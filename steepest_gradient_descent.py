@@ -1,10 +1,11 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
-from test_functions import generic_quad, generic_quad_der, Rosenbrock
 from line_search import armijo_wolfe_line_search, backtracking_line_search
+from functions import GenericQuadratic, Rosenbrock, Ackley
 
 
-def SDQ(Q=None, q=None, x=None, f_star=np.inf, eps=1e-6, max_iter=1000, plot=True, verbose=True):
+def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=True, plot=True):
     """
     Apply the Steepest Descent algorithm with exact line search to the quadratic function.
 
@@ -21,6 +22,8 @@ def SDQ(Q=None, q=None, x=None, f_star=np.inf, eps=1e-6, max_iter=1000, plot=Tru
                      criterion: the algorithm is stopped when the norm of the gradient is less
                      than or equal to eps.
     :param max_iter: (integer scalar, optional, default value 1000): the maximum number of iterations
+    :param verbose:
+    :param plot:
     :return x:       ([n x 1] real column vector): either the best solution found so far (possibly the
                      optimal one) or a direction proving the problem is unbounded below, depending on case
     :return status:  (string): a string describing the status of the algorithm at termination:
@@ -34,26 +37,9 @@ def SDQ(Q=None, q=None, x=None, f_star=np.inf, eps=1e-6, max_iter=1000, plot=Tru
                      x is the best solution found so far, but not necessarily the optimal one.
     """
 
-    # reading and checking input
-    if not np.isrealobj(Q):
-        return ValueError('Q not a real matrix')
+    x = np.asarray(x)
 
-    n = Q.shape[0]
-
-    if n <= 1:
-        return ValueError('Q is too small')
-
-    if n != Q.shape[1]:
-        return ValueError('Q is not square')
-
-    if not np.isrealobj(q):
-        return ValueError('q not a real vector')
-
-    if q.shape[1] != 1:
-        return ValueError('q is not a (column) vector')
-
-    if q.size != n:
-        return ValueError('q size does not match with Q')
+    n = x.shape[0]
 
     if not np.isrealobj(x):
         return ValueError('x not a real vector')
@@ -61,7 +47,7 @@ def SDQ(Q=None, q=None, x=None, f_star=np.inf, eps=1e-6, max_iter=1000, plot=Tru
     if x.shape[1] != 1:
         return ValueError('x is not a (column) vector')
 
-    if x.size != n:
+    if x.size != f.hessian().shape[0]:
         return ValueError('x size does not match with Q')
 
     if not np.isrealobj(f_star) or not np.isscalar(f_star):
@@ -88,8 +74,8 @@ def SDQ(Q=None, q=None, x=None, f_star=np.inf, eps=1e-6, max_iter=1000, plot=Tru
     i = 1
     while True:
         # compute function value and gradient
-        v = generic_quad(Q, q, x).item()
-        d = generic_quad_der(Q, q, x)
+        v = f.function(x)
+        d = f.jacobian(x)
         nd = np.linalg.norm(d)
 
         # output statistics
@@ -112,7 +98,7 @@ def SDQ(Q=None, q=None, x=None, f_star=np.inf, eps=1e-6, max_iter=1000, plot=Tru
             return x, 'stopped'
 
         # check if f is unbounded below
-        den = d.T.dot(Q).dot(d)
+        den = d.T.dot(f.hessian()).dot(d)
 
         if den <= 1e-12:
             # this is actually two different cases:
@@ -131,13 +117,15 @@ def SDQ(Q=None, q=None, x=None, f_star=np.inf, eps=1e-6, max_iter=1000, plot=Tru
         if plot and n == 2:
             print(end='')
 
+        assert np.isclose(f.jacobian(x).T.dot(f.jacobian(x + a * -d)), 0.0)
+
         # compute new point
-        x = x - a * d
+        x = x + a * -d
         i += 1
 
 
-def SDG(f, x=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
-        tau=0.9, sfgrd=0.01, m_inf=np.inf, min_a=1e-16, plot=True, verbose=True):
+def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+        tau=0.9, sfgrd=0.01, m_inf=np.inf, min_a=1e-16, verbose=True, plot=True):
     """
     Apply the classical Steepest Descent algorithm for the minimization of
     the provided function f.
@@ -226,17 +214,16 @@ def SDG(f, x=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
                     continuing optimization (see min_a above).
     """
 
+    x = np.asarray(x)
+
     # reading and checking input
-    if x is None:
-        f_star, x = f.function([]), f.derivative([])
-    else:
-        if not np.isrealobj(x):
-            return ValueError('x not a real vector')
+    if not np.isrealobj(x):
+        return ValueError('x not a real vector')
 
-        if x.shape[1] != 1:
-            return ValueError('x is not a (column) vector')
+    if x.shape[1] != 1:
+        return ValueError('x is not a (column) vector')
 
-        f_star = f.function([])
+    f_star = f.function([])
 
     n = x.shape[0]
 
@@ -293,17 +280,21 @@ def SDG(f, x=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
             print('f_eval\tf(x)\t\t\t|| g(x) ||', end='')
         print('ls f_eval\ta*')
 
-    v, d = f.function(x), f.derivative(x)
+    v, d = f.function(x), f.jacobian(x)
     nd = np.linalg.norm(d)
     if eps < 0:
         ng0 = -nd  # norm of first subgradient
     else:
         ng0 = 1  # un-scaled stopping criterion
 
+    if plot and n == 2:
+        surface_plot, contour_plot, contour_plot, contour_axes = f.plot()
+
     while True:
         # output statistics
         if f_star < np.inf:
-            print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max([abs(f_star), 1]), nd), end='')
+            if verbose:
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max([abs(f_star), 1]), nd), end='')
             if prev_v < np.inf:
                 print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
             else:
@@ -314,11 +305,17 @@ def SDG(f, x=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
 
         # stopping criteria
         if nd <= eps * ng0:
+            if verbose:
+                print()
+            if plot and n == 2:
+                plt.show()
             return x, 'optimal'
 
         if f_eval > max_f_eval:
             if verbose:
                 print()
+            if plot and n == 2:
+                plt.show()
             return x, 'stopped'
 
         # compute step size
@@ -326,10 +323,10 @@ def SDG(f, x=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
 
         if 0 < m2 < 1:
             a, v, last_x, last_d, f_eval = armijo_wolfe_line_search(
-                f, d, x, last_x, last_d, f_eval, max_f_eval, min_a, sfgrd, v, phi_p0, a_start, m1, m2, tau)
+                f, d, x, last_x, last_d, f_eval, max_f_eval, min_a, sfgrd, v, phi_p0, a_start, m1, m2, tau, verbose)
         else:
             a, v, last_x, last_d, f_eval = backtracking_line_search(
-                f, d, x, last_x, last_d, f_eval, max_f_eval, min_a, v, phi_p0, a_start, m1, tau)
+                f, d, x, last_x, last_d, f_eval, max_f_eval, min_a, v, phi_p0, a_start, m1, tau, verbose)
 
         # output statistics
         if verbose:
@@ -342,8 +339,11 @@ def SDG(f, x=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
             return x, 'unbounded'
 
         # plot the trajectory
-        if n == 2 and plot:
-            print(end='')
+        if plot and n == 2:
+            p_xy = np.hstack((x, last_x))
+            contour_axes.plot(p_xy[0], p_xy[1], color='k')
+
+        assert np.isclose(f.jacobian(x).T.dot(f.jacobian(last_x)), 0.0)
 
         # compute new point
         x = last_x
@@ -354,18 +354,11 @@ def SDG(f, x=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
 
 
 if __name__ == "__main__":
-    Q = np.array([[6, -2], [-2, 6]])
-    q = np.array([[10], [10]])
-    x = np.array([[1], [-1]])
+    Q = [[6, -2], [-2, 6]]
+    q = [[10], [5]]
+    x = [[-1], [1]]
 
-    # the optimal solution of a linear system Qx = q is
-    # x = Q^-1 q which has a complexity of O(n^3)
-    x_star = np.linalg.inv(Q).dot(q)  # or np.linalg.solve(Q, q)
-    f_star = generic_quad(Q, q, x_star).item()
-    # while the steepest gradient descent over a quadratic
-    # function has a complexity of O(n^2)
-    print(SDQ(Q, q, x, f_star))
-
+    f = GenericQuadratic(Q, q)
+    print(SDQ(f, x, f.function([[]]), plot=False))
     print()
-
-    print(SDG(Rosenbrock(), x))
+    print(SDG(f, x, plot=False))
