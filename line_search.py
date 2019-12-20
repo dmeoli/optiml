@@ -15,7 +15,7 @@ def armijo_wolfe_line_search(f, d, x, last_x, last_d, last_h, f_eval, max_f_eval
 
     ls_iter = 1  # count iterations of first phase
     while f_eval <= max_f_eval:
-        phi_a, phi_ps, last_x, last_d, last_h, f_eval = f2phi(f, d, x, f_eval, a_start)
+        phi_a, phi_ps, last_x, last_d, last_h, f_eval = f2phi(f, d, x, last_h, f_eval, a_start)
         # Armijo and strong Wolfe conditions
         if phi_a <= phi0 + m1 * a_start * phi_p0 and abs(phi_ps) <= -m2 * phi_p0:
             if verbose:
@@ -41,7 +41,7 @@ def armijo_wolfe_line_search(f, d, x, last_x, last_d, last_h, f_eval, max_f_eval
                                         (am * phi_ps - a_start * phi_pm) / (phi_ps - phi_pm)])])
 
         # compute phi(a)
-        phi_a, phi_p, last_x, last_d, last_h, f_eval = f2phi(f, d, x, f_eval, a)
+        phi_a, phi_p, last_x, last_d, last_h, f_eval = f2phi(f, d, x, last_h, f_eval, a)
         # Armijo and strong Wolfe conditions
         if phi_a <= phi0 + m1 * a * phi_p0 and abs(phi_p) <= -m2 * phi_p0:
             break
@@ -78,7 +78,7 @@ def backtracking_line_search(f, d, x, last_x, last_d, last_h, f_eval, max_f_eval
 
     ls_iter = 1  # count ls iterations
     while f_eval <= max_f_eval and a_start > min_a:
-        phi_a, _, last_x, last_d, last_h, f_eval = f2phi(f, d, x, f_eval, a_start)
+        phi_a, _, last_x, last_d, last_h, f_eval = f2phi(f, d, x, last_h, f_eval, a_start)
         if phi_a <= phi0 + m1 * a_start * phi_p0:  # Armijo condition
             break
 
@@ -90,12 +90,13 @@ def backtracking_line_search(f, d, x, last_x, last_d, last_h, f_eval, max_f_eval
     return a_start, phi_a, last_x, last_d, last_h, f_eval
 
 
-def f2phi(f, d, x, f_eval, a):
+def f2phi(f, d, x, last_h, f_eval, a):
     # phi(a) = f(x + a * d)
     # phi'(a) = <\nabla f(x + a * d) , d>
 
     last_x = x + a * d
-    phi_a, last_g, last_h = f.function(last_x), f.jacobian(last_x), f.hessian(last_x)
+    phi_a, last_g,  = f.function(last_x), f.jacobian(last_x)
+    last_h = f.hessian(last_x) if last_h is not None else None
     phi_p = d.T.dot(last_g).item()
     f_eval += 1
     return phi_a, phi_p, last_x, last_g, last_h, f_eval

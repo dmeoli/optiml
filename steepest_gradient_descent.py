@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from line_search import armijo_wolfe_line_search, backtracking_line_search
-from functions import GenericQuadratic, Rosenbrock, Ackley
+from functions import GenericQuadratic, Rosenbrock, Ackley, gen_quad_1
 
 
 def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=True, plot=True):
@@ -312,15 +312,17 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
             status = 'stopped'
             break
 
-        # compute step size
         phi_p0 = -ng * ng
 
+        # compute step size
         if 0 < m2 < 1:
-            a, v, last_x, last_g, f_eval = armijo_wolfe_line_search(
-                f, -g, x, last_x, last_g, f_eval, max_f_eval, min_a, sfgrd, v, phi_p0, a_start, m1, m2, tau, verbose)
+            a, v, last_x, last_g, _, f_eval = \
+                armijo_wolfe_line_search(f, -g, x, last_x, last_g, None, f_eval, max_f_eval,
+                                         min_a, sfgrd, v, phi_p0, a_start, m1, m2, tau, verbose)
         else:
-            a, v, last_x, last_g, f_eval = backtracking_line_search(
-                f, -g, x, last_x, last_g, f_eval, max_f_eval, min_a, v, phi_p0, a_start, m1, tau, verbose)
+            a, v, last_x, last_g, _, f_eval = \
+                backtracking_line_search(f, -g, x, last_x, last_g, None, f_eval, max_f_eval,
+                                         min_a, v, phi_p0, a_start, m1, tau, verbose)
 
         # output statistics
         if verbose:
@@ -339,8 +341,6 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
             p_xy = np.hstack((x, last_x))
             contour_axes.plot(p_xy[0], p_xy[1], color='k')
 
-        # assert np.isclose(f.jacobian(x).T.dot(f.jacobian(last_x)), 0.0)
-
         # compute new point
         x = last_x
 
@@ -356,11 +356,6 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
 
 
 if __name__ == "__main__":
-    Q = [[6, -2], [-2, 6]]
-    q = [[10], [10]]
-    x = [[-1], [1]]
-
-    # f = GenericQuadratic(Q, q)
-    # print(SDQ(f, x))
-    # print()
-    print(SDG(Rosenbrock(), x))
+    print(SDQ(gen_quad_1, [[-1], [1]], gen_quad_1.function([])))
+    print()
+    print(SDG(Rosenbrock(), [[-1], [1]]))

@@ -179,7 +179,6 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
     else:
         print('f_eval\tf(x)\t\t\t|| g(x) ||\t\tdelta\t', end='')
     print('\tls\tit\ta*')
-    print()
 
     v, g, h = f.function(x), f.jacobian(x), f.hessian(x)
     ng = np.linalg.norm(g)
@@ -218,14 +217,13 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
             print('\t{:1.4e}'.format(delta - lambda_n), end='')
             h = h + (delta - lambda_n) * np.eye(n)
         else:
-            print('\t0.0000e+00', end='')
+            print('\t{:1.4e}'.format(0), end='')
 
         d = -np.linalg.solve(h, g)
 
         phi_p0 = g.T.dot(d)
 
-        # compute step size
-        # in Newton's method, the default initial step size is 1
+        # compute step size: in Newton's method, the default initial step size is 1
         if 0 < m2 < 1:
             a, v, last_x, last_g, last_h, f_eval = armijo_wolfe_line_search(
                 f, d, x, last_x, last_g, last_h, f_eval, max_f_eval, min_a, sfgrd, v, phi_p0, 1, m1, m2, tau, verbose)
@@ -234,7 +232,7 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
                 f, d, x, last_x, last_g, last_h, f_eval, max_f_eval, min_a, v, phi_p0, 1, m1, tau, verbose)
 
         # output statistics
-        print('\t{:1.2e}'.format(a.item() if isinstance(a, np.ndarray) else a))
+        print('\t{:1.4e}'.format(a.item() if isinstance(a, np.ndarray) else a))
 
         if a <= min_a:
             status = 'error'
