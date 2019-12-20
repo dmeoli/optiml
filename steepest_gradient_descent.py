@@ -74,13 +74,12 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=True, plot=True):
     i = 1
     while True:
         # compute function value and gradient
-        v = f.function(x)
-        d = f.jacobian(x)
-        nd = np.linalg.norm(d)
+        v, d = f.function(x), f.jacobian(x)
+        ng = np.linalg.norm(d)
 
         # output statistics
         if verbose:
-            print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(i, v, nd), end='')
+            print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(i, v, ng), end='')
         if f_star < np.inf:
             if verbose:
                 print('\t{:1.4e}'.format(v - f_star), end='')
@@ -91,7 +90,7 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=True, plot=True):
             print()
 
         # stopping criteria
-        if nd <= eps:
+        if ng <= eps:
             return x, 'optimal'
 
         if i > max_iter:
@@ -111,13 +110,14 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=True, plot=True):
             return x, 'unbounded'
 
         # compute step size
-        a = nd ** 2 / den
+        a = ng ** 2 / den
 
         # plot the trajectory
         if plot and n == 2:
             print(end='')
 
-        assert np.isclose(f.jacobian(x).T.dot(f.jacobian(x + a * -d)), 0.0)
+        # <\nabla f(x_i), \nabla f(x_i+1)> = 0
+        # assert np.isclose(f.jacobian(x).T.dot(f.jacobian(x + a * -d)), 0)
 
         # compute new point
         x = x + a * -d
@@ -125,7 +125,7 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=True, plot=True):
 
 
 def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
-        tau=0.9, sfgrd=0.01, m_inf=np.inf, min_a=1e-16, verbose=True, plot=True):
+        tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=True, plot=True):
     """
     Apply the classical Steepest Descent algorithm for the minimization of
     the provided function f.
@@ -269,7 +269,7 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
         return ValueError('min_a is < 0')
 
     last_x = np.zeros((n, 1))  # last point visited in the line search
-    last_d = np.zeros((n, 1))  # gradient of last_x
+    last_g = np.zeros((n, 1))  # gradient of last_x
     f_eval = 1  # f() evaluations count ("common" with LSs)
 
     if verbose:
@@ -277,13 +277,13 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
             print('f_eval\trel gap\t\t|| g(x) ||\t\trate\t', end='')
             prev_v = np.inf
         else:
-            print('f_eval\tf(x)\t\t\t|| g(x) ||', end='')
+            print('f_eval\tf(x)\t\t\t|| g(x) ||\t', end='')
         print('ls f_eval\ta*')
 
-    v, d = f.function(x), f.jacobian(x)
-    nd = np.linalg.norm(d)
+    v, g = f.function(x), f.jacobian(x)
+    ng = np.linalg.norm(g)
     if eps < 0:
-        ng0 = -nd  # norm of first subgradient
+        ng0 = -ng  # norm of first subgradient
     else:
         ng0 = 1  # un-scaled stopping criterion
 
@@ -292,73 +292,75 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
 
     while True:
         # output statistics
-        if f_star < np.inf:
+        if f_star > -np.inf:
             if verbose:
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max([abs(f_star), 1]), nd), end='')
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max([abs(f_star), 1]), ng), end='')
             if prev_v < np.inf:
                 print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
             else:
                 print('\t\t\t', end='')
             prev_v = v
         else:
-            print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, nd))
+            print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng))
 
         # stopping criteria
-        if nd <= eps * ng0:
-            if verbose:
-                print()
-            if plot and n == 2:
-                plt.show()
-            return x, 'optimal'
+        if ng <= eps * ng0:
+            status = 'optimal'
+            break
 
         if f_eval > max_f_eval:
-            if verbose:
-                print()
-            if plot and n == 2:
-                plt.show()
-            return x, 'stopped'
+            status = 'stopped'
+            break
 
         # compute step size
-        phi_p0 = -nd * nd
+        phi_p0 = -ng * ng
 
         if 0 < m2 < 1:
-            a, v, last_x, last_d, f_eval = armijo_wolfe_line_search(
-                f, d, x, last_x, last_d, f_eval, max_f_eval, min_a, sfgrd, v, phi_p0, a_start, m1, m2, tau, verbose)
+            a, v, last_x, last_g, f_eval = armijo_wolfe_line_search(
+                f, -g, x, last_x, last_g, f_eval, max_f_eval, min_a, sfgrd, v, phi_p0, a_start, m1, m2, tau, verbose)
         else:
-            a, v, last_x, last_d, f_eval = backtracking_line_search(
-                f, d, x, last_x, last_d, f_eval, max_f_eval, min_a, v, phi_p0, a_start, m1, tau, verbose)
+            a, v, last_x, last_g, f_eval = backtracking_line_search(
+                f, -g, x, last_x, last_g, f_eval, max_f_eval, min_a, v, phi_p0, a_start, m1, tau, verbose)
 
         # output statistics
         if verbose:
             print('\t\t{:1.4e}'.format(a))
 
         if a <= min_a:
-            return x, 'error'
+            status = 'error'
+            break
 
-        if v > m_inf:
-            return x, 'unbounded'
+        if v <= m_inf:
+            status = 'unbounded'
+            break
 
         # plot the trajectory
         if plot and n == 2:
             p_xy = np.hstack((x, last_x))
             contour_axes.plot(p_xy[0], p_xy[1], color='k')
 
-        assert np.isclose(f.jacobian(x).T.dot(f.jacobian(last_x)), 0.0)
+        # assert np.isclose(f.jacobian(x).T.dot(f.jacobian(last_x)), 0.0)
 
         # compute new point
         x = last_x
 
         # update gradient
-        d = last_d
-        nd = np.linalg.norm(d)
+        g = last_g
+        ng = np.linalg.norm(g)
+
+    if verbose:
+        print()
+    if plot and n == 2:
+        plt.show()
+    return x, status
 
 
 if __name__ == "__main__":
     Q = [[6, -2], [-2, 6]]
-    q = [[10], [5]]
+    q = [[10], [10]]
     x = [[-1], [1]]
 
-    f = GenericQuadratic(Q, q)
-    print(SDQ(f, x, f.function([[]]), plot=False))
-    print()
-    print(SDG(f, x, plot=False))
+    # f = GenericQuadratic(Q, q)
+    # print(SDQ(f, x))
+    # print()
+    print(SDG(Rosenbrock(), x))

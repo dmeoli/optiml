@@ -54,7 +54,7 @@ class GenericQuadratic:
         x = np.array(x)
         return (0.5 * x.T.dot(self.Q).dot(x) + self.q.T.dot(x)).item() \
             if x.size != 0 else self.function(np.linalg.inv(self.Q).dot(-self.q)) \
-            if min(np.linalg.eig(self.Q)[0]) > 1e-14 else -np.inf  # or np.linalg.solve(Q, -q)
+            if min(np.linalg.eigvalsh(self.Q)) > 1e-14 else -np.inf  # or np.linalg.solve(Q, -q)
 
     def jacobian(self, x):
         """
@@ -97,11 +97,18 @@ class GenericQuadratic:
         ax.plot(*np.array([0., 0.]), 'r*', markersize=10)
 
 
-if __name__ == "__main__":
-    Q = [[6, -2], [-2, 6]]
-    q = [[10], [10]]
-
-    GenericQuadratic(Q, q).plot()
+# generic 2x2 quadratic function with nicely conditioned Hessian
+gen_quad_1 = GenericQuadratic([[6, -2], [-2, 6]], [[10], [5]])
+# generic 2x2 quadratic function with less nicely conditioned Hessian
+gen_quad_2 = GenericQuadratic([[5, -3], [-3, 5]], [[10], [5]])
+# generic 2x2 quadratic function with Hessian having one zero eigenvalue
+gen_quad_3 = GenericQuadratic([[4, -4], [-4, 4]], [[10], [5]])
+# generic 2x2 quadratic function with indefinite Hessian
+# (one positive and one negative eigenvalue)
+gen_quad_4 = GenericQuadratic([[3, -5], [-5, 3]], [[10], [5]])
+# generic 2x2 quadratic function with "very elongated" Hessian
+# (a very small positive minimum eigenvalue, the other much larger)
+gen_quad_5 = GenericQuadratic([[101, -99], [-99, 101]], [[10], [5]])
 
 
 class Rosenbrock:
@@ -133,7 +140,7 @@ class Rosenbrock:
         :param x: 1-D array of points at which the Hessian is to be computed
         :return: the Hessian matrix of the Rosenbrock function at x
         """
-        return self.rosenbrock_jacobian(np.array(x, dtype=float))
+        return self.rosenbrock_hessian(np.array(x, dtype=float)).reshape((x.size, x.size))
 
     def plot(self):
         xmin, xmax, xstep = -2, 2, 0.1
@@ -190,7 +197,7 @@ class Ackley:
         :param x: 1-D array of points at which the Hessian is to be computed
         :return: the Hessian matrix of the Ackley function at x
         """
-        return self.ackley_hessian(np.array(x, dtype=float))
+        return self.ackley_hessian(np.array(x, dtype=float)).reshape((x.size, x.size))
 
     def plot(self):
         xmin, xmax, xstep = -32, 32, 0.1
