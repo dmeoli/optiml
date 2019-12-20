@@ -1,5 +1,5 @@
 def armijo_wolfe_line_search(f, d, x, last_x, last_d, last_h, f_eval, max_f_eval, min_a, sfgrd, phi0=None,
-                             phi_p0=None, a_start=None, m1=None, m2=None, tau=None, verbose=True):
+                             phi_p0=None, a_start=None, m1=None, m2=None, tau=None, verbose=False):
     """
     Performs an Armijo-Wolfe Line Search.
 
@@ -65,7 +65,7 @@ def armijo_wolfe_line_search(f, d, x, last_x, last_d, last_h, f_eval, max_f_eval
 
 
 def backtracking_line_search(f, d, x, last_x, last_d, last_h, f_eval, max_f_eval, min_a, phi0=None,
-                             phi_p0=None, a_start=None, m1=None, tau=None, verbose=True):
+                             phi_p0=None, a_start=None, m1=None, tau=None, verbose=False):
     """
     Performs a Backtracking Line Search.
 
@@ -95,7 +95,7 @@ def f2phi(f, d, x, last_h, f_eval, a):
     # phi'(a) = <\nabla f(x + a * d) , d>
 
     last_x = x + a * d
-    phi_a, last_g,  = f.function(last_x), f.jacobian(last_x)
+    phi_a, last_g = f.function(last_x), f.jacobian(last_x)
     last_h = f.hessian(last_x) if last_h is not None else None
     phi_p = d.T.dot(last_g).item()
     f_eval += 1

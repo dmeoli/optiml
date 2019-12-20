@@ -6,7 +6,7 @@ from line_search import armijo_wolfe_line_search, backtracking_line_search
 
 
 def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
-         sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=True, plot=True):
+         sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
     # Apply a classical Newton's method for the minimization of the provided
     # function f, which must have the following interface:
     #
@@ -174,11 +174,14 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
 
     # initializations
     if f_star > -np.inf:
-        print('f_eval\trel gap\t\t|| g(x) ||\trate\t\tdelta\t', end='')
+        if verbose:
+            print('f_eval\trel gap\t\t|| g(x) ||\trate\t\tdelta\t', end='')
         prev_v = np.inf
     else:
-        print('f_eval\tf(x)\t\t\t|| g(x) ||\t\tdelta\t', end='')
-    print('\tls\tit\ta*')
+        if verbose:
+            print('f_eval\tf(x)\t\t\t|| g(x) ||\tdelta\t', end='')
+    if verbose:
+        print('\tls\tit\ta*')
 
     v, g, h = f.function(x), f.jacobian(x), f.hessian(x)
     ng = np.linalg.norm(g)
@@ -193,14 +196,18 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
     while True:
         # output statistics
         if f_star > -np.inf:
-            print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max([abs(f_star), 1]), ng), end='')
+            if verbose:
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max([abs(f_star), 1]), ng), end='')
             if prev_v < np.inf:
-                print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
+                if verbose:
+                    print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
             else:
-                print('\t\t\t', end='')
+                if verbose:
+                    print('\t\t\t', end='')
             prev_v = v
         else:
-            print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng))
+            if verbose:
+                print('{:4d}\t{:1.4e}\t\t{:1.4e}'.format(f_eval, v, ng), end='')
 
         # stopping criteria
         if ng <= eps * ng0:
@@ -214,10 +221,12 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
         # compute Newton's direction
         lambda_n = min(np.linalg.eigvalsh(h))  # smallest eigenvalue
         if lambda_n < delta:
-            print('\t{:1.4e}'.format(delta - lambda_n), end='')
+            if verbose:
+                print('\t{:1.4e}'.format(delta - lambda_n), end='')
             h = h + (delta - lambda_n) * np.eye(n)
         else:
-            print('\t{:1.4e}'.format(0), end='')
+            if verbose:
+                print('\t{:1.4e}'.format(0), end='')
 
         d = -np.linalg.solve(h, g)
 
@@ -232,7 +241,8 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
                 f, d, x, last_x, last_g, last_h, f_eval, max_f_eval, min_a, v, phi_p0, 1, m1, tau, verbose)
 
         # output statistics
-        print('\t{:1.4e}'.format(a.item() if isinstance(a, np.ndarray) else a))
+        if verbose:
+            print('\t{:1.4e}'.format(a.item() if isinstance(a, np.ndarray) else a))
 
         if a <= min_a:
             status = 'error'
@@ -252,8 +262,8 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
 
         # update gradient and Hessian
         g = last_g
-        ng = np.linalg.norm(g)
         h = last_h
+        ng = np.linalg.norm(g)
 
     if verbose:
         print()
@@ -263,4 +273,4 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
 
 
 if __name__ == "__main__":
-    print(NWTN(Rosenbrock(), [[-1], [1]]))
+    print(NWTN(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))

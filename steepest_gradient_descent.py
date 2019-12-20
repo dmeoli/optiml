@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from functions import Rosenbrock, gen_quad_1
 from line_search import armijo_wolfe_line_search, backtracking_line_search
-from functions import GenericQuadratic, Rosenbrock, Ackley, gen_quad_1
 
 
-def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=True, plot=True):
+def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False):
     """
     Apply the Steepest Descent algorithm with exact line search to the quadratic function.
 
@@ -74,8 +74,8 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=True, plot=True):
     i = 1
     while True:
         # compute function value and gradient
-        v, d = f.function(x), f.jacobian(x)
-        ng = np.linalg.norm(d)
+        v, g = f.function(x), f.jacobian(x)
+        ng = np.linalg.norm(g)
 
         # output statistics
         if verbose:
@@ -91,13 +91,15 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=True, plot=True):
 
         # stopping criteria
         if ng <= eps:
-            return x, 'optimal'
+            status = 'optimal'
+            break
 
         if i > max_iter:
-            return x, 'stopped'
+            status = 'stopped'
+            break
 
         # check if f is unbounded below
-        den = d.T.dot(f.hessian()).dot(d)
+        den = g.T.dot(f.hessian()).dot(g)
 
         if den <= 1e-12:
             # this is actually two different cases:
@@ -107,7 +109,8 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=True, plot=True):
             #
             # - d.T.dot(Q).dot(d) < 0, i.e., d is a direction of negative curvature
             #   for f, which is then necessarily unbounded below.
-            return x, 'unbounded'
+            status = 'unbounded'
+            break
 
         # compute step size
         a = ng ** 2 / den
@@ -120,12 +123,18 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=True, plot=True):
         # assert np.isclose(f.jacobian(x).T.dot(f.jacobian(x + a * -d)), 0)
 
         # compute new point
-        x = x + a * -d
+        x = x + a * -g
         i += 1
+
+    if verbose:
+        print()
+    if plot and n == 2:
+        plt.show()
+    return x, status
 
 
 def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
-        tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=True, plot=True):
+        tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
     """
     Apply the classical Steepest Descent algorithm for the minimization of
     the provided function f.
@@ -272,12 +281,14 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
     last_g = np.zeros((n, 1))  # gradient of last_x
     f_eval = 1  # f() evaluations count ("common" with LSs)
 
-    if verbose:
-        if f_star > -np.inf:
+    if f_star > -np.inf:
+        if verbose:
             print('f_eval\trel gap\t\t|| g(x) ||\t\trate\t', end='')
-            prev_v = np.inf
-        else:
+        prev_v = np.inf
+    else:
+        if verbose:
             print('f_eval\tf(x)\t\t\t|| g(x) ||\t', end='')
+    if verbose:
         print('ls f_eval\ta*')
 
     v, g = f.function(x), f.jacobian(x)
@@ -296,12 +307,15 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
             if verbose:
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max([abs(f_star), 1]), ng), end='')
             if prev_v < np.inf:
-                print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
+                if verbose:
+                    print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
             else:
-                print('\t\t\t', end='')
+                if verbose:
+                    print('\t\t\t', end='')
             prev_v = v
         else:
-            print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng))
+            if verbose:
+                print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng))
 
         # stopping criteria
         if ng <= eps * ng0:
@@ -356,6 +370,6 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
 
 
 if __name__ == "__main__":
-    print(SDQ(gen_quad_1, [[-1], [1]], gen_quad_1.function([])))
+    print(SDQ(gen_quad_1, [[-1], [1]], gen_quad_1.function([]), verbose=True, plot=True))
     print()
-    print(SDG(Rosenbrock(), [[-1], [1]]))
+    print(SDG(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))
