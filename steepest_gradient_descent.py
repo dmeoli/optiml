@@ -83,8 +83,9 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False)
         if f_star < np.inf:
             if verbose:
                 print('\t{:1.4e}'.format(v - f_star), end='')
-            if verbose and prev_v < np.inf:
-                print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
+            if prev_v < np.inf:
+                if verbose:
+                    print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
             prev_v = v
         if verbose:
             print()
@@ -104,10 +105,10 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False)
         if den <= 1e-12:
             # this is actually two different cases:
             #
-            # - d.T.dot(Q).dot(d) = 0, i.e., f is linear along g, and since the
+            # - g.T.dot(Q).dot(g) = 0, i.e., f is linear along g, and since the
             #   gradient is not zero, it is unbounded below;
             #
-            # - d.T.dot(Q).dot(d) < 0, i.e., d is a direction of negative curvature
+            # - g.T.dot(Q).dot(g) < 0, i.e., g is a direction of negative curvature
             #   for f, which is then necessarily unbounded below.
             status = 'unbounded'
             break
