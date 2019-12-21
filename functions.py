@@ -138,7 +138,7 @@ class Rosenbrock(Function):
         :return:  the value of the Rosenbrock function at x.
         """
         x = np.array(x)
-        return np.sum(100.0 * (x[1:] - x[:-1] ** 2.0) ** 2.0 + (1 - x[:-1]) ** 2.0)
+        return np.sum(100.0 * (x[1:] - x[:-1] ** 2.0) ** 2.0 + (1 - x[:-1]) ** 2.0) if x.size != 0 else 0
 
     def jacobian(self, x):
         """
@@ -190,9 +190,8 @@ class Ackley(Function):
         :return:  the value of the Ackley function.
         """
         x = np.array(x)
-        sum_sq_term = -0.2 * np.sqrt(np.sum(x ** 2) / len(x))
-        cos_term = (np.sum(np.cos(2.0 * np.pi * x))) / len(x)
-        return -20 * np.exp(sum_sq_term) - np.exp(cos_term) + np.e + 20
+        return -20 * np.exp(-0.2 * np.sqrt(np.sum(x ** 2) / x.size)) \
+               - np.exp((np.sum(np.cos(2.0 * np.pi * x))) / x.size) + np.e + 20 if x.size != 0 else 0
 
     def jacobian(self, x):
         """
@@ -218,9 +217,8 @@ class Ackley(Function):
         surface_axes = Axes3D(surface_plot)
 
         # Ackley function
-        sum_sq_term = -0.2 * np.sqrt((x ** 2 + y ** 2) * 0.5)
-        cos_term = (np.cos(2.0 * np.pi * x) + np.cos(2 * np.pi * y)) * 0.5
-        z = -20 * np.exp(sum_sq_term) - np.exp(cos_term) + np.e + 20
+        z = -20 * np.exp(-0.2 * np.sqrt((x ** 2 + y ** 2) * 0.5)) \
+            - np.exp((np.cos(2.0 * np.pi * x) + np.cos(2 * np.pi * y)) * 0.5) + np.e + 20
 
         surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
 
