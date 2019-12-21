@@ -16,6 +16,9 @@ class Function:
     def hessian(self, x):
         return NotImplementedError
 
+    def plot(self, x_min, x_max, y_min, y_max):
+        return NotImplementedError
+
 
 class GenericQuadratic(Function):
 
@@ -83,11 +86,8 @@ class GenericQuadratic(Function):
         """
         return self.Q
 
-    def plot(self):
-        xmin, xmax, xstep = -5, 1, 0.1
-        ymin, ymax, ystep = -5, 1, 0.1
-
-        x, y = np.meshgrid(np.arange(xmin, xmax, xstep), np.arange(ymin, ymax, ystep))
+    def plot(self, x_min=-5, x_max=2, y_min=-5, y_max=2):
+        x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
         # 3D surface plot
         surface_plot = plt.figure()
@@ -134,8 +134,8 @@ class Rosenbrock(Function):
     def function(self, x):
         """
         The Rosenbrock function.
-        :param x: 1-D array of points at which the Rosenbrock function is to be computed
-        :return: the value of the Rosenbrock function at x
+        :param x: 1-D array of points at which the Rosenbrock function is to be computed.
+        :return:  the value of the Rosenbrock function at x.
         """
         x = np.array(x)
         return np.sum(100.0 * (x[1:] - x[:-1] ** 2.0) ** 2.0 + (1 - x[:-1]) ** 2.0)
@@ -143,24 +143,21 @@ class Rosenbrock(Function):
     def jacobian(self, x):
         """
         The Jacobian (i.e. gradient) of the Rosenbrock function.
-        :param x: 1-D array of points at which the Jacobian is to be computed
-        :return: the Jacobian of the Rosenbrock function at x
+        :param x: 1-D array of points at which the Jacobian is to be computed.
+        :return:  the Jacobian of the Rosenbrock function at x.
         """
         return self.rosenbrock_jacobian(np.array(x, dtype=float))
 
     def hessian(self, x):
         """
         The Hessian matrix of the Rosenbrock function.
-        :param x: 1-D array of points at which the Hessian is to be computed
-        :return: the Hessian matrix of the Rosenbrock function at x
+        :param x: 1-D array of points at which the Hessian is to be computed.
+        :return:  the Hessian matrix of the Rosenbrock function at x.
         """
         return self.rosenbrock_hessian(np.array(x, dtype=float)).reshape((x.size, x.size))
 
-    def plot(self):
-        xmin, xmax, xstep = -2, 2, 0.1
-        ymin, ymax, ystep = -1, 3, 0.1
-
-        x, y = np.meshgrid(np.arange(xmin, xmax, xstep), np.arange(ymin, ymax, ystep))
+    def plot(self, x_min=-2, x_max=2, y_min=-1, y_max=3):
+        x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
         # 3D surface plot
         surface_plot = plt.figure()
@@ -175,7 +172,7 @@ class Rosenbrock(Function):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*np.array([1., 1.]), 'r*', markersize=10)
+        contour_axes.plot(*np.array([1, 1]), 'r*', markersize=10)
 
         return surface_plot, surface_axes, contour_plot, contour_axes
 
@@ -189,8 +186,8 @@ class Ackley(Function):
     def function(self, x):
         """
         The Ackley function.
-        :param x: 1-D array of points at which the Ackley function is to be computed
-        :return: the value of the Ackley function
+        :param x: 1-D array of points at which the Ackley function is to be computed.
+        :return:  the value of the Ackley function.
         """
         x = np.array(x)
         sum_sq_term = -0.2 * np.sqrt(np.sum(x ** 2) / len(x))
@@ -200,32 +197,29 @@ class Ackley(Function):
     def jacobian(self, x):
         """
         The Jacobian (i.e. gradient) of the Ackley function.
-        :param x: 1-D array of points at which the Jacobian is to be computed
-        :return: the Jacobian of the Ackley function at x
+        :param x: 1-D array of points at which the Jacobian is to be computed.
+        :return:  the Jacobian of the Ackley function at x.
         """
         return self.ackley_jacobian(np.array(x, dtype=float))
 
     def hessian(self, x):
         """
         The Hessian matrix of the Ackley function.
-        :param x: 1-D array of points at which the Hessian is to be computed
-        :return: the Hessian matrix of the Ackley function at x
+        :param x: 1-D array of points at which the Hessian is to be computed.
+        :return:  the Hessian matrix of the Ackley function at x.
         """
         return self.ackley_hessian(np.array(x, dtype=float)).reshape((x.size, x.size))
 
-    def plot(self):
-        xmin, xmax, xstep = -32, 32, 0.1
-        ymin, ymax, ystep = -32, 32, 0.1
-
-        x, y = np.meshgrid(np.arange(xmin, xmax, xstep), np.arange(ymin, ymax, ystep))
+    def plot(self, x_min=-4, x_max=4, y_min=-4, y_max=4):
+        x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
         # 3D surface plot
         surface_plot = plt.figure()
         surface_axes = Axes3D(surface_plot)
 
         # Ackley function
-        sum_sq_term = -0.2 * np.sqrt(x ** 2 + y ** 2) / 2
-        cos_term = (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * x)) / 2
+        sum_sq_term = -0.2 * np.sqrt((x ** 2 + y ** 2) / 2)
+        cos_term = (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * y)) / 2
         z = -20 * np.exp(sum_sq_term) - np.exp(cos_term) + 20 + np.e
 
         surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
@@ -234,6 +228,6 @@ class Ackley(Function):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*np.array([0., 0.]), 'r*', markersize=10)
+        contour_axes.plot(*np.array([0, 0]), 'r*', markersize=10)
 
         return surface_plot, surface_axes, contour_plot, contour_axes

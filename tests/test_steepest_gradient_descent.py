@@ -42,7 +42,7 @@ def test_Rosenbrock():
 
     # TODO fixed
     x, status = SDG(Rosenbrock(), x0, max_f_eval=10000)
-    assert np.allclose(x, [[1.], [1.]])
+    assert np.allclose(x, [[1], [1]])
     assert status is 'optimal'
 
 
@@ -50,7 +50,7 @@ def test_Ackley():
     x0 = [[-1], [1]]
 
     x, status = SDG(Ackley(), x0)
-    assert np.allclose(x, [[-0.96847766], [0.96847766]])
+    assert np.allclose(x, [[0], [0]])
     assert status is 'optimal'
 
 

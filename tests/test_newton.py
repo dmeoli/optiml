@@ -25,7 +25,7 @@ def test_Rosenbrock():
     x0 = [[-1], [1]]
 
     x, status = NWTN(Rosenbrock(), x0)
-    assert np.allclose(x, [[1.], [1.]])
+    assert np.allclose(x, [[1], [1]])
     assert status is 'optimal'
 
 
@@ -33,7 +33,7 @@ def test_Ackley():
     x0 = [[-1], [1]]
 
     x, status = NWTN(Ackley(), x0)
-    assert np.allclose(x, [[-0.96847766], [0.96847766]])
+    assert np.allclose(x, [[0], [0]])
     assert status is 'optimal'
 
 

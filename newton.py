@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from functions import Rosenbrock
+from functions import Rosenbrock, Ackley
 from line_search import armijo_wolfe_line_search, backtracking_line_search
 
 
@@ -268,4 +268,4 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
 
 
 if __name__ == "__main__":
-    print(NWTN(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))
+    print(NWTN(Ackley(), [[-1], [1]], verbose=True, plot=True))

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from functions import Rosenbrock, gen_quad_1
+from functions import Rosenbrock, gen_quad_1, Ackley
 from line_search import armijo_wolfe_line_search, backtracking_line_search
 
 
@@ -378,4 +378,4 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
 if __name__ == "__main__":
     print(SDQ(gen_quad_1, [[-1], [1]], verbose=True, plot=True))
     print()
-    print(SDG(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))
+    print(SDG(Ackley(), [[-1], [1]], verbose=True, plot=True))
