@@ -71,6 +71,9 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False)
     if verbose:
         print()
 
+    if plot and n == 2:
+        surface_plot, contour_plot, contour_plot, contour_axes = f.plot()
+
     i = 1
     while True:
         # compute function value and gradient
@@ -118,7 +121,8 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False)
 
         # plot the trajectory
         if plot and n == 2:
-            print(end='')
+            p_xy = np.hstack((x, x + a * -g))
+            contour_axes.plot(p_xy[0], p_xy[1], color='k')
 
         # <\nabla f(x_i), \nabla f(x_i+1)> = 0
         # assert np.isclose(f.jacobian(x).T.dot(f.jacobian(x + a * -d)), 0)
@@ -372,6 +376,6 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
 
 
 if __name__ == "__main__":
-    # print(SDG(gen_quad_1, [[-1], [1]], verbose=True, plot=True))
+    print(SDQ(gen_quad_1, [[-1], [1]], verbose=True, plot=True))
     print()
-    print(SDG(Rosenbrock(), [[-1], [1]], max_f_eval=1000, verbose=True, plot=True))
+    print(SDG(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))
