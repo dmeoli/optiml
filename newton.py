@@ -8,11 +8,7 @@ from line_search import armijo_wolfe_line_search, backtracking_line_search
 def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
          sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
     # Apply a classical Newton's method for the minimization of the provided
-    # function f, which must have the following interface:
-    #
-    #   [ v , g ] = f( x )
-    #
-    # Input:
+    # function f.
     #
     # - x is either a [ n x 1 ] real (column) vector denoting the input of
     #   f(), or [] (empty).
@@ -169,7 +165,6 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
     last_x = np.zeros((n, 1))  # last point visited in the line search
     last_g = np.zeros((n, 1))  # gradient of last_x
     last_h = np.zeros((n, n))  # Hessian of last_x
-    d = np.zeros((n, 1))  # Newton's direction
     f_eval = 1  # f() evaluations count ("common" with LSs)
 
     # initializations
@@ -228,9 +223,9 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
             if verbose:
                 print('\t{:1.4e}'.format(0), end='')
 
-        d = -np.linalg.solve(h, g)
+        d = -np.linalg.inv(h).dot(g)  # or np.linalg.solve(h, g)
 
-        phi_p0 = g.T.dot(d)
+        phi_p0 = g.T.dot(d).item()
 
         # compute step size: in Newton's method, the default initial step size is 1
         if 0 < m2 < 1:
@@ -242,7 +237,7 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
 
         # output statistics
         if verbose:
-            print('\t{:1.4e}'.format(a.item() if isinstance(a, np.ndarray) else a))
+            print('\t{:1.4e}'.format(a))
 
         if a <= min_a:
             status = 'error'

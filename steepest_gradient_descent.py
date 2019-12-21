@@ -209,8 +209,7 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
     #   start, otherwise it is the gradient of f() at x (or a subgradient if
     #   f() is not differentiable at x, which it should not be if you are
     #   applying the gradient method to it).
-    :return status: (string): a string describing the status of the algorithm
-                    at termination:
+    :return status: (string): a string describing the status of the algorithm at termination:
                     - 'optimal': the algorithm terminated having proven that x is a(n
                     approximately) optimal solution, i.e., the norm of the gradient at x
                     is less than the required threshold;
@@ -316,7 +315,7 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
             prev_v = v
         else:
             if verbose:
-                print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng))
+                print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng), end='')
 
         # stopping criteria
         if ng <= eps * ng0:
@@ -327,16 +326,18 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
             status = 'stopped'
             break
 
+        d = -g
+
         phi_p0 = -ng * ng
 
         # compute step size
         if 0 < m2 < 1:
             a, v, last_x, last_g, _, f_eval = \
-                armijo_wolfe_line_search(f, -g, x, last_x, last_g, None, f_eval, max_f_eval,
+                armijo_wolfe_line_search(f, d, x, last_x, last_g, None, f_eval, max_f_eval,
                                          min_a, sfgrd, v, phi_p0, a_start, m1, m2, tau, verbose)
         else:
             a, v, last_x, last_g, _, f_eval = \
-                backtracking_line_search(f, -g, x, last_x, last_g, None, f_eval, max_f_eval,
+                backtracking_line_search(f, d, x, last_x, last_g, None, f_eval, max_f_eval,
                                          min_a, v, phi_p0, a_start, m1, tau, verbose)
 
         # output statistics
@@ -371,6 +372,6 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
 
 
 if __name__ == "__main__":
-    print(SDQ(gen_quad_1, [[-1], [1]], gen_quad_1.function([]), verbose=True, plot=True))
+    # print(SDG(gen_quad_1, [[-1], [1]], verbose=True, plot=True))
     print()
-    print(SDG(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))
+    print(SDG(Rosenbrock(), [[-1], [1]], max_f_eval=1000, verbose=True, plot=True))
