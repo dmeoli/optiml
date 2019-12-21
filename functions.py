@@ -191,8 +191,8 @@ class Ackley(Function):
         """
         x = np.array(x)
         sum_sq_term = -0.2 * np.sqrt(np.sum(x ** 2) / len(x))
-        sum_cos_term = np.sum(np.cos(2 * np.pi * x)) / len(x)
-        return -20 * np.exp(sum_sq_term) - np.exp(sum_cos_term) + 20 + np.e
+        cos_term = (np.sum(np.cos(2.0 * np.pi * x))) / len(x)
+        return -20 * np.exp(sum_sq_term) - np.exp(cos_term) + np.e + 20
 
     def jacobian(self, x):
         """
@@ -210,7 +210,7 @@ class Ackley(Function):
         """
         return self.ackley_hessian(np.array(x, dtype=float)).reshape((x.size, x.size))
 
-    def plot(self, x_min=-4, x_max=4, y_min=-4, y_max=4):
+    def plot(self, x_min=-5, x_max=5, y_min=-5, y_max=5):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
         # 3D surface plot
@@ -218,9 +218,9 @@ class Ackley(Function):
         surface_axes = Axes3D(surface_plot)
 
         # Ackley function
-        sum_sq_term = -0.2 * np.sqrt((x ** 2 + y ** 2) / 2)
-        cos_term = (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * y)) / 2
-        z = -20 * np.exp(sum_sq_term) - np.exp(cos_term) + 20 + np.e
+        sum_sq_term = -0.2 * np.sqrt((x ** 2 + y ** 2) * 0.5)
+        cos_term = (np.cos(2.0 * np.pi * x) + np.cos(2 * np.pi * y)) * 0.5
+        z = -20 * np.exp(sum_sq_term) - np.exp(cos_term) + np.e + 20
 
         surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
 
