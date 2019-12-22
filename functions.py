@@ -7,14 +7,28 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 class Function:
+    def __init__(self):
+        self._jacobian = jacobian(self.function)
+        self._hessian = hessian(self.function)
+
     def function(self, x):
         return NotImplementedError
 
     def jacobian(self, x):
-        return NotImplementedError
+        """
+        The Jacobian (i.e. gradient) of the function.
+        :param x: 1-D array of points at which the Jacobian is to be computed.
+        :return:  the Jacobian of the function at x.
+        """
+        return self._jacobian(np.array(x, dtype=float))
 
     def hessian(self, x):
-        return NotImplementedError
+        """
+        The Hessian matrix of the function.
+        :param x: 1-D array of points at which the Hessian is to be computed.
+        :return:  the Hessian matrix of the function at x.
+        """
+        return self._hessian(np.array(x, dtype=float)).reshape((x.size, x.size))
 
     def plot(self, x_min, x_max, y_min, y_max):
         return NotImplementedError
@@ -30,7 +44,6 @@ class GenericQuadratic(Function):
                            positive semidefinite, f(x) will be unbounded below.
         :param q: ([n x 1] real column vector): the linear part of f.
         """
-
         Q = np.array(Q)
         q = np.array(q)
 
@@ -60,23 +73,23 @@ class GenericQuadratic(Function):
 
     def function(self, x):
         """
-        A general quadratic function f(x) = 1/2 x^T Q x + q^T x.
+        A general quadratic function f(x) = 1/2 x^T Q x - q^T x.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
         :return:  the value of a general quadratic function if x, the optimal solution of a
                   linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
         """
         x = np.array(x)
-        return (0.5 * x.T.dot(self.Q).dot(x) + self.q.T.dot(x)).item() \
-            if x.size != 0 else self.function(np.linalg.inv(self.Q).dot(-self.q)) \
-            if min(np.linalg.eigvalsh(self.Q)) > 1e-14 else -np.inf  # np.linalg.solve(Q, -q)
+        return (0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x)).item() \
+            if x.size != 0 else self.function(np.linalg.inv(self.Q).dot(self.q)) \
+            if min(np.linalg.eigvalsh(self.Q)) > 1e-14 else -np.inf  # np.linalg.solve(Q, q)
 
     def jacobian(self, x):
         """
-        The Jacobian (i.e. gradient) of a general quadratic function J f(x) = Q x + q.
+        The Jacobian (i.e. gradient) of a general quadratic function J f(x) = Q x - q.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
         :return:  the Jacobian of a general quadratic function.
         """
-        return self.Q.dot(x) + self.q  # complexity O(n^2)
+        return self.Q.dot(x) - self.q  # complexity O(n^2)
 
     def hessian(self, x=None):
         """
@@ -86,7 +99,7 @@ class GenericQuadratic(Function):
         """
         return self.Q
 
-    def plot(self, x_min=-5, x_max=2, y_min=-5, y_max=2):
+    def plot(self, x_min=-3, x_max=1, y_min=-3, y_max=1):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
         # 3D surface plot
@@ -95,10 +108,10 @@ class GenericQuadratic(Function):
 
         # generic quadratic function
         #                      T                           T
-        # f(x, y) = 1/2 * | x |  * | a  b | * | x | + | d |  * | x |
+        # f(x, y) = 1/2 * | x |  * | a  b | * | x | - | d |  * | x |
         #                 | y |    | b  c |   | y |   | e |    | y |
         z = 0.5 * self.Q[0][0] * x ** 2 + self.Q[0][1] * x * y + \
-            0.5 * self.Q[1][1] * y ** 2 + self.q[0] * x + self.q[1] * y
+            0.5 * self.Q[1][1] * y ** 2 - self.q[0] * x - self.q[1] * y
 
         surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
 
@@ -106,7 +119,7 @@ class GenericQuadratic(Function):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*np.linalg.inv(self.Q).dot(-self.q), 'r*', markersize=10)  # np.linalg.solve(self.Q, -self.q)
+        contour_axes.plot(*np.linalg.inv(self.Q).dot(self.q), 'r*', markersize=10)  # np.linalg.solve(self.Q, self.q)
 
         return surface_plot, surface_axes, contour_plot, contour_axes
 
@@ -127,10 +140,6 @@ gen_quad_5 = GenericQuadratic([[101, -99], [-99, 101]], [[10], [5]])
 
 class Rosenbrock(Function):
 
-    def __init__(self):
-        self.rosenbrock_jacobian = jacobian(self.function)
-        self.rosenbrock_hessian = hessian(self.function)
-
     def function(self, x):
         """
         The Rosenbrock function.
@@ -139,22 +148,6 @@ class Rosenbrock(Function):
         """
         x = np.array(x)
         return np.sum(100.0 * (x[1:] - x[:-1] ** 2.0) ** 2.0 + (1 - x[:-1]) ** 2.0) if x.size != 0 else 0
-
-    def jacobian(self, x):
-        """
-        The Jacobian (i.e. gradient) of the Rosenbrock function.
-        :param x: 1-D array of points at which the Jacobian is to be computed.
-        :return:  the Jacobian of the Rosenbrock function at x.
-        """
-        return self.rosenbrock_jacobian(np.array(x, dtype=float))
-
-    def hessian(self, x):
-        """
-        The Hessian matrix of the Rosenbrock function.
-        :param x: 1-D array of points at which the Hessian is to be computed.
-        :return:  the Hessian matrix of the Rosenbrock function at x.
-        """
-        return self.rosenbrock_hessian(np.array(x, dtype=float)).reshape((x.size, x.size))
 
     def plot(self, x_min=-2, x_max=2, y_min=-1, y_max=3):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
@@ -179,10 +172,6 @@ class Rosenbrock(Function):
 
 class Ackley(Function):
 
-    def __init__(self):
-        self.ackley_jacobian = jacobian(self.function)
-        self.ackley_hessian = hessian(self.function)
-
     def function(self, x):
         """
         The Ackley function.
@@ -192,22 +181,6 @@ class Ackley(Function):
         x = np.array(x)
         return -20 * np.exp(-0.2 * np.sqrt(np.sum(x ** 2) / x.size)) \
                - np.exp((np.sum(np.cos(2.0 * np.pi * x))) / x.size) + np.e + 20 if x.size != 0 else 0
-
-    def jacobian(self, x):
-        """
-        The Jacobian (i.e. gradient) of the Ackley function.
-        :param x: 1-D array of points at which the Jacobian is to be computed.
-        :return:  the Jacobian of the Ackley function at x.
-        """
-        return self.ackley_jacobian(np.array(x, dtype=float))
-
-    def hessian(self, x):
-        """
-        The Hessian matrix of the Ackley function.
-        :param x: 1-D array of points at which the Hessian is to be computed.
-        :return:  the Hessian matrix of the Ackley function at x.
-        """
-        return self.ackley_hessian(np.array(x, dtype=float)).reshape((x.size, x.size))
 
     def plot(self, x_min=-5, x_max=5, y_min=-5, y_max=5):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))

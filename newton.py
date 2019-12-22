@@ -252,7 +252,7 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
             p_xy = np.hstack((x, last_x))
             contour_axes.plot(p_xy[0], p_xy[1], color='k')
 
-        # compute new point
+        # update new point
         x = last_x
 
         # update gradient and Hessian

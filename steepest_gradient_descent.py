@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from functions import Rosenbrock, gen_quad_1, Ackley
+from functions import Rosenbrock, gen_quad_1, Ackley, gen_quad_2
 from line_search import armijo_wolfe_line_search, backtracking_line_search
 
 
@@ -9,7 +9,7 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False)
     """
     Apply the Steepest Descent algorithm with exact line search to the quadratic function.
 
-        f(x) = 1/2 x^T Q x + q x
+        f(x) = 1/2 x^T Q x - q x
 
     :param Q:        ([n x n] real symmetric matrix, not necessarily positive
                      semidefinite): the Hessian (quadratic part) of f.
@@ -117,18 +117,22 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False)
             break
 
         # compute step size
-        a = ng ** 2 / den
+        a = g.T.dot(g) / den  # or ng ** 2 / den
+
+        # assert np.isclose(g.T.dot(g), ng ** 2)
+
+        # compute new point
+        new_x = x - a * g
 
         # plot the trajectory
         if plot and n == 2:
-            p_xy = np.hstack((x, x + a * -g))
+            p_xy = np.hstack((x, new_x))
             contour_axes.plot(p_xy[0], p_xy[1], color='k')
 
         # <\nabla f(x_i), \nabla f(x_i+1)> = 0
-        # assert np.isclose(f.jacobian(x).T.dot(f.jacobian(x + a * -d)), 0)
+        # assert np.isclose(f.jacobian(x).T.dot(f.jacobian(x - a * g)), 0)
 
-        # compute new point
-        x = x + a * -g
+        x = new_x
         i += 1
 
     if verbose:
@@ -361,7 +365,7 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
             p_xy = np.hstack((x, last_x))
             contour_axes.plot(p_xy[0], p_xy[1], color='k')
 
-        # compute new point
+        # update new point
         x = last_x
 
         # update gradient
@@ -376,6 +380,6 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
 
 
 if __name__ == "__main__":
-    print(SDQ(gen_quad_1, [[-1], [1]], verbose=True, plot=True))
+    print(SDQ(gen_quad_2, [[-1], [1]], verbose=True, plot=True))
     print()
     print(SDG(Ackley(), [[-1], [1]], verbose=True, plot=True))
