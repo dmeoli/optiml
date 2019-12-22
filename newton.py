@@ -268,4 +268,4 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
 
 
 if __name__ == "__main__":
-    print(NWTN(Ackley(), [[-1], [1]], verbose=True, plot=True))
+    print(NWTN(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))

@@ -99,7 +99,7 @@ class GenericQuadratic(Function):
         """
         return self.Q
 
-    def plot(self, x_min=-3, x_max=1, y_min=-3, y_max=1):
+    def plot(self, x_min=-5, x_max=1, y_min=-5, y_max=1):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
         # 3D surface plot
@@ -147,7 +147,7 @@ class Rosenbrock(Function):
         :return:  the value of the Rosenbrock function at x.
         """
         x = np.array(x)
-        return np.sum(100.0 * (x[1:] - x[:-1] ** 2.0) ** 2.0 + (1 - x[:-1]) ** 2.0) if x.size != 0 else 0
+        return np.sum(100.0 * (x[1:] - x[:-1] ** 2) ** 2.0 + (1 - x[:-1]) ** 2) if x.size != 0 else 0
 
     def plot(self, x_min=-2, x_max=2, y_min=-1, y_max=3):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))

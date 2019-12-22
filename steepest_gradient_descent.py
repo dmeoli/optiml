@@ -380,6 +380,6 @@ def SDG(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
 
 
 if __name__ == "__main__":
-    print(SDQ(gen_quad_2, [[-1], [1]], verbose=True, plot=True))
+    print(SDQ(gen_quad_2, [[-1], [1]], f_star=gen_quad_2.function([]), verbose=True, plot=True))
     print()
-    print(SDG(Ackley(), [[-1], [1]], verbose=True, plot=True))
+    print(SDG(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))
