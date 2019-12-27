@@ -10,17 +10,17 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
     # Apply a classical Newton's method for the minimization of the provided
     # function f.
     #
-    # - x is either a [ n x 1 ] real (column) vector denoting the input of
+    # - x is either a [n x 1] real (column) vector denoting the input of
     #   f(), or [] (empty).
     #
     # Output:
     #
     # - v (real, scalar): if x == [] this is the best known lower bound on
-    #   the unconstrained global optimum of f(); it can be -np.inf if either f()
+    #   the unconstrained global optimum of f(); it can be -inf if either f()
     #   is not bounded below, or no such information is available. If x ~= []
     #   then v = f(x).
     #
-    # - g (real, [ n x 1 ] real vector): this also depends on x. if x == []
+    # - g (real, [n x 1] real vector): this also depends on x. if x == []
     #   this is the standard starting point from which the algorithm should
     #   start, otherwise it is the gradient of f() at x (or a subgradient if
     #   f() is not differentiable at x, which it should not be if you are
@@ -28,7 +28,7 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
     #
     # The other [optional] input parameters are:
     #
-    # - x (either [ n x 1 ] real vector or [], default []): starting point.
+    # - x (either [n x 1] real vector or [], default []): starting point.
     #   If x == [], the default starting point provided by f() is used.
     #
     # - eps (real scalar, optional, default value 1e-6): the accuracy in the
@@ -68,15 +68,15 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
     #   large w.r.t. the one at the other (which leads to choosing a point
     #   extremely near to the other endpoint), a *safeguarded* version of
     #   interpolation is used whereby the new point is chosen in the interval
-    #   [ as * (1 + sfgrd) , am * (1 - sfgrd) ], being [ as , am ] the
+    #   [as * (1 + sfgrd) , am * (1 - sfgrd)], being [as , am] the
     #   current interval, whatever quadratic interpolation says. If you
     #   experience problems with the line search taking too many iterations to
     #   converge at "nasty" points, try to increase this
     #
-    # - m_inf (real scalar, optional, default value -np.inf): if the algorithm
+    # - m_inf (real scalar, optional, default value -inf): if the algorithm
     #   determines a value for f() <= m_inf this is taken as an indication that
     #   the problem is unbounded below and computation is stopped
-    #   (a "finite -np.inf").
+    #   (a "finite -inf").
     #
     # - mina (real scalar, optional, default value 1e-16): if the algorithm
     #   determines a step size value <= mina, this is taken as an indication
@@ -87,7 +87,7 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
     #
     # Output:
     #
-    # - x ([ n x 1 ] real column vector): the best solution found so far.
+    # - x ([n x 1] real column vector): the best solution found so far.
     #
     # - status (string): a string describing the status of the algorithm at
     #   termination
@@ -98,7 +98,7 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
     #
     #   = 'unbounded': the algorithm has determined an extremely large negative
     #     value for f() that is taken as an indication that the problem is
-    #     unbounded below (a "finite -np.inf", see m_inf above)
+    #     unbounded below (a "finite -inf", see m_inf above)
     #
     #   = 'stopped': the algorithm terminated having exhausted the maximum
     #     number of iterations: x is the bast solution found so far, but not
@@ -178,7 +178,7 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
     if verbose:
         print('\tls\tit\ta*')
 
-    v, g, h = f.function(x), f.jacobian(x), f.hessian(x)
+    v, g, H = f.function(x), f.jacobian(x), f.hessian(x)
     ng = np.linalg.norm(g)
     if eps < 0:
         ng0 = -ng  # norm of first subgradient
@@ -214,16 +214,16 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
             break
 
         # compute Newton's direction
-        lambda_n = min(np.linalg.eigvalsh(h))  # smallest eigenvalue
+        lambda_n = min(np.linalg.eigvalsh(H))  # smallest eigenvalue
         if lambda_n < delta:
             if verbose:
                 print('\t{:1.4e}'.format(delta - lambda_n), end='')
-            h = h + (delta - lambda_n) * np.eye(n)
+            H = H + (delta - lambda_n) * np.eye(n)
         else:
             if verbose:
                 print('\t{:1.4e}'.format(0), end='')
 
-        d = -np.linalg.inv(h).dot(g)  # or np.linalg.solve(h, g)
+        d = -np.linalg.inv(H).dot(g)  # or np.linalg.solve(H, g)
 
         phi_p0 = g.T.dot(d).item()
 
@@ -257,7 +257,7 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
 
         # update gradient and Hessian
         g = last_g
-        h = last_h
+        H = last_h
         ng = np.linalg.norm(g)
 
     if verbose:

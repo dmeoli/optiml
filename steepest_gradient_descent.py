@@ -9,7 +9,7 @@ def SDQ(f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False)
     """
     Apply the Steepest Descent algorithm with exact line search to the quadratic function.
 
-        f(x) = 1/2 x^T Q x - q x
+        f(x) = 1/2 x^T Q x - q^T x
 
     :param Q:        ([n x n] real symmetric matrix, not necessarily positive
                      semidefinite): the Hessian (quadratic part) of f.
