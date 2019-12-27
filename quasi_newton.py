@@ -140,9 +140,6 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
     if not np.isscalar(delta):
         return ValueError('delta is not a real scalar')
 
-    if delta < 0:
-        return ValueError('delta must be > 0')
-
     if not np.isscalar(tau):
         return ValueError('tau is not a real scalar')
 
@@ -193,9 +190,9 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
         B = np.zeros(n, n)
         for i in range(n):
             xp = x
-            xp[i].lvalue = xp[i] + small_step
-            f(xp)
-            B[i, :].lvalue = (gp - g) / eldiv / small_step
+            xp[i] += small_step
+            gp = f.jacobian(xp)
+            B[i, :] = (gp - g) / small_step
         B = (B + B.T) / 2  # ensure it is symmetric
         lambda_n = min(np.linalg.eigvalsh(B))  # smallest eigenvalue
         if lambda_n < 1e-6:
