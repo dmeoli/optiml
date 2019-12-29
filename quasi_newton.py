@@ -5,7 +5,7 @@ from functions import Rosenbrock, Ackley
 from line_search import armijo_wolfe_line_search, backtracking_line_search
 
 
-def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
+def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
          sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
     # Apply a Quasi-Newton approach, in particular using the celebrated
     # Broyden-Fletcher-Goldfarb-Shanno (BFGS) formula, for the minimization of
@@ -187,12 +187,12 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
         # initial approximation of inverse of Hessian computed by finite
         # differences of gradient
         small_step = max([-delta, 1e-8])
-        B = np.zeros(n, n)
+        B = np.zeros((n, n))
         for i in range(n):
             xp = x
-            xp[i] += small_step
+            xp[i] = xp[i] + small_step
             gp = f.jacobian(xp)
-            B[i, :] = (gp - g) / small_step
+            B[i] = ((gp - g) / small_step).T
         B = (B + B.T) / 2  # ensure it is symmetric
         lambda_n = min(np.linalg.eigvalsh(B))  # smallest eigenvalue
         if lambda_n < 1e-6:
