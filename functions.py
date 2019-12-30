@@ -73,23 +73,23 @@ class GenericQuadratic(Function):
 
     def function(self, x):
         """
-        A general quadratic function f(x) = 1/2 x^T Q x - q^T x.
+        A general quadratic function f(x) = 1/2 x^T Q x + q^T x.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
         :return:  the value of a general quadratic function if x, the optimal solution of a
-                  linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
+                  linear system Qx = -q (=> x = Q^-1 -q) which has a complexity of O(n^3) otherwise.
         """
         x = np.array(x)
-        return (0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x)).item() \
-            if x.size != 0 else self.function(np.linalg.inv(self.Q).dot(self.q)) \
-            if min(np.linalg.eigvalsh(self.Q)) > 1e-14 else -np.inf  # np.linalg.solve(Q, q)
+        return (0.5 * x.T.dot(self.Q).dot(x) + self.q.T.dot(x)).item() \
+            if x.size != 0 else self.function(np.linalg.inv(self.Q).dot(-self.q)) \
+            if min(np.linalg.eigvalsh(self.Q)) > 1e-14 else -np.inf  # np.linalg.solve(Q, -q)
 
     def jacobian(self, x):
         """
-        The Jacobian (i.e. gradient) of a general quadratic function J f(x) = Q x - q.
+        The Jacobian (i.e. gradient) of a general quadratic function J f(x) = Q x + q.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
         :return:  the Jacobian of a general quadratic function.
         """
-        return self.Q.dot(x) - self.q  # complexity O(n^2)
+        return self.Q.dot(x) + self.q  # complexity O(n^2)
 
     def hessian(self, x=None):
         """
@@ -99,7 +99,7 @@ class GenericQuadratic(Function):
         """
         return self.Q
 
-    def plot(self, x_min=-5, x_max=1, y_min=-5, y_max=1):
+    def plot(self, x_min=-5, x_max=2, y_min=-5, y_max=2):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
         # 3D surface plot
@@ -108,10 +108,10 @@ class GenericQuadratic(Function):
 
         # generic quadratic function
         #                      T                           T
-        # f(x, y) = 1/2 * | x |  * | a  b | * | x | - | d |  * | x |
+        # f(x, y) = 1/2 * | x |  * | a  b | * | x | + | d |  * | x |
         #                 | y |    | b  c |   | y |   | e |    | y |
         z = 0.5 * self.Q[0][0] * x ** 2 + self.Q[0][1] * x * y + \
-            0.5 * self.Q[1][1] * y ** 2 - self.q[0] * x - self.q[1] * y
+            0.5 * self.Q[1][1] * y ** 2 + self.q[0] * x + self.q[1] * y
 
         surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
 
@@ -119,8 +119,7 @@ class GenericQuadratic(Function):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*np.linalg.inv(self.Q).dot(self.q), 'r*', markersize=10)  # np.linalg.solve(self.Q, self.q)
-
+        contour_axes.plot(*np.linalg.inv(self.Q).dot(-self.q), 'r*', markersize=10)  # np.linalg.solve(self.Q, -self.q)
         return surface_plot, surface_axes, contour_plot, contour_axes
 
 
@@ -192,6 +191,32 @@ class Ackley(Function):
         # Ackley function
         z = -20 * np.exp(-0.2 * np.sqrt((x ** 2 + y ** 2) * 0.5)) \
             - np.exp((np.cos(2.0 * np.pi * x) + np.cos(2 * np.pi * y)) * 0.5) + np.e + 20
+
+        surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
+
+        # 2D contour
+        contour_plot, contour_axes = plt.subplots()
+
+        contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
+        contour_axes.plot(*np.array([0, 0]), 'r*', markersize=10)
+
+        return surface_plot, surface_axes, contour_plot, contour_axes
+
+
+class Sphere(Function):
+
+    def function(self, x):
+        return np.sum(np.power(np.array(x), 2))
+
+    def plot(self, x_min=-2, x_max=2, y_min=-2, y_max=2):
+        x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
+
+        # 3D surface plot
+        surface_plot = plt.figure()
+        surface_axes = Axes3D(surface_plot)
+
+        # Ackley function
+        z = x ** 2 + y ** 2
 
         surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
 
