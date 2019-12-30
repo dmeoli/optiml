@@ -219,9 +219,8 @@ def NCG(f, x, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_sta
             break
 
         # compute search direction
-        # formulae could be streamlined somewhat and some np.linalg.norms could be saved
-        # from previous iterations
-
+        # formulae could be streamlined somewhat and some
+        # norms could be saved from previous iterations
         if i == 1:  # first iteration is off-line, standard gradient
             d = -g
             if verbose:
@@ -236,12 +235,12 @@ def NCG(f, x, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_sta
                 if wf == 0:  # Fletcher-Reeves
                     beta = (ng / np.linalg.norm(past_g)) ** 2
                 elif wf == 1:  # Polak-Ribiere
-                    beta = (g.T * (g - past_g)) / np.linalg.norm(past_g) ** 2
-                    beta = max([beta, 0])
+                    beta = (g.T.dot(g - past_g) / np.linalg.norm(past_g) ** 2).item()
+                    beta = max(beta, 0)
                 elif wf == 2:  # Hestenes-Stiefel
-                    beta = (g.T * (g - past_g)) / ((g - past_g).T * past_d)
+                    beta = (g.T.dot(g - past_g) / (g - past_g).T.dot(past_d)).item()
                 else:  # Dai-Yuan
-                    beta = ng ** 2 / ((g - past_g).T * past_d)
+                    beta = (ng ** 2 / (g - past_g).T.dot(past_d)).item()
                 if verbose:
                     print('\t{:1.4f}'.format(beta), end='')
 

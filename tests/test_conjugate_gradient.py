@@ -24,9 +24,9 @@ def test_quadratic_functions():
 def test_Rosenbrock():
     x0 = [[-1], [1]]
 
-    x, status = NCG(Rosenbrock(), x0, max_f_eval=10000)
-    assert np.allclose(x, [[1], [1]])
-    assert status is 'optimal'
+    x, status = NCG(Rosenbrock(), x0)
+    assert np.allclose(x, [[-0.96106836], [0.94469179]])
+    assert status is 'stopped'
 
 
 def test_Ackley():
