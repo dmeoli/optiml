@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from line_search import armijo_wolfe_line_search, backtracking_line_search
-from optimization_test_functions import Ackley
+from optimization_test_functions import Ackley, Rosenbrock
 
 
 def NCG(f, x, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
@@ -198,7 +198,7 @@ def NCG(f, x, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_sta
     else:
         ng0 = 1  # un-scaled stopping criterion
 
-    iter = 1  # iterations count (as distinguished from f() evals)
+    iter = 1  # iterations count (as distinguished from f() evaluations)
 
     if plot and n == 2:
         surface_plot, contour_plot, contour_plot, contour_axes = f.plot()
@@ -304,4 +304,4 @@ def NCG(f, x, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_sta
 
 
 if __name__ == "__main__":
-    print(NCG(Ackley(), [[-1], [1]], verbose=True, plot=True))
+    print(NCG(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))
