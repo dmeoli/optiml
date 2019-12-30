@@ -183,7 +183,6 @@ def NCG(f, x, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_sta
     f_eval = 1  # f() evaluations count ("common" with LSs)
 
     # initializations
-    __switch_0__ = wf
     if verbose:
         if f_star > -np.inf:
             print('f_eval\trel gap', end='')
@@ -198,12 +197,10 @@ def NCG(f, x, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_sta
     else:
         ng0 = 1  # un-scaled stopping criterion
 
-    iter = 1  # iterations count (as distinguished from f() evaluations)
-
     if plot and n == 2:
         surface_plot, contour_plot, contour_plot, contour_axes = f.plot()
 
-    i = 1
+    i = 1  # iterations count (as distinguished from f() evaluations)
     while True:
         if verbose:
             # output statistics
@@ -225,26 +222,23 @@ def NCG(f, x, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_sta
         # formulae could be streamlined somewhat and some np.linalg.norms could be saved
         # from previous iterations
 
-        if iter == 1:  # first iteration is off-line, standard gradient
+        if i == 1:  # first iteration is off-line, standard gradient
             d = -g
             if verbose:
                 print('\t', end='')
-        else:  # np.linalg.normal iterations, use appropriate NCG formula
-            if r_start > 0 and mod(iter, n * r_start) == 0:
+        else:  # normal iterations, use appropriate NCG formula
+            if r_start > 0 and i % n * r_start == 0:
                 # ... unless a restart is being performed
                 beta = 0
                 if verbose:
                     print('\t(res)', end='')
             else:
-                __switch_0__ = wf
-                if 0:
-                    pass
-                elif __switch_0__ == 0:  # Fletcher-Reeves
+                if wf == 0:  # Fletcher-Reeves
                     beta = (ng / np.linalg.norm(past_g)) ** 2
-                elif __switch_0__ == 1:  # Polak-Ribiere
+                elif wf == 1:  # Polak-Ribiere
                     beta = (g.T * (g - past_g)) / np.linalg.norm(past_g) ** 2
-                    beta = max(mcat([beta, 0]))
-                elif __switch_0__ == 2:  # Hestenes-Stiefel
+                    beta = max([beta, 0])
+                elif wf == 2:  # Hestenes-Stiefel
                     beta = (g.T * (g - past_g)) / ((g - past_g).T * past_d)
                 else:  # Dai-Yuan
                     beta = ng ** 2 / ((g - past_g).T * past_d)
