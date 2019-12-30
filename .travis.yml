@@ -12,7 +12,7 @@ install:
   - pip install numpy
 
 script:
-  - py.test --cov=./
+  - py.test
 
 notifications:
   email: false
