@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from functions import Rosenbrock, gen_quad_1, Ackley, gen_quad_2
+from optimization_test_functions import Rosenbrock, gen_quad_1, Ackley, gen_quad_2
 from line_search import armijo_wolfe_line_search, backtracking_line_search
 
 

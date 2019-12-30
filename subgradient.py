@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from functions import Rosenbrock, gen_quad_1, Ackley
+from optimization_test_functions import Ackley
 
 
 def SGM(f, x, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):

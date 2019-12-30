@@ -5,11 +5,12 @@ from line_search import armijo_wolfe_line_search, backtracking_line_search
 from optimization_test_functions import Ackley
 
 
-def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
-         sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-    # Apply a Quasi-Newton approach, in particular using the celebrated
-    # Broyden-Fletcher-Goldfarb-Shanno (BFGS) formula, for the minimization of
+def NCG(f, x, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
+        sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+    # Apply a Nonlinear Conjugated Gradient algorithm for the minimization of
     # the provided function f.
+    #
+    # Input:
     #
     # - x is either a [n x 1] real (column) vector denoting the input of
     #   f(), or [] (empty).
@@ -32,10 +33,15 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
     # - x (either [n x 1] real vector or [], default []): starting point.
     #   If x == [], the default starting point provided by f() is used.
     #
-    # - delta (real scalar, optional, default value 1): the initial
-    #   approximation of the Hessian is taken as delta * I if delta > 0;
-    #   otherwise, the initial Hessian is approximated by finite differences
-    #   with - delta as the step, and inverted just the once.
+    # - wf (integer scalar, optional, default value 0): which of the Nonlinear
+    #   Conjugated Gradient formulae to use. Possible values are:
+    #   = 0: Fletcher-Reeves
+    #   = 1: Polak-Ribiere
+    #   = 2: Hestenes-Stiefel
+    #   = 3: Dai-Yuan
+    #
+    # - r_start (integer scalar, optional, default value 0): if > 0, restarts
+    #   (setting beta = 0) are performed every n * r_start iterations
     #
     # - eps (real scalar, optional, default value 1e-6): the accuracy in the
     #   stopping criterion: the algorithm is stopped when the norm of the
@@ -56,6 +62,9 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
     #   parameter of the Armijo-Wolfe-type line search (strong curvature
     #   condition). It should to be in (0,1); if not, it is taken to mean that
     #   the simpler Backtracking line search should be used instead
+    #
+    # - a_start (real scalar, optional, default value 1): starting value of
+    #   alpha in the line search (> 0)
     #
     # - tau (real scalar, optional, default value 0.9): scaling parameter for
     #   the line search. In the Armijo-Wolfe line search it is used in the
@@ -122,6 +131,12 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
 
     n = x.shape[0]
 
+    if wf < 0 or wf > 3:
+        return ValueError('unknown NCG formula {:d}'.format(wf))
+
+    if not np.isscalar(r_start):
+        return ValueError('r_start is not an integer scalar')
+
     if not np.isreal(eps) or not np.isscalar(eps):
         return ValueError('eps is not a real scalar')
 
@@ -137,8 +152,10 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
     if not np.isscalar(m1):
         return ValueError('m2 is not a real scalar')
 
-    if not np.isscalar(delta):
-        return ValueError('delta is not a real scalar')
+    if not np.isscalar(a_start):
+        return ValueError('a_start is not a real scalar')
+    if a_start < 0:
+        return ValueError('a_start must be > 0')
 
     if not np.isscalar(tau):
         return ValueError('tau is not a real scalar')
@@ -166,46 +183,30 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
     f_eval = 1  # f() evaluations count ("common" with LSs)
 
     # initializations
+    __switch_0__ = wf
     if verbose:
         if f_star > -np.inf:
             print('f_eval\trel gap', end='')
         else:
             print('f_eval\tf(x)', end='')
-        print('\t\t|| g(x) ||\tls fev\ta*\t\t\trho')
+        print('\t\t|| g(x) ||\tbeta\tls f_eval\ta*')
 
     v, g = f.function(x), f.jacobian(x)
     ng = np.linalg.norm(g)
     if eps < 0:
-        ng0 = -ng  # norm of first subgradient
+        ng0 = -ng  # np.linalg.norm of first subgradient
     else:
         ng0 = 1  # un-scaled stopping criterion
 
-    if delta > 0:
-        # initial approximation of inverse of Hessian = scaled identity
-        B = delta * np.eye(n)
-    else:
-        # initial approximation of inverse of Hessian computed by finite
-        # differences of gradient
-        small_step = max([-delta, 1e-8])
-        B = np.zeros((n, n))
-        for i in range(n):
-            xp = x
-            xp[i] = xp[i] + small_step
-            gp = f.jacobian(xp)
-            B[i] = ((gp - g) / small_step).T
-        B = (B + B.T) / 2  # ensure it is symmetric
-        lambda_n = min(np.linalg.eigvalsh(B))  # smallest eigenvalue
-        if lambda_n < 1e-6:
-            B = B + (1e-6 - lambda_n) * np.eye(n)
-        B = np.linalg.inv(B)
+    iter = 1  # iterations count (as distinguished from f() evals)
 
     if plot and n == 2:
         surface_plot, contour_plot, contour_plot, contour_axes = f.plot()
 
+    i = 1
     while True:
-
-        # output statistics
         if verbose:
+            # output statistics
             if f_star > -np.inf:
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max([abs(f_star), 1]), ng), end='')
             else:
@@ -220,10 +221,45 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
             status = 'stopped'
             break
 
-        # compute approximation to Newton's direction
-        d = -B.dot(g)
+        # compute search direction
+        # formulae could be streamlined somewhat and some np.linalg.norms could be saved
+        # from previous iterations
 
-        # compute step size: as in Newton's method, the default initial step size is 1
+        if iter == 1:  # first iteration is off-line, standard gradient
+            d = -g
+            if verbose:
+                print('\t', end='')
+        else:  # np.linalg.normal iterations, use appropriate NCG formula
+            if r_start > 0 and mod(iter, n * r_start) == 0:
+                # ... unless a restart is being performed
+                beta = 0
+                if verbose:
+                    print('\t(res)', end='')
+            else:
+                __switch_0__ = wf
+                if 0:
+                    pass
+                elif __switch_0__ == 0:  # Fletcher-Reeves
+                    beta = (ng / np.linalg.norm(past_g)) ** 2
+                elif __switch_0__ == 1:  # Polak-Ribiere
+                    beta = (g.T * (g - past_g)) / np.linalg.norm(past_g) ** 2
+                    beta = max(mcat([beta, 0]))
+                elif __switch_0__ == 2:  # Hestenes-Stiefel
+                    beta = (g.T * (g - past_g)) / ((g - past_g).T * past_d)
+                else:  # Dai-Yuan
+                    beta = ng ** 2 / ((g - past_g).T * past_d)
+                if verbose:
+                    print('\t{:1.4f}'.format(beta), end='')
+
+            if beta != 0:
+                d = -g + beta * past_d
+            else:
+                d = -g
+
+        past_g = g  # previous gradient
+        past_d = d  # previous search direction
+
+        # compute step size
         phi_p0 = g.T.dot(d).item()
 
         if 0 < m2 < 1:
@@ -235,7 +271,7 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
 
         # output statistics
         if verbose:
-            print('\t{:1.4e}'.format(a), end='')
+            print('\t{:1.2e}'.format(a))
 
         if a <= min_a:
             status = 'error'
@@ -244,27 +280,6 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
         if v <= m_inf:
             status = 'unbounded'
             break
-
-        # update approximation of the Hessian using the
-        # Broyden-Fletcher-Goldfarb-Shanno formula
-
-        s = last_x - x  # s^i = x^{i + 1} - x^i
-        y = last_g - g  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
-
-        rho = y.T.dot(s).item()
-        if rho < 1e-16:
-            if verbose:
-                print('\nError: y^i s^i = {:1.4e}'.format(rho))
-            status = 'error'
-            break
-
-        rho = 1 / rho
-
-        if verbose:
-            print('\t{:1.4e}'.format(rho))
-
-        D = B.dot(y).dot(s.T)
-        B = B + rho * ((1 + rho * y.T.dot(B).dot(y)) * (s.dot(s.T)) - D - D.T)
 
         # plot the trajectory
         if plot and n == 2:
@@ -278,6 +293,9 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
         g = last_g
         ng = np.linalg.norm(g)
 
+        # iterate
+        i += 1
+
     if verbose:
         print()
     if plot and n == 2:
@@ -286,4 +304,4 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
 
 
 if __name__ == "__main__":
-    print(BFGS(Ackley(), [[-1], [1]], verbose=True, plot=True))
+    print(NCG(Ackley(), [[-1], [1]], verbose=True, plot=True))

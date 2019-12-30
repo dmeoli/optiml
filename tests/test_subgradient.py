@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from functions import *
+from optimization_test_functions import *
 from subgradient import SGM
 
 

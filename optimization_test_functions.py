@@ -206,6 +206,11 @@ class Ackley(Function):
 class Sphere(Function):
 
     def function(self, x):
+        """
+        The Sphere function.
+        :param x: 1-D array of points at which the Sphere function is to be computed.
+        :return:  the value of the Sphere function.
+        """
         return np.sum(np.power(np.array(x), 2))
 
     def plot(self, x_min=-2, x_max=2, y_min=-2, y_max=2):
@@ -215,7 +220,7 @@ class Sphere(Function):
         surface_plot = plt.figure()
         surface_axes = Axes3D(surface_plot)
 
-        # Ackley function
+        # Sphere function
         z = x ** 2 + y ** 2
 
         surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
