@@ -205,7 +205,7 @@ def NCG(f, x, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_sta
         if verbose:
             # output statistics
             if f_star > -np.inf:
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max([abs(f_star), 1]), ng), end='')
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
             else:
                 print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng), end='')
 

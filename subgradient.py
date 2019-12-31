@@ -162,9 +162,9 @@ def SGM(f, x, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000, m_inf=-np.inf, 
 
         if eps > 0:  # target-level step size
             if v <= f_ref - delta:  # found a "significantly" better point
-                delta = a_start * max([abs(v), 1])  # reset delta
+                delta = a_start * max(abs(v), 1)  # reset delta
             else:  # decrease delta
-                delta = max([delta * tau, eps * max([abs(min([v, f_ref])), 1])])
+                delta = max(delta * tau, eps * max(abs(min(v, f_ref)), 1))
 
         if v < f_ref:  # found a better f-value (however slightly better)
             f_ref = v  # update f_ref
@@ -173,12 +173,12 @@ def SGM(f, x, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000, m_inf=-np.inf, 
         # output statistics
         if verbose:
             if f_star > -np.inf:
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(i, (v - f_star) / max([abs(f_star), 1]), ng), end='')
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(i, (v - f_star) / max(abs(f_star), 1), ng), end='')
             else:
                 print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(i, v, ng), end='')
 
         # stopping criteria
-        if eps < 0 and f_ref - f_star <= -eps * max([abs(f_star), 1]):
+        if eps < 0 and f_ref - f_star <= -eps * max(abs(f_star), 1):
             x_ref = x
             status = 'optimal'
             break

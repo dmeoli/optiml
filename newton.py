@@ -192,7 +192,7 @@ def NWTN(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9,
         # output statistics
         if f_star > -np.inf:
             if verbose:
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max([abs(f_star), 1]), ng), end='')
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
             if prev_v < np.inf:
                 if verbose:
                     print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')

@@ -186,7 +186,7 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
     else:
         # initial approximation of inverse of Hessian computed by finite
         # differences of gradient
-        small_step = max([-delta, 1e-8])
+        small_step = max(-delta, 1e-8)
         B = np.zeros((n, n))
         for i in range(n):
             xp = x
@@ -207,7 +207,7 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
         # output statistics
         if verbose:
             if f_star > -np.inf:
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max([abs(f_star), 1]), ng), end='')
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
             else:
                 print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng), end='')
 

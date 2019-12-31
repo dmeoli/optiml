@@ -37,8 +37,8 @@ def armijo_wolfe_line_search(f, d, x, last_x, last_d, last_h, f_eval, max_f_eval
     phi_pm = phi_p0
     while f_eval <= max_f_eval and a_start - am > min_a and phi_ps > 1e-12:
         # compute the new value by safeguarded quadratic interpolation
-        a = max([am * (1 + sfgrd), min([a_start * (1 - sfgrd),
-                                        (am * phi_ps - a_start * phi_pm) / (phi_ps - phi_pm)])])
+        a = max(am * (1 + sfgrd), min(a_start * (1 - sfgrd),
+                                      (am * phi_ps - a_start * phi_pm) / (phi_ps - phi_pm)))
 
         # compute phi(a)
         phi_a, phi_p, last_x, last_d, last_h, f_eval = f2phi(f, d, x, last_h, f_eval, a)
