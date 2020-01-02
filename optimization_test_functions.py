@@ -85,7 +85,7 @@ class Quadratic(Function):
 
     def jacobian(self, x):
         """
-        The Jacobian (i.e. gradient) of a general quadratic function J f(x) = Q x + q.
+        The Jacobian (i.e. gradient) of a general quadratic function J f(x) = Q x - q.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
         :return:  the Jacobian of a general quadratic function.
         """
