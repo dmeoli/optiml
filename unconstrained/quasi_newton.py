@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from unconstrained.line_search import armijo_wolfe_line_search, backtracking_line_search
-from optimization_test_functions import Ackley
+from optimization_test_functions import Rosenbrock
 
 
 def BroydenFletcherGoldfarbShanno(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
@@ -286,4 +286,4 @@ def BroydenFletcherGoldfarbShanno(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0
 
 
 if __name__ == "__main__":
-    print(BroydenFletcherGoldfarbShanno(Ackley(), [[-1], [1]], verbose=True, plot=True))
+    print(BroydenFletcherGoldfarbShanno(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))

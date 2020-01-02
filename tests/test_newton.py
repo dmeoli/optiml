@@ -29,13 +29,5 @@ def test_Rosenbrock():
     assert status is 'optimal'
 
 
-def test_Ackley():
-    x0 = [[-1], [1]]
-
-    x, status = Newton(Ackley(), x0)
-    assert np.allclose(x, [[-0.96847766], [0.96847766]])
-    assert status is 'optimal'
-
-
 if __name__ == "__main__":
     pytest.main()

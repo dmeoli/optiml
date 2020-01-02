@@ -417,12 +417,12 @@ class StochasticGradientDescent(StochasticOptimizer):
     """
 
     def __init__(self, f, x, eps=1e-6, max_iter=1000, step_rate=0.1, momentum=0.0,
-                 momentum_type='standard', verbose=False, plot=False):
+                 momentum_type='none', verbose=False, plot=False):
         """Create a GradientDescent object.
 
         Parameters
         ----------
-        wrt : array_like
+        x : array_like
             Array that represents the solution. Will be operated upon in
             place.  ``fprime`` should accept this array as a first argument.
 
@@ -457,7 +457,7 @@ class StochasticGradientDescent(StochasticOptimizer):
         super().__init__(f, x, verbose, plot)
         self.step_rate = step_rate
         self.momentum = momentum
-        if momentum_type not in ('nesterov', 'standard'):
+        if momentum_type not in ('nesterov', 'standard', 'none'):
             raise ValueError('unknown momentum type')
         self.momentum_type = momentum_type
         self.step = 0
@@ -481,6 +481,10 @@ class StochasticGradientDescent(StochasticOptimizer):
                 self.x -= correction
 
                 step = big_jump + correction
+            elif self.momentum_type == 'none':
+                gradient = self.f.jacobian(self.x)
+                step = gradient * step_rate + step_m1
+                self.x -= step
 
             self.step = step
             self.n_iter += 1
@@ -493,4 +497,10 @@ if __name__ == "__main__":
     print()
     print(SteepestGradientDescent(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))
     print()
-    print(StochasticGradientDescent(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))
+    print(StochasticGradientDescent(Rosenbrock(), [[-1], [1]], step_rate=0.01, verbose=True, plot=True).minimize())
+    print()
+    print(StochasticGradientDescent(Rosenbrock(), [[-1], [1]], step_rate=0.01, momentum=0.9,
+                                    momentum_type='standard', verbose=True, plot=True).minimize())
+    print()
+    print(StochasticGradientDescent(Rosenbrock(), [[-1], [1]], step_rate=0.01, momentum=0.9,
+                                    momentum_type='nesterov', verbose=True, plot=True).minimize())

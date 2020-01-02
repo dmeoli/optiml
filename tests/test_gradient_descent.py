@@ -36,6 +36,60 @@ def test_quadratic_functions_SteepestGradientDescent():
     assert status is 'optimal'
 
 
+def test_quadratic_functions_StochasticGradientDescent():
+    x0 = [[-1], [1]]
+
+    x, status = StochasticGradientDescent(gen_quad_1, x0, step_rate=0.01).minimize()
+    assert np.allclose(x, [[2.1875], [1.5625]])
+    assert status is 'optimal'
+
+    x, status = StochasticGradientDescent(gen_quad_2, x0, step_rate=0.01).minimize()
+    assert np.allclose(x, [[4.0625], [3.4375]])
+    assert status is 'optimal'
+
+    x, status = StochasticGradientDescent(gen_quad_5, x0, step_rate=0.01).minimize()
+    assert np.allclose(x, [[3.7625], [3.7375]])
+    assert status is 'optimal'
+
+
+def test_quadratic_functions_StochasticGradientDescent_standard_momentum():
+    x0 = [[-1], [1]]
+
+    x, status = StochasticGradientDescent(gen_quad_1, x0, step_rate=0.01, momentum=0.9,
+                                          momentum_type='standard').minimize()
+    assert np.allclose(x, [[2.1875], [1.5625]])
+    assert status is 'optimal'
+
+    x, status = StochasticGradientDescent(gen_quad_2, x0, step_rate=0.01, momentum=0.9,
+                                          momentum_type='standard').minimize()
+    assert np.allclose(x, [[4.0625], [3.4375]])
+    assert status is 'optimal'
+
+    x, status = StochasticGradientDescent(gen_quad_5, x0, step_rate=0.01, momentum=0.9,
+                                          momentum_type='standard').minimize()
+    assert np.allclose(x, [[3.7625], [3.7375]])
+    assert status is 'optimal'
+
+
+def test_quadratic_functions_StochasticGradientDescent_Nesterov_momentum():
+    x0 = [[-1], [1]]
+
+    x, status = StochasticGradientDescent(gen_quad_1, x0, step_rate=0.01, momentum=0.9,
+                                          momentum_type='nesterov').minimize()
+    assert np.allclose(x, [[2.1875], [1.5625]])
+    assert status is 'optimal'
+
+    x, status = StochasticGradientDescent(gen_quad_2, x0, step_rate=0.01, momentum=0.9,
+                                          momentum_type='nesterov').minimize()
+    assert np.allclose(x, [[4.0625], [3.4375]])
+    assert status is 'optimal'
+
+    x, status = StochasticGradientDescent(gen_quad_5, x0, step_rate=0.01, momentum=0.9,
+                                          momentum_type='nesterov').minimize()
+    assert np.allclose(x, [[3.7625], [3.7375]])
+    assert status is 'optimal'
+
+
 def test_Rosenbrock_SteepestGradientDescent():
     x0 = [[-1], [1]]
 
@@ -48,24 +102,26 @@ def test_Rosenbrock_SteepestGradientDescent():
 def test_Rosenbrock_StochasticGradientDescent():
     x0 = [[-1], [1]]
 
-    x, status = StochasticGradientDescent(Rosenbrock(), x0).minimize()
+    x, status = StochasticGradientDescent(Rosenbrock(), x0, step_rate=0.01).minimize()
     assert np.allclose(x, [[1], [1]])
     assert status is 'optimal'
 
 
-def test_Ackley_SteepestGradientDescent():
+def test_Rosenbrock_StochasticGradientDescent_standard_momentum():
     x0 = [[-1], [1]]
 
-    x, status = SteepestGradientDescent(Ackley(), x0).minimize()
-    assert np.allclose(x, [[-0.96847766], [0.96847766]])
+    x, status = StochasticGradientDescent(Rosenbrock(), x0, step_rate=0.01, momentum=0.9,
+                                          momentum_type='standard').minimize()
+    assert np.allclose(x, [[1], [1]])
     assert status is 'optimal'
 
 
-def test_Ackley_StochasticGradientDescent():
+def test_Rosenbrock_StochasticGradientDescent_Nesterov_momentum():
     x0 = [[-1], [1]]
 
-    x, status = SteepestGradientDescent(Ackley(), x0).minimize()
-    assert np.allclose(x, [[-0.96847766], [0.96847766]])
+    x, status = StochasticGradientDescent(Rosenbrock(), x0, step_rate=0.01, momentum=0.9,
+                                          momentum_type='nesterov').minimize()
+    assert np.allclose(x, [[1], [1]])
     assert status is 'optimal'
 
 

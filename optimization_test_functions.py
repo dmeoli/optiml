@@ -34,7 +34,7 @@ class Function:
         return NotImplementedError
 
 
-class GenericQuadratic(Function):
+class Quadratic(Function):
 
     def __init__(self, Q, q):
         """
@@ -124,17 +124,17 @@ class GenericQuadratic(Function):
 
 
 # generic 2x2 quadratic function with nicely conditioned Hessian
-gen_quad_1 = GenericQuadratic([[6, -2], [-2, 6]], [[10], [5]])
+gen_quad_1 = Quadratic([[6, -2], [-2, 6]], [[10], [5]])
 # generic 2x2 quadratic function with less nicely conditioned Hessian
-gen_quad_2 = GenericQuadratic([[5, -3], [-3, 5]], [[10], [5]])
+gen_quad_2 = Quadratic([[5, -3], [-3, 5]], [[10], [5]])
 # generic 2x2 quadratic function with Hessian having one zero eigenvalue
-gen_quad_3 = GenericQuadratic([[4, -4], [-4, 4]], [[10], [5]])
+gen_quad_3 = Quadratic([[4, -4], [-4, 4]], [[10], [5]])
 # generic 2x2 quadratic function with indefinite Hessian
 # (one positive and one negative eigenvalue)
-gen_quad_4 = GenericQuadratic([[3, -5], [-5, 3]], [[10], [5]])
+gen_quad_4 = Quadratic([[3, -5], [-5, 3]], [[10], [5]])
 # generic 2x2 quadratic function with "very elongated" Hessian
 # (a very small positive minimum eigenvalue, the other much larger)
-gen_quad_5 = GenericQuadratic([[101, -99], [-99, 101]], [[10], [5]])
+gen_quad_5 = Quadratic([[101, -99], [-99, 101]], [[10], [5]])
 
 
 class Rosenbrock(Function):
