@@ -9,6 +9,7 @@ install:
   - pip install autograd
   - pip install matplotlib
   - pip install numpy
+  - pip install qpsolvers
 
 script:
   - py.test

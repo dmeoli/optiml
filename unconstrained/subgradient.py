@@ -4,7 +4,7 @@ import numpy as np
 from optimization_test_functions import Ackley
 
 
-def SGM(f, x, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+def Subgradient(f, x, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
     # Apply the classical Subgradient Method for the minimization of the
     # provided function f.
     #
@@ -233,4 +233,4 @@ def SGM(f, x, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000, m_inf=-np.inf, 
 
 
 if __name__ == "__main__":
-    print(SGM(Ackley(), [[-1], [1]], verbose=True, plot=True))
+    print(Subgradient(Ackley(), [[-1], [1]], verbose=True, plot=True))

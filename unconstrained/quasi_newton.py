@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from line_search import armijo_wolfe_line_search, backtracking_line_search
+from unconstrained.line_search import armijo_wolfe_line_search, backtracking_line_search
 from optimization_test_functions import Ackley
 
 
-def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
-         sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+def BroydenFletcherGoldfarbShanno(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
+                                  sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
     # Apply a Quasi-Newton approach, in particular using the celebrated
     # Broyden-Fletcher-Goldfarb-Shanno (BFGS) formula, for the minimization of
     # the provided function f.
@@ -286,4 +286,4 @@ def BFGS(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1, tau=0.9,
 
 
 if __name__ == "__main__":
-    print(BFGS(Ackley(), [[-1], [1]], verbose=True, plot=True))
+    print(BroydenFletcherGoldfarbShanno(Ackley(), [[-1], [1]], verbose=True, plot=True))

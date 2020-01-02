@@ -1,3 +1,4 @@
+qpsolvers
 pytest
 autograd
 numpy

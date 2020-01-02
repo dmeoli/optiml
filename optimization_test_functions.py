@@ -17,7 +17,7 @@ class Function:
     def jacobian(self, x):
         """
         The Jacobian (i.e. gradient) of the function.
-        :param x: 1-D array of points at which the Jacobian is to be computed.
+        :param x: 1D array of points at which the Jacobian is to be computed.
         :return:  the Jacobian of the function at x.
         """
         return self._jacobian(np.array(x, dtype=float))
@@ -25,7 +25,7 @@ class Function:
     def hessian(self, x):
         """
         The Hessian matrix of the function.
-        :param x: 1-D array of points at which the Hessian is to be computed.
+        :param x: 1D array of points at which the Hessian is to be computed.
         :return:  the Hessian matrix of the function at x.
         """
         return self._hessian(np.array(x, dtype=float)).reshape((x.size, x.size))
@@ -73,15 +73,15 @@ class GenericQuadratic(Function):
 
     def function(self, x):
         """
-        A general quadratic function f(x) = 1/2 x^T Q x + q^T x.
+        A general quadratic function f(x) = 1/2 x^T Q x - q^T x.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
         :return:  the value of a general quadratic function if x, the optimal solution of a
-                  linear system Qx = -q (=> x = Q^-1 -q) which has a complexity of O(n^3) otherwise.
+                  linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
         """
         x = np.array(x)
-        return (0.5 * x.T.dot(self.Q).dot(x) + self.q.T.dot(x)).item() \
-            if x.size != 0 else self.function(np.linalg.inv(self.Q).dot(-self.q)) \
-            if min(np.linalg.eigvalsh(self.Q)) > 1e-14 else -np.inf  # np.linalg.solve(Q, -q)
+        return (0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x)).item() \
+            if x.size != 0 else self.function(np.linalg.inv(self.Q).dot(self.q)) \
+            if min(np.linalg.eigvalsh(self.Q)) > 1e-14 else -np.inf  # np.linalg.solve(Q, q)
 
     def jacobian(self, x):
         """
@@ -89,12 +89,12 @@ class GenericQuadratic(Function):
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
         :return:  the Jacobian of a general quadratic function.
         """
-        return self.Q.dot(x) + self.q  # complexity O(n^2)
+        return self.Q.dot(x) - self.q  # complexity O(n^2)
 
     def hessian(self, x=None):
         """
         The Hessian matrix of a general quadratic function H f(x) = Q.
-        :param x: 1-D array of points at which the Hessian is to be computed.
+        :param x: 1D array of points at which the Hessian is to be computed.
         :return:  the Hessian matrix (i.e. the quadratic part) of a general quadratic function at x.
         """
         return self.Q
@@ -108,10 +108,10 @@ class GenericQuadratic(Function):
 
         # generic quadratic function
         #                      T                           T
-        # f(x, y) = 1/2 * | x |  * | a  b | * | x | + | d |  * | x |
+        # f(x, y) = 1/2 * | x |  * | a  b | * | x | - | d |  * | x |
         #                 | y |    | b  c |   | y |   | e |    | y |
         z = 0.5 * self.Q[0][0] * x ** 2 + self.Q[0][1] * x * y + \
-            0.5 * self.Q[1][1] * y ** 2 + self.q[0] * x + self.q[1] * y
+            0.5 * self.Q[1][1] * y ** 2 - self.q[0] * x - self.q[1] * y
 
         surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
 
@@ -119,7 +119,7 @@ class GenericQuadratic(Function):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*np.linalg.inv(self.Q).dot(-self.q), 'r*', markersize=10)  # np.linalg.solve(self.Q, -self.q)
+        contour_axes.plot(*np.linalg.inv(self.Q).dot(self.q), 'r*', markersize=10)  # np.linalg.solve(self.Q, self.q)
         return surface_plot, surface_axes, contour_plot, contour_axes
 
 
@@ -142,7 +142,7 @@ class Rosenbrock(Function):
     def function(self, x):
         """
         The Rosenbrock function.
-        :param x: 1-D array of points at which the Rosenbrock function is to be computed.
+        :param x: 1D array of points at which the Rosenbrock function is to be computed.
         :return:  the value of the Rosenbrock function at x.
         """
         x = np.array(x)
@@ -174,7 +174,7 @@ class Ackley(Function):
     def function(self, x):
         """
         The Ackley function.
-        :param x: 1-D array of points at which the Ackley function is to be computed.
+        :param x: 1D array of points at which the Ackley function is to be computed.
         :return:  the value of the Ackley function.
         """
         x = np.array(x)
@@ -208,7 +208,7 @@ class Sphere(Function):
     def function(self, x):
         """
         The Sphere function.
-        :param x: 1-D array of points at which the Sphere function is to be computed.
+        :param x: 1D array of points at which the Sphere function is to be computed.
         :return:  the value of the Sphere function.
         """
         return np.sum(np.power(np.array(x), 2))
