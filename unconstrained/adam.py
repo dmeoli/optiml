@@ -6,14 +6,13 @@ from ml.neural_network import BackPropagation, get_batch, init_examples
 from utils import vector_add, scalar_vector_product, map_vector, element_wise_product
 
 
-def adam(dataset, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
+def adam(x, inputs, target, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
          l_rate=0.001, batch_size=1, verbose=None):
     """
     Adam optimizer to update the learnable parameters of a network.
     Required parameters are similar to gradient descent.
     :return the updated network
     """
-    examples = dataset.examples
 
     # init s,r and t
     s = [[[0] * len(node.weights) for node in layer.nodes] for layer in net]
@@ -24,12 +23,12 @@ def adam(dataset, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
     for e in range(epochs):
         # total loss of each epoch
         total_loss = 0
-        random.shuffle(examples)
+        random.shuffle(x)
         weights = [[node.weights for node in layer.nodes] for layer in net]
 
-        for batch in get_batch(examples, batch_size):
+        for batch in get_batch(x, batch_size):
             t += 1
-            inputs, targets = init_examples(batch, dataset.inputs, dataset.target, len(net[-1].nodes))
+            inputs, targets = init_examples(batch, inputs, target, len(net[-1].nodes))
 
             # compute gradients of weights
             gs, batch_loss = BackPropagation(inputs, targets, weights, net, loss)

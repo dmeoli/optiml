@@ -1,8 +1,6 @@
 import bisect
 import collections
-import os
 import random
-from statistics import mean
 
 import numpy as np
 
@@ -34,10 +32,6 @@ def num_or_str(x):
             return float(x)
         except ValueError:
             return str(x).strip()
-
-
-def mean_boolean_error(x, y):
-    return mean(_x != _y for _x, _y in zip(x, y))
 
 
 def normalize(dist):

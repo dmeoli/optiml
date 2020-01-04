@@ -3,6 +3,7 @@ import pytest
 from ml.datasets import DataSet
 from ml.learning import err_ratio, grade_learner
 from ml.neural_network import *
+from unconstrained.adam import adam
 
 
 def test_neural_net():
