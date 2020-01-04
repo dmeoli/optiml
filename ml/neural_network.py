@@ -106,8 +106,8 @@ def NeuralNetLearner(dataset, hidden_layer_sizes=None, learning_rate=0.01, epoch
     raw_net.append(DenseLayer(hidden_input_size, output_size))
 
     # update parameters of the network
-    learned_net = optimizer(dataset, raw_net, mean_squared_error_loss, epochs, l_rate=learning_rate,
-                            batch_size=batch_size, verbose=verbose)
+    learned_net = optimizer(dataset.examples, dataset.inputs, dataset.target, raw_net, mean_squared_error_loss,
+                            epochs, l_rate=learning_rate, batch_size=batch_size, verbose=verbose)
 
     def predict(example):
         n_layers = len(learned_net)
@@ -136,8 +136,8 @@ def PerceptronLearner(dataset, learning_rate=0.01, epochs=100, optimizer=gradien
     raw_net = [InputLayer(input_size), DenseLayer(input_size, output_size)]
 
     # update the network
-    learned_net = optimizer(dataset, raw_net, mean_squared_error_loss, epochs, l_rate=learning_rate,
-                            batch_size=batch_size, verbose=verbose)
+    learned_net = optimizer(dataset.examples, dataset.inputs, dataset.target, raw_net, mean_squared_error_loss,
+                            epochs, l_rate=learning_rate, batch_size=batch_size, verbose=verbose)
 
     def predict(example):
         layer_out = learned_net[1].forward(example)

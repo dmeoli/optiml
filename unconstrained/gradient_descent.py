@@ -107,7 +107,7 @@ class SteepestGradientDescentQuadratic(Optimizer):
                 contour_axes.plot(p_xy[0], p_xy[1], color='k')
 
             # <\nabla f(x_i), \nabla f(x_i+1)> = 0
-            # assert np.isclose(f.jacobian(self.x).T.dot(f.jacobian(self.x - a * g)), 0)
+            # assert np.isclose(self.f.jacobian(self.x).T.dot(self.f.jacobian(self.x - a * g)), 0)
 
             self.x = new_x
             i += 1
@@ -508,20 +508,19 @@ if __name__ == "__main__":
                           momentum_type='nesterov', verbose=True, plot=True))
 
 
-def gradient_descent(dataset, net, loss, epochs=1000, l_rate=0.01, batch_size=1, verbose=None):
+def gradient_descent(x, inputs, target, net, loss, epochs=1000, l_rate=0.01, batch_size=1, verbose=None):
     """
     Gradient descent algorithm to update the learnable parameters of a network.
     :return: the updated network
     """
-    examples = dataset.examples  # init data
 
     for e in range(epochs):
         total_loss = 0
-        random.shuffle(examples)
+        random.shuffle(x)
         weights = [[node.weights for node in layer.nodes] for layer in net]
 
-        for batch in get_batch(examples, batch_size):
-            inputs, targets = init_examples(batch, dataset.inputs, dataset.target, len(net[-1].nodes))
+        for batch in get_batch(x, batch_size):
+            inputs, targets = init_examples(batch, inputs, target, len(net[-1].nodes))
             # compute gradients of weights
             gs, batch_loss = BackPropagation(inputs, targets, weights, net, loss)
             # update weights with gradient descent
