@@ -3,7 +3,7 @@ import statistics
 import numpy as np
 
 from ml.activations import Sigmoid
-from ml.neural_network import random_weights
+from ml.learning import random_weights
 from utils import dot_product
 
 

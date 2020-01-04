@@ -7,10 +7,6 @@ from statistics import mean
 import numpy as np
 
 
-def open_data(name, mode='r'):
-    return open(os.path.join(os.path.dirname(__file__), *['data', name]), mode=mode)
-
-
 def remove_all(item, seq):
     """Return a copy of seq (or string) with all occurrences of item removed."""
     if isinstance(seq, str):
