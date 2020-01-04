@@ -5,7 +5,7 @@ from unconstrained.gradient_descent import *
 
 
 def test_SteepestGradientDescentQuadratic_quadratic():
-    x0 = [[-1], [1]]
+    x0 = np.random.standard_normal(2).reshape((2, 1))
 
     x, status = SteepestGradientDescentQuadratic(gen_quad_1, x0).minimize()
     assert np.allclose(x, [[2.1875], [1.5625]])
@@ -21,7 +21,7 @@ def test_SteepestGradientDescentQuadratic_quadratic():
 
 
 def test_SteepestGradientDescent_quadratic():
-    x0 = [[-1], [1]]
+    x0 = np.random.standard_normal(2).reshape((2, 1))
 
     x, status = SteepestGradientDescent(gen_quad_1, x0).minimize()
     assert np.allclose(x, [[2.1875], [1.5625]])
@@ -37,7 +37,7 @@ def test_SteepestGradientDescent_quadratic():
 
 
 def test_GradientDescent_quadratic():
-    x0 = [[-1], [1]]
+    x0 = np.random.standard_normal(2).reshape((2, 1))
 
     x, status = GradientDescent(gen_quad_1, x0, step_rate=0.01)
     assert np.allclose(x, [[2.1875], [1.5625]])
@@ -53,7 +53,7 @@ def test_GradientDescent_quadratic():
 
 
 def test_GradientDescent_standard_quadratic():
-    x0 = [[-1], [1]]
+    x0 = np.random.standard_normal(2).reshape((2, 1))
 
     x, status = GradientDescent(gen_quad_1, x0, step_rate=0.01, momentum=0.9, momentum_type='standard')
     assert np.allclose(x, [[2.1875], [1.5625]])
@@ -69,7 +69,7 @@ def test_GradientDescent_standard_quadratic():
 
 
 def test_GradientDescent_Nesterov_quadratic():
-    x0 = [[-1], [1]]
+    x0 = np.random.standard_normal(2).reshape((2, 1))
 
     x, status = GradientDescent(gen_quad_1, x0, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
     assert np.allclose(x, [[2.1875], [1.5625]])
@@ -85,7 +85,7 @@ def test_GradientDescent_Nesterov_quadratic():
 
 
 def test_SteepestGradientDescent_Rosenbrock():
-    x0 = [[-1], [1]]
+    x0 = np.random.standard_normal(2).reshape((2, 1))
 
     # TODO fixed: in MATLAB it works with just 1000 max_f_eval
     x, status = SteepestGradientDescent(Rosenbrock(), x0, max_f_eval=10000).minimize()
@@ -94,7 +94,7 @@ def test_SteepestGradientDescent_Rosenbrock():
 
 
 def test_GradientDescent_Rosenbrock():
-    x0 = [[-1], [1]]
+    x0 = np.random.standard_normal(2).reshape((2, 1))
 
     x, status = GradientDescent(Rosenbrock(), x0, step_rate=0.01)
     assert np.allclose(x, [[1], [1]])
@@ -102,7 +102,7 @@ def test_GradientDescent_Rosenbrock():
 
 
 def test_GradientDescent_standard_Rosenbrock():
-    x0 = [[-1], [1]]
+    x0 = np.random.standard_normal(2).reshape((2, 1))
 
     x, status = GradientDescent(Rosenbrock(), x0, step_rate=0.01, momentum=0.9, momentum_type='standard')
     assert np.allclose(x, [[1], [1]])
@@ -110,7 +110,7 @@ def test_GradientDescent_standard_Rosenbrock():
 
 
 def test_GradientDescent_Nesterov_Rosenbrock():
-    x0 = [[-1], [1]]
+    x0 = np.random.standard_normal(2).reshape((2, 1))
 
     x, status = GradientDescent(Rosenbrock(), x0, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
     assert np.allclose(x, [[1], [1]])

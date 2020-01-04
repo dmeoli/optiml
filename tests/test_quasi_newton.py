@@ -6,7 +6,7 @@ from unconstrained.quasi_newton import BroydenFletcherGoldfarbShanno
 
 
 def test_quadratic():
-    x0 = [[-1], [1]]
+    x0 = np.random.standard_normal(2).reshape((2, 1))
 
     x, status = BroydenFletcherGoldfarbShanno(gen_quad_1, x0)
     assert np.allclose(x, [[2.1875], [1.5625]])
@@ -22,7 +22,7 @@ def test_quadratic():
 
 
 def test_Rosenbrock():
-    x0 = [[-1], [1]]
+    x0 = np.random.standard_normal(2).reshape((2, 1))
 
     x, status = BroydenFletcherGoldfarbShanno(Rosenbrock(), x0)
     assert np.allclose(x, [[1], [1]])
