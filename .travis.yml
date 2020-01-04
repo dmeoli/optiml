@@ -13,6 +13,7 @@ install:
 
 script:
   - py.test
+  - python -m doctest -v *.py
 
 notifications:
   email: false

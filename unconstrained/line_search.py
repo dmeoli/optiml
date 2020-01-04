@@ -92,7 +92,7 @@ def backtracking_line_search(f, d, x, last_x, last_d, last_h, f_eval, max_f_eval
 
 def f2phi(f, d, x, last_h, f_eval, a):
     # phi(a) = f(x + a * d)
-    # phi'(a) = <\nabla f(x + a * d) , d>
+    # phi'(a) = <\nabla f(x + a * d), d>
 
     last_x = x + a * d
     phi_a, last_g = f.function(last_x), f.jacobian(last_x)

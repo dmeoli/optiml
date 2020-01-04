@@ -1,12 +1,16 @@
+from random import random
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimizer import StochasticOptimizer, LineSearchOptimizer
+from ml.neural_network import BackPropagation, get_batch, init_examples
 from optimization_test_functions import Rosenbrock, gen_quad_2
+from optimizer import Optimizer, LineSearchOptimizer
 from unconstrained.line_search import armijo_wolfe_line_search, backtracking_line_search
+from utils import vector_add, scalar_vector_product
 
 
-class SteepestGradientDescentQuadratic(StochasticOptimizer):
+class SteepestGradientDescentQuadratic(Optimizer):
     """
     Apply the Steepest Gradient Descent algorithm with exact line search to the quadratic function.
 
@@ -161,7 +165,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
     #   large w.r.t. The one at the other (which leads to choosing a point
     #   extremely near to the other endpoint), a *safeguarded* version of
     #   interpolation is used whereby the new point is chosen in the interval
-    #   [as * (1 + sfgrd) , am * (1 - sfgrd)], being [as , am] the
+    #   [as * (1 + sfgrd), am * (1 - sfgrd)], being [as, am] the
     #   current interval, whatever quadratic interpolation says. If you
     #   experience problems with the line search taking too many iterations to
     #   converge at "nasty" points, try to increase this
@@ -211,7 +215,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
                            derivative at one endpoint is too large w.r.t. The one at the other (which leads to
                            choosing a point extremely near to the other endpoint), a *safeguarded* version of
                            interpolation is used whereby the new point is chosen in the interval
-                           [as * (1 + sfgrd) , am * (1 - sfgrd)], being [as , am] the current interval, whatever
+                           [as * (1 + sfgrd), am * (1 - sfgrd)], being [as, am] the current interval, whatever
                            quadratic interpolation says. If you experience problems with the line search taking
                            too many iterations to converge at "nasty" points, try to increase this.
         :param m_inf:      (real scalar, optional, default value -inf): if the algorithm determines a value for
@@ -344,7 +348,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
         return self.x, status
 
 
-class StochasticGradientDescent(StochasticOptimizer):
+class GradientDescent(Optimizer):
     """
     Apply the classical Stochastic Gradient Descent algorithm for the minimization
     of the provided function f.
@@ -417,7 +421,7 @@ class StochasticGradientDescent(StochasticOptimizer):
     """
 
     def __init__(self, f, x, eps=1e-6, max_iter=1000, step_rate=0.1, momentum=0.0,
-                 momentum_type='none', verbose=False, plot=False):
+                 momentum_type='none', verbose=False, plot=False, args=None):
         """Create a GradientDescent object.
 
         Parameters
@@ -454,7 +458,7 @@ class StochasticGradientDescent(StochasticOptimizer):
             with.
         """
 
-        super().__init__(f, x, verbose, plot)
+        super().__init__(f, x, verbose, plot, args)
         self.step_rate = step_rate
         self.momentum = momentum
         if momentum_type not in ('nesterov', 'standard', 'none'):
@@ -462,28 +466,26 @@ class StochasticGradientDescent(StochasticOptimizer):
         self.momentum_type = momentum_type
         self.step = 0
 
-    def minimize(self):
+    def __iter__(self):
         for args, kwargs in self.args:
             step_rate = self.step_rate
             momentum = self.momentum
             step_m1 = self.step
 
             if self.momentum_type == 'standard':
-                gradient = self.f.jacobian(self.x)
+                gradient = self.f.jacobian(self.x, *args, **kwargs)
                 step = gradient * step_rate + momentum * step_m1
                 self.x -= step
             elif self.momentum_type == 'nesterov':
                 big_jump = momentum * step_m1
                 self.x -= big_jump
-
-                gradient = self.f.jacobian(self.x)
+                gradient = self.f.jacobian(self.x, *args, **kwargs)
                 correction = step_rate * gradient
                 self.x -= correction
-
                 step = big_jump + correction
             elif self.momentum_type == 'none':
-                gradient = self.f.jacobian(self.x)
-                step = gradient * step_rate + step_m1
+                gradient = self.f.jacobian(self.x, *args, **kwargs)
+                step = step_m1 + gradient * step_rate
                 self.x -= step
 
             self.step = step
@@ -493,14 +495,45 @@ class StochasticGradientDescent(StochasticOptimizer):
 
 if __name__ == "__main__":
     print(SteepestGradientDescentQuadratic(gen_quad_2, [[-1], [1]], f_star=gen_quad_2.function([]),
-                                           verbose=True, plot=True))
+                                           verbose=True, plot=True).minimize())
     print()
-    print(SteepestGradientDescent(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))
+    print(SteepestGradientDescent(Rosenbrock(), [[-1], [1]], max_f_eval=10000, verbose=True, plot=True).minimize())
     print()
-    print(StochasticGradientDescent(Rosenbrock(), [[-1], [1]], step_rate=0.01, verbose=True, plot=True).minimize())
+    print(GradientDescent(Rosenbrock(), [[-1], [1]], step_rate=0.01, verbose=True, plot=True))
     print()
-    print(StochasticGradientDescent(Rosenbrock(), [[-1], [1]], step_rate=0.01, momentum=0.9,
-                                    momentum_type='standard', verbose=True, plot=True).minimize())
+    print(GradientDescent(Rosenbrock(), [[-1], [1]], step_rate=0.01, momentum=0.9,
+                          momentum_type='standard', verbose=True, plot=True))
     print()
-    print(StochasticGradientDescent(Rosenbrock(), [[-1], [1]], step_rate=0.01, momentum=0.9,
-                                    momentum_type='nesterov', verbose=True, plot=True).minimize())
+    print(GradientDescent(Rosenbrock(), [[-1], [1]], step_rate=0.01, momentum=0.9,
+                          momentum_type='nesterov', verbose=True, plot=True))
+
+
+def gradient_descent(dataset, net, loss, epochs=1000, l_rate=0.01, batch_size=1, verbose=None):
+    """
+    Gradient descent algorithm to update the learnable parameters of a network.
+    :return: the updated network
+    """
+    examples = dataset.examples  # init data
+
+    for e in range(epochs):
+        total_loss = 0
+        random.shuffle(examples)
+        weights = [[node.weights for node in layer.nodes] for layer in net]
+
+        for batch in get_batch(examples, batch_size):
+            inputs, targets = init_examples(batch, dataset.inputs, dataset.target, len(net[-1].nodes))
+            # compute gradients of weights
+            gs, batch_loss = BackPropagation(inputs, targets, weights, net, loss)
+            # update weights with gradient descent
+            weights = vector_add(weights, scalar_vector_product(-l_rate, gs))
+            total_loss += batch_loss
+            # update the weights of network each batch
+            for i in range(len(net)):
+                if weights[i]:
+                    for j in range(len(weights[i])):
+                        net[i].nodes[j].weights = weights[i][j]
+
+        if verbose and (e + 1) % verbose == 0:
+            print("epoch:{}, total_loss:{}".format(e + 1, total_loss))
+
+    return net

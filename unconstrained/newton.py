@@ -68,7 +68,7 @@ def Newton(f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, delta=1e-6, tau=0.9
     #   large w.r.t. the one at the other (which leads to choosing a point
     #   extremely near to the other endpoint), a *safeguarded* version of
     #   interpolation is used whereby the new point is chosen in the interval
-    #   [as * (1 + sfgrd) , am * (1 - sfgrd)], being [as , am] the
+    #   [as * (1 + sfgrd), am * (1 - sfgrd)], being [as, am] the
     #   current interval, whatever quadratic interpolation says. If you
     #   experience problems with the line search taking too many iterations to
     #   converge at "nasty" points, try to increase this

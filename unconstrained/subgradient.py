@@ -41,7 +41,7 @@ def Subgradient(f, x, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000,
     #   v_* = f([]) > -inf, then the algorithm "cheats" and it does an
     #   *exact* Polyak step size with termination criteria
     #
-    #       (f^i_{ref} - v_*) <= (- eps) * max(abs(v_*) , 1)
+    #       (f^i_{ref} - v_*) <= (- eps) * max(abs(v_*), 1)
     #
     #   Finally, if eps == 0 the algorithm rather uses a DSS (diminishing
     #   square-summable) step size, i.e., a_start * (1 / i) [see below]
@@ -51,7 +51,7 @@ def Subgradient(f, x, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000,
     #   then a_start is used as the relative value to which the displacement is
     #   reset each time f(x^{i + 1}) <= f^i_{ref} - delta^i, i.e.,
     #
-    #     delta^{i + 1} = a_start * max(abs(f^{i + 1}_{ref}) , 1)
+    #     delta^{i + 1} = a_start * max(abs(f^{i + 1}_{ref}), 1)
     #
     #   If eps == 0, i.e. a diminishing square-summable) step size is used, then
     #   a_start is used as the fixed scaling factor for the step size sequence

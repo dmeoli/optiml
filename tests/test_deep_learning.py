@@ -1,6 +1,6 @@
 import pytest
 
-from ml.deep_learning import *
+from ml.neural_network import *
 from ml.learning import DataSet, grade_learner, err_ratio
 
 

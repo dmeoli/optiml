@@ -1,129 +1,10 @@
+import bisect
 import collections
 import os
-import bisect
 import random
 from statistics import mean
 
 import numpy as np
-
-from optimization_test_functions import Function
-
-
-# loss functions
-
-def cross_entropy_loss(x, y):
-    """Example of cross entropy loss. x and y are 1D iterable objects."""
-    return (-1.0 / len(x)) * sum(x * np.log(y) + (1 - x) * np.log(1 - y) for x, y in zip(x, y))
-
-
-def mse_loss(x, y):
-    """Example of min square loss. x and y are 1D iterable objects."""
-    return (1.0 / len(x)) * sum((_x - _y) ** 2 for _x, _y in zip(x, y))
-
-
-# activation functions
-
-def clip(x, lowest, highest):
-    """Return x clipped to the range [lowest..highest]."""
-    return max(lowest, min(x, highest))
-
-
-def softmax1D(x):
-    """Return the softmax vector of input vector x."""
-    exps = [np.exp(_x) for _x in x]
-    sum_exps = sum(exps)
-    return [exp / sum_exps for exp in exps]
-
-
-def conv1D(x, k):
-    """1D convolution. x: input vector; K: kernel vector."""
-    return np.convolve(x, k, mode='same')
-
-
-class Sigmoid(Function):
-
-    def function(self, x):
-        if x >= 100:
-            return 1
-        if x <= -100:
-            return 0
-        return 1 / (1 + np.exp(-x))
-
-    def jacobian(self, x):
-        return x * (1 - x)
-
-
-class Relu(Function):
-
-    def function(self, x):
-        return max(0, x)
-
-    def jacobian(self, x):
-        return 1 if x > 0 else 0
-
-
-class Elu(Function):
-
-    def function(self, x, alpha=0.01):
-        return x if x > 0 else alpha * (np.exp(x) - 1)
-
-    def jacobian(self, x, alpha=0.01):
-        return 1 if x > 0 else alpha * np.exp(x)
-
-
-class Tanh(Function):
-
-    def function(self, x):
-        return np.tanh(x)
-
-    def jacobian(self, x):
-        return 1 - (x ** 2)
-
-
-class LeakyRelu(Function):
-
-    def function(self, x, alpha=0.01):
-        return x if x > 0 else alpha * x
-
-    def jacobian(self, x, alpha=0.01):
-        return 1 if x > 0 else alpha
-
-
-def random_weights(min_value, max_value, num_weights):
-    return [random.uniform(min_value, max_value) for _ in range(num_weights)]
-
-
-# kernels
-
-def gaussian(mean, st_dev, x):
-    """Given the mean and standard deviation of a distribution, it returns the probability of x."""
-    return 1 / (np.sqrt(2 * np.pi) * st_dev) * np.exp(-0.5 * (float(x - mean) / st_dev) ** 2)
-
-
-def gaussian_kernel(size=3):
-    return [gaussian((size - 1) / 2, 0.1, x) for x in range(size)]
-
-
-def linear_kernel(x, y=None):
-    if y is None:
-        y = x
-    return np.dot(x, y.T)
-
-
-def polynomial_kernel(x, y=None, degree=2.0):
-    if y is None:
-        y = x
-    return (1.0 + np.dot(x, y.T)) ** degree
-
-
-def rbf_kernel(x, y=None, gamma=None):
-    """Radial-basis function kernel (aka squared-exponential kernel)."""
-    if y is None:
-        y = x
-    if gamma is None:
-        gamma = 1.0 / x.shape[1]  # 1.0 / n_features
-    return np.exp(-gamma * (-2.0 * np.dot(x, y.T) +
-                            np.sum(x * x, axis=1).reshape((-1, 1)) + np.sum(y * y, axis=1).reshape((1, -1))))
 
 
 def open_data(name, mode='r'):
@@ -175,11 +56,6 @@ def normalize(dist):
     return [(n / total) for n in dist]
 
 
-def probability(p):
-    """Return true with probability p."""
-    return p > random.uniform(0.0, 1.0)
-
-
 def weighted_sample_with_replacement(n, seq, weights):
     """Pick n samples from seq at random, with replacement, with the
     probability of each element in proportion to its corresponding
@@ -198,7 +74,6 @@ def weighted_sampler(seq, weights):
     return lambda: seq[bisect.bisect(totals, random.uniform(0, totals[-1]))]
 
 
-# ______________________________________________________________________________
 # argmin and argmax
 
 identity = lambda x: x

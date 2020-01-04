@@ -1,6 +1,6 @@
 import pytest
 
-from ml.deep_learning import PerceptronLearner
+from ml.neural_network import PerceptronLearner
 from ml.learning import *
 
 

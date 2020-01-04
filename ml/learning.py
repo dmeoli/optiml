@@ -3,8 +3,8 @@ import heapq
 from collections import defaultdict
 from statistics import stdev, mode
 
-from qpsolvers import solve_qp
-
+from ml.activations import Sigmoid
+from ml.datasets import iris, orings, zoo, Majority, Parity, Xor
 from utils import *
 
 
@@ -216,14 +216,6 @@ def err_ratio(predict, dataset, examples=None, verbose=0):
     return 1 - (right / len(examples))
 
 
-def grade_learner(predict, tests):
-    """
-    Grades the given learner based on how many tests it passes.
-    tests is a list with each element in the form: (values, output).
-    """
-    return mean(int(predict(X) == y) for X, y in tests)
-
-
 def train_test_split(dataset, start=None, end=None, test_split=None):
     """
     If you are giving 'start' and 'end' as parameters,
@@ -316,134 +308,6 @@ def learning_curve(learner, dataset, trials=10, sizes=None):
     return [(size, mean([score(learner, size) for _ in range(trials)])) for size in sizes]
 
 
-def PluralityLearner(dataset):
-    """
-    A very dumb algorithm: always pick the result that was most popular
-    in the training data. Makes a baseline for comparison.
-    """
-    most_popular = mode([e[dataset.target] for e in dataset.examples])
-
-    def predict(example):
-        """Always return same result: the most popular from the training set."""
-        return most_popular
-
-    return predict
-
-
-class DecisionFork:
-    """
-    A fork of a decision tree holds an attribute to test, and a dict
-    of branches, one for each of the attribute's values.
-    """
-
-    def __init__(self, attr, attr_name=None, default_child=None, branches=None):
-        """Initialize by saying what attribute this node tests."""
-        self.attr = attr
-        self.attr_name = attr_name or attr
-        self.default_child = default_child
-        self.branches = branches or {}
-
-    def __call__(self, example):
-        """Given an example, classify it using the attribute and the branches."""
-        attr_val = example[self.attr]
-        if attr_val in self.branches:
-            return self.branches[attr_val](example)
-        else:
-            # return default class when attribute is unknown
-            return self.default_child(example)
-
-    def add(self, val, subtree):
-        """Add a branch. If self.attr = val, go to the given subtree."""
-        self.branches[val] = subtree
-
-    def display(self, indent=0):
-        name = self.attr_name
-        print('Test', name)
-        for (val, subtree) in self.branches.items():
-            print(' ' * 4 * indent, name, '=', val, '==>', end=' ')
-            subtree.display(indent + 1)
-
-    def __repr__(self):
-        return 'DecisionFork({0!r}, {1!r}, {2!r})'.format(self.attr, self.attr_name, self.branches)
-
-
-class DecisionLeaf:
-    """A leaf of a decision tree holds just a result."""
-
-    def __init__(self, result):
-        self.result = result
-
-    def __call__(self, example):
-        return self.result
-
-    def display(self):
-        print('RESULT =', self.result)
-
-    def __repr__(self):
-        return repr(self.result)
-
-
-def DecisionTreeLearner(dataset):
-    target, values = dataset.target, dataset.values
-
-    def decision_tree_learning(examples, attrs, parent_examples=()):
-        if len(examples) == 0:
-            return plurality_value(parent_examples)
-        if all_same_class(examples):
-            return DecisionLeaf(examples[0][target])
-        if len(attrs) == 0:
-            return plurality_value(examples)
-        A = choose_attribute(attrs, examples)
-        tree = DecisionFork(A, dataset.attr_names[A], plurality_value(examples))
-        for (v_k, exs) in split_by(A, examples):
-            subtree = decision_tree_learning(exs, remove_all(A, attrs), examples)
-            tree.add(v_k, subtree)
-        return tree
-
-    def plurality_value(examples):
-        """
-        Return the most popular target value for this set of examples.
-        (If target is binary, this is the majority; otherwise plurality).
-        """
-        popular = argmax_random_tie(values[target], key=lambda v: count(target, v, examples))
-        return DecisionLeaf(popular)
-
-    def count(attr, val, examples):
-        """Count the number of examples that have example[attr] = val."""
-        return sum(e[attr] == val for e in examples)
-
-    def all_same_class(examples):
-        """Are all these examples in the same target class?"""
-        class0 = examples[0][target]
-        return all(e[target] == class0 for e in examples)
-
-    def choose_attribute(attrs, examples):
-        """Choose the attribute with the highest information gain."""
-        return argmax_random_tie(attrs, key=lambda a: information_gain(a, examples))
-
-    def information_gain(attr, examples):
-        """Return the expected reduction in entropy from splitting by attr."""
-
-        def I(examples):
-            return information_content([count(target, v, examples) for v in values[target]])
-
-        n = len(examples)
-        remainder = sum((len(examples_i) / n) * I(examples_i) for (v, examples_i) in split_by(attr, examples))
-        return I(examples) - remainder
-
-    def split_by(attr, examples):
-        """Return a list of (val, examples) pairs for each val of attr."""
-        return [(v, [e for e in examples if e[attr] == v]) for v in values[attr]]
-
-    return decision_tree_learning(dataset.examples, dataset.inputs)
-
-
-def information_content(values):
-    """Number of bits to represent the probability distribution in values."""
-    probabilities = normalize(remove_all(0, values))
-    return sum(-p * np.log2(p) for p in probabilities)
-
-
 def NearestNeighborLearner(dataset, k=1):
     """k-NearestNeighbor: the k nearest neighbors vote."""
 
@@ -453,6 +317,10 @@ def NearestNeighborLearner(dataset, k=1):
         return mode(e[dataset.target] for (d, e) in best)
 
     return predict
+
+
+def random_weights(min_value, max_value, num_weights):
+    return [random.uniform(min_value, max_value) for _ in range(num_weights)]
 
 
 def LinearLearner(dataset, learning_rate=0.01, epochs=100):
@@ -522,7 +390,7 @@ def LogisticLinearLeaner(dataset, learning_rate=0.01, epochs=100):
         for example in examples:
             x = [1] + example
             y = Sigmoid().function(dot_product(w, x))
-            h.append(Sigmoid().jacobian(y))
+            h.append(Sigmoid().derivative(y))
             t = example[idx_t]
             err.append(t - y)
 
@@ -536,136 +404,6 @@ def LogisticLinearLeaner(dataset, learning_rate=0.01, epochs=100):
         return Sigmoid().function(dot_product(w, x))
 
     return predict
-
-
-class BinarySVM:
-    def __init__(self, kernel=linear_kernel, C=1.0):
-        self.kernel = kernel
-        self.C = C  # hyper-parameter
-        self.eps = 1e-6
-        self.n_sv = -1
-        self.sv_x, self.sv_y, = np.zeros(0), np.zeros(0)
-        self.alphas = np.zeros(0)
-        self.w = None
-        self.b = 0.0  # intercept
-
-    def fit(self, X, y):
-        """
-        Trains the model by solving a quadratic programming problem.
-        :param X: array of size [n_samples, n_features] holding the training samples
-        :param y: array of size [n_samples] holding the class labels
-        """
-        # In QP formulation (dual): m variables, 2m+1 constraints (1 equation, 2m inequations)
-        self.QP(X, y)
-        sv_indices = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
-        self.sv_x, self.sv_y, self.alphas = X[sv_indices], y[sv_indices], self.alphas[sv_indices]
-        self.n_sv = len(sv_indices)
-        if self.kernel == linear_kernel:
-            self.w = np.dot(self.alphas * self.sv_y, self.sv_x)
-        # calculate b: average over all support vectors
-        sv_boundary = self.alphas < self.C - self.eps
-        self.b = np.mean(self.sv_y[sv_boundary] - np.dot(self.alphas * self.sv_y,
-                                                         self.kernel(self.sv_x, self.sv_x[sv_boundary])))
-
-    def QP(self, X, y):
-        """
-        Solves a quadratic programming problem. In QP formulation (dual):
-        m variables, 2m+1 constraints (1 equation, 2m inequations).
-        :param X: array of size [n_samples, n_features] holding the training samples
-        :param y: array of size [n_samples] holding the class labels
-        """
-        #
-        m = len(y)  # m = n_samples
-        K = self.kernel(X)  # gram matrix
-        P = K * np.outer(y, y)
-        q = -np.ones(m)
-        G = np.vstack((-np.identity(m), np.identity(m)))
-        h = np.hstack((np.zeros(m), np.ones(m) * self.C))
-        A = y.reshape((1, -1))
-        b = np.zeros(1)
-        # make sure P is positive definite
-        P += np.eye(P.shape[0]).__mul__(1e-3)
-        self.alphas = solve_qp(P, q, G, h, A, b, sym_proj=True)
-
-    def predict_score(self, x):
-        """
-        Predicts the score for a given example.
-        """
-        if self.w is None:
-            return np.dot(self.alphas * self.sv_y, self.kernel(self.sv_x, x)) + self.b
-        return np.dot(x, self.w) + self.b
-
-    def predict(self, x):
-        """
-        Predicts the class of a given example.
-        """
-        return np.sign(self.predict_score(x))
-
-
-class MultiSVM:
-    def __init__(self, kernel=linear_kernel, decision_function='ovr', C=1.0):
-        self.kernel = kernel
-        self.decision_function = decision_function
-        self.C = C  # hyper-parameter
-        self.n_class, self.classifiers = 0, []
-
-    def fit(self, X, y):
-        """
-        Trains n_class or n_class * (n_class - 1) / 2 classifiers
-        according to the training method, ovr or ovo respectively.
-        :param X: array of size [n_samples, n_features] holding the training samples
-        :param y: array of size [n_samples] holding the class labels
-        :return: array of classifiers
-        """
-        labels = np.unique(y)
-        self.n_class = len(labels)
-        if self.decision_function == 'ovr':  # one-vs-rest method
-            for label in labels:
-                y1 = np.array(y)
-                y1[y1 != label] = -1.0
-                y1[y1 == label] = 1.0
-                clf = BinarySVM(self.kernel, self.C)
-                clf.fit(X, y1)
-                self.classifiers.append(copy.deepcopy(clf))
-        elif self.decision_function == 'ovo':  # use one-vs-one method
-            n_labels = len(labels)
-            for i in range(n_labels):
-                for j in range(i + 1, n_labels):
-                    neg_id, pos_id = y == labels[i], y == labels[j]
-                    x1, y1 = np.r_[X[neg_id], X[pos_id]], np.r_[y[neg_id], y[pos_id]]
-                    y1[y1 == labels[i]] = -1.0
-                    y1[y1 == labels[j]] = 1.0
-                    clf = BinarySVM(self.kernel, self.C)
-                    clf.fit(x1, y1)
-                    self.classifiers.append(copy.deepcopy(clf))
-        else:
-            return ValueError("Decision function must be either 'ovr' or 'ovo'.")
-
-    def predict(self, x):
-        """
-        Predicts the class of a given example according to the training method.
-        """
-        n_samples = len(x)
-        if self.decision_function == 'ovr':  # one-vs-rest method
-            assert len(self.classifiers) == self.n_class
-            score = np.zeros((n_samples, self.n_class))
-            for i in range(self.n_class):
-                clf = self.classifiers[i]
-                score[:, i] = clf.predict_score(x)
-            return np.argmax(score, axis=1)
-        elif self.decision_function == 'ovo':  # use one-vs-one method
-            assert len(self.classifiers) == self.n_class * (self.n_class - 1) / 2
-            vote = np.zeros((n_samples, self.n_class))
-            clf_id = 0
-            for i in range(self.n_class):
-                for j in range(i + 1, self.n_class):
-                    res = self.classifiers[clf_id].predict(x)
-                    vote[res < 0, i] += 1.0  # negative sample: class i
-                    vote[res > 0, j] += 1.0  # positive sample: class j
-                    clf_id += 1
-            return np.argmax(vote, axis=1)
-        else:
-            return ValueError("Decision function must be either 'ovr' or 'ovo'.")
 
 
 def EnsembleLearner(learners):
@@ -693,7 +431,7 @@ def ada_boost(dataset, L, K):
         h.append(h_k)
         error = sum(weight for example, weight in zip(examples, w) if example[target] != h_k(example))
         # avoid divide-by-0 from either 0% or 100% error rates
-        error = clip(error, eps, 1 - eps)
+        error = np.clip(error, eps, 1 - eps)
         for j, example in enumerate(examples):
             if example[target] == h_k(example):
                 w[j] *= error / (1 - error)
@@ -719,30 +457,6 @@ def weighted_mode(values, weights):
     for v, w in zip(values, weights):
         totals[v] += w
     return max(totals, key=totals.__getitem__)
-
-
-def RandomForest(dataset, n=5):
-    """An ensemble of Decision Trees trained using bagging and feature bagging."""
-
-    def data_bagging(dataset, m=0):
-        """Sample m examples with replacement"""
-        n = len(dataset.examples)
-        return weighted_sample_with_replacement(m or n, dataset.examples, [1] * n)
-
-    def feature_bagging(dataset, p=0.7):
-        """Feature bagging with probability p to retain an attribute"""
-        inputs = [i for i in dataset.inputs if probability(p)]
-        return inputs or dataset.inputs
-
-    def predict(example):
-        print([predictor(example) for predictor in predictors])
-        return mode(predictor(example) for predictor in predictors)
-
-    predictors = [DecisionTreeLearner(DataSet(examples=data_bagging(dataset), attrs=dataset.attrs,
-                                              attr_names=dataset.attr_names, target=dataset.target,
-                                              inputs=feature_bagging(dataset))) for _ in range(n)]
-
-    return predict
 
 
 def WeightedLearner(unweighted_learner):
@@ -784,62 +498,13 @@ def flatten(seqs):
     return sum(seqs, [])
 
 
-orings = DataSet(name='orings', target='Distressed', attr_names='Rings Distressed Temp Pressure Flightnum')
-
-zoo = DataSet(name='zoo', target='type', exclude=['name'],
-              attr_names='name hair feathers eggs milk airborne aquatic predator toothed backbone '
-                         'breathes venomous fins legs tail domestic catsize type')
-
-iris = DataSet(name='iris', target='class', attr_names='sepal-len sepal-width petal-len petal-width class')
-
-
-def Majority(k, n):
-    """
-    Return a DataSet with n k-bit examples of the majority problem:
-    k random bits followed by a 1 if more than half the bits are 1, else 0.
-    """
-    examples = []
-    for i in range(n):
-        bits = [random.choice([0, 1]) for _ in range(k)]
-        bits.append(int(sum(bits) > k / 2))
-        examples.append(bits)
-    return DataSet(name='majority', examples=examples)
-
-
-def Parity(k, n, name='parity'):
-    """
-    Return a DataSet with n k-bit examples of the parity problem:
-    k random bits followed by a 1 if an odd number of bits are 1, else 0.
-    """
-    examples = []
-    for i in range(n):
-        bits = [random.choice([0, 1]) for _ in range(k)]
-        bits.append(sum(bits) % 2)
-        examples.append(bits)
-    return DataSet(name=name, examples=examples)
-
-
-def Xor(n):
-    """Return a DataSet with n examples of 2-input xor."""
-    return Parity(2, n, name='xor')
-
-
-def ContinuousXor(n):
-    """2 inputs are chosen uniformly from (0.0 .. 2.0]; output is xor of ints."""
-    examples = []
-    for i in range(n):
-        x, y = [random.uniform(0.0, 2.0) for _ in '12']
-        examples.append([x, y, x != y])
-    return DataSet(name='continuous xor', examples=examples)
-
-
 def compare(algorithms=None, datasets=None, k=10, trials=1):
     """
     Compare various learners on various datasets using cross-validation.
     Print results as a table.
     """
     # default list of algorithms
-    algorithms = algorithms or [PluralityLearner, NearestNeighborLearner]
+    algorithms = algorithms or [NearestNeighborLearner]
 
     # default list of datasets
     datasets = datasets or [iris, orings, zoo, Majority(7, 100), Parity(7, 100), Xor(100)]
