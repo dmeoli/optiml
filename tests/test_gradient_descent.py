@@ -4,7 +4,7 @@ from optimization_test_functions import *
 from unconstrained.gradient_descent import *
 
 
-def test_quadratic_functions_SteepestGradientDescentQuadratic():
+def test_SteepestGradientDescentQuadratic_quadratic():
     x0 = [[-1], [1]]
 
     x, status = SteepestGradientDescentQuadratic(gen_quad_1, x0).minimize()
@@ -20,7 +20,7 @@ def test_quadratic_functions_SteepestGradientDescentQuadratic():
     assert status is 'optimal'
 
 
-def test_quadratic_functions_SteepestGradientDescent():
+def test_SteepestGradientDescent_quadratic():
     x0 = [[-1], [1]]
 
     x, status = SteepestGradientDescent(gen_quad_1, x0).minimize()
@@ -36,7 +36,7 @@ def test_quadratic_functions_SteepestGradientDescent():
     assert status is 'optimal'
 
 
-def test_quadratic_functions_GradientDescent():
+def test_GradientDescent_quadratic():
     x0 = [[-1], [1]]
 
     x, status = GradientDescent(gen_quad_1, x0, step_rate=0.01)
@@ -52,7 +52,7 @@ def test_quadratic_functions_GradientDescent():
     assert status is 'optimal'
 
 
-def test_quadratic_functions_GradientDescent_standard_momentum():
+def test_GradientDescent_standard_quadratic():
     x0 = [[-1], [1]]
 
     x, status = GradientDescent(gen_quad_1, x0, step_rate=0.01, momentum=0.9, momentum_type='standard')
@@ -68,7 +68,7 @@ def test_quadratic_functions_GradientDescent_standard_momentum():
     assert status is 'optimal'
 
 
-def test_quadratic_functions_GradientDescent_Nesterov_momentum():
+def test_GradientDescent_Nesterov_quadratic():
     x0 = [[-1], [1]]
 
     x, status = GradientDescent(gen_quad_1, x0, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
@@ -84,7 +84,7 @@ def test_quadratic_functions_GradientDescent_Nesterov_momentum():
     assert status is 'optimal'
 
 
-def test_Rosenbrock_SteepestGradientDescent():
+def test_SteepestGradientDescent_Rosenbrock():
     x0 = [[-1], [1]]
 
     # TODO fixed: in MATLAB it works with just 1000 max_f_eval
@@ -93,7 +93,7 @@ def test_Rosenbrock_SteepestGradientDescent():
     assert status is 'optimal'
 
 
-def test_Rosenbrock_GradientDescent():
+def test_GradientDescent_Rosenbrock():
     x0 = [[-1], [1]]
 
     x, status = GradientDescent(Rosenbrock(), x0, step_rate=0.01)
@@ -101,7 +101,7 @@ def test_Rosenbrock_GradientDescent():
     assert status is 'optimal'
 
 
-def test_Rosenbrock_GradientDescent_standard_momentum():
+def test_GradientDescent_standard_Rosenbrock():
     x0 = [[-1], [1]]
 
     x, status = GradientDescent(Rosenbrock(), x0, step_rate=0.01, momentum=0.9, momentum_type='standard')
@@ -109,7 +109,7 @@ def test_Rosenbrock_GradientDescent_standard_momentum():
     assert status is 'optimal'
 
 
-def test_Rosenbrock_GradientDescent_Nesterov_momentum():
+def test_GradientDescent_Nesterov_Rosenbrock():
     x0 = [[-1], [1]]
 
     x, status = GradientDescent(Rosenbrock(), x0, step_rate=0.01, momentum=0.9, momentum_type='nesterov')

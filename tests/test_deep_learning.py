@@ -1,7 +1,8 @@
 import pytest
 
+from ml.datasets import DataSet
+from ml.learning import err_ratio, grade_learner
 from ml.neural_network import *
-from ml.learning import DataSet, grade_learner, err_ratio
 
 
 def test_neural_net():

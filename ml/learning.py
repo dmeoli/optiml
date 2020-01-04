@@ -29,6 +29,14 @@ def err_ratio(predict, dataset, examples=None, verbose=0):
     return 1 - (right / len(examples))
 
 
+def grade_learner(predict, tests):
+    """
+    Grades the given learner based on how many tests it passes.
+    tests is a list with each element in the form: (values, output).
+    """
+    return mean(int(predict(X) == y) for X, y in tests)
+
+
 def train_test_split(dataset, start=None, end=None, test_split=None):
     """
     If you are giving 'start' and 'end' as parameters,

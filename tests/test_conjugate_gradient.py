@@ -5,7 +5,7 @@ from optimization_test_functions import *
 from unconstrained.conjugate_gradient import NCG
 
 
-def test_quadratic_functions():
+def test_quadratic():
     x0 = [[-1], [1]]
 
     x, status = NCG(gen_quad_1, x0)

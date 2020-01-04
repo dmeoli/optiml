@@ -1,7 +1,9 @@
 import pytest
 
+from ml.datasets import DataSet, open_data, parse_csv
 from ml.neural_network import PerceptronLearner
 from ml.learning import *
+from ml.svm import MultiSVM
 
 
 def test_exclude():
@@ -33,26 +35,12 @@ def test_means_and_deviation():
     assert round(deviations['virginica'][0], 3) == 0.636
 
 
-def test_plurality_learner():
-    zoo = DataSet(name='zoo')
-    pl = PluralityLearner(zoo)
-    assert pl([1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 4, 1, 0, 1]) == 'mammal'
-
-
 def test_k_nearest_neighbors():
     iris = DataSet(name='iris')
     knn = NearestNeighborLearner(iris, k=3)
     assert knn([5, 3, 1, 0.1]) == 'setosa'
     assert knn([6, 5, 3, 1.5]) == 'versicolor'
     assert knn([7.5, 4, 6, 2]) == 'virginica'
-
-
-def test_decision_tree_learner():
-    iris = DataSet(name='iris')
-    dtl = DecisionTreeLearner(iris)
-    assert dtl([5, 3, 1, 0.1]) == 'setosa'
-    assert dtl([6, 5, 3, 1.5]) == 'versicolor'
-    assert dtl([7.5, 4, 6, 2]) == 'virginica'
 
 
 def test_svm():
@@ -73,27 +61,6 @@ def test_svm():
     assert svm.predict([[7.5, 4.1, 6.2, 2.3]]) == 2
     assert svm.predict([[7.3, 4.0, 6.1, 2.4]]) == 2
     assert svm.predict([[7.0, 3.3, 6.1, 2.5]]) == 2
-
-
-def test_information_content():
-    assert information_content([]) == 0
-    assert information_content([4]) == 0
-    assert information_content([5, 4, 0, 2, 5, 0]) > 1.9
-    assert information_content([5, 4, 0, 2, 5, 0]) < 2
-    assert information_content([1.5, 2.5]) > 0.9
-    assert information_content([1.5, 2.5]) < 1.0
-
-
-def test_random_forest():
-    iris = DataSet(name='iris')
-    rf = RandomForest(iris)
-    tests = [([5.0, 3.0, 1.0, 0.1], 'setosa'),
-             ([5.1, 3.3, 1.1, 0.1], 'setosa'),
-             ([6.0, 5.0, 3.0, 1.0], 'versicolor'),
-             ([6.1, 2.2, 3.5, 1.0], 'versicolor'),
-             ([7.5, 4.1, 6.2, 2.3], 'virginica'),
-             ([7.3, 3.7, 6.1, 2.5], 'virginica')]
-    assert grade_learner(rf, tests) >= 1 / 3
 
 
 def test_random_weights():

@@ -5,7 +5,7 @@ from optimization_test_functions import *
 from unconstrained.newton import Newton
 
 
-def test_quadratic_functions():
+def test_quadratic():
     x0 = [[-1], [1]]
 
     x, status = Newton(gen_quad_1, x0)
