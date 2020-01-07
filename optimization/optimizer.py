@@ -26,10 +26,7 @@ class Minimizer:
             x = f.x0
         if not np.isrealobj(x):
             raise ValueError('x not a real vector')
-        x = np.asarray(x)
-        if x.shape[1] != 1:
-            raise ValueError('x is not a (column) vector')
-        self.x = x
+        self.x = np.asarray(x)
         self.n = x.shape[0]
         if not np.isrealobj(eps) or not np.isscalar(eps):
             raise ValueError('eps is not a real scalar')

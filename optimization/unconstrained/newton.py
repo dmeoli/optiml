@@ -223,4 +223,4 @@ class Newton(LineSearchOptimizer):
 
 
 if __name__ == "__main__":
-    print(Newton(Rosenbrock(), verbose=True, plot=True))
+    print(Newton(Rosenbrock(), verbose=True, plot=True).minimize())

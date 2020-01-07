@@ -10,7 +10,7 @@ class Function:
     def __init__(self, n=2):
         self._jacobian = jacobian(self.function)
         self._hessian = hessian(self.function)
-        self.x0 = np.random.standard_normal(n).reshape((n, 1))
+        self.x0 = np.random.standard_normal(n)
 
     def function(self, x):
         return NotImplementedError
@@ -73,8 +73,6 @@ class Quadratic(Function):
 
         if not np.isrealobj(q):
             raise ValueError('q not a real vector')
-        if q.shape[1] != 1:
-            raise ValueError('q is not a (column) vector')
         if q.size != n:
             raise ValueError('q size does not match with Q')
         self.q = q
@@ -136,17 +134,17 @@ class Quadratic(Function):
 
 
 # generic 2x2 quadratic function with nicely conditioned Hessian
-gen_quad_1 = Quadratic([[6, -2], [-2, 6]], [[10], [5]])
+gen_quad_1 = Quadratic([[6, -2], [-2, 6]], [10, 5])
 # generic 2x2 quadratic function with less nicely conditioned Hessian
-gen_quad_2 = Quadratic([[5, -3], [-3, 5]], [[10], [5]])
+gen_quad_2 = Quadratic([[5, -3], [-3, 5]], [10, 5])
 # generic 2x2 quadratic function with Hessian having one zero eigenvalue
-gen_quad_3 = Quadratic([[4, -4], [-4, 4]], [[10], [5]])
+gen_quad_3 = Quadratic([[4, -4], [-4, 4]], [10, 5])
 # generic 2x2 quadratic function with indefinite Hessian
 # (one positive and one negative eigenvalue)
-gen_quad_4 = Quadratic([[3, -5], [-5, 3]], [[10], [5]])
+gen_quad_4 = Quadratic([[3, -5], [-5, 3]], [10, 5])
 # generic 2x2 quadratic function with "very elongated" Hessian
 # (a very small positive minimum eigenvalue, the other much larger)
-gen_quad_5 = Quadratic([[101, -99], [-99, 101]], [[10], [5]])
+gen_quad_5 = Quadratic([[101, -99], [-99, 101]], [10, 5])
 
 
 class Rosenbrock(Function):
@@ -154,7 +152,7 @@ class Rosenbrock(Function):
     def __init__(self, n=2, autodiff=True):
         super().__init__(n)
         self.autodiff = autodiff
-        self.x_star = np.ones(n).reshape((n, 1))
+        self.x_star = np.ones(n)
 
     def function(self, x):
         """
@@ -166,7 +164,7 @@ class Rosenbrock(Function):
         76.56
         """
         x = np.array(x)
-        return np.sum(100.0 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2) if x.size != 0 else 0
+        return np.sum(100.0 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2, axis=0) if x.size != 0 else 0
 
     def jacobian(self, x):
         """
@@ -269,7 +267,7 @@ class Ackley(Function):
 
     def __init__(self, n=2):
         super().__init__(n)
-        self.x_star = np.zeros(n).reshape((n, 1))
+        self.x_star = np.zeros(n)
 
     def function(self, x):
         """
@@ -307,7 +305,7 @@ class Sphere(Function):
 
     def __init__(self, n=2):
         super().__init__(n)
-        self.x_star = np.ones(n).reshape((n, 1))
+        self.x_star = np.ones(n)
 
     def function(self, x):
         """

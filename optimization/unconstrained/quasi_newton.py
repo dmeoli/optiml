@@ -207,7 +207,6 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
 
             # update approximation of the Hessian using the
             # Broyden-Fletcher-Goldfarb-Shanno formula
-
             s = last_x - self.x  # s^i = x^{i + 1} - x^i
             y = last_g - g  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
 
@@ -246,4 +245,4 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
 
 
 if __name__ == "__main__":
-    print(BroydenFletcherGoldfarbShanno(Rosenbrock(), verbose=True, plot=True))
+    print(BroydenFletcherGoldfarbShanno(Rosenbrock(), verbose=True, plot=True).minimize())

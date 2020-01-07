@@ -201,5 +201,4 @@ class Subgradient(LineSearchOptimizer):
 
 
 if __name__ == "__main__":
-    obj = Rosenbrock()
-    print(Subgradient(Rosenbrock(), verbose=True, plot=True))
+    print(Subgradient(Rosenbrock(), verbose=True, plot=True).minimize())
