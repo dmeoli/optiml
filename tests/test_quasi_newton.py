@@ -1,31 +1,28 @@
 import numpy as np
 import pytest
 
-from optimization_test_functions import *
-from unconstrained.quasi_newton import BroydenFletcherGoldfarbShanno
+from optimization.test_functions import *
+from optimization.unconstrained.quasi_newton import BroydenFletcherGoldfarbShanno
 
 
 def test_quadratic():
-    x0 = np.random.standard_normal(2).reshape((2, 1))
-
-    x, status = BroydenFletcherGoldfarbShanno(gen_quad_1, x0)
-    assert np.allclose(x, [[2.1875], [1.5625]])
+    x, status = BroydenFletcherGoldfarbShanno(gen_quad_1).minimize()
+    assert np.allclose(x, gen_quad_1.x_star)
     assert status is 'optimal'
 
-    x, status = BroydenFletcherGoldfarbShanno(gen_quad_2, x0)
-    assert np.allclose(x, [[4.0625], [3.4375]])
+    x, status = BroydenFletcherGoldfarbShanno(gen_quad_2).minimize()
+    assert np.allclose(x, gen_quad_2.x_star)
     assert status is 'optimal'
 
-    x, status = BroydenFletcherGoldfarbShanno(gen_quad_5, x0)
-    assert np.allclose(x, [[3.7625], [3.7375]])
+    x, status = BroydenFletcherGoldfarbShanno(gen_quad_5).minimize()
+    assert np.allclose(x, gen_quad_5.x_star)
     assert status is 'optimal'
 
 
 def test_Rosenbrock():
-    x0 = np.random.standard_normal(2).reshape((2, 1))
-
-    x, status = BroydenFletcherGoldfarbShanno(Rosenbrock(), x0)
-    assert np.allclose(x, [[1], [1]])
+    obj = Rosenbrock()
+    x, status = BroydenFletcherGoldfarbShanno(Rosenbrock()).minimize()
+    assert np.allclose(x, obj.x_star)
     assert status is 'optimal'
 
 

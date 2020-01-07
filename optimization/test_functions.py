@@ -7,9 +7,10 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 class Function:
-    def __init__(self):
+    def __init__(self, n=2):
         self._jacobian = jacobian(self.function)
         self._hessian = hessian(self.function)
+        self.x0 = np.random.standard_normal(n).reshape((n, 1))
 
     def function(self, x):
         return NotImplementedError
@@ -44,6 +45,7 @@ class Quadratic(Function):
                            positive semidefinite, f(x) will be unbounded below.
         :param q: ([n x 1] real column vector): the linear part of f.
         """
+
         Q = np.array(Q)
         q = np.array(q)
 
@@ -52,24 +54,26 @@ class Quadratic(Function):
             raise ValueError('Q not a real matrix')
 
         n = Q.shape[0]
+        super().__init__(n)
 
         if n <= 1:
             raise ValueError('Q is too small')
-
         if n != Q.shape[1]:
             raise ValueError('Q is not square')
+        self.Q = Q
 
         if not np.isrealobj(q):
             raise ValueError('q not a real vector')
-
         if q.shape[1] != 1:
             raise ValueError('q is not a (column) vector')
-
         if q.size != n:
             raise ValueError('q size does not match with Q')
-
-        self.Q = Q
         self.q = q
+
+        try:
+            self.x_star = np.linalg.inv(self.Q).dot(self.q)  # np.linalg.solve(self.Q, self.q)
+        except np.linalg.LinAlgError:
+            self.x_star = np.full((n, 1), -np.nan)
 
     def function(self, x):
         """
@@ -80,8 +84,7 @@ class Quadratic(Function):
         """
         x = np.array(x)
         return (0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x)).item() \
-            if x.size != 0 else self.function(np.linalg.inv(self.Q).dot(self.q)) \
-            if min(np.linalg.eigvalsh(self.Q)) > 1e-14 else -np.inf  # np.linalg.solve(Q, q)
+            if x.size != 0 else self.x_star if min(np.linalg.eigvalsh(self.Q)) > 1e-14 else -np.inf
 
     def jacobian(self, x):
         """
@@ -119,7 +122,7 @@ class Quadratic(Function):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*np.linalg.inv(self.Q).dot(self.q), 'r*', markersize=10)  # np.linalg.solve(self.Q, self.q)
+        contour_axes.plot(*self.x_star, 'r*', markersize=10)
         return surface_plot, surface_axes, contour_plot, contour_axes
 
 
@@ -138,6 +141,10 @@ gen_quad_5 = Quadratic([[101, -99], [-99, 101]], [[10], [5]])
 
 
 class Rosenbrock(Function):
+
+    def __init__(self, n=2):
+        super().__init__(n)
+        self.x_star = np.ones(n).reshape((n, 1))
 
     def function(self, x):
         """
@@ -164,12 +171,16 @@ class Rosenbrock(Function):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*np.array([1, 1]), 'r*', markersize=10)
+        contour_axes.plot(*self.x_star, 'r*', markersize=10)
 
         return surface_plot, surface_axes, contour_plot, contour_axes
 
 
 class Ackley(Function):
+
+    def __init__(self, n=2):
+        super().__init__(n)
+        self.x_star = np.zeros(n).reshape((n, 1))
 
     def function(self, x):
         """
@@ -198,12 +209,16 @@ class Ackley(Function):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*np.array([0, 0]), 'r*', markersize=10)
+        contour_axes.plot(*self.x_star, 'r*', markersize=10)
 
         return surface_plot, surface_axes, contour_plot, contour_axes
 
 
 class Sphere(Function):
+
+    def __init__(self, n=2):
+        super().__init__(n)
+        self.x_star = np.ones(n).reshape((n, 1))
 
     def function(self, x):
         """
@@ -229,6 +244,6 @@ class Sphere(Function):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*np.array([0, 0]), 'r*', markersize=10)
+        contour_axes.plot(*self.x_star, 'r*', markersize=10)
 
         return surface_plot, surface_axes, contour_plot, contour_axes

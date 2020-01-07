@@ -1,8 +1,10 @@
+import numpy as np
 import pytest
 
-from ml.datasets import DataSet, open_data, parse_csv
+from ml.datasets import DataSet, parse_csv, open_data
+from ml.learning import weighted_mode, weighted_replicate, NearestNeighborLearner, random_weights, WeightedLearner, \
+    ada_boost, grade_learner, err_ratio
 from ml.neural_network import PerceptronLearner
-from ml.learning import *
 from ml.svm import MultiSVM
 
 

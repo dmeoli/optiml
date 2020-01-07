@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization_test_functions import Rosenbrock
+from optimization.optimizer import LineSearchOptimizer
+from optimization.test_functions import Rosenbrock
 
 
-def Subgradient(f, x, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000,
-                m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+class Subgradient(LineSearchOptimizer):
     # Apply the classical Subgradient Method for the minimization of the
     # provided function f.
     #
@@ -97,141 +97,109 @@ def Subgradient(f, x, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000,
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    x = np.asarray(x)
+    def __init__(self, f, x=None, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000,
+                 m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, x, eps, max_f_eval, 0, 0, a_start, tau, 0, m_inf, min_a, verbose, plot)
 
-    # reading and checking input
-    if not np.isrealobj(x):
-        return ValueError('x not a real vector')
+    def minimize(self):
+        f_star = self.f.function([])
 
-    if x.shape[1] != 1:
-        return ValueError('x is not a (column) vector')
+        if self.eps < 0 and f_star == -np.inf:
+            # no way of cheating since the true optimal value is unknown
+            self.eps = -self.eps  # revert to ordinary target level step size
 
-    f_star = f.function([])
-
-    n = x.shape[0]
-
-    if not np.isrealobj(eps) or not np.isscalar(eps):
-        return ValueError('eps is not a real scalar')
-
-    if eps < 0 and f_star == -np.inf:
-        # no way of cheating since the true optimal value is unknown
-        eps = -eps  # revert to ordinary target level step size
-
-    if not np.isscalar(a_start):
-        return ValueError('a_start is not a real scalar')
-
-    if a_start < 0:
-        return ValueError('a_start must be > 0')
-
-    if not np.isscalar(tau):
-        return ValueError('tau is not a real scalar')
-
-    if tau <= 0 or tau >= 1:
-        return ValueError('tau is not in (0,1)')
-
-    if not np.isscalar(max_f_eval):
-        return ValueError('max_f_eval is not an integer scalar')
-
-    if not np.isscalar(m_inf):
-        return ValueError('m_inf is not a real scalar')
-
-    if not np.isscalar(min_a):
-        return ValueError('min_a is not a real scalar')
-
-    if min_a < 0:
-        return ValueError('min_a is < 0')
-
-    if verbose:
-        if f_star > -np.inf:
-            print('iter\trel gap\t\t|| g(x) ||\ta')
-        else:
-            print('iter\tf(x)\t\t\t|| g(x) ||\ta')
-
-    x_ref = x
-    f_ref = np.inf  # best f-value found so far
-    if eps > 0:
-        delta = 0  # required displacement from f_ref;
-
-    if plot and n == 2:
-        surface_plot, contour_plot, contour_plot, contour_axes = f.plot()
-
-    i = 1
-    while True:
-        # compute function and subgradient
-        v, g = f.function(x), f.jacobian(x)
-        ng = np.linalg.norm(g)
-
-        if eps > 0:  # target-level step size
-            if v <= f_ref - delta:  # found a "significantly" better point
-                delta = a_start * max(abs(v), 1)  # reset delta
-            else:  # decrease delta
-                delta = max(delta * tau, eps * max(abs(min(v, f_ref)), 1))
-
-        if v < f_ref:  # found a better f-value (however slightly better)
-            f_ref = v  # update f_ref
-            x_ref = x  # this is the incumbent solution
-
-        # output statistics
-        if verbose:
+        if self.verbose:
             if f_star > -np.inf:
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(i, (v - f_star) / max(abs(f_star), 1), ng), end='')
+                print('iter\trel gap\t\t|| g(x) ||\ta')
             else:
-                print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(i, v, ng), end='')
+                print('iter\tf(x)\t\t\t|| g(x) ||\ta')
 
-        # stopping criteria
-        if eps < 0 and f_ref - f_star <= -eps * max(abs(f_star), 1):
-            x_ref = x
-            status = 'optimal'
-            break
+        x_ref = self.x
+        f_ref = np.inf  # best f-value found so far
+        if self.eps > 0:
+            delta = 0  # required displacement from f_ref;
 
-        if ng < 1e-12:  # unlikely, but it could happen
-            x_ref = x
-            status = 'optimal'
-            break
+        if self.plot and self.n == 2:
+            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        if i > max_f_eval:
-            status = 'stopped'
-            break
+        i = 1
+        while True:
+            # compute function and subgradient
+            v, g = self.f.function(self.x), self.f.jacobian(self.x)
+            ng = np.linalg.norm(g)
 
-        # compute step size
-        if eps > 0:  # Polyak step size with target level
-            a = (v - f_ref + delta) / ng
-        elif eps < 0:  # true Polyak step size (cheating)
-            a = (v - f_star) / ng
-        else:  # diminishing square-summable step size
-            a = a_start * (1 / i)
+            if self.eps > 0:  # target-level step size
+                if v <= f_ref - delta:  # found a "significantly" better point
+                    delta = self.a_start * max(abs(v), 1)  # reset delta
+                else:  # decrease delta
+                    delta = max(delta * self.tau, self.eps * max(abs(min(v, f_ref)), 1))
 
-        # output statistics
-        if verbose:
-            print('\t{:1.4e}'.format(a))
+            if v < f_ref:  # found a better f-value (however slightly better)
+                f_ref = v  # update f_ref
+                x_ref = self.x  # this is the incumbent solution
 
-        # stopping criteria
-        if a <= min_a:
-            status = 'stopped'
-            break
+            # output statistics
+            if self.verbose:
+                if f_star > -np.inf:
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(i, (v - f_star) / max(abs(f_star), 1), ng), end='')
+                else:
+                    print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(i, v, ng), end='')
 
-        if v <= m_inf:
-            status = 'unbounded'
-            break
+            # stopping criteria
+            if self.eps < 0 and f_ref - f_star <= -self.eps * max(abs(f_star), 1):
+                x_ref = self.x
+                status = 'optimal'
+                break
 
-        # plot the trajectory
-        if plot and n == 2:
-            p_xy = np.hstack((x, x - (a / ng) * g))
-            contour_axes.plot(p_xy[0], p_xy[1], color='k')
+            if ng < 1e-12:  # unlikely, but it could happen
+                x_ref = self.x
+                status = 'optimal'
+                break
 
-        # compute new point
-        x = x - (a / ng) * g
+            if i > self.max_f_eval:
+                status = 'stopped'
+                break
 
-        i += 1
+            # compute step size
+            if self.eps > 0:  # Polyak step size with target level
+                a = (v - f_ref + delta) / ng
+            elif self.eps < 0:  # true Polyak step size (cheating)
+                a = (v - f_star) / ng
+            else:  # diminishing square-summable step size
+                a = self.a_start * (1 / i)
 
-    x = x_ref  # return point corresponding to best value found so far
+            # output statistics
+            if self.verbose:
+                print('\t{:1.4e}'.format(a))
 
-    if verbose:
-        print()
-    if plot and n == 2:
-        plt.show()
-    return x, status
+            # stopping criteria
+            if a <= self.min_a:
+                status = 'stopped'
+                break
+
+            if v <= self.m_inf:
+                status = 'unbounded'
+                break
+
+            # plot the trajectory
+            if self.plot and self.n == 2:
+                p_xy = np.hstack((self.x, self.x - (a / ng) * g))
+                contour_axes.plot(p_xy[0], p_xy[1], color='k')
+
+            # compute new point
+            self.x = self.x - (a / ng) * g
+
+            i += 1
+
+        x = x_ref  # return point corresponding to best value found so far
+
+        if self.verbose:
+            print()
+        if self.plot and self.n == 2:
+            plt.show()
+        return x, status
 
 
 if __name__ == "__main__":
-    print(Subgradient(Rosenbrock(), [[-1], [1]], verbose=True, plot=True))
+    obj = Rosenbrock()
+    print(Subgradient(Rosenbrock(), verbose=True, plot=True))

@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import confusion_matrix, classification_report
 
-from ml.learning import BinarySVM
-from utils import rbf_kernel
+from ml.svm import BinarySVM, rbf_kernel
 
 
 def data_generator(data_type='separable', n=200):

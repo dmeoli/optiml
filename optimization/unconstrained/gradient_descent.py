@@ -1,12 +1,12 @@
-from random import random
+import random
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.neural_network import BackPropagation, get_batch, init_examples
-from optimization_test_functions import Rosenbrock, gen_quad_2
-from optimizer import Optimizer, LineSearchOptimizer
-from unconstrained.line_search import armijo_wolfe_line_search, backtracking_line_search
+from ml.neural_network import get_batch, init_examples, BackPropagation
+from optimization.optimizer import Optimizer, LineSearchOptimizer
+from optimization.test_functions import Rosenbrock, gen_quad_2
+from optimization.unconstrained.line_search import armijo_wolfe_line_search, backtracking_line_search
 from utils import vector_add, scalar_vector_product
 
 
@@ -30,7 +30,7 @@ class SteepestGradientDescentQuadratic(Optimizer):
                      x is the best solution found so far, but not necessarily the optimal one.
     """
 
-    def __init__(self, f, x, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+    def __init__(self, f, x=None, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, x, eps, max_iter, verbose, plot)
         if self.x.size != self.f.hessian().shape[0]:
             raise ValueError('x size does not match with Q')
@@ -184,7 +184,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
     """
 
-    def __init__(self, f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
+    def __init__(self, f, x=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
                  sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         """
 
@@ -420,7 +420,7 @@ class GradientDescent(Optimizer):
         latter before.
     """
 
-    def __init__(self, f, x, eps=1e-6, max_iter=1000, step_rate=0.1, momentum=0.0,
+    def __init__(self, f, x=None, eps=1e-6, max_iter=1000, step_rate=0.1, momentum=0.0,
                  momentum_type='none', verbose=False, plot=False, args=None):
         """Create a GradientDescent object.
 
@@ -494,21 +494,21 @@ class GradientDescent(Optimizer):
 
 
 if __name__ == "__main__":
-    print(SteepestGradientDescentQuadratic(gen_quad_2, [[-1], [1]], f_star=gen_quad_2.function([]),
+    print(SteepestGradientDescentQuadratic(gen_quad_2, f_star=gen_quad_2.function([]),
                                            verbose=True, plot=True).minimize())
     print()
-    print(SteepestGradientDescent(Rosenbrock(), [[-1], [1]], max_f_eval=10000, verbose=True, plot=True).minimize())
+    print(SteepestGradientDescent(Rosenbrock(), max_f_eval=10000, verbose=True, plot=True).minimize())
     print()
-    print(GradientDescent(Rosenbrock(), [[-1], [1]], step_rate=0.01, verbose=True, plot=True))
+    print(GradientDescent(Rosenbrock(), step_rate=0.01, verbose=True, plot=True))
     print()
-    print(GradientDescent(Rosenbrock(), [[-1], [1]], step_rate=0.01, momentum=0.9,
+    print(GradientDescent(Rosenbrock(), step_rate=0.01, momentum=0.9,
                           momentum_type='standard', verbose=True, plot=True))
     print()
-    print(GradientDescent(Rosenbrock(), [[-1], [1]], step_rate=0.01, momentum=0.9,
+    print(GradientDescent(Rosenbrock(), step_rate=0.01, momentum=0.9,
                           momentum_type='nesterov', verbose=True, plot=True))
 
 
-def gradient_descent(x, inputs, target, net, loss, epochs=1000, l_rate=0.01, batch_size=1, verbose=None):
+def stochastic_gradient_descent(x, inputs, target, net, loss, epochs=1000, l_rate=0.01, batch_size=1, verbose=None):
     """
     Gradient descent algorithm to update the learnable parameters of a network.
     :return: the updated network

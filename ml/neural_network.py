@@ -1,7 +1,34 @@
 from ml.layers import InputLayer, DenseLayer
 from ml.losses import mean_squared_error_loss
-from unconstrained.gradient_descent import gradient_descent
+from optimization.unconstrained.gradient_descent import stochastic_gradient_descent
+
 from utils import element_wise_product, vector_add, scalar_vector_product, matrix_multiplication
+
+
+def get_batch(examples, batch_size=1):
+    """Split examples into multiple batches"""
+    for i in range(0, len(examples), batch_size):
+        yield examples[i: i + batch_size]
+
+
+def init_examples(examples, idx_i, idx_t, o_units):
+    """Init examples from dataset.examples."""
+
+    inputs, targets = {}, {}
+    for i, e in enumerate(examples):
+        # input values of e
+        inputs[i] = [e[i] for i in idx_i]
+
+        if o_units > 1:
+            # one-hot representation of e's target
+            t = [0 for i in range(o_units)]
+            t[e[idx_t]] = 1
+            targets[i] = t
+        else:
+            # target value of e
+            targets[i] = [e[idx_t]]
+
+    return inputs, targets
 
 
 def BackPropagation(inputs, targets, theta, net, loss):
@@ -45,7 +72,7 @@ def BackPropagation(inputs, targets, theta, net, loss):
         # backward pass
         for i in range(h_layers, 0, -1):
             layer = net[i]
-            derivative = [layer.activation.jacobian(node.val) for node in layer.nodes]
+            derivative = [layer.activation.derivative(node.val) for node in layer.nodes]
             delta[i] = element_wise_product(previous, derivative)
             # pass to layer i-1 in the next iteration
             previous = matrix_multiplication([delta[i]], theta[i])[0]
@@ -58,34 +85,8 @@ def BackPropagation(inputs, targets, theta, net, loss):
     return total_gradients, batch_loss
 
 
-def get_batch(examples, batch_size=1):
-    """Split examples into multiple batches"""
-    for i in range(0, len(examples), batch_size):
-        yield examples[i: i + batch_size]
-
-
-def init_examples(examples, idx_i, idx_t, o_units):
-    """Init examples from dataset.examples."""
-
-    inputs, targets = {}, {}
-    for i, e in enumerate(examples):
-        # input values of e
-        inputs[i] = [e[i] for i in idx_i]
-
-        if o_units > 1:
-            # one-hot representation of e's target
-            t = [0 for i in range(o_units)]
-            t[e[idx_t]] = 1
-            targets[i] = t
-        else:
-            # target value of e
-            targets[i] = [e[idx_t]]
-
-    return inputs, targets
-
-
 def NeuralNetLearner(dataset, hidden_layer_sizes=None, learning_rate=0.01, epochs=100,
-                     optimizer=gradient_descent, batch_size=1, verbose=None):
+                     optimizer=stochastic_gradient_descent, batch_size=1, verbose=None):
     """
     Simple dense multilayer neural network.
     :param hidden_layer_sizes: size of hidden layers in the form of a list
@@ -125,7 +126,8 @@ def NeuralNetLearner(dataset, hidden_layer_sizes=None, learning_rate=0.01, epoch
     return predict
 
 
-def PerceptronLearner(dataset, learning_rate=0.01, epochs=100, optimizer=gradient_descent, batch_size=1, verbose=None):
+def PerceptronLearner(dataset, learning_rate=0.01, epochs=100, optimizer=stochastic_gradient_descent,
+                      batch_size=1, verbose=None):
     """
     Simple perceptron neural network.
     """

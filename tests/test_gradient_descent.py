@@ -1,119 +1,106 @@
 import pytest
 
-from optimization_test_functions import *
-from unconstrained.gradient_descent import *
+from optimization.test_functions import *
+from optimization.unconstrained.gradient_descent import SteepestGradientDescentQuadratic, SteepestGradientDescent, \
+    GradientDescent
 
 
 def test_SteepestGradientDescentQuadratic_quadratic():
-    x0 = np.random.standard_normal(2).reshape((2, 1))
-
-    x, status = SteepestGradientDescentQuadratic(gen_quad_1, x0).minimize()
-    assert np.allclose(x, [[2.1875], [1.5625]])
+    x, status = SteepestGradientDescentQuadratic(gen_quad_1).minimize()
+    assert np.allclose(x, gen_quad_1.x_star)
     assert status is 'optimal'
 
-    x, status = SteepestGradientDescentQuadratic(gen_quad_2, x0).minimize()
-    assert np.allclose(x, [[4.0625], [3.4375]])
+    x, status = SteepestGradientDescentQuadratic(gen_quad_2).minimize()
+    assert np.allclose(x, gen_quad_2.x_star)
     assert status is 'optimal'
 
-    x, status = SteepestGradientDescentQuadratic(gen_quad_5, x0).minimize()
-    assert np.allclose(x, [[3.7625], [3.7375]])
+    x, status = SteepestGradientDescentQuadratic(gen_quad_5).minimize()
+    assert np.allclose(x, gen_quad_5.x_star)
     assert status is 'optimal'
 
 
 def test_SteepestGradientDescent_quadratic():
-    x0 = np.random.standard_normal(2).reshape((2, 1))
-
-    x, status = SteepestGradientDescent(gen_quad_1, x0).minimize()
-    assert np.allclose(x, [[2.1875], [1.5625]])
+    x, status = SteepestGradientDescent(gen_quad_1).minimize()
+    assert np.allclose(x, gen_quad_1.x_star)
     assert status is 'optimal'
 
-    x, status = SteepestGradientDescent(gen_quad_2, x0).minimize()
-    assert np.allclose(x, [[4.0625], [3.4375]])
+    x, status = SteepestGradientDescent(gen_quad_2).minimize()
+    assert np.allclose(x, gen_quad_2.x_star)
     assert status is 'optimal'
 
-    x, status = SteepestGradientDescent(gen_quad_5, x0).minimize()
-    assert np.allclose(x, [[3.7625], [3.7375]])
-    assert status is 'optimal'
-
-
-def test_GradientDescent_quadratic():
-    x0 = np.random.standard_normal(2).reshape((2, 1))
-
-    x, status = GradientDescent(gen_quad_1, x0, step_rate=0.01)
-    assert np.allclose(x, [[2.1875], [1.5625]])
-    assert status is 'optimal'
-
-    x, status = GradientDescent(gen_quad_2, x0, step_rate=0.01)
-    assert np.allclose(x, [[4.0625], [3.4375]])
-    assert status is 'optimal'
-
-    x, status = GradientDescent(gen_quad_5, x0, step_rate=0.01)
-    assert np.allclose(x, [[3.7625], [3.7375]])
-    assert status is 'optimal'
-
-
-def test_GradientDescent_standard_quadratic():
-    x0 = np.random.standard_normal(2).reshape((2, 1))
-
-    x, status = GradientDescent(gen_quad_1, x0, step_rate=0.01, momentum=0.9, momentum_type='standard')
-    assert np.allclose(x, [[2.1875], [1.5625]])
-    assert status is 'optimal'
-
-    x, status = GradientDescent(gen_quad_2, x0, step_rate=0.01, momentum=0.9, momentum_type='standard')
-    assert np.allclose(x, [[4.0625], [3.4375]])
-    assert status is 'optimal'
-
-    x, status = GradientDescent(gen_quad_5, x0, step_rate=0.01, momentum=0.9, momentum_type='standard')
-    assert np.allclose(x, [[3.7625], [3.7375]])
-    assert status is 'optimal'
-
-
-def test_GradientDescent_Nesterov_quadratic():
-    x0 = np.random.standard_normal(2).reshape((2, 1))
-
-    x, status = GradientDescent(gen_quad_1, x0, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
-    assert np.allclose(x, [[2.1875], [1.5625]])
-    assert status is 'optimal'
-
-    x, status = GradientDescent(gen_quad_2, x0, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
-    assert np.allclose(x, [[4.0625], [3.4375]])
-    assert status is 'optimal'
-
-    x, status = GradientDescent(gen_quad_5, x0, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
-    assert np.allclose(x, [[3.7625], [3.7375]])
+    x, status = SteepestGradientDescent(gen_quad_5).minimize()
+    assert np.allclose(x, gen_quad_5.x_star)
     assert status is 'optimal'
 
 
 def test_SteepestGradientDescent_Rosenbrock():
-    x0 = np.random.standard_normal(2).reshape((2, 1))
-
+    obj = Rosenbrock()
     # TODO fixed: in MATLAB it works with just 1000 max_f_eval
-    x, status = SteepestGradientDescent(Rosenbrock(), x0, max_f_eval=10000).minimize()
-    assert np.allclose(x, [[1], [1]])
+    x, status = SteepestGradientDescent(obj, max_f_eval=10000).minimize()
+    assert np.allclose(x, obj.x_star)
+    assert status is 'optimal'
+
+
+def test_GradientDescent_quadratic():
+    x, status = GradientDescent(gen_quad_1, step_rate=0.01)
+    assert np.allclose(x, gen_quad_1.x_star)
+    assert status is 'optimal'
+
+    x, status = GradientDescent(gen_quad_2, step_rate=0.01)
+    assert np.allclose(x, gen_quad_2.x_star)
+    assert status is 'optimal'
+
+    x, status = GradientDescent(gen_quad_5, step_rate=0.01)
+    assert np.allclose(x, gen_quad_5.x_star)
     assert status is 'optimal'
 
 
 def test_GradientDescent_Rosenbrock():
-    x0 = np.random.standard_normal(2).reshape((2, 1))
+    obj = Rosenbrock()
+    x, status = GradientDescent(obj, step_rate=0.01)
+    assert np.allclose(x, obj.x_star)
+    assert status is 'optimal'
 
-    x, status = GradientDescent(Rosenbrock(), x0, step_rate=0.01)
-    assert np.allclose(x, [[1], [1]])
+
+def test_GradientDescent_standard_quadratic():
+    x, status = GradientDescent(gen_quad_1, step_rate=0.01, momentum=0.9, momentum_type='standard')
+    assert np.allclose(x, gen_quad_1.x_star)
+    assert status is 'optimal'
+
+    x, status = GradientDescent(gen_quad_2, step_rate=0.01, momentum=0.9, momentum_type='standard')
+    assert np.allclose(x, gen_quad_2.x_star)
+    assert status is 'optimal'
+
+    x, status = GradientDescent(gen_quad_5, step_rate=0.01, momentum=0.9, momentum_type='standard')
+    assert np.allclose(x, gen_quad_5.x_star)
     assert status is 'optimal'
 
 
 def test_GradientDescent_standard_Rosenbrock():
-    x0 = np.random.standard_normal(2).reshape((2, 1))
+    obj = Rosenbrock()
+    x, status = GradientDescent(obj, step_rate=0.01, momentum=0.9, momentum_type='standard')
+    assert np.allclose(x, obj.x_star)
+    assert status is 'optimal'
 
-    x, status = GradientDescent(Rosenbrock(), x0, step_rate=0.01, momentum=0.9, momentum_type='standard')
-    assert np.allclose(x, [[1], [1]])
+
+def test_GradientDescent_Nesterov_quadratic():
+    x, status = GradientDescent(gen_quad_1, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
+    assert np.allclose(x, gen_quad_1.x_star)
+    assert status is 'optimal'
+
+    x, status = GradientDescent(gen_quad_2, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
+    assert np.allclose(x, gen_quad_2.x_star)
+    assert status is 'optimal'
+
+    x, status = GradientDescent(gen_quad_5, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
+    assert np.allclose(x, gen_quad_5.x_star)
     assert status is 'optimal'
 
 
 def test_GradientDescent_Nesterov_Rosenbrock():
-    x0 = np.random.standard_normal(2).reshape((2, 1))
-
-    x, status = GradientDescent(Rosenbrock(), x0, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
-    assert np.allclose(x, [[1], [1]])
+    obj = Rosenbrock()
+    x, status = GradientDescent(obj, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
+    assert np.allclose(x, obj.x_star)
     assert status is 'optimal'
 
 

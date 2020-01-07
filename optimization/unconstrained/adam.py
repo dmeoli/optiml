@@ -1,4 +1,4 @@
-from random import random
+import random
 
 import numpy as np
 
@@ -6,7 +6,7 @@ from ml.neural_network import BackPropagation, get_batch, init_examples
 from utils import vector_add, scalar_vector_product, map_vector, element_wise_product
 
 
-def adam(x, inputs, target, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
+def Adam(x, inputs, target, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
          l_rate=0.001, batch_size=1, verbose=None):
     """
     Adam optimizer to update the learnable parameters of a network.
@@ -33,7 +33,7 @@ def adam(x, inputs, target, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 
             # compute gradients of weights
             gs, batch_loss = BackPropagation(inputs, targets, weights, net, loss)
 
-            # update s,r,s_hat and r_gat
+            # update s, r, s_hat and r_gat
             s = vector_add(scalar_vector_product(rho[0], s),
                            scalar_vector_product((1 - rho[0]), gs))
             r = vector_add(scalar_vector_product(rho[1], r),

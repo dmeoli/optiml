@@ -6,6 +6,10 @@ from statistics import mean, stdev
 from utils import remove_all, unique, num_or_str
 
 
+def mean_boolean_error(x, y):
+    return mean(_x != _y for _x, _y in zip(x, y))
+
+
 class DataSet:
     """
     A data set for a machine learning problem. It has the following fields:
@@ -195,10 +199,6 @@ def parse_csv(input, delim=','):
     """
     lines = [line for line in input.splitlines() if line.strip()]
     return [list(map(num_or_str, line.split(delim))) for line in lines]
-
-
-def mean_boolean_error(x, y):
-    return mean(_x != _y for _x, _y in zip(x, y))
 
 
 orings = DataSet(name='orings', target='Distressed', attr_names='Rings Distressed Temp Pressure Flightnum')

@@ -2,11 +2,11 @@ import itertools
 
 import numpy as np
 
-from optimization_test_functions import Function
+from optimization.test_functions import Function
 
 
 class Minimizer:
-    def __init__(self, f, x, eps=1e-6, verbose=False, plot=False, args=None):
+    def __init__(self, f, x=None, eps=1e-6, verbose=False, plot=False, args=None):
         """
 
         :param f:        the objective function.
@@ -22,6 +22,8 @@ class Minimizer:
         if not isinstance(f, Function):
             raise ValueError('f not a function')
         self.f = f
+        if x is None:
+            x = f.x0
         if not np.isrealobj(x):
             raise ValueError('x not a real vector')
         x = np.asarray(x)
@@ -66,7 +68,7 @@ class Minimizer:
 
 
 class Optimizer(Minimizer):
-    def __init__(self, f, x, eps=1e-6, max_iter=1000, verbose=False, plot=False, args=None):
+    def __init__(self, f, x=None, eps=1e-6, max_iter=1000, verbose=False, plot=False, args=None):
         """
 
         :param f:        the objective function.
@@ -87,7 +89,7 @@ class Optimizer(Minimizer):
 
 
 class LineSearchOptimizer(Minimizer):
-    def __init__(self, f, x, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
+    def __init__(self, f, x=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
                  sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
         """
 
