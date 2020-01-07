@@ -12,7 +12,7 @@ install:
   - pip install qpsolvers
 
 script:
-  - py.test
+  - py.test --cov=./
   - python -m doctest -v *.py
 
 notifications:
