@@ -31,6 +31,9 @@ class Function:
         """
         return self._hessian(np.array(x, dtype=float)).reshape((x.size, x.size))
 
+    def hessian_product(self, x, p):
+        return np.dot(self.hessian(x), p)
+
     def plot(self, x_min, x_max, y_min, y_max):
         return NotImplementedError
 
