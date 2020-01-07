@@ -20,7 +20,12 @@ def test_quadratic():
 
 
 def test_Rosenbrock():
-    obj = Rosenbrock()
+    obj = Rosenbrock(autodiff=True)
+    x, status = Newton(obj).minimize()
+    assert np.allclose(x, obj.x_star)
+    assert status is 'optimal'
+
+    obj = Rosenbrock(autodiff=False)
     x, status = Newton(obj).minimize()
     assert np.allclose(x, obj.x_star)
     assert status is 'optimal'
