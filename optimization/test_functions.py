@@ -11,6 +11,7 @@ class Function:
         self._jacobian = jacobian(self.function)
         self._hessian = hessian(self.function)
         self.x0 = np.random.standard_normal(n)
+        self.x_star = None
 
     def function(self, x):
         return NotImplementedError
@@ -39,6 +40,9 @@ class Function:
         :return:  the Hessian matrix of the function at x multiplied by the vector p.
         """
         return np.dot(self.hessian(x), p)
+
+    def solved(self, x, tol=0.1):
+        return abs(x - self.x_star).mean() < tol
 
     def plot(self, x_min, x_max, y_min, y_max):
         return NotImplementedError
@@ -80,7 +84,7 @@ class Quadratic(Function):
         try:
             self.x_star = np.linalg.inv(self.Q).dot(self.q)  # np.linalg.solve(self.Q, self.q)
         except np.linalg.LinAlgError:
-            self.x_star = np.full((1,), np.nan)
+            self.x_star = np.full((n,), np.nan)
 
     def function(self, x):
         """
@@ -109,6 +113,9 @@ class Quadratic(Function):
         :return:  the Hessian matrix (i.e. the quadratic part) of a general quadratic function at x.
         """
         return self.Q
+
+    def solved(self, x, tol=0.01):
+        return (abs(self.jacobian(x)) < tol).all()
 
     def plot(self, x_min=-5, x_max=2, y_min=-5, y_max=2):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
