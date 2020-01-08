@@ -203,17 +203,17 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
                 else:
                     if self.wf == 0:
                         betaFR = (ng / np.linalg.norm(past_g)) ** 2  # Fletcher-Reeves
-                        betaPR = (g.T.dot(g - past_g) / np.linalg.norm(past_g) ** 2).item()  # Polak-Ribiere
+                        betaPR = g.T.dot(g - past_g) / np.linalg.norm(past_g) ** 2  # Polak-Ribiere
                         beta = max(-betaFR, min(betaPR, betaFR))
                     if self.wf == 1:  # Fletcher-Reeves
                         beta = (ng / np.linalg.norm(past_g)) ** 2
                     elif self.wf == 2:  # Polak-Ribiere
-                        beta = (g.T.dot(g - past_g) / np.linalg.norm(past_g) ** 2).item()
+                        beta = g.T.dot(g - past_g) / np.linalg.norm(past_g) ** 2
                         beta = max(beta, 0)
                     elif self.wf == 3:  # Hestenes-Stiefel
-                        beta = (g.T.dot(g - past_g) / (g - past_g).T.dot(past_d)).item()
+                        beta = g.T.dot(g - past_g) / (g - past_g).T.dot(past_d)
                     elif self.wf == 4:  # Dai-Yuan
-                        beta = (ng ** 2 / (g - past_g).T.dot(past_d)).item()
+                        beta = ng ** 2 / (g - past_g).T.dot(past_d)
                     if self.verbose:
                         print('\t{:1.4f}'.format(beta), end='')
 
@@ -226,7 +226,7 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
             past_d = d  # previous search direction
 
             # compute step size
-            phi_p0 = g.T.dot(d).item()
+            phi_p0 = g.T.dot(d)
 
             # compute step size
             if 0 < self.m2 < 1:

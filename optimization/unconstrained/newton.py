@@ -177,7 +177,7 @@ class Newton(LineSearchOptimizer):
 
             d = -np.linalg.inv(H).dot(g)  # or np.linalg.solve(H, g)
 
-            phi_p0 = g.T.dot(d).item()
+            phi_p0 = g.T.dot(d)
 
             # compute step size: in Newton's method, the default initial step size is 1
             if 0 < self.m2 < 1:

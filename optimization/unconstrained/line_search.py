@@ -97,6 +97,6 @@ def f2phi(f, d, x, last_h, f_eval, a):
     last_x = x + a * d
     phi_a, last_g = f.function(last_x), f.jacobian(last_x)
     last_h = f.hessian(last_x) if last_h is not None else None
-    phi_p = d.T.dot(last_g).item()
+    phi_p = d.T.dot(last_g)
     f_eval += 1
     return phi_a, phi_p, last_x, last_g, last_h, f_eval

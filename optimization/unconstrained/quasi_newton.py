@@ -180,7 +180,7 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
             # compute approximation to Newton's direction
             d = -B.dot(g)
 
-            phi_p0 = g.T.dot(d).item()
+            phi_p0 = g.T.dot(d)
 
             # compute step size: as in Newton's method, the default initial step size is 1
             if 0 < self.m2 < 1:
@@ -210,7 +210,7 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
             s = last_x - self.x  # s^i = x^{i + 1} - x^i
             y = last_g - g  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
 
-            rho = y.T.dot(s).item()
+            rho = y.T.dot(s)
             if rho < 1e-16:
                 if self.verbose:
                     print('\nError: y^i s^i = {:1.4e}'.format(rho))

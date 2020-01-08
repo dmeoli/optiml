@@ -90,8 +90,9 @@ class Quadratic(Function):
                   linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
         """
         x = np.array(x)
-        return (0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x)).item() \
-            if x.size != 0 else self.x_star if min(np.linalg.eigvalsh(self.Q)) > 1e-14 else -np.inf
+        return 0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x) \
+            if x.size != 0 else self.function(np.linalg.inv(self.Q).dot(self.q)) \
+            if min(np.linalg.eigvalsh(self.Q)) > 1e-14 else -np.inf
 
     def jacobian(self, x):
         """

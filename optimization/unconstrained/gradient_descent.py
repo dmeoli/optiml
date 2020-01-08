@@ -177,7 +177,6 @@ class SteepestGradientDescent(LineSearchOptimizer):
     #   descent, so maybe the function is not differentiable) and computation
     #   is stopped. It is legal to take min_a = 0, thereby in fact skipping this
     #   test.
-
     """
 
     def __init__(self, f, x=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
