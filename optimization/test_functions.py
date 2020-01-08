@@ -80,7 +80,7 @@ class Quadratic(Function):
         try:
             self.x_star = np.linalg.inv(self.Q).dot(self.q)  # np.linalg.solve(self.Q, self.q)
         except np.linalg.LinAlgError:
-            self.x_star = np.full((n, 1), -np.nan)
+            self.x_star = np.full((1,), np.nan)
 
     def function(self, x):
         """

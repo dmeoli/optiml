@@ -2,16 +2,14 @@ import pytest
 
 from ml.datasets import DataSet
 from ml.learning import err_ratio, grade_learner
-from ml.neural_network import NeuralNetLearner, PerceptronLearner
-from optimization.unconstrained.adam import Adam
-from optimization.unconstrained.gradient_descent import stochastic_gradient_descent
+from ml.neural_network import NeuralNetLearner, PerceptronLearner, adam, stochastic_gradient_descent
 
 
 def test_neural_net():
     iris = DataSet(name='iris')
     classes = ['setosa', 'versicolor', 'virginica']
     iris.classes_to_numbers(classes)
-    nnl_adam = NeuralNetLearner(iris, [4], learning_rate=0.001, epochs=200, optimizer=Adam)
+    nnl_adam = NeuralNetLearner(iris, [4], learning_rate=0.001, epochs=200, optimizer=adam)
     nnl_gd = NeuralNetLearner(iris, [4], learning_rate=0.15, epochs=100, optimizer=stochastic_gradient_descent)
     tests = [([5.0, 3.1, 0.9, 0.1], 0),
              ([5.1, 3.5, 1.0, 0.0], 0),

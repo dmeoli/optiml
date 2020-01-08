@@ -1,13 +1,9 @@
-import random
-
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.neural_network import get_batch, init_examples, BackPropagation
 from optimization.optimizer import Optimizer, LineSearchOptimizer
 from optimization.test_functions import Rosenbrock, gen_quad_2
 from optimization.unconstrained.line_search import armijo_wolfe_line_search, backtracking_line_search
-from utils import vector_add, scalar_vector_product
 
 
 class SteepestGradientDescentQuadratic(Optimizer):
@@ -506,33 +502,3 @@ if __name__ == "__main__":
     print()
     print(GradientDescent(Rosenbrock(), step_rate=0.01, momentum=0.9,
                           momentum_type='nesterov', verbose=True, plot=True))
-
-
-def stochastic_gradient_descent(x, inputs, target, net, loss, epochs=1000, l_rate=0.01, batch_size=1, verbose=None):
-    """
-    Gradient descent algorithm to update the learnable parameters of a network.
-    :return: the updated network
-    """
-
-    for e in range(epochs):
-        total_loss = 0
-        random.shuffle(x)
-        weights = [[node.weights for node in layer.nodes] for layer in net]
-
-        for batch in get_batch(x, batch_size):
-            inputs, targets = init_examples(batch, inputs, target, len(net[-1].nodes))
-            # compute gradients of weights
-            gs, batch_loss = BackPropagation(inputs, targets, weights, net, loss)
-            # update weights with gradient descent
-            weights = vector_add(weights, scalar_vector_product(-l_rate, gs))
-            total_loss += batch_loss
-            # update the weights of network each batch
-            for i in range(len(net)):
-                if weights[i]:
-                    for j in range(len(weights[i])):
-                        net[i].nodes[j].weights = weights[i][j]
-
-        if verbose and (e + 1) % verbose == 0:
-            print("epoch:{}, total_loss:{}".format(e + 1, total_loss))
-
-    return net
