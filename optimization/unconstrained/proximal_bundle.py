@@ -198,7 +198,7 @@ class ProximalBundle(Optimizer):
                     p_xy = np.hstack((self.x, new_x))
                     contour_axes.plot(p_xy[0], p_xy[1], color='r')
 
-            i = i + 1
+            i += 1
 
         if self.verbose:
             print()

@@ -10,6 +10,8 @@ class ConjugateGradient(LineSearchOptimizer):
     def __init__(self, f, x=None, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
                  tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         super().__init__(f, x, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        if not np.isscalar(wf):
+            raise ValueError('wf is not a real scalar')
         if wf < 0 or wf > 4:
             raise ValueError('unknown NCG formula {:d}'.format(wf))
         self.wf = wf
