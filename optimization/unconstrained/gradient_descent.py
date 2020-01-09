@@ -92,18 +92,18 @@ class SteepestGradientDescentQuadratic(Optimizer):
             # compute step size
             a = g.T.dot(g) / den  # or ng ** 2 / den
 
-            # assert np.isclose(g.T.dot(g), ng ** 2)
+            assert np.isclose(g.T.dot(g), ng ** 2)
 
             # compute new point
             new_x = self.x - a * g
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.hstack((self.x, new_x))
-                contour_axes.plot(p_xy[0], p_xy[1], color='k')
+                p_xy = np.vstack((self.x, new_x))
+                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             # <\nabla f(x_i), \nabla f(x_i+1)> = 0
-            # assert np.isclose(self.f.jacobian(self.x).T.dot(self.f.jacobian(self.x - a * g)), 0)
+            assert np.isclose(self.f.jacobian(self.x).T.dot(self.f.jacobian(self.x - a * g)), 0)
 
             self.x = new_x
             i += 1
@@ -248,8 +248,8 @@ class SteepestGradientDescent(LineSearchOptimizer):
     def minimize(self):
         f_star = self.f.function([])
 
-        last_x = np.zeros((self.n, 1))  # last point visited in the line search
-        last_g = np.zeros((self.n, 1))  # gradient of last_x
+        last_x = np.zeros((self.n,))  # last point visited in the line search
+        last_g = np.zeros((self.n,))  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if f_star > -np.inf:
@@ -326,8 +326,8 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.hstack((self.x, last_x))
-                contour_axes.plot(p_xy[0], p_xy[1], color='k')
+                p_xy = np.vstack((self.x, last_x))
+                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             # update new point
             self.x = last_x
@@ -344,117 +344,19 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
 
 class GradientDescent(Optimizer):
-    """
-    Apply the classical Stochastic Gradient Descent algorithm for the minimization
-    of the provided function f.
-
-    Gradient descent works by iteratively performing updates solely based on
-    the first derivative of a problem. The gradient is calculated and multiplied
-    with a scalar (or component wise with a vector) to do a step in the problem
-    space. For speed ups, a technique called "momentum" is often used, which
-    averages search steps over iterations.
-
-    Even though gradient descent is pretty simple it can be very effective if
-    well tuned (in terms of its hyper parameters step rate and momentum).
-    Sometimes the use of schedules for both parameters is necessary. See
-    ``schedule`` for basic schedules.
-
-    Gradient descent is also very robust to stochasticity in the objective
-    function. This might result from noise injected into it (e.g. in the case
-    of denoising auto encoders) or because it is based on data samples (e.g. in
-    the case of stochastic mini batches.)
-
-    Given a step rate :math:`\\alpha` and a function :math:`f'` to evaluate the
-    search direction the current parameters :math:`\\theta_t` the following
-    update is performed:
-
-    .. math::
-        v_{t+1} &= \\alpha f'(\\theta_t) \\\\
-        \\theta_{t+1} &= \\theta_t - v_{t+1}.
-
-    If we also have a momentum :math:`\\beta` and are using standard momentum,
-    we update the parameters according to:
-
-    .. math::
-        v_{t+1} &= \\alpha f'(\\theta_t) + \\beta v_{t} \\\\
-        \\theta_{t+1} &= \\theta_t - v_{t+1}
-
-    In some cases (e.g. learning the parameters of deep networks), using
-    Nesterov momentum can be beneficial. In this case, we first make a momentum
-    step and then evaluate the gradient at the location in between. Thus,
-    there is an additional cost of an addition of the parameters.
-
-    .. math::
-        \\theta_{t+{1 \\over 2}} &= \\theta_t - \\beta v_t \\\\
-        v_{t+1} &= \\alpha f'(\\theta_{t + {1 \\over 2}}) \\\\
-        \\theta_{t+1} &= \\theta_t - v_{t+1}
-
-    which can be specified additionally by the initialization argument
-    ``momentum_type``.
-
-
-    Attributes
-    ----------
-    f : Callable
-        First derivative of the objective function. Returns an array of the \
-        same shape as ``.wrt``.
-
-    x : array_like
-    Current solution to the problem. Can be given as a first argument to \
-    ``.fprime``.
-
-    step_rate : float or array_like
-        Step rate to multiply the gradients with.
-
-    momentum : float or array_like
-        Momentum to multiply previous steps with.
-
-    momentum_type : string (either "standard" or "nesterov")
-        When to add the momentum term to the parameter vector; in the first \
-        case it will be done after the calculation of the gradient, in the\
-        latter before.
-    """
 
     def __init__(self, f, x=None, eps=1e-6, max_iter=1000, step_rate=0.1, momentum=0.0,
                  momentum_type='none', verbose=False, plot=False, args=None):
-        """Create a GradientDescent object.
-
-        Parameters
-        ----------
-        x : array_like
-            Array that represents the solution. Will be operated upon in
-            place.  ``fprime`` should accept this array as a first argument.
-
-        fprime : callable
-            Callable that given a solution vector as first parameter and *args
-            and **kwargs drawn from the iterations ``args`` returns a
-            search direction, such as a gradient.
-
-        step_rate : float or array_like, or iterable of that
-            Step rate to use during optimization. Can be given as a single
-            scalar value or as an array for a different step rate of each
-            parameter of the problem.
-
-            Can also be given as an iterator; in that case, every iteration
-            of the optimization takes a new element as a step rate from that
-            iterator.
-
-        momentum : float or array_like, or iterable of that
-          Momentum to use during optimization. Can be specified analogously
-          (but independent of) step rate.
-
-        momentum_type : string (either "standard" or "nesterov")
-            When to add the momentum term to the parameter vector; in the first
-            case it will be done after the calculation of the gradient, in the
-            latter before.
-
-        args : iterable
-            Iterator of arguments which ``fprime`` will be called
-            with.
-        """
-
-        super().__init__(f, x, verbose, plot, args)
+        super().__init__(f, x, eps, max_iter, verbose, plot, args)
+        if not np.isscalar(step_rate):
+            raise ValueError('step_rate is not a real scalar')
+        if step_rate < 0:
+            raise ValueError('step_rate must be > 0')
         self.step_rate = step_rate
+        if not np.isscalar(momentum):
+            raise ValueError('momentum is not a real scalar')
+        if momentum < 0:
+            raise ValueError('momentum must be > 0')
         self.momentum = momentum
         if momentum_type not in ('nesterov', 'standard', 'none'):
             raise ValueError('unknown momentum type')
@@ -492,7 +394,7 @@ if __name__ == "__main__":
     print(SteepestGradientDescentQuadratic(gen_quad_2, f_star=gen_quad_2.function([]),
                                            verbose=True, plot=True).minimize())
     print()
-    print(SteepestGradientDescent(Rosenbrock(), max_f_eval=10000, verbose=True, plot=True).minimize())
+    print(SteepestGradientDescent(Rosenbrock(), verbose=True, plot=True).minimize())
     print()
     print(GradientDescent(Rosenbrock(), step_rate=0.01, verbose=True, plot=True))
     print()

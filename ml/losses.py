@@ -66,6 +66,3 @@ class LogisticRegression(Function):
 
     def score(self):
         return self.function(self.pars, self.X, self.Z)
-
-    def solved(self, x=None, tol=0.1):
-        return self.score() - tol < 0

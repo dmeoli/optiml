@@ -41,9 +41,6 @@ class Function:
         """
         return np.dot(self.hessian(x), p)
 
-    def solved(self, x, tol=0.1):
-        return abs(x - self.x_star).mean() < tol
-
     def plot(self, x_min, x_max, y_min, y_max):
         return NotImplementedError
 
@@ -113,9 +110,6 @@ class Quadratic(Function):
         :return:  the Hessian matrix (i.e. the quadratic part) of a general quadratic function at x.
         """
         return self.Q
-
-    def solved(self, x, tol=0.01):
-        return (abs(self.jacobian(x)) < tol).all()
 
     def plot(self, x_min=-5, x_max=2, y_min=-5, y_max=2):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))

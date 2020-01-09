@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization import Rosenbrock
+from optimization import gen_quad_1
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.line_search import backtracking_line_search
 
@@ -220,8 +220,8 @@ class AcceleratedGradient(LineSearchOptimizer):
 
             # possibly plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.hstack((self.x, last_x))
-                contour_axes.plot(p_xy[0], p_xy[1], color='k')
+                p_xy = np.vstack((self.x, last_x))
+                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             if self.mon:  # in the monotone version
                 if xv > past_xv:  # if the new x is worse than the last x
@@ -266,4 +266,4 @@ class AcceleratedGradient(LineSearchOptimizer):
 
 
 if __name__ == "__main__":
-    print(AcceleratedGradient(Rosenbrock(), verbose=True, plot=True).minimize())
+    print(AcceleratedGradient(gen_quad_1, verbose=True, plot=True).minimize())

@@ -124,8 +124,8 @@ class HeavyBallGradient(LineSearchOptimizer):
     def minimize(self):
         f_star = self.f.function([])
 
-        last_x = np.zeros((self.n, 1))  # last point visited in the line search
-        last_g = np.zeros((self.n, 1))  # gradient of last_x
+        last_x = np.zeros((self.n,))  # last point visited in the line search
+        last_g = np.zeros((self.n,))  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
@@ -142,7 +142,7 @@ class HeavyBallGradient(LineSearchOptimizer):
         else:
             ng0 = 1  # un-scaled stopping criterion
 
-        past_d = np.zeros((self.n, 1))
+        past_d = np.zeros((self.n,))
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
@@ -201,8 +201,8 @@ class HeavyBallGradient(LineSearchOptimizer):
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.hstack((self.x, last_x))
-                contour_axes.plot(p_xy[0], p_xy[1], color='k')
+                p_xy = np.vstack((self.x, last_x))
+                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             past_d = last_x - self.x
             self.x = last_x
