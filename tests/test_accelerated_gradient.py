@@ -6,37 +6,30 @@ from optimization.unconstrained.accelerated_gradient import AcceleratedGradient
 
 
 def test_quadratic():
-    x, status = AcceleratedGradient(gen_quad_1).minimize()
-    assert np.allclose(x, gen_quad_1.x_star)
-    assert status is 'optimal'
+    x, _ = AcceleratedGradient(gen_quad_1).minimize()
+    assert np.allclose(gen_quad_1.jacobian(x), 0)
 
-    x, status = AcceleratedGradient(gen_quad_2).minimize()
-    assert np.allclose(x, gen_quad_2.x_star)
-    assert status is 'optimal'
+    x, _ = AcceleratedGradient(gen_quad_2).minimize()
+    assert np.allclose(gen_quad_2.jacobian(x), 0)
 
-    # x, status = AcceleratedGradient(gen_quad_3).minimize()
-    # assert np.allclose(x, gen_quad_3.x_star)
-    # assert status is 'optimal'
+    # x, _ = AcceleratedGradient(gen_quad_3).minimize()
+    # assert np.allclose(gen_quad_3.jacobian(x), 0)
 
-    # x, status = AcceleratedGradient(gen_quad_4).minimize()
-    # assert np.allclose(x, gen_quad_4.x_star)
-    # assert status is 'optimal'
+    # x, _ = AcceleratedGradient(gen_quad_4).minimize()
+    # assert np.allclose(gen_quad_4.jacobian(x), 0)
 
-    x, status = AcceleratedGradient(gen_quad_5).minimize()
-    assert np.allclose(x, gen_quad_5.x_star)
-    assert status is 'optimal'
+    x, _ = AcceleratedGradient(gen_quad_5).minimize()
+    assert np.allclose(gen_quad_5.jacobian(x), 0)
 
 
 def test_Rosenbrock():
     obj = Rosenbrock(autodiff=True)
-    x, status = AcceleratedGradient(obj).minimize()
+    x, _ = AcceleratedGradient(obj).minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
-    assert status is 'optimal'
 
     obj = Rosenbrock(autodiff=False)
-    x, status = AcceleratedGradient(obj).minimize()
+    x, _ = AcceleratedGradient(obj).minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
-    assert status is 'optimal'
 
 
 if __name__ == "__main__":

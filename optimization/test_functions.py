@@ -101,7 +101,7 @@ class Quadratic(Function):
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
         :return:  the Jacobian of a general quadratic function.
         """
-        return self.Q.dot(x) - self.q  # complexity O(n^2)
+        return self.Q.dot(x) - self.q
 
     def hessian(self, x=None):
         """

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from ml.datasets import DataSet, parse_csv, open_data
-from ml.learning import weighted_mode, weighted_replicate, NearestNeighborLearner, random_weights, WeightedLearner, \
+from ml.learning import weighted_mode, weighted_replicate, NearestNeighborLearner, WeightedLearner, \
     ada_boost, grade_learner, err_ratio
 from ml.neural_network import PerceptronLearner
 from ml.svm import MultiSVM
@@ -24,17 +24,6 @@ def test_weighted_mode():
 
 def test_weighted_replicate():
     assert weighted_replicate('ABC', [1, 2, 1], 4) == ['A', 'B', 'B', 'C']
-
-
-def test_means_and_deviation():
-    iris = DataSet(name='iris')
-    means, deviations = iris.find_means_and_deviations()
-    assert round(means['setosa'][0], 3) == 5.006
-    assert round(means['versicolor'][0], 3) == 5.936
-    assert round(means['virginica'][0], 3) == 6.588
-    assert round(deviations['setosa'][0], 3) == 0.352
-    assert round(deviations['versicolor'][0], 3) == 0.516
-    assert round(deviations['virginica'][0], 3) == 0.636
 
 
 def test_k_nearest_neighbors():
@@ -63,16 +52,6 @@ def test_svm():
     assert svm.predict([[7.5, 4.1, 6.2, 2.3]]) == 2
     assert svm.predict([[7.3, 4.0, 6.1, 2.4]]) == 2
     assert svm.predict([[7.0, 3.3, 6.1, 2.5]]) == 2
-
-
-def test_random_weights():
-    min_value = -0.5
-    max_value = 0.5
-    num_weights = 10
-    test_weights = random_weights(min_value, max_value, num_weights)
-    assert len(test_weights) == num_weights
-    for weight in test_weights:
-        assert min_value <= weight <= max_value
 
 
 def test_ada_boost():

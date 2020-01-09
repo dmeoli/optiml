@@ -103,7 +103,7 @@ class SteepestGradientDescentQuadratic(Optimizer):
                 contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             # <\nabla f(x_i), \nabla f(x_i+1)> = 0
-            assert np.isclose(self.f.jacobian(self.x).T.dot(self.f.jacobian(self.x - a * g)), 0)
+            assert np.isclose(self.f.jacobian(self.x).T.dot(self.f.jacobian(new_x)), 0)
 
             self.x = new_x
             i += 1
