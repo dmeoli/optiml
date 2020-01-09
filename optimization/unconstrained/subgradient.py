@@ -184,8 +184,8 @@ class Subgradient(LineSearchOptimizer):
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.hstack((self.x, self.x - (a / ng) * g))
-                contour_axes.plot(p_xy[0], p_xy[1], color='k')
+                p_xy = np.vstack((self.x, self.x - (a / ng) * g))
+                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             # compute new point
             self.x = self.x - (a / ng) * g

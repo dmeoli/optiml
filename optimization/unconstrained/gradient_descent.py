@@ -391,15 +391,15 @@ class GradientDescent(Optimizer):
 
 
 if __name__ == "__main__":
-    print(SteepestGradientDescentQuadratic(gen_quad_2, f_star=gen_quad_2.function([]),
-                                           verbose=True, plot=True).minimize())
-    print()
+    # print(SteepestGradientDescentQuadratic(gen_quad_2, f_star=gen_quad_2.function([]),
+    #                                        verbose=True, plot=True).minimize())
+    # print()
     print(SteepestGradientDescent(Rosenbrock(), verbose=True, plot=True).minimize())
-    print()
-    print(GradientDescent(Rosenbrock(), step_rate=0.01, verbose=True, plot=True))
-    print()
-    print(GradientDescent(Rosenbrock(), step_rate=0.01, momentum=0.9,
-                          momentum_type='standard', verbose=True, plot=True))
-    print()
-    print(GradientDescent(Rosenbrock(), step_rate=0.01, momentum=0.9,
-                          momentum_type='nesterov', verbose=True, plot=True))
+    # print()
+    # print(GradientDescent(Rosenbrock(), step_rate=0.01, verbose=True, plot=True))
+    # print()
+    # print(GradientDescent(Rosenbrock(), step_rate=0.01, momentum=0.9,
+    #                       momentum_type='standard', verbose=True, plot=True))
+    # print()
+    # print(GradientDescent(Rosenbrock(), step_rate=0.01, momentum=0.9,
+    #                       momentum_type='nesterov', verbose=True, plot=True))

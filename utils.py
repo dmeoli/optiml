@@ -5,6 +5,12 @@ import random
 import numpy as np
 
 
+def not_test(func):
+    """Decorator to mark a function or method as *not* a test"""
+    func.__test__ = False
+    return func
+
+
 def remove_all(item, seq):
     """Return a copy of seq (or string) with all occurrences of item removed."""
     if isinstance(seq, str):

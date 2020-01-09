@@ -14,6 +14,3 @@ install:
 script:
   - py.test --cov=./
   - python -m doctest -v *.py
-
-notifications:
-  email: false

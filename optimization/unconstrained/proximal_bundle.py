@@ -187,16 +187,16 @@ class ProximalBundle(Optimizer):
             if fd <= fx + self.m1 * (v - fx):
                 print('\tSS')
                 if self.plot and self.n == 2:
-                    p_xy = np.hstack((self.x, new_x))
-                    contour_axes.plot(p_xy[0], p_xy[1], color='k')
+                    p_xy = np.vstack((self.x, new_x))
+                    contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
                 self.x = new_x
                 fx = fd
             else:
                 print('\tNS')
                 if self.plot and self.n == 2:
-                    p_xy = np.hstack((self.x, new_x))
-                    contour_axes.plot(p_xy[0], p_xy[1], color='r')
+                    p_xy = np.vstack((self.x, new_x))
+                    contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='r')
 
             i += 1
 
