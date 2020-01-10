@@ -3,13 +3,12 @@ import numpy as np
 
 from optimization.optimizer import LineSearchOptimizer
 from optimization.test_functions import Rosenbrock
-from optimization.unconstrained.line_search import armijo_wolfe_line_search, backtracking_line_search
 
 
 class ConjugateGradient(LineSearchOptimizer):
-    def __init__(self, f, x=None, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+    def __init__(self, f, wrt=None, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
                  tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, x, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if wf < 0 or wf > 4:
@@ -19,7 +18,7 @@ class ConjugateGradient(LineSearchOptimizer):
             raise ValueError('r_start is not an integer scalar')
         self.r_start = r_start
 
-    def minimize(self):
+    def __iter__(self):
         return NotImplementedError
 
 
@@ -136,9 +135,9 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, x=None, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+    def __init__(self, f, wrt=None, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
                  tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, x, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if wf < 0 or wf > 4:
             raise ValueError('unknown NCG formula {:d}'.format(wf))
         self.wf = wf
@@ -146,11 +145,11 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
             raise ValueError('r_start is not an integer scalar')
         self.r_start = r_start
 
-    def minimize(self):
+    def __iter__(self):
         f_star = self.f.function([])
 
-        last_x = np.zeros((self.n,))  # last point visited in the line search
-        last_g = np.zeros((self.n,))  # gradient of last_x
+        last_wrt = np.zeros((self.n,))  # last point visited in the line search
+        last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         # initializations
@@ -161,7 +160,7 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
                 print('f_eval\tf(x)', end='')
             print('\t\t|| g(x) ||\tbeta\tls f_eval\ta*')
 
-        v, g = self.f.function(self.x), self.f.jacobian(self.x)
+        v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
         ng = np.linalg.norm(g)
         if self.eps < 0:
             ng0 = -ng  # np.linalg.norm of first subgradient
@@ -231,15 +230,8 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
             phi_p0 = g.T.dot(d)
 
             # compute step size
-            if 0 < self.m2 < 1:
-                a, v, last_x, last_g, _, f_eval = \
-                    armijo_wolfe_line_search(self.f, d, self.x, last_x, last_g, None, f_eval, self.max_f_eval,
-                                             self.min_a, self.sfgrd, v, phi_p0, self.a_start, self.m1, self.m2,
-                                             self.tau, self.verbose)
-            else:
-                a, v, last_x, last_g, _, f_eval = \
-                    backtracking_line_search(self.f, d, self.x, last_x, last_g, None, f_eval, self.max_f_eval,
-                                             self.min_a, v, phi_p0, self.a_start, self.m1, self.tau, self.verbose)
+            a, v, last_wrt, last_g, _, f_eval = self.line_search.search(
+                d, self.wrt, last_wrt, last_g, None, f_eval, v, phi_p0)
 
             # output statistics
             if self.verbose:
@@ -255,11 +247,11 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.x, last_x))
+                p_xy = np.vstack((self.wrt, last_wrt))
                 contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             # update new point
-            self.x = last_x
+            self.wrt = last_wrt
 
             # update gradient
             g = last_g
@@ -272,10 +264,10 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.x, status
+        return self.wrt, status
 
 
 if __name__ == "__main__":
-    print(ConjugateGradient(Rosenbrock(), verbose=True, plot=True).minimize())
+    print(ConjugateGradient(Rosenbrock(), verbose=True, plot=True))
     print()
-    print(NonLinearConjugateGradient(Rosenbrock(), verbose=True, plot=True).minimize())
+    print(NonLinearConjugateGradient(Rosenbrock(), verbose=True, plot=True))

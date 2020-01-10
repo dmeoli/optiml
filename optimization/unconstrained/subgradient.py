@@ -97,12 +97,12 @@ class Subgradient(LineSearchOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, x=None, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000,
+    def __init__(self, f, wrt=None, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000,
                  m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, x, eps, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf,
+        super().__init__(f, wrt, eps, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf,
                          min_a=min_a, verbose=verbose, plot=plot)
 
-    def minimize(self):
+    def __iter__(self):
         f_star = self.f.function([])
 
         if self.eps < 0 and f_star == -np.inf:
@@ -115,7 +115,7 @@ class Subgradient(LineSearchOptimizer):
             else:
                 print('iter\tf(x)\t\t\t|| g(x) ||\ta')
 
-        x_ref = self.x
+        x_ref = self.wrt
         f_ref = np.inf  # best f-value found so far
         if self.eps > 0:
             delta = 0  # required displacement from f_ref;
@@ -126,7 +126,7 @@ class Subgradient(LineSearchOptimizer):
         i = 1
         while True:
             # compute function and subgradient
-            v, g = self.f.function(self.x), self.f.jacobian(self.x)
+            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
             ng = np.linalg.norm(g)
 
             if self.eps > 0:  # target-level step size
@@ -137,7 +137,7 @@ class Subgradient(LineSearchOptimizer):
 
             if v < f_ref:  # found a better f-value (however slightly better)
                 f_ref = v  # update f_ref
-                x_ref = self.x  # this is the incumbent solution
+                x_ref = self.wrt  # this is the incumbent solution
 
             # output statistics
             if self.verbose:
@@ -148,12 +148,12 @@ class Subgradient(LineSearchOptimizer):
 
             # stopping criteria
             if self.eps < 0 and f_ref - f_star <= -self.eps * max(abs(f_star), 1):
-                x_ref = self.x
+                x_ref = self.wrt
                 status = 'optimal'
                 break
 
             if ng < 1e-12:  # unlikely, but it could happen
-                x_ref = self.x
+                x_ref = self.wrt
                 status = 'optimal'
                 break
 
@@ -184,11 +184,11 @@ class Subgradient(LineSearchOptimizer):
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.x, self.x - (a / ng) * g))
+                p_xy = np.vstack((self.wrt, self.wrt - (a / ng) * g))
                 contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             # compute new point
-            self.x = self.x - (a / ng) * g
+            self.wrt = self.wrt - (a / ng) * g
 
             i += 1
 
@@ -202,4 +202,4 @@ class Subgradient(LineSearchOptimizer):
 
 
 if __name__ == "__main__":
-    print(Subgradient(Rosenbrock(), verbose=True, plot=True).minimize())
+    print(Subgradient(Rosenbrock(), verbose=True, plot=True))

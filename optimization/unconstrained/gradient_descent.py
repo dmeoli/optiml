@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from optimization.optimizer import Optimizer, LineSearchOptimizer
-from optimization.test_functions import Rosenbrock, gen_quad_2
-from optimization.unconstrained.line_search import armijo_wolfe_line_search, backtracking_line_search
+from optimization.test_functions import gen_quad_1
 
 
 class SteepestGradientDescentQuadratic(Optimizer):
@@ -12,7 +11,7 @@ class SteepestGradientDescentQuadratic(Optimizer):
 
         f(x) = 1/2 x^T Q x - q^T x
 
-    :param x:        ([n x 1] real column vector): the point where to start the algorithm from
+    :param wrt:        ([n x 1] real column vector): the point where to start the algorithm from
     :return x:       ([n x 1] real column vector): either the best solution found so far (possibly the
                      optimal one) or a direction proving the problem is unbounded below, depending on case
     :return status:  (string): a string describing the status of the algorithm at termination:
@@ -26,15 +25,15 @@ class SteepestGradientDescentQuadratic(Optimizer):
                      x is the best solution found so far, but not necessarily the optimal one.
     """
 
-    def __init__(self, f, x=None, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, x, eps, max_iter, verbose, plot)
-        if self.x.size != self.f.hessian().shape[0]:
+    def __init__(self, f, wrt=None, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+        super().__init__(f, wrt, eps, max_iter, verbose, plot)
+        if self.wrt.size != self.f.hessian().shape[0]:
             raise ValueError('x size does not match with Q')
         if not np.isrealobj(f_star) or not np.isscalar(f_star):
             raise ValueError('f_star is not a real scalar')
         self.f_star = f_star
 
-    def minimize(self):
+    def __iter__(self):
         if self.verbose:
             print('iter\tf(x)\t\t\t||nabla f(x)||', end='')
         if self.f_star < np.inf:
@@ -50,7 +49,7 @@ class SteepestGradientDescentQuadratic(Optimizer):
         i = 1
         while True:
             # compute function value and gradient
-            v, g = self.f.function(self.x), self.f.jacobian(self.x)
+            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
             ng = np.linalg.norm(g)
 
             # output statistics
@@ -95,24 +94,24 @@ class SteepestGradientDescentQuadratic(Optimizer):
             assert np.isclose(g.T.dot(g), ng ** 2)
 
             # compute new point
-            new_x = self.x - a * g
+            new_x = self.wrt - a * g
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.x, new_x))
+                p_xy = np.vstack((self.wrt, new_x))
                 contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             # <\nabla f(x_i), \nabla f(x_i+1)> = 0
-            assert np.isclose(self.f.jacobian(self.x).T.dot(self.f.jacobian(new_x)), 0)
+            assert np.isclose(self.f.jacobian(self.wrt).T.dot(self.f.jacobian(new_x)), 0)
 
-            self.x = new_x
+            self.wrt = new_x
             i += 1
 
         if self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.x, status
+        return self.wrt, status
 
 
 class SteepestGradientDescent(LineSearchOptimizer):
@@ -179,12 +178,12 @@ class SteepestGradientDescent(LineSearchOptimizer):
     #   test.
     """
 
-    def __init__(self, f, x=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
+    def __init__(self, f, wrt=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
                  sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         """
 
         :param f:          the objective function.
-        :param x:          ([n x 1] real column vector): the point where to start the algorithm from.
+        :param wrt:          ([n x 1] real column vector): the point where to start the algorithm from.
         :param eps:        (real scalar, optional, default value 1e-6): the accuracy in the stopping
                            criterion: the algorithm is stopped when the norm of the gradient is less
                            than or equal to eps.
@@ -243,13 +242,13 @@ class SteepestGradientDescent(LineSearchOptimizer):
                               - 'error': the algorithm found a numerical error that prev_vents it from continuing
                            optimization (see min_a above).
         """
-        super().__init__(f, x, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
 
-    def minimize(self):
+    def __iter__(self):
         f_star = self.f.function([])
 
-        last_x = np.zeros((self.n,))  # last point visited in the line search
-        last_g = np.zeros((self.n,))  # gradient of last_x
+        last_wrt = np.zeros((self.n,))  # last point visited in the line search
+        last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if f_star > -np.inf:
@@ -262,7 +261,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
         if self.verbose:
             print('ls f_eval\ta*')
 
-        v, g = self.f.function(self.x), self.f.jacobian(self.x)
+        v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
         ng = np.linalg.norm(g)
         if self.eps < 0:
             ng0 = -ng  # norm of first subgradient
@@ -303,14 +302,11 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
             # compute step size
             if 0 < self.m2 < 1:
-                a, v, last_x, last_g, _, f_eval = \
-                    armijo_wolfe_line_search(self.f, d, self.x, last_x, last_g, None, f_eval, self.max_f_eval,
-                                             self.min_a, self.sfgrd, v, phi_p0, self.a_start, self.m1, self.m2,
-                                             self.tau, self.verbose)
+                a, v, last_wrt, last_g, _, f_eval = \
+                    self.line_search.search(d, self.wrt, last_wrt, last_g, None, f_eval, v, phi_p0)
             else:
-                a, v, last_x, last_g, _, f_eval = \
-                    backtracking_line_search(self.f, d, self.x, last_x, last_g, None, f_eval, self.max_f_eval,
-                                             self.min_a, v, phi_p0, self.a_start, self.m1, self.tau, self.verbose)
+                a, v, last_wrt, last_g, _, f_eval = \
+                    self.line_search.search(d, self.wrt, last_wrt, last_g, None, f_eval, v, phi_p0)
 
             # output statistics
             if self.verbose:
@@ -326,11 +322,11 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.x, last_x))
+                p_xy = np.vstack((self.wrt, last_wrt))
                 contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             # update new point
-            self.x = last_x
+            self.wrt = last_wrt
 
             # update gradient
             g = last_g
@@ -340,14 +336,14 @@ class SteepestGradientDescent(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.x, status
+        return self.wrt, status
 
 
 class GradientDescent(Optimizer):
 
-    def __init__(self, f, x=None, eps=1e-6, max_iter=1000, step_rate=0.1, momentum=0.0,
+    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.1, momentum=0.0,
                  momentum_type='none', verbose=False, plot=False, args=None):
-        super().__init__(f, x, eps, max_iter, verbose, plot, args)
+        super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
         if step_rate < 0:
@@ -362,39 +358,72 @@ class GradientDescent(Optimizer):
             raise ValueError('unknown momentum type')
         self.momentum_type = momentum_type
         self.step = 0
+        self.iter = 0
+        self.state_fields = 'step_rate momentum momentum_type step iter'.split()
 
     def __iter__(self):
         for args, kwargs in self.args:
-            step_rate = self.step_rate
-            momentum = self.momentum
             step_m1 = self.step
 
             if self.momentum_type == 'standard':
-                gradient = self.f.jacobian(self.x, *args, **kwargs)
-                step = gradient * step_rate + momentum * step_m1
-                self.x -= step
+                gradient = self.f.jacobian(self.wrt, *args, **kwargs)
+                step = step_m1 * self.momentum + gradient * self.step_rate
+                self.wrt -= step
             elif self.momentum_type == 'nesterov':
-                big_jump = momentum * step_m1
-                self.x -= big_jump
-                gradient = self.f.jacobian(self.x, *args, **kwargs)
-                correction = step_rate * gradient
-                self.x -= correction
+                big_jump = step_m1 * self.momentum
+                self.wrt -= big_jump
+                gradient = self.f.jacobian(self.wrt, *args, **kwargs)
+                correction = gradient * self.step_rate
+                self.wrt -= correction
                 step = big_jump + correction
-            elif self.momentum_type == 'none':
-                gradient = self.f.jacobian(self.x, *args, **kwargs)
-                step = step_m1 + gradient * step_rate
-                self.x -= step
+            else:
+                gradient = self.f.jacobian(self.wrt, *args, **kwargs)
+                step = gradient * self.step_rate
+                self.wrt -= step
 
             self.step = step
-            self.n_iter += 1
+            self.iter += 1
             yield self.extended_info(gradient=gradient, args=args, kwargs=kwargs)
 
 
 if __name__ == "__main__":
+    opt = GradientDescent(gen_quad_1, step_rate=0.01, momentum_type='none')
+    for i, info in enumerate(opt):
+        if i > 1000:
+            break
+    a = abs(gen_quad_1.jacobian(opt.wrt))
+    assert np.allclose(a, 0)
+
+    opt = GradientDescent(gen_quad_1, step_rate=0.01, momentum=0.9, momentum_type='standard')
+    for i, info in enumerate(opt):
+        if i > 1000:
+            break
+    a = abs(gen_quad_1.jacobian(opt.wrt))
+    assert np.allclose(a, 0)
+    opt = GradientDescent(gen_quad_1, step_rate=0.01, momentum=0.9, momentum_type='standard')
+    for i, info in enumerate(opt):
+        if i > 1000:
+            break
+    a = abs(gen_quad_1.jacobian(opt.wrt))
+    assert np.allclose(a, 0)
+
+    opt = GradientDescent(gen_quad_1, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
+    for i, info in enumerate(opt):
+        if i > 1000:
+            break
+    a = abs(gen_quad_1.jacobian(opt.wrt))
+    assert np.allclose(a, 0)
+
+    # opt = GradientDescent(Rosenbrock(), step_rate=0.01, momentum=0.9, momentum_type='standard')
+    # for i, info in enumerate(opt):
+    #     if i > 1000:
+    #         break
+    # print(opt.x)
+
     # print(SteepestGradientDescentQuadratic(gen_quad_2, f_star=gen_quad_2.function([]),
-    #                                        verbose=True, plot=True).minimize())
+    #                                        verbose=True, plot=True))
     # print()
-    print(SteepestGradientDescent(Rosenbrock(), verbose=True, plot=True).minimize())
+    # print(SteepestGradientDescent(Rosenbrock(), verbose=True, plot=True))
     # print()
     # print(GradientDescent(Rosenbrock(), step_rate=0.01, verbose=True, plot=True))
     # print()

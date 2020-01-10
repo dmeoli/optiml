@@ -81,8 +81,8 @@ class ProximalBundle(Optimizer):
     #   = 'error': the solver of the master QP problem solver reported
     #     some error, which requires to stop optimization
 
-    def __init__(self, f, x=None, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf, verbose=False, plot=False):
-        super().__init__(f, x, eps, max_iter, verbose, plot)
+    def __init__(self, f, wrt=None, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf, verbose=False, plot=False):
+        super().__init__(f, wrt, eps, max_iter, verbose, plot)
         if not np.isscalar(mu):
             raise ValueError('mu is not a real scalar')
         if mu <= 0:
@@ -97,7 +97,7 @@ class ProximalBundle(Optimizer):
             raise ValueError('m_inf is not a real scalar')
         self.m_inf = m_inf
 
-    def minimize(self):
+    def __iter__(self):
         f_star = self.f.function([])
 
         if self.verbose:
@@ -107,10 +107,10 @@ class ProximalBundle(Optimizer):
                 print('iter\tf(x)\t\t\t|| d ||\t\tstep')
 
         # compute first function and subgradient
-        fx, g = self.f.function(self.x), self.f.jacobian(self.x)
+        fx, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
 
         G = g.T  # matrix of subgradients
-        F = fx - g.T * self.x  # vector of translated function values
+        F = fx - g.T * self.wrt  # vector of translated function values
         # each (fxi , gi , xi) gives the constraint
         #
         #  v >= fxi + gi' * (x + d - xi) = gi' * (x + d) + (fi - gi' * xi)
@@ -132,7 +132,7 @@ class ProximalBundle(Optimizer):
             d = sdpvar(n, 1)
             v = sdpvar(1, 1)
 
-            M = v * np.ones(np.size(G, 1), 1) >= F + G * (d + self.x)
+            M = v * np.ones(np.size(G, 1), 1) >= F + G * (d + self.wrt)
 
             if f_star > -np.inf:
                 # this is cheating: use information about f_star in the model
@@ -171,31 +171,31 @@ class ProximalBundle(Optimizer):
 
             # compute function and subgradient
 
-            fd, g = self.f.function(self.x + d)
+            fd, g = self.f.function(self.wrt + d)
 
             if fd <= self.m_inf:
                 status = 'unbounded'
                 break
 
             G = [G, OMPCSEMI, g.T]
-            F = [F, OMPCSEMI, fd - g.T * (self.x + d)]
+            F = [F, OMPCSEMI, fd - g.T * (self.wrt + d)]
 
             # SS / NS decision
 
-            new_x = self.x + d
+            new_x = self.wrt + d
 
             if fd <= fx + self.m1 * (v - fx):
                 print('\tSS')
                 if self.plot and self.n == 2:
-                    p_xy = np.vstack((self.x, new_x))
+                    p_xy = np.vstack((self.wrt, new_x))
                     contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
-                self.x = new_x
+                self.wrt = new_x
                 fx = fd
             else:
                 print('\tNS')
                 if self.plot and self.n == 2:
-                    p_xy = np.vstack((self.x, new_x))
+                    p_xy = np.vstack((self.wrt, new_x))
                     contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='r')
 
             i += 1
@@ -204,7 +204,7 @@ class ProximalBundle(Optimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.x, status
+        return self.wrt, status
 
 
 if __name__ == "__main__":

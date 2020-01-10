@@ -3,7 +3,6 @@ import numpy as np
 
 from optimization import gen_quad_1
 from optimization.optimizer import LineSearchOptimizer
-from optimization.unconstrained.line_search import backtracking_line_search
 
 
 class AcceleratedGradient(LineSearchOptimizer):
@@ -44,7 +43,7 @@ class AcceleratedGradient(LineSearchOptimizer):
     #   course immaterial if no line search is done.
     #
     # - m1 (real scalar, optional, default value 0): parameter of the Armijo
-    #   condition (sufficient decrease) in the backtracking line search. Has
+    #   condition (sufficient decrease) in the Backtracking line search. Has
     #   to be in [0,1), with the special value 0 meaning "no line search",
     #   i.e., fixed step size.
     #
@@ -110,9 +109,9 @@ class AcceleratedGradient(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, x=None, a_start=1, m1=0, mon=1e-6, wf=0, eps=1e-6, max_f_eval=1000,
+    def __init__(self, f, wrt=None, a_start=1, m1=0, mon=1e-6, wf=0, eps=1e-6, max_f_eval=1000,
                  tau=0.9, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, x, eps, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf,
+        super().__init__(f, wrt, eps, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf,
                          min_a=min_a, verbose=verbose, plot=plot)
         if not np.isscalar(m1):
             raise ValueError('m1 is not a real scalar')
@@ -128,11 +127,11 @@ class AcceleratedGradient(LineSearchOptimizer):
             raise ValueError('unknown fast gradient formula {:d}'.format(wf))
         self.wf = wf
 
-    def minimize(self):
+    def __iter__(self):
         f_star = self.f.function([])
 
-        last_x = np.zeros((self.n, 1))  # last point visited in the line search
-        last_g = np.zeros((self.n, 1))  # gradient of last_x
+        last_wrt = np.zeros((self.n, 1))  # last point visited in the line search
+        last_g = np.zeros((self.n, 1))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
@@ -147,10 +146,10 @@ class AcceleratedGradient(LineSearchOptimizer):
         if self.wf == 3:
             d = np.zeros((self.n, 1))
 
-        y = self.x
-        past_y = self.x
+        y = self.wrt
+        past_y = self.wrt
         if self.mon:
-            past_x = self.x
+            past_x = self.wrt
             past_xv = np.inf
 
         if self.plot and self.n == 2:
@@ -169,7 +168,7 @@ class AcceleratedGradient(LineSearchOptimizer):
 
             if self.mon:  # in the monotone version
                 if v < past_xv:  # if y is better than x
-                    self.x = y  # then x = y
+                    self.wrt = y  # then x = y
                     past_xv = v
 
             # output statistics
@@ -193,18 +192,20 @@ class AcceleratedGradient(LineSearchOptimizer):
 
             # compute step size
             if self.m1 > 0:
-                a, v, last_x, last_g, _, f_eval = \
-                    backtracking_line_search(self.f, d, self.x, last_x, last_g, None, f_eval, self.max_f_eval,
-                                             self.min_a, v, -ng, abs(self.a_start), self.m1, self.tau, self.verbose)
+                # a, v, last_wrt, last_g, _, f_eval = \
+                #     Backtracking.search(d, self.wrt, last_wrt, last_g, None, f_eval, v, -ng, abs(self.a_start))
+
+                a, v, last_wrt, last_g, _, f_eval = self.line_search.search(
+                    d, self.wrt, last_wrt, last_g, None, f_eval, v)
 
                 if self.a_start < 0:
                     self.a_start = -a
             else:  # fixed step size
                 a = abs(self.a_start)
-                last_x = y - a * g
+                last_wrt = y - a * g
 
                 if self.mon:  # in the monotone version
-                    xv = self.f.function(last_x)
+                    xv = self.f.function(last_wrt)
 
             # output statistics
             if self.verbose:
@@ -220,14 +221,14 @@ class AcceleratedGradient(LineSearchOptimizer):
 
             # possibly plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.x, last_x))
+                p_xy = np.vstack((self.wrt, last_wrt))
                 contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             if self.mon:  # in the monotone version
                 if xv > past_xv:  # if the new x is worse than the last x
-                    last_x = past_x  # then new x = last x
+                    last_wrt = past_x  # then new x = last x
                 else:
-                    past_x = last_x
+                    past_x = last_wrt
                     past_xv = xv
 
             # perform appropriate black magic
@@ -243,13 +244,13 @@ class AcceleratedGradient(LineSearchOptimizer):
                 beta = i / (i + 3)
 
             if self.wf < 3:
-                y = last_x + beta * (last_x - self.x)
+                y = last_wrt + beta * (last_wrt - self.wrt)
             else:
                 d = (2 / (i + 2)) * g + (i / (i + 2)) * d
                 z = -((i + 1) * (i + 2) * a / 4) * d
-                y = (2 / (i + 3)) * z + ((i + 1) / (i + 3)) * last_x
+                y = (2 / (i + 3)) * z + ((i + 1) / (i + 3)) * last_wrt
 
-            self.x = last_x
+            self.wrt = last_wrt
 
             if self.n == 2 and self.plot:
                 p_xy = np.hstack((y, past_y))
@@ -262,8 +263,8 @@ class AcceleratedGradient(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.x, status
+        return self.wrt, status
 
 
 if __name__ == "__main__":
-    print(AcceleratedGradient(gen_quad_1, verbose=True, plot=True).minimize())
+    print(AcceleratedGradient(gen_quad_1, verbose=True, plot=True))

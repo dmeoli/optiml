@@ -10,7 +10,7 @@ class Function:
     def __init__(self, n=2):
         self._jacobian = jacobian(self.function)
         self._hessian = hessian(self.function)
-        self.x0 = np.random.standard_normal(n)
+        self.n = n
         self.x_star = None
 
     def function(self, x):
@@ -59,7 +59,6 @@ class Quadratic(Function):
         Q = np.array(Q)
         q = np.array(q)
 
-        # reading and checking input
         if not np.isrealobj(Q):
             raise ValueError('Q not a real matrix')
 
@@ -91,9 +90,7 @@ class Quadratic(Function):
                   linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
         """
         x = np.array(x)
-        return 0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x) \
-            if x.size != 0 else self.function(np.linalg.inv(self.Q).dot(self.q)) \
-            if min(np.linalg.eigvalsh(self.Q)) > 1e-14 else -np.inf
+        return 0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x)
 
     def jacobian(self, x):
         """
@@ -166,7 +163,7 @@ class Rosenbrock(Function):
         76.56
         """
         x = np.array(x)
-        return np.sum(100.0 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2, axis=0) if x.size != 0 else 0
+        return np.sum(100.0 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2, axis=0)
 
     def jacobian(self, x):
         """
@@ -212,11 +209,11 @@ class Rosenbrock(Function):
         if not self.autodiff:
             x = np.atleast_1d(x)
             H = np.diag(-400 * x[:-1], 1) - np.diag(400 * x[:-1], -1)
-            diagonal = np.zeros(len(x), dtype=x.dtype)
-            diagonal[0] = 1200 * x[0] ** 2 - 400 * x[1] + 2
-            diagonal[-1] = 200
-            diagonal[1:-1] = 202 + 1200 * x[1:-1] ** 2 - 400 * x[2:]
-            H = H + np.diag(diagonal)
+            diag = np.zeros(len(x), dtype=x.dtype)
+            diag[0] = 1200 * x[0] ** 2 - 400 * x[1] + 2
+            diag[-1] = 200
+            diag[1:-1] = 202 + 1200 * x[1:-1] ** 2 - 400 * x[2:]
+            H = H + np.diag(diag)
             return H
         return super().hessian(x)
 
@@ -279,7 +276,7 @@ class Ackley(Function):
         """
         x = np.array(x)
         return -20 * np.exp(-0.2 * np.sqrt(np.sum(x ** 2) / x.size)) \
-               - np.exp((np.sum(np.cos(2.0 * np.pi * x))) / x.size) + np.e + 20 if x.size != 0 else 0
+               - np.exp((np.sum(np.cos(2.0 * np.pi * x))) / x.size) + np.e + 20
 
     def plot(self, x_min=-5, x_max=5, y_min=-5, y_max=5):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))

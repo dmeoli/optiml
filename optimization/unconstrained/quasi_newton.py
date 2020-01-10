@@ -3,7 +3,6 @@ import numpy as np
 
 from optimization.optimizer import LineSearchOptimizer
 from optimization.test_functions import Rosenbrock
-from optimization.unconstrained.line_search import armijo_wolfe_line_search, backtracking_line_search
 
 
 class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
@@ -109,18 +108,18 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, x=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, delta=1,
+    def __init__(self, f, wrt=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, delta=1,
                  tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, x, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if not np.isscalar(delta):
             raise ValueError('delta is not a real scalar')
         self.delta = delta
 
-    def minimize(self):
+    def __iter__(self):
         f_star = self.f.function([])
 
-        last_x = np.zeros((self.n,))  # last point visited in the line search
-        last_g = np.zeros((self.n,))  # gradient of last_x
+        last_wrt = np.zeros((self.n,))  # last point visited in the line search
+        last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         # initializations
@@ -131,7 +130,7 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
                 print('f_eval\tf(x)', end='')
             print('\t\t|| g(x) ||\tls fev\ta*\t\t\trho')
 
-        v, g = self.f.function(self.x), self.f.jacobian(self.x)
+        v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
         ng = np.linalg.norm(g)
         if self.eps < 0:
             ng0 = -ng  # norm of first subgradient
@@ -147,7 +146,7 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
             small_step = max(-self.delta, 1e-8)
             B = np.zeros((self.n, self.n))
             for i in range(self.n):
-                xp = self.x
+                xp = self.wrt
                 xp[i] = xp[i] + small_step
                 gp = self.f.jacobian(xp)
                 B[i] = ((gp - g) / small_step).T
@@ -183,15 +182,8 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
             phi_p0 = g.T.dot(d)
 
             # compute step size: as in Newton's method, the default initial step size is 1
-            if 0 < self.m2 < 1:
-                a, v, last_x, last_g, _, f_eval = \
-                    armijo_wolfe_line_search(self.f, d, self.x, last_x, last_g, None, f_eval, self.max_f_eval,
-                                             self.min_a, self.sfgrd, v, phi_p0, self.a_start, self.m1, self.m2,
-                                             self.tau, self.verbose)
-            else:
-                a, v, last_x, last_g, _, f_eval = \
-                    backtracking_line_search(self.f, d, self.x, last_x, last_g, None, f_eval, self.max_f_eval,
-                                             self.min_a, v, phi_p0, self.a_start, self.m1, self.tau, self.verbose)
+            a, v, last_wrt, last_g, _, f_eval = self.line_search.search(
+                d, self.wrt, last_wrt, last_g, None, f_eval, v, phi_p0)
 
             # output statistics
             if self.verbose:
@@ -207,7 +199,7 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
 
             # update approximation of the Hessian using the
             # Broyden-Fletcher-Goldfarb-Shanno formula
-            s = last_x - self.x  # s^i = x^{i + 1} - x^i
+            s = last_wrt - self.wrt  # s^i = x^{i + 1} - x^i
             y = last_g - g  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
 
             rho = y.T.dot(s)
@@ -227,11 +219,11 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.x, last_x))
+                p_xy = np.vstack((self.wrt, last_wrt))
                 contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             # update new point
-            self.x = last_x
+            self.wrt = last_wrt
 
             # update gradient
             g = last_g
@@ -241,8 +233,8 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.x, status
+        return self.wrt, status
 
 
 if __name__ == "__main__":
-    print(BroydenFletcherGoldfarbShanno(Rosenbrock(), verbose=True, plot=True).minimize())
+    print(BroydenFletcherGoldfarbShanno(Rosenbrock(), verbose=True, plot=True))
