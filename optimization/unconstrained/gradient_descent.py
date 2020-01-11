@@ -11,7 +11,8 @@ class SteepestGradientDescentQuadratic(Optimizer):
 
         f(x) = 1/2 x^T Q x - q^T x
 
-    :param wrt:        ([n x 1] real column vector): the point where to start the algorithm from
+    :param f:        the objective function.
+    :param wrt:      ([n x 1] real column vector): the point where to start the algorithm from
     :return x:       ([n x 1] real column vector): either the best solution found so far (possibly the
                      optimal one) or a direction proving the problem is unbounded below, depending on case
     :return status:  (string): a string describing the status of the algorithm at termination:
@@ -33,9 +34,9 @@ class SteepestGradientDescentQuadratic(Optimizer):
             raise ValueError('f_star is not a real scalar')
         self.f_star = f_star
 
-    def __iter__(self):
+    def minimize(self):
         if self.verbose:
-            print('iter\tf(x)\t\t\t||nabla f(x)||', end='')
+            print('iter\tf(x)\t\t\t||g(x)||', end='')
         if self.f_star < np.inf:
             if self.verbose:
                 print('\tf(x) - f*\trate', end='')
@@ -244,7 +245,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
         """
         super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
 
-    def __iter__(self):
+    def minimize(self):
         f_star = self.f.function([])
 
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
@@ -301,12 +302,8 @@ class SteepestGradientDescent(LineSearchOptimizer):
             phi_p0 = -ng * ng
 
             # compute step size
-            if 0 < self.m2 < 1:
-                a, v, last_wrt, last_g, _, f_eval = \
-                    self.line_search.search(d, self.wrt, last_wrt, last_g, None, f_eval, v, phi_p0)
-            else:
-                a, v, last_wrt, last_g, _, f_eval = \
-                    self.line_search.search(d, self.wrt, last_wrt, last_g, None, f_eval, v, phi_p0)
+            a, v, last_wrt, last_g, _, f_eval = self.line_search.search(
+                d, self.wrt, last_wrt, last_g, None, f_eval, v, phi_p0)
 
             # output statistics
             if self.verbose:

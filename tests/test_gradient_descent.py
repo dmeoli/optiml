@@ -7,38 +7,26 @@ from optimization.unconstrained.gradient_descent import SteepestGradientDescentQ
     GradientDescent
 
 
-def test_SteepestGradientDescentQuadratic_quadratic():
-    x, _ = SteepestGradientDescentQuadratic(gen_quad_1)
-    assert np.allclose(gen_quad_1.jacobian(x), 0)
+def test_SteepestGradientDescentQuadratic():
+    x, _ = SteepestGradientDescentQuadratic(gen_quad_1).minimize()
+    assert np.allclose(x, gen_quad_1.x_star)
 
-    x, _ = SteepestGradientDescentQuadratic(gen_quad_2)
-    np.allclose(gen_quad_2.jacobian(x), 0)
+    x, _ = SteepestGradientDescentQuadratic(gen_quad_2).minimize()
+    assert np.allclose(x, gen_quad_2.x_star)
 
-    # x, _ = SteepestGradientDescentQuadratic(gen_quad_3)
-    # np.allclose(gen_quad_3.jacobian(x), 0)
-
-    # x, _ = SteepestGradientDescentQuadratic(gen_quad_4)
-    # np.allclose(gen_quad_4.jacobian(x), 0)
-
-    x, _ = SteepestGradientDescentQuadratic(gen_quad_5)
-    np.allclose(gen_quad_5.jacobian(x), 0)
+    x, _ = SteepestGradientDescentQuadratic(gen_quad_5).minimize()
+    assert np.allclose(x, gen_quad_5.x_star)
 
 
 def test_SteepestGradientDescent_quadratic():
-    x, _ = SteepestGradientDescent(gen_quad_1)
-    np.allclose(gen_quad_1.jacobian(x), 0)
+    x, _ = SteepestGradientDescent(gen_quad_1).minimize()
+    assert np.allclose(x, gen_quad_1.x_star)
 
-    x, _ = SteepestGradientDescent(gen_quad_2)
-    np.allclose(gen_quad_2.jacobian(x), 0)
+    x, _ = SteepestGradientDescent(gen_quad_2).minimize()
+    assert np.allclose(x, gen_quad_2.x_star)
 
-    # x, _ = SteepestGradientDescent(gen_quad_3)
-    # np.allclose(gen_quad_3.jacobian(x), 0)
-
-    # x, _ = SteepestGradientDescent(gen_quad_4)
-    # np.allclose(gen_quad_4.jacobian(x), 0)
-
-    x, _ = SteepestGradientDescent(gen_quad_5)
-    np.allclose(gen_quad_5.jacobian(x), 0)
+    x, _ = SteepestGradientDescent(gen_quad_5).minimize()
+    assert np.allclose(x, gen_quad_5.x_star)
 
 
 @utils.not_test
@@ -59,12 +47,6 @@ def test_GradientDescent_quadratic():
 
     x, _ = GradientDescent(gen_quad_2, step_rate=0.01)
     np.allclose(gen_quad_2.jacobian(x), 0)
-
-    # x, _ = GradientDescent(gen_quad_3)
-    # np.allclose(gen_quad_3.jacobian(x), 0)
-
-    # x, _ = GradientDescent(gen_quad_4)
-    # np.allclose(gen_quad_4.jacobian(x), 0)
 
     x, _ = GradientDescent(gen_quad_5, step_rate=0.01)
     np.allclose(gen_quad_5.jacobian(x), 0)
@@ -89,12 +71,6 @@ def test_GradientDescent_standard_quadratic():
     x, _ = GradientDescent(gen_quad_2, step_rate=0.01, momentum=0.9, momentum_type='standard')
     np.allclose(gen_quad_2.jacobian(x), 0)
 
-    # x, _ = GradientDescent(gen_quad_3, step_rate=0.01, momentum=0.9, momentum_type='standard')
-    # np.allclose(gen_quad_3.jacobian(x), 0)
-
-    # x, _ = GradientDescent(gen_quad_4, step_rate=0.01, momentum=0.9, momentum_type='standard')
-    # np.allclose(gen_quad_4.jacobian(x), 0)
-
     x, _ = GradientDescent(gen_quad_5, step_rate=0.01, momentum=0.9, momentum_type='standard')
     np.allclose(gen_quad_5.jacobian(x), 0)
 
@@ -117,12 +93,6 @@ def test_GradientDescent_Nesterov_quadratic():
 
     x, _ = GradientDescent(gen_quad_2, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
     np.allclose(gen_quad_2.jacobian(x), 0)
-
-    # x, _ = GradientDescent(gen_quad_3, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
-    # np.allclose(gen_quad_3.jacobian(x), 0)
-
-    # x, _ = GradientDescent(gen_quad_4, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
-    # np.allclose(gen_quad_4.jacobian(x), 0)
 
     x, _ = GradientDescent(gen_quad_5, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
     np.allclose(gen_quad_5.jacobian(x), 0)

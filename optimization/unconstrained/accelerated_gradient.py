@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization import gen_quad_1
 from optimization.optimizer import LineSearchOptimizer
+from optimization.test_functions import gen_quad_1
 
 
 class AcceleratedGradient(LineSearchOptimizer):

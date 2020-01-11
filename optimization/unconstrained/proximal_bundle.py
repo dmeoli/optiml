@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization import Rosenbrock
+from optimization.test_functions import Rosenbrock
 from optimization.optimizer import Optimizer
 
 
