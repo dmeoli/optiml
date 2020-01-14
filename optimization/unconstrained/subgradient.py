@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from optimization.optimizer import LineSearchOptimizer
-from optimization.test_functions import Rosenbrock
 
 
 class Subgradient(LineSearchOptimizer):
@@ -102,7 +101,7 @@ class Subgradient(LineSearchOptimizer):
         super().__init__(f, wrt, eps, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf,
                          min_a=min_a, verbose=verbose, plot=plot)
 
-    def __iter__(self):
+    def minimize(self):
         f_star = self.f.function([])
 
         if self.eps < 0 and f_star == -np.inf:
@@ -123,7 +122,6 @@ class Subgradient(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        i = 1
         while True:
             # compute function and subgradient
             v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
@@ -142,9 +140,9 @@ class Subgradient(LineSearchOptimizer):
             # output statistics
             if self.verbose:
                 if f_star > -np.inf:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(i, (v - f_star) / max(abs(f_star), 1), ng), end='')
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, (v - f_star) / max(abs(f_star), 1), ng), end='')
                 else:
-                    print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(i, v, ng), end='')
+                    print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(self.iter, v, ng), end='')
 
             # stopping criteria
             if self.eps < 0 and f_ref - f_star <= -self.eps * max(abs(f_star), 1):
@@ -157,7 +155,7 @@ class Subgradient(LineSearchOptimizer):
                 status = 'optimal'
                 break
 
-            if i > self.max_f_eval:
+            if self.iter > self.max_f_eval:
                 status = 'stopped'
                 break
 
@@ -167,7 +165,7 @@ class Subgradient(LineSearchOptimizer):
             elif self.eps < 0:  # true Polyak step size (cheating)
                 a = (v - f_star) / ng
             else:  # diminishing square-summable step size
-                a = self.a_start * (1 / i)
+                a = self.a_start * (1 / self.iter)
 
             # output statistics
             if self.verbose:
@@ -190,7 +188,7 @@ class Subgradient(LineSearchOptimizer):
             # compute new point
             self.wrt = self.wrt - (a / ng) * g
 
-            i += 1
+            self.iter += 1
 
         x = x_ref  # return point corresponding to best value found so far
 
@@ -202,4 +200,6 @@ class Subgradient(LineSearchOptimizer):
 
 
 if __name__ == "__main__":
-    print(Subgradient(Rosenbrock(), verbose=True, plot=True))
+    import optimization.test_functions as tf
+
+    print(Subgradient(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())

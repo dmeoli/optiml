@@ -1,34 +1,28 @@
 import numpy as np
 import pytest
 
-from optimization.test_functions import gen_quad_1, gen_quad_2, gen_quad_5, Rosenbrock
+from optimization.test_functions import quad1, quad2, quad5, Rosenbrock
 from optimization.unconstrained.newton import Newton
 
 
 def test_quadratic():
-    x, _ = Newton(gen_quad_1)
-    assert np.allclose(gen_quad_1.jacobian(x), 0)
+    x, _ = Newton(quad1).minimize()
+    assert np.allclose(quad1.jacobian(x), 0)
 
-    x, _ = Newton(gen_quad_2)
-    assert np.allclose(gen_quad_2.jacobian(x), 0)
+    x, _ = Newton(quad2).minimize()
+    assert np.allclose(quad2.jacobian(x), 0)
 
-    # x, _ = Newton(gen_quad_3)
-    # assert np.allclose(gen_quad_3.jacobian(x), 0)
-
-    # x, _ = Newton(gen_quad_4)
-    # assert np.allclose(gen_quad_4.jacobian(x), 0)
-
-    x, _ = Newton(gen_quad_5)
-    assert np.allclose(gen_quad_5.jacobian(x), 0)
+    x, _ = Newton(quad5).minimize()
+    assert np.allclose(quad5.jacobian(x), 0)
 
 
 def test_Rosenbrock():
     obj = Rosenbrock(autodiff=True)
-    x, _ = Newton(obj)
+    x, _ = Newton(obj).minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
 
     obj = Rosenbrock(autodiff=False)
-    x, _ = Newton(obj)
+    x, _ = Newton(obj).minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
 
 

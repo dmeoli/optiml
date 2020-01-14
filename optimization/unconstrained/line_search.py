@@ -1,15 +1,55 @@
+from optimization.unconstrained.nocedal_line_search import line_search_wolfe, line_search_armijo
+
+
 class LineSearch:
-    def __init__(self, f, max_f_eval=1000, min_a=1e-16, a_start=1, m1=0.01, tau=0.9, verbose=False):
+    def __init__(self, f, max_f_eval=1000, min_a=1e-16, m1=0.01, tau=0.9, verbose=False):
         self.f = f
         self.max_f_eval = max_f_eval
         self.min_a = min_a
-        self.a_start = a_start
         self.m1 = m1
         self.tau = tau
         self.verbose = verbose
 
-    def search(self, d, wrt, last_wrt, last_d, last_h, f_eval, phi0=None, phi_p0=None):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
         return NotImplementedError
+
+
+class ScipyArmijoWolfe(LineSearch):
+    def __init__(self, f, max_f_eval=1000, min_a=1e-16, sfgrd=0.01, m1=0.01, m2=0.9, tau=0.9, verbose=False):
+        super().__init__(f, max_f_eval, min_a, m1, tau, verbose)
+        self.sfgrd = sfgrd
+        self.m2 = m2
+
+    def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
+        from optimization.unconstrained.minpack_line_search import line_search_wolfe
+        a, f_eval_ls, _, v, _, _ = line_search_wolfe(self.f.function, self.f.jacobian, wrt, d, self.f.jacobian(wrt))
+        last_wrt = wrt + a * d
+        last_g = self.f.jacobian(last_wrt)
+        return a, v, last_wrt, last_g, f_eval + f_eval_ls
+
+
+class NocedalArmijoWolfe(LineSearch):
+    def __init__(self, f, max_f_eval=1000, min_a=1e-16, sfgrd=0.01, m1=0.01, m2=0.9, tau=0.9, verbose=False):
+        super().__init__(f, max_f_eval, min_a, m1, tau, verbose)
+        self.sfgrd = sfgrd
+        self.m2 = m2
+
+    def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
+        a, f_eval_ls, _, v, _, _ = line_search_armijo(self.f.function, self.f.jacobian, wrt, d, self.f.jacobian(wrt))
+        last_wrt = wrt + a * d
+        last_g = self.f.jacobian(last_wrt)
+        return a, v, last_wrt, last_g, f_eval + f_eval_ls
+
+
+class NocedalBacktracking(LineSearch):
+    def __init__(self, f, max_f_eval=1000, min_a=1e-16, m1=0.01, tau=0.9, verbose=False):
+        super().__init__(f, max_f_eval, min_a, m1, tau, verbose)
+
+    def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
+        a, f_eval_ls, v = line_search_wolfe(self.f.function, self.f.jacobian, wrt, d, self.f.jacobian(wrt))
+        last_wrt = wrt + a * d
+        last_g = self.f.jacobian(last_wrt)
+        return a, v, last_wrt, last_g, f_eval + f_eval_ls
 
 
 class ArmijoWolfe(LineSearch):
@@ -26,25 +66,36 @@ class ArmijoWolfe(LineSearch):
     :returns: the optimal step and the optimal f-value
     """
 
-    def __init__(self, f, max_f_eval=1000, min_a=1e-16, sfgrd=0.01, a_start=1, m1=0.01, m2=0.9, tau=0.9, verbose=False):
-        super().__init__(f, max_f_eval, min_a, a_start, m1, tau, verbose)
+    def __init__(self, f, max_f_eval=1000, min_a=1e-16, sfgrd=0.01, m1=0.01, m2=0.9, tau=0.9, verbose=False):
+        super().__init__(f, max_f_eval, min_a, m1, tau, verbose)
         self.sfgrd = sfgrd
         self.m2 = m2
 
-    def search(self, d, wrt, last_wrt, last_d, last_h, f_eval, phi0=None, phi_p0=None):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
+
+        def f2phi(f, d, x, a, f_eval):
+            # phi(a) = f(x + a * d)
+            # phi'(a) = <\nabla f(x + a * d), d>
+
+            last_wrt = x + a * d
+            phi_a, last_g = f.function(last_wrt), f.jacobian(last_wrt)
+            phi_p = d.T.dot(last_g)
+            f_eval += 1
+            return phi_a, phi_p, last_wrt, last_g, f_eval
+
         ls_iter = 1  # count iterations of first phase
         while f_eval <= self.max_f_eval:
-            phi_a, phi_ps, last_wrt, last_d, last_h, f_eval = f2phi(self.f, d, wrt, last_h, f_eval, self.a_start)
+            phi_a, phi_ps, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, a_start, f_eval)
             # Armijo and strong Wolfe conditions
-            if phi_a <= phi0 + self.m1 * self.a_start * phi_p0 and abs(phi_ps) <= -self.m2 * phi_p0:
+            if phi_a <= phi0 + self.m1 * a_start * phi_p0 and abs(phi_ps) <= -self.m2 * phi_p0:
                 if self.verbose:
                     print('\t{:2d}\t{:2d}'.format(ls_iter, 0), end='')
-                return self.a_start, phi_a, last_wrt, last_d, last_h, f_eval
+                return a_start, phi_a, last_wrt, last_g, f_eval
 
             if phi_ps >= 0:
                 break
 
-            self.a_start /= self.tau
+            a_start /= self.tau
             ls_iter += 1
 
         if self.verbose:
@@ -52,15 +103,17 @@ class ArmijoWolfe(LineSearch):
         ls_iter = 1  # count iterations of second phase
 
         am = 0
-        a = self.a_start
+        a = a_start
         phi_pm = phi_p0
-        while f_eval <= self.max_f_eval and self.a_start - am > self.min_a and phi_ps > 1e-12:
+        while f_eval <= self.max_f_eval and a_start - am > self.min_a and phi_ps > 1e-12:
             # compute the new value by safeguarded quadratic interpolation
-            a = max(am * (1 + self.sfgrd), min(self.a_start * (1 - self.sfgrd),
-                                               (am * phi_ps - self.a_start * phi_pm) / (phi_ps - phi_pm)))
+            a = (am * phi_ps - a_start * phi_pm) / (phi_ps - phi_pm)
+
+            a = max(am * (1 + self.sfgrd), min(a_start * (1 - self.sfgrd), a))
+            # a = max(am + (a_start - am) * self.sfgrd, min(a_start - (a_start - am) * self.sfgrd, a))
 
             # compute phi(a)
-            phi_a, phi_p, last_wrt, last_d, last_h, f_eval = f2phi(self.f, d, wrt, last_h, f_eval, a)
+            phi_a, phi_p, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, a, f_eval)
             # Armijo and strong Wolfe conditions
             if phi_a <= phi0 + self.m1 * a * phi_p0 and abs(phi_p) <= -self.m2 * phi_p0:
                 break
@@ -80,7 +133,7 @@ class ArmijoWolfe(LineSearch):
 
         if self.verbose:
             print('{:2d}'.format(ls_iter), end='')
-        return a, phi_a, last_wrt, last_d, last_h, f_eval
+        return a, phi_a, last_wrt, last_g, f_eval
 
 
 class Backtracking(LineSearch):
@@ -94,31 +147,28 @@ class Backtracking(LineSearch):
     :returns: the optimal step and the optimal f-value
     """
 
-    def __init__(self, f, max_f_eval=1000, min_a=1e-16, a_start=1, m1=0.01, tau=0.9, verbose=False):
-        super().__init__(f, max_f_eval, min_a, a_start, m1, tau, verbose)
+    def __init__(self, f, max_f_eval=1000, min_a=1e-16, m1=0.01, tau=0.9, verbose=False):
+        super().__init__(f, max_f_eval, min_a, m1, tau, verbose)
 
-    def search(self, d, wrt, last_wrt, last_d, last_h, f_eval, phi0=None, phi_p0=None):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
+
+        def f2phi(f, d, x, a, f_eval):
+            # phi(a) = f(x + a * d)
+
+            last_wrt = x + a * d
+            phi_a, last_g = f.function(last_wrt), f.jacobian(last_wrt)
+            f_eval += 1
+            return phi_a, last_wrt, last_g, f_eval
+
         ls_iter = 1  # count ls iterations
-        while f_eval <= self.max_f_eval and self.a_start > self.min_a:
-            phi_a, _, last_wrt, last_d, last_h, f_eval = f2phi(self.f, d, wrt, last_h, f_eval, self.a_start)
-            if phi_a <= phi0 + self.m1 * self.a_start * phi_p0:  # Armijo condition
+        while f_eval <= self.max_f_eval and a_start > self.min_a:
+            phi_a, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, a_start, f_eval)
+            if phi_a <= phi0 + self.m1 * a_start * phi_p0:  # Armijo condition
                 break
 
-            self.a_start *= self.tau
+            a_start *= self.tau
             ls_iter += 1
 
         if self.verbose:
             print('\t{:2d}'.format(ls_iter), end='')
-        return self.a_start, phi_a, last_wrt, last_d, last_h, f_eval
-
-
-def f2phi(f, d, x, last_h, f_eval, a):
-    # phi(a) = f(x + a * d)
-    # phi'(a) = <\nabla f(x + a * d), d>
-
-    last_wrt = x + a * d
-    phi_a, last_g = f.function(last_wrt), f.jacobian(last_wrt)
-    last_h = f.hessian(last_wrt) if last_h is not None else None
-    phi_p = d.T.dot(last_g)
-    f_eval += 1
-    return phi_a, phi_p, last_wrt, last_g, last_h, f_eval
+        return a_start, phi_a, last_wrt, last_g, f_eval

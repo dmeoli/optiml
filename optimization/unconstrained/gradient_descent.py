@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from optimization.optimizer import Optimizer, LineSearchOptimizer
-from optimization.test_functions import gen_quad_1
 
 
 class SteepestGradientDescentQuadratic(Optimizer):
@@ -47,7 +46,6 @@ class SteepestGradientDescentQuadratic(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        i = 1
         while True:
             # compute function value and gradient
             v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
@@ -55,7 +53,7 @@ class SteepestGradientDescentQuadratic(Optimizer):
 
             # output statistics
             if self.verbose:
-                print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(i, v, ng), end='')
+                print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(self.iter, v, ng), end='')
             if self.f_star < np.inf:
                 if self.verbose:
                     print('\t{:1.4e}'.format(v - self.f_star), end='')
@@ -71,42 +69,44 @@ class SteepestGradientDescentQuadratic(Optimizer):
                 status = 'optimal'
                 break
 
-            if i > self.max_iter:
+            if self.iter > self.max_iter:
                 status = 'stopped'
                 break
 
+            d = -g
+
             # check if f is unbounded below
-            den = g.T.dot(self.f.hessian()).dot(g)
+            den = d.T.dot(self.f.hessian()).dot(d)
 
             if den <= 1e-12:
                 # this is actually two different cases:
                 #
-                # - g.T.dot(Q).dot(g) = 0, i.e., f is linear along g, and since the
+                # - d.T.dot(Q).dot(d) = 0, i.e., f is linear along d, and since the
                 #   gradient is not zero, it is unbounded below;
                 #
-                # - g.T.dot(Q).dot(g) < 0, i.e., g is a direction of negative curvature
+                # - d.T.dot(Q).dot(d) < 0, i.e., d is a direction of negative curvature
                 #   for f, which is then necessarily unbounded below.
                 status = 'unbounded'
                 break
 
             # compute step size
-            a = g.T.dot(g) / den  # or ng ** 2 / den
+            a = d.T.dot(d) / den  # or ng ** 2 / den
 
-            assert np.isclose(g.T.dot(g), ng ** 2)
+            # assert np.isclose(d.T.dot(d), ng ** 2)
 
             # compute new point
-            new_x = self.wrt - a * g
+            last_wrt = self.wrt + a * d
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, new_x))
+                p_xy = np.vstack((self.wrt, last_wrt))
                 contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
 
             # <\nabla f(x_i), \nabla f(x_i+1)> = 0
-            assert np.isclose(self.f.jacobian(self.wrt).T.dot(self.f.jacobian(new_x)), 0)
+            # assert np.isclose(self.f.jacobian(self.wrt).T.dot(self.f.jacobian(last_wrt)), 0)
 
-            self.wrt = new_x
-            i += 1
+            self.wrt = last_wrt
+            self.iter += 1
 
         if self.verbose:
             print()
@@ -184,7 +184,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
         """
 
         :param f:          the objective function.
-        :param wrt:          ([n x 1] real column vector): the point where to start the algorithm from.
+        :param wrt:        ([n x 1] real column vector): the point where to start the algorithm from.
         :param eps:        (real scalar, optional, default value 1e-6): the accuracy in the stopping
                            criterion: the algorithm is stopped when the norm of the gradient is less
                            than or equal to eps.
@@ -302,8 +302,8 @@ class SteepestGradientDescent(LineSearchOptimizer):
             phi_p0 = -ng * ng
 
             # compute step size
-            a, v, last_wrt, last_g, _, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, None, f_eval, v, phi_p0)
+            a, v, last_wrt, last_g, f_eval = self.line_search.search(d, self.wrt, last_wrt, last_g, f_eval,
+                                                                     self.a_start, v, phi_p0)
 
             # output statistics
             if self.verbose:
@@ -329,6 +329,8 @@ class SteepestGradientDescent(LineSearchOptimizer):
             g = last_g
             ng = np.linalg.norm(g)
 
+            self.iter += 1
+
         if self.verbose:
             print()
         if self.plot and self.n == 2:
@@ -338,9 +340,9 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
 class GradientDescent(Optimizer):
 
-    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.1, momentum=0.0,
-                 momentum_type='none', verbose=False, plot=False, args=None):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
+    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.01, momentum=0.,
+                 momentum_type='none', verbose=False, plot=False):
+        super().__init__(f, wrt, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
         if step_rate < 0:
@@ -354,78 +356,98 @@ class GradientDescent(Optimizer):
         if momentum_type not in ('nesterov', 'standard', 'none'):
             raise ValueError('unknown momentum type')
         self.momentum_type = momentum_type
+
         self.step = 0
-        self.iter = 0
         self.state_fields = 'step_rate momentum momentum_type step iter'.split()
 
-    def __iter__(self):
-        for args, kwargs in self.args:
+    def minimize(self):
+        f_star = self.f.function([])
+
+        f_eval = 1  # f() evaluations count ("common" with LSs)
+
+        if f_star > -np.inf:
+            if self.verbose:
+                print('f_eval\trel gap\t\t|| g(x) ||\t\trate\t', end='')
+            prev_v = np.inf
+        else:
+            if self.verbose:
+                print('f_eval\tf(x)\t\t\t|| g(x) ||\t', end='')
+        if self.verbose:
+            print('ls f_eval\ta*')
+
+        v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+        ng = np.linalg.norm(g)
+        if self.eps < 0:
+            ng0 = -ng  # norm of first subgradient
+        else:
+            ng0 = 1  # un-scaled stopping criterion
+
+        if self.plot and self.n == 2:
+            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
+
+        while True:
+            # output statistics
+            if f_star > -np.inf:
+                if self.verbose:
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
+                if prev_v < np.inf:
+                    if self.verbose:
+                        print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
+                else:
+                    if self.verbose:
+                        print('\t\t\t', end='')
+                prev_v = v
+            else:
+                if self.verbose:
+                    print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng), end='')
+
             step_m1 = self.step
 
             if self.momentum_type == 'standard':
-                gradient = self.f.jacobian(self.wrt, *args, **kwargs)
-                step = step_m1 * self.momentum + gradient * self.step_rate
+                gradient = self.f.jacobian(self.wrt)
+                step = step_m1 * self.momentum + self.step_rate * gradient
                 self.wrt -= step
             elif self.momentum_type == 'nesterov':
                 big_jump = step_m1 * self.momentum
                 self.wrt -= big_jump
-                gradient = self.f.jacobian(self.wrt, *args, **kwargs)
-                correction = gradient * self.step_rate
+                gradient = self.f.jacobian(self.wrt)
+                correction = self.step_rate * gradient
                 self.wrt -= correction
                 step = big_jump + correction
-            else:
-                gradient = self.f.jacobian(self.wrt, *args, **kwargs)
-                step = gradient * self.step_rate
+            elif self.momentum_type == 'none':
+                gradient = self.f.jacobian(self.wrt)
+                step = self.step_rate * gradient
                 self.wrt -= step
 
+            # stopping criteria
+            if ng <= self.eps * ng0:
+                status = 'optimal'
+                break
+
+            if self.iter > self.max_iter:
+                status = 'stopped'
+                break
+
+            # plot the trajectory
+            if self.plot and self.n == 2:
+                p_xy = np.vstack((self.wrt, step_m1))
+                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
+
             self.step = step
+
             self.iter += 1
-            yield self.extended_info(gradient=gradient, args=args, kwargs=kwargs)
+
+        if self.verbose:
+            print()
+        if self.plot and self.n == 2:
+            plt.show()
+        return self.wrt, status
 
 
 if __name__ == "__main__":
-    opt = GradientDescent(gen_quad_1, step_rate=0.01, momentum_type='none')
-    for i, info in enumerate(opt):
-        if i > 1000:
-            break
-    a = abs(gen_quad_1.jacobian(opt.wrt))
-    assert np.allclose(a, 0)
+    import optimization.test_functions as tf
 
-    opt = GradientDescent(gen_quad_1, step_rate=0.01, momentum=0.9, momentum_type='standard')
-    for i, info in enumerate(opt):
-        if i > 1000:
-            break
-    a = abs(gen_quad_1.jacobian(opt.wrt))
-    assert np.allclose(a, 0)
-    opt = GradientDescent(gen_quad_1, step_rate=0.01, momentum=0.9, momentum_type='standard')
-    for i, info in enumerate(opt):
-        if i > 1000:
-            break
-    a = abs(gen_quad_1.jacobian(opt.wrt))
-    assert np.allclose(a, 0)
-
-    opt = GradientDescent(gen_quad_1, step_rate=0.01, momentum=0.9, momentum_type='nesterov')
-    for i, info in enumerate(opt):
-        if i > 1000:
-            break
-    a = abs(gen_quad_1.jacobian(opt.wrt))
-    assert np.allclose(a, 0)
-
-    # opt = GradientDescent(Rosenbrock(), step_rate=0.01, momentum=0.9, momentum_type='standard')
-    # for i, info in enumerate(opt):
-    #     if i > 1000:
-    #         break
-    # print(opt.x)
-
-    # print(SteepestGradientDescentQuadratic(gen_quad_2, f_star=gen_quad_2.function([]),
-    #                                        verbose=True, plot=True))
-    # print()
-    # print(SteepestGradientDescent(Rosenbrock(), verbose=True, plot=True))
-    # print()
-    # print(GradientDescent(Rosenbrock(), step_rate=0.01, verbose=True, plot=True))
-    # print()
-    # print(GradientDescent(Rosenbrock(), step_rate=0.01, momentum=0.9,
-    #                       momentum_type='standard', verbose=True, plot=True))
-    # print()
-    # print(GradientDescent(Rosenbrock(), step_rate=0.01, momentum=0.9,
-    #                       momentum_type='nesterov', verbose=True, plot=True))
+    print(SteepestGradientDescent(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    print()
+    print(GradientDescent(tf.quad1, [-1, 1], [-1, 1], step_rate=0.01, momentum_type='standard',
+                          verbose=True, plot=True).minimize())

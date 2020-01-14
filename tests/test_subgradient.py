@@ -1,27 +1,24 @@
 import numpy as np
 import pytest
 
-from optimization import gen_quad_1, gen_quad_2, gen_quad_5, Rosenbrock
-from optimization.unconstrained import Subgradient
+import utils
+from optimization.test_functions import quad1, quad2, quad5, Rosenbrock
+from optimization.unconstrained.subgradient import Subgradient
 
 
+@utils.not_test
 def test_quadratic():
-    x, _ = Subgradient(gen_quad_1)
-    assert np.allclose(gen_quad_1.jacobian(x), 0)
+    x, _ = Subgradient(quad1)
+    assert np.allclose(quad1.jacobian(x), 0)
 
-    x, _ = Subgradient(gen_quad_2)
-    assert np.allclose(gen_quad_2.jacobian(x), 0)
+    x, _ = Subgradient(quad2)
+    assert np.allclose(quad2.jacobian(x), 0)
 
-    # x, _ = Subgradient(gen_quad_3)
-    # assert np.allclose(gen_quad_3.jacobian(x), 0)
-
-    # x, _ = Subgradient(gen_quad_4)
-    # assert np.allclose(gen_quad_4.jacobian(x), 0)
-
-    x, _ = Subgradient(gen_quad_5)
-    assert np.allclose(gen_quad_5.jacobian(x), 0)
+    x, _ = Subgradient(quad5)
+    assert np.allclose(quad5.jacobian(x), 0)
 
 
+@utils.not_test
 def test_Rosenbrock():
     obj = Rosenbrock(autodiff=True)
     x, _ = Subgradient(obj)

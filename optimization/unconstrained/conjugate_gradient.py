@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from optimization.optimizer import LineSearchOptimizer
-from optimization.test_functions import Rosenbrock
 
 
 class ConjugateGradient(LineSearchOptimizer):
@@ -18,7 +17,7 @@ class ConjugateGradient(LineSearchOptimizer):
             raise ValueError('r_start is not an integer scalar')
         self.r_start = r_start
 
-    def __iter__(self):
+    def minimize(self):
         return NotImplementedError
 
 
@@ -135,7 +134,7 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, wrt=None, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+    def __init__(self, f, wrt=None, wf=0, eps=1e-6, max_f_eval=1000, r_start=0, m1=0.01, m2=0.9, a_start=1,
                  tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if wf < 0 or wf > 4:
@@ -145,7 +144,7 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
             raise ValueError('r_start is not an integer scalar')
         self.r_start = r_start
 
-    def __iter__(self):
+    def minimize(self):
         f_star = self.f.function([])
 
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
@@ -170,7 +169,6 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        i = 1  # iterations count (as distinguished from f() evaluations)
         while True:
             if self.verbose:
                 # output statistics
@@ -191,12 +189,12 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
             # compute search direction
             # formulae could be streamlined somewhat and some
             # norms could be saved from previous iterations
-            if i == 1:  # first iteration is off-line, standard gradient
+            if self.iter == 1:  # first iteration is off-line, standard gradient
                 d = -g
                 if self.verbose:
                     print('\t', end='')
             else:  # normal iterations, use appropriate NCG formula
-                if self.r_start > 0 and i % self.n * self.r_start == 0:
+                if self.r_start > 0 and self.iter % self.n * self.r_start == 0:
                     # ... unless a restart is being performed
                     beta = 0
                     if self.verbose:
@@ -230,8 +228,8 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
             phi_p0 = g.T.dot(d)
 
             # compute step size
-            a, v, last_wrt, last_g, _, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, None, f_eval, v, phi_p0)
+            a, v, last_wrt, last_g, f_eval = self.line_search.search(d, self.wrt, last_wrt, last_g, f_eval,
+                                                                     self.a_start, v, phi_p0)
 
             # output statistics
             if self.verbose:
@@ -257,8 +255,7 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
             g = last_g
             ng = np.linalg.norm(g)
 
-            # iterate
-            i += 1
+            self.iter += 1
 
         if self.verbose:
             print()
@@ -268,6 +265,6 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
 
 
 if __name__ == "__main__":
-    print(ConjugateGradient(Rosenbrock(), verbose=True, plot=True))
-    print()
-    print(NonLinearConjugateGradient(Rosenbrock(), verbose=True, plot=True))
+    import optimization.test_functions as tf
+
+    print(NonLinearConjugateGradient(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())

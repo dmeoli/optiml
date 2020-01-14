@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.test_functions import Rosenbrock
 from optimization.optimizer import Optimizer
 
 
@@ -97,7 +96,7 @@ class ProximalBundle(Optimizer):
             raise ValueError('m_inf is not a real scalar')
         self.m_inf = m_inf
 
-    def __iter__(self):
+    def minimize(self):
         f_star = self.f.function([])
 
         if self.verbose:
@@ -126,10 +125,9 @@ class ProximalBundle(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        i = 1
         while True:
             # construct the master problem
-            d = sdpvar(n, 1)
+            d = sdpvar(self.n, 1)
             v = sdpvar(1, 1)
 
             M = v * np.ones(np.size(G, 1), 1) >= F + G * (d + self.wrt)
@@ -155,9 +153,9 @@ class ProximalBundle(Optimizer):
 
             # output statistics
             if f_star > -np.inf:
-                print('%4d\t%1.4e\t%1.4e'.format(i, (fx - f_star) / max(abs(f_star), 1), nd))
+                print('%4d\t%1.4e\t%1.4e'.format(self.iter, (fx - f_star) / max(abs(f_star), 1), nd))
             else:
-                print('%4d\t%1.8e\t\t%1.4e'.format(i, fx, nd))
+                print('%4d\t%1.8e\t\t%1.4e'.format(self.iter, fx, nd))
 
             # stopping criteria
 
@@ -165,7 +163,7 @@ class ProximalBundle(Optimizer):
                 status = 'optimal'
                 break
 
-            if i > self.max_iter:
+            if self.iter > self.max_iter:
                 status = 'stopped'
                 break
 
@@ -196,9 +194,9 @@ class ProximalBundle(Optimizer):
                 print('\tNS')
                 if self.plot and self.n == 2:
                     p_xy = np.vstack((self.wrt, new_x))
-                    contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='r')
+                    contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='b')
 
-            i += 1
+            self.iter += 1
 
         if self.verbose:
             print()
@@ -208,4 +206,6 @@ class ProximalBundle(Optimizer):
 
 
 if __name__ == "__main__":
-    print(ProximalBundle(Rosenbrock(), verbose=True, plot=True).minimize())
+    import optimization.test_functions as tf
+
+    print(ProximalBundle(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())

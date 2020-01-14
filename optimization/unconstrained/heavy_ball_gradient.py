@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.test_functions import Rosenbrock
 from optimization.optimizer import LineSearchOptimizer
 
 
@@ -120,7 +119,7 @@ class HeavyBallGradient(LineSearchOptimizer):
             raise ValueError('beta is not a real scalar')
         self.beta = beta
 
-    def __iter__(self):
+    def minimize(self):
         f_star = self.f.function([])
 
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
@@ -164,7 +163,7 @@ class HeavyBallGradient(LineSearchOptimizer):
                 break
 
             # compute deflected gradient direction
-            if f_eval == 1:
+            if self.iter == 1:
                 d = -g
             else:
                 if self.beta > 0:
@@ -173,11 +172,11 @@ class HeavyBallGradient(LineSearchOptimizer):
                     beta_i = -self.beta * ng / np.linalg.norm(past_d)
                 d = -g + beta_i * past_d
 
-            phi_p0 = g.T * d
+            phi_p0 = g.T.dot(d)
 
             # compute step size
-            a, v, last_wrt, last_g, _, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, None, f_eval, v, phi_p0)
+            a, v, last_wrt, last_g, f_eval = self.line_search.search(d, self.wrt, last_wrt, last_g, f_eval,
+                                                                     self.a_start, v, phi_p0)
 
             # output statistics
             if self.verbose:
@@ -202,6 +201,8 @@ class HeavyBallGradient(LineSearchOptimizer):
             g = last_g
             ng = np.linalg.norm(g)
 
+            self.iter += 1
+
         if self.verbose:
             print()
         if self.plot and self.n == 2:
@@ -210,4 +211,6 @@ class HeavyBallGradient(LineSearchOptimizer):
 
 
 if __name__ == "__main__":
-    print(HeavyBallGradient(Rosenbrock(), verbose=True, plot=True))
+    import optimization.test_functions as tf
+
+    print(HeavyBallGradient(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())

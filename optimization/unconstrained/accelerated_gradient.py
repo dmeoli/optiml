@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from optimization.optimizer import LineSearchOptimizer
-from optimization.test_functions import gen_quad_1
 
 
 class AcceleratedGradient(LineSearchOptimizer):
@@ -109,7 +108,7 @@ class AcceleratedGradient(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, wrt=None, a_start=1, m1=0, mon=1e-6, wf=0, eps=1e-6, max_f_eval=1000,
+    def __init__(self, f, wrt=None, wf=0, eps=1e-6, max_f_eval=1000, mon=1e-6, m1=0.1, a_start=0.01,
                  tau=0.9, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         super().__init__(f, wrt, eps, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf,
                          min_a=min_a, verbose=verbose, plot=plot)
@@ -127,11 +126,11 @@ class AcceleratedGradient(LineSearchOptimizer):
             raise ValueError('unknown fast gradient formula {:d}'.format(wf))
         self.wf = wf
 
-    def __iter__(self):
+    def minimize(self):
         f_star = self.f.function([])
 
-        last_wrt = np.zeros((self.n, 1))  # last point visited in the line search
-        last_g = np.zeros((self.n, 1))  # gradient of last_wrt
+        last_wrt = np.zeros((self.n,))  # last point visited in the line search
+        last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
@@ -141,10 +140,9 @@ class AcceleratedGradient(LineSearchOptimizer):
                 print('f_eval\tf(x)', end='')
             print('\t\t|| g(x) ||\tgamma\tls fev\ta*')
 
-        i = 1
         gamma = 1
         if self.wf == 3:
-            d = np.zeros((self.n, 1))
+            d = np.zeros((self.n,))
 
         y = self.wrt
         past_y = self.wrt
@@ -188,21 +186,15 @@ class AcceleratedGradient(LineSearchOptimizer):
                 status = 'stopped'
                 break
 
-            d = -g
-
             # compute step size
             if self.m1 > 0:
-                # a, v, last_wrt, last_g, _, f_eval = \
-                #     Backtracking.search(d, self.wrt, last_wrt, last_g, None, f_eval, v, -ng, abs(self.a_start))
-
-                a, v, last_wrt, last_g, _, f_eval = self.line_search.search(
-                    d, self.wrt, last_wrt, last_g, None, f_eval, v)
-
+                a, xv, last_wrt, last_g, f_eval = self.line_search.search(-g, self.wrt, last_wrt, last_g, f_eval,
+                                                                          abs(self.a_start), v, -ng)
                 if self.a_start < 0:
                     self.a_start = -a
             else:  # fixed step size
                 a = abs(self.a_start)
-                last_wrt = y - a * g
+                last_wrt = y + a * -g
 
                 if self.mon:  # in the monotone version
                     xv = self.f.function(last_wrt)
@@ -231,7 +223,6 @@ class AcceleratedGradient(LineSearchOptimizer):
                     past_x = last_wrt
                     past_xv = xv
 
-            # perform appropriate black magic
             if self.wf == 0:
                 past_gamma = gamma
                 gamma = (np.sqrt(4 * gamma ** 2 + gamma ** 4) - gamma ** 2) / 2
@@ -241,23 +232,24 @@ class AcceleratedGradient(LineSearchOptimizer):
                 gamma = (1 + np.sqrt(1 + 4 * past_gamma)) / 2
                 beta = (past_gamma - 1) / gamma
             elif self.wf == 2:
-                beta = i / (i + 3)
+                beta = self.iter / (self.iter + 3)
 
             if self.wf < 3:
                 y = last_wrt + beta * (last_wrt - self.wrt)
             else:
-                d = (2 / (i + 2)) * g + (i / (i + 2)) * d
-                z = -((i + 1) * (i + 2) * a / 4) * d
-                y = (2 / (i + 3)) * z + ((i + 1) / (i + 3)) * last_wrt
+                d = (2 / (self.iter + 2)) * g + (self.iter / (self.iter + 2)) * d
+                z = -((self.iter + 1) * (self.iter + 2) * a / 4) * d
+                y = (2 / (self.iter + 3)) * z + ((self.iter + 1) / (self.iter + 3)) * last_wrt
 
             self.wrt = last_wrt
 
-            if self.n == 2 and self.plot:
-                p_xy = np.hstack((y, past_y))
-                contour_axes.plot(p_xy[0], p_xy[1], color='r')
+            # possibly plot the trajectory
+            if self.plot and self.n == 2:
+                p_xy = np.vstack((y, past_y))
+                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='b')
                 past_y = y
 
-            i += 1
+            self.iter += 1
 
         if self.verbose:
             print()
@@ -267,4 +259,6 @@ class AcceleratedGradient(LineSearchOptimizer):
 
 
 if __name__ == "__main__":
-    print(AcceleratedGradient(gen_quad_1, verbose=True, plot=True))
+    import optimization.test_functions as tf
+
+    print(AcceleratedGradient(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())

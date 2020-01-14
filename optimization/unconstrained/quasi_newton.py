@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from optimization.optimizer import LineSearchOptimizer
-from optimization.test_functions import Rosenbrock
 
 
 class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
@@ -115,7 +114,7 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
             raise ValueError('delta is not a real scalar')
         self.delta = delta
 
-    def __iter__(self):
+    def minimize(self):
         f_star = self.f.function([])
 
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
@@ -182,8 +181,8 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
             phi_p0 = g.T.dot(d)
 
             # compute step size: as in Newton's method, the default initial step size is 1
-            a, v, last_wrt, last_g, _, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, None, f_eval, v, phi_p0)
+            a, v, last_wrt, last_g, f_eval = self.line_search.search(d, self.wrt, last_wrt, last_g, f_eval,
+                                                                     self.a_start, v, phi_p0)
 
             # output statistics
             if self.verbose:
@@ -229,6 +228,8 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
             g = last_g
             ng = np.linalg.norm(g)
 
+            self.iter += 1
+
         if self.verbose:
             print()
         if self.plot and self.n == 2:
@@ -237,4 +238,6 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
 
 
 if __name__ == "__main__":
-    print(BroydenFletcherGoldfarbShanno(Rosenbrock(), verbose=True, plot=True))
+    import optimization.test_functions as tf
+
+    print(BroydenFletcherGoldfarbShanno(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())

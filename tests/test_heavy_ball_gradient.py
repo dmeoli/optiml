@@ -1,34 +1,28 @@
 import numpy as np
 import pytest
 
-from optimization import gen_quad_1, gen_quad_2, gen_quad_5, Rosenbrock
+from optimization.test_functions import quad1, quad2, quad5, Rosenbrock
 from optimization.unconstrained.heavy_ball_gradient import HeavyBallGradient
 
 
 def test_quadratic():
-    x, _ = HeavyBallGradient(gen_quad_1)
-    assert np.allclose(gen_quad_1.jacobian(x), 0)
+    x, _ = HeavyBallGradient(quad1).minimize()
+    assert np.allclose(x, quad1.x_star)
 
-    x, _ = HeavyBallGradient(gen_quad_2)
-    assert np.allclose(gen_quad_2.jacobian(x), 0)
+    x, _ = HeavyBallGradient(quad2).minimize()
+    assert np.allclose(x, quad2.x_star)
 
-    # x, _ = HeavyBallGradient(gen_quad_3)
-    # assert np.allclose(gen_quad_3.jacobian(x), 0)
-
-    # x, _ = HeavyBallGradient(gen_quad_4)
-    # assert np.allclose(gen_quad_4.jacobian(x), 0)
-
-    x, _ = HeavyBallGradient(gen_quad_5)
-    assert np.allclose(gen_quad_5.jacobian(x), 0)
+    x, _ = HeavyBallGradient(quad5).minimize()
+    assert np.allclose(x, quad5.x_star)
 
 
 def test_Rosenbrock():
     obj = Rosenbrock(autodiff=True)
-    x, _ = HeavyBallGradient(obj)
+    x, _ = HeavyBallGradient(obj).minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
 
     obj = Rosenbrock(autodiff=False)
-    x, _ = HeavyBallGradient(obj)
+    x, _ = HeavyBallGradient(obj).minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
 
 

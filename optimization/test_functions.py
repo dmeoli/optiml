@@ -90,7 +90,7 @@ class Quadratic(Function):
                   linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
         """
         x = np.array(x)
-        return 0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x)
+        return 0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x) if x.size != 0 else 0
 
     def jacobian(self, x):
         """
@@ -115,7 +115,6 @@ class Quadratic(Function):
         surface_plot = plt.figure()
         surface_axes = Axes3D(surface_plot)
 
-        # generic quadratic function
         #                      T                           T
         # f(x, y) = 1/2 * | x |  * | a  b | * | x | - | d |  * | x |
         #                 | y |    | b  c |   | y |   | e |    | y |
@@ -132,18 +131,18 @@ class Quadratic(Function):
         return surface_plot, surface_axes, contour_plot, contour_axes
 
 
-# generic 2x2 quadratic function with nicely conditioned Hessian
-gen_quad_1 = Quadratic([[6, -2], [-2, 6]], [10, 5])
-# generic 2x2 quadratic function with less nicely conditioned Hessian
-gen_quad_2 = Quadratic([[5, -3], [-3, 5]], [10, 5])
-# generic 2x2 quadratic function with Hessian having one zero eigenvalue
-gen_quad_3 = Quadratic([[4, -4], [-4, 4]], [10, 5])
-# generic 2x2 quadratic function with indefinite Hessian
+# 2x2 quadratic function with nicely conditioned Hessian
+quad1 = Quadratic([[6, -2], [-2, 6]], [10, 5])
+# 2x2 quadratic function with less nicely conditioned Hessian
+quad2 = Quadratic([[5, -3], [-3, 5]], [10, 5])
+# 2x2 quadratic function with Hessian having one zero eigenvalue
+quad3 = Quadratic([[4, -4], [-4, 4]], [10, 5])
+# 2x2 quadratic function with indefinite Hessian
 # (one positive and one negative eigenvalue)
-gen_quad_4 = Quadratic([[3, -5], [-5, 3]], [10, 5])
-# generic 2x2 quadratic function with "very elongated" Hessian
+quad4 = Quadratic([[3, -5], [-5, 3]], [10, 5])
+# 2x2 quadratic function with "very elongated" Hessian
 # (a very small positive minimum eigenvalue, the other much larger)
-gen_quad_5 = Quadratic([[101, -99], [-99, 101]], [10, 5])
+quad5 = Quadratic([[101, -99], [-99, 101]], [10, 5])
 
 
 class Rosenbrock(Function):
@@ -250,79 +249,6 @@ class Rosenbrock(Function):
 
         # Rosenbrock function
         z = 100. * (y - x ** 2) ** 2 + (1. - x) ** 2
-
-        surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
-
-        # 2D contour
-        contour_plot, contour_axes = plt.subplots()
-
-        contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*self.x_star, 'r*', markersize=10)
-
-        return surface_plot, surface_axes, contour_plot, contour_axes
-
-
-class Ackley(Function):
-
-    def __init__(self, n=2):
-        super().__init__(n)
-        self.x_star = np.zeros(n)
-
-    def function(self, x):
-        """
-        The Ackley function.
-        :param x: 1D array of points at which the Ackley function is to be computed.
-        :return:  the value of the Ackley function.
-        """
-        x = np.array(x)
-        return -20 * np.exp(-0.2 * np.sqrt(np.sum(x ** 2) / x.size)) \
-               - np.exp((np.sum(np.cos(2.0 * np.pi * x))) / x.size) + np.e + 20
-
-    def plot(self, x_min=-5, x_max=5, y_min=-5, y_max=5):
-        x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
-
-        # 3D surface plot
-        surface_plot = plt.figure()
-        surface_axes = Axes3D(surface_plot)
-
-        # Ackley function
-        z = -20 * np.exp(-0.2 * np.sqrt((x ** 2 + y ** 2) * 0.5)) \
-            - np.exp((np.cos(2.0 * np.pi * x) + np.cos(2 * np.pi * y)) * 0.5) + np.e + 20
-
-        surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
-
-        # 2D contour
-        contour_plot, contour_axes = plt.subplots()
-
-        contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*self.x_star, 'r*', markersize=10)
-
-        return surface_plot, surface_axes, contour_plot, contour_axes
-
-
-class Sphere(Function):
-
-    def __init__(self, n=2):
-        super().__init__(n)
-        self.x_star = np.ones(n)
-
-    def function(self, x):
-        """
-        The Sphere function.
-        :param x: 1D array of points at which the Sphere function is to be computed.
-        :return:  the value of the Sphere function.
-        """
-        return np.sum(np.power(np.array(x), 2))
-
-    def plot(self, x_min=-2, x_max=2, y_min=-2, y_max=2):
-        x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
-
-        # 3D surface plot
-        surface_plot = plt.figure()
-        surface_axes = Axes3D(surface_plot)
-
-        # Sphere function
-        z = x ** 2 + y ** 2
 
         surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
 

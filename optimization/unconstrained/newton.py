@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from optimization.optimizer import LineSearchOptimizer
-from optimization.test_functions import Rosenbrock
 
 
 class Newton(LineSearchOptimizer):
@@ -115,7 +114,7 @@ class Newton(LineSearchOptimizer):
             raise ValueError('delta must be > 0')
         self.delta = delta
 
-    def __iter__(self):
+    def minimize(self):
         f_star = self.f.function([])
 
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
@@ -179,8 +178,8 @@ class Newton(LineSearchOptimizer):
             phi_p0 = g.T.dot(d)
 
             # compute step size: in Newton's method, the default initial step size is 1
-            a, v, last_wrt, last_g, last_h, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, last_h, f_eval, v, phi_p0)
+            a, v, last_wrt, last_g, f_eval = self.line_search.search(d, self.wrt, last_wrt, last_g, f_eval,
+                                                                     self.a_start, v, phi_p0)
 
             # output statistics
             if self.verbose:
@@ -204,8 +203,10 @@ class Newton(LineSearchOptimizer):
 
             # update gradient and Hessian
             g = last_g
-            H = last_h
+            H = self.f.hessian(self.wrt)
             ng = np.linalg.norm(g)
+
+            self.iter += 1
 
         if self.verbose:
             print()
@@ -215,4 +216,6 @@ class Newton(LineSearchOptimizer):
 
 
 if __name__ == "__main__":
-    print(Newton(Rosenbrock(), verbose=True, plot=True))
+    import optimization.test_functions as tf
+
+    print(Newton(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
