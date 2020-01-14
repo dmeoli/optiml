@@ -196,12 +196,11 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
                 status = 'unbounded'
                 break
 
-            # update approximation of the Hessian using the
-            # Broyden-Fletcher-Goldfarb-Shanno formula
-            s = last_wrt - self.wrt  # s^i = x^{i + 1} - x^i
-            y = last_g - g  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
+            # update approximation of the Hessian using the BFGS formula
+            s = (last_wrt - self.wrt).reshape((self.n, 1))  # s^i = x^{i + 1} - x^i
+            y = (last_g - g).reshape((self.n, 1))  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
 
-            rho = y.T.dot(s)
+            rho = y.T.dot(s).item()
             if rho < 1e-16:
                 if self.verbose:
                     print('\nError: y^i s^i = {:1.4e}'.format(rho))
@@ -213,7 +212,7 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
             if self.verbose:
                 print('\t{:1.4e}'.format(rho))
 
-            D = B.dot(y).dot(s.T)
+            D = B.dot(y) * s.T
             B = B + rho * ((1 + rho * y.T.dot(B).dot(y)) * (s.dot(s.T)) - D - D.T)
 
             # plot the trajectory
@@ -240,4 +239,4 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(BroydenFletcherGoldfarbShanno(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    print(BroydenFletcherGoldfarbShanno(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

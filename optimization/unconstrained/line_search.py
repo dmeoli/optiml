@@ -109,8 +109,8 @@ class ArmijoWolfe(LineSearch):
             # compute the new value by safeguarded quadratic interpolation
             a = (am * phi_ps - a_start * phi_pm) / (phi_ps - phi_pm)
 
-            a = max(am * (1 + self.sfgrd), min(a_start * (1 - self.sfgrd), a))
-            # a = max(am + (a_start - am) * self.sfgrd, min(a_start - (a_start - am) * self.sfgrd, a))
+            # a = max(am * (1 + self.sfgrd), min(a_start * (1 - self.sfgrd), a))
+            a = max(am + (a_start - am) * self.sfgrd, min(a_start - (a_start - am) * self.sfgrd, a))
 
             # compute phi(a)
             phi_a, phi_p, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, a, f_eval)
