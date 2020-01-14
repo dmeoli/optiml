@@ -1,7 +1,7 @@
 import numpy as np
 
 from optimization.test_functions import Function
-from optimization.unconstrained.line_search import ScipyArmijoWolfe, NocedalBacktracking, ArmijoWolfe
+from optimization.unconstrained.line_search import ArmijoWolfe, Backtracking
 
 
 class Minimizer:
@@ -141,12 +141,8 @@ class LineSearchOptimizer(Minimizer):
             raise ValueError('min_a is < 0')
         self.min_a = min_a
         if 0 < self.m2 < 1:
-            # self.line_search = ScipyArmijoWolfe(self.f, self.max_f_eval, self.min_a, self.sfgrd,
-            #                                    self.m1, self.m2, self.tau, self.verbose)
             self.line_search = ArmijoWolfe(self.f, self.max_f_eval, self.min_a, self.sfgrd,
                                            self.m1, self.m2, self.tau, self.verbose)
         else:
-            self.line_search = NocedalBacktracking(self.f, self.max_f_eval, self.min_a,
-                                                   self.m1, self.tau, self.verbose)
-            # self.line_search = Backtracking(self.f, self.max_f_eval, self.min_a,
-            #                                 self.m1, self.tau, self.verbose)
+            self.line_search = Backtracking(self.f, self.max_f_eval, self.min_a,
+                                            self.m1, self.tau, self.verbose)

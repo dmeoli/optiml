@@ -1,6 +1,3 @@
-from optimization.unconstrained.nocedal_line_search import line_search_wolfe, line_search_armijo
-
-
 class LineSearch:
     def __init__(self, f, max_f_eval=1000, min_a=1e-16, m1=0.01, tau=0.9, verbose=False):
         self.f = f
@@ -12,44 +9,6 @@ class LineSearch:
 
     def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
         return NotImplementedError
-
-
-class ScipyArmijoWolfe(LineSearch):
-    def __init__(self, f, max_f_eval=1000, min_a=1e-16, sfgrd=0.01, m1=0.01, m2=0.9, tau=0.9, verbose=False):
-        super().__init__(f, max_f_eval, min_a, m1, tau, verbose)
-        self.sfgrd = sfgrd
-        self.m2 = m2
-
-    def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
-        from optimization.unconstrained.minpack_line_search import line_search_wolfe
-        a, f_eval_ls, _, v, _, _ = line_search_wolfe(self.f.function, self.f.jacobian, wrt, d, self.f.jacobian(wrt))
-        last_wrt = wrt + a * d
-        last_g = self.f.jacobian(last_wrt)
-        return a, v, last_wrt, last_g, f_eval + f_eval_ls
-
-
-class NocedalArmijoWolfe(LineSearch):
-    def __init__(self, f, max_f_eval=1000, min_a=1e-16, sfgrd=0.01, m1=0.01, m2=0.9, tau=0.9, verbose=False):
-        super().__init__(f, max_f_eval, min_a, m1, tau, verbose)
-        self.sfgrd = sfgrd
-        self.m2 = m2
-
-    def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
-        a, f_eval_ls, _, v, _, _ = line_search_armijo(self.f.function, self.f.jacobian, wrt, d, self.f.jacobian(wrt))
-        last_wrt = wrt + a * d
-        last_g = self.f.jacobian(last_wrt)
-        return a, v, last_wrt, last_g, f_eval + f_eval_ls
-
-
-class NocedalBacktracking(LineSearch):
-    def __init__(self, f, max_f_eval=1000, min_a=1e-16, m1=0.01, tau=0.9, verbose=False):
-        super().__init__(f, max_f_eval, min_a, m1, tau, verbose)
-
-    def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
-        a, f_eval_ls, v = line_search_wolfe(self.f.function, self.f.jacobian, wrt, d, self.f.jacobian(wrt))
-        last_wrt = wrt + a * d
-        last_g = self.f.jacobian(last_wrt)
-        return a, v, last_wrt, last_g, f_eval + f_eval_ls
 
 
 class ArmijoWolfe(LineSearch):

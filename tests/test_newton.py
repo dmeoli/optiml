@@ -19,11 +19,11 @@ def test_quadratic():
 def test_Rosenbrock():
     obj = Rosenbrock(autodiff=True)
     x, _ = Newton(obj).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
+    assert np.allclose(x, obj.x_star)
 
     obj = Rosenbrock(autodiff=False)
     x, _ = Newton(obj).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
+    assert np.allclose(x, obj.x_star)
 
 
 if __name__ == "__main__":

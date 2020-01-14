@@ -27,6 +27,7 @@ def test_SteepestGradientDescent_quadratic():
     assert np.allclose(x, quad5.x_star)
 
 
+@utils.not_test
 def test_SteepestGradientDescent_Rosenbrock():
     obj = Rosenbrock(autodiff=True)
     x, _ = SteepestGradientDescent(obj).minimize()

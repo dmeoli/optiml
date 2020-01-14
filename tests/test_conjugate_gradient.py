@@ -39,12 +39,12 @@ def test_NonLinearConjugateGradient_quadratic():
 
 def test_NonLinearConjugateGradient_Rosenbrock():
     obj = Rosenbrock(autodiff=True)
-    x, _ = NonLinearConjugateGradient(obj).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
+    x, _ = NonLinearConjugateGradient(obj, wf=4).minimize()
+    assert np.allclose(x, obj.x_star)
 
     obj = Rosenbrock(autodiff=False)
-    x, _ = NonLinearConjugateGradient(obj).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
+    x, _ = NonLinearConjugateGradient(obj, wf=4).minimize()
+    assert np.allclose(x, obj.x_star)
 
 
 if __name__ == "__main__":

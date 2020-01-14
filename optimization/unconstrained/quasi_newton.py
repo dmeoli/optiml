@@ -239,4 +239,4 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(BroydenFletcherGoldfarbShanno(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    print(BroydenFletcherGoldfarbShanno(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())

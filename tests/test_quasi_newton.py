@@ -7,23 +7,23 @@ from optimization.unconstrained.quasi_newton import BroydenFletcherGoldfarbShann
 
 def test_quadratic():
     x, _ = BroydenFletcherGoldfarbShanno(quad1).minimize()
-    assert np.allclose(x, quad1.x_star)
+    assert np.allclose(quad1.jacobian(x), 0)
 
     x, _ = BroydenFletcherGoldfarbShanno(quad2).minimize()
-    assert np.allclose(x, quad2.x_star)
+    assert np.allclose(quad2.jacobian(x), 0)
 
     x, _ = BroydenFletcherGoldfarbShanno(quad5).minimize()
-    assert np.allclose(x, quad5.x_star)
+    assert np.allclose(quad5.jacobian(x), 0)
 
 
 def test_Rosenbrock():
     obj = Rosenbrock(autodiff=True)
     x, _ = BroydenFletcherGoldfarbShanno(obj).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
+    assert np.allclose(x, obj.x_star)
 
     obj = Rosenbrock(autodiff=False)
     x, _ = BroydenFletcherGoldfarbShanno(obj).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
+    assert np.allclose(x, obj.x_star)
 
 
 if __name__ == "__main__":
