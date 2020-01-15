@@ -225,7 +225,7 @@ class Rosenbrock(Function):
         >>> x = 0.1 * np.arange(9)
         >>> p = 0.5 * np.arange(9)
         >>> Rosenbrock(autodiff=True).hessian_product(x, p)
-        array([  -0.,   27.,  -10.,  -95., -192., -265., -278., -195., -180.])
+        array([   0.,   27.,  -10.,  -95., -192., -265., -278., -195., -180.])
         >>> Rosenbrock(autodiff=False).hessian_product(x, p)
         array([  -0.,   27.,  -10.,  -95., -192., -265., -278., -195., -180.])
         """
