@@ -92,7 +92,6 @@ class LineSearchOptimizer(Optimizer):
         if not np.isscalar(m_inf):
             raise ValueError('m_inf is not a real scalar')
         self.m_inf = m_inf
-        self.a_start = a_start
         if 0 < m2 < 1:
             self.line_search = ArmijoWolfe(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a, verbose)
         else:

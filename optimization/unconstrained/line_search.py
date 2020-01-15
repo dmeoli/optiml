@@ -53,7 +53,7 @@ class LineSearch:
         self.min_a = min_a
         self.verbose = verbose
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None):
         return NotImplementedError
 
 
@@ -117,7 +117,7 @@ class ArmijoWolfe(LineSearch):
             raise ValueError('m2 is not a real scalar')
         self.m2 = m2
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None):
 
         def f2phi(f, d, x, a, f_eval):
             # phi(a) = f(x + a * d)
@@ -129,19 +129,20 @@ class ArmijoWolfe(LineSearch):
             f_eval += 1
             return phi_a, phi_p, last_wrt, last_g, f_eval
 
+        _as = self.a_start
         ls_iter = 1  # count iterations of first phase
         while f_eval <= self.max_f_eval:
-            phi_a, phi_ps, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, a_start, f_eval)
+            phi_a, phi_ps, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, _as, f_eval)
             # Armijo and strong Wolfe conditions
-            if phi_a <= phi0 + self.m1 * a_start * phi_p0 and abs(phi_ps) <= -self.m2 * phi_p0:
+            if phi_a <= phi0 + self.m1 * _as * phi_p0 and abs(phi_ps) <= -self.m2 * phi_p0:
                 if self.verbose:
                     print('\t{:2d}\t{:2d}'.format(ls_iter, 0), end='')
-                return a_start, phi_a, last_wrt, last_g, f_eval
+                return _as, phi_a, last_wrt, last_g, f_eval
 
             if phi_ps >= 0:
                 break
 
-            a_start /= self.tau
+            _as /= self.tau
             ls_iter += 1
 
         if self.verbose:
@@ -149,14 +150,14 @@ class ArmijoWolfe(LineSearch):
         ls_iter = 1  # count iterations of second phase
 
         am = 0
-        a = a_start
+        a = _as
         phi_pm = phi_p0
-        while f_eval <= self.max_f_eval and a_start - am > self.min_a and phi_ps > 1e-12:
+        while f_eval <= self.max_f_eval and _as - am > self.min_a and phi_ps > 1e-12:
             # compute the new value by safeguarded quadratic interpolation
-            a = (am * phi_ps - a_start * phi_pm) / (phi_ps - phi_pm)
+            a = (am * phi_ps - _as * phi_pm) / (phi_ps - phi_pm)
 
-            # a = max(am * (1 + self.sfgrd), min(a_start * (1 - self.sfgrd), a))
-            a = max(am + (a_start - am) * self.sfgrd, min(a_start - (a_start - am) * self.sfgrd, a))
+            # a = max(am * (1 + self.sfgrd), min(_as * (1 - self.sfgrd), a))
+            a = max(am + (_as - am) * self.sfgrd, min(_as - (_as - am) * self.sfgrd, a))
 
             # compute phi(a)
             phi_a, phi_p, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, a, f_eval)
@@ -169,8 +170,8 @@ class ArmijoWolfe(LineSearch):
                 am = a
                 phi_pm = phi_p
             else:
-                a_start = a
-                if a_start <= self.min_a:
+                _as = a
+                if _as <= self.min_a:
                     break
 
                 phi_ps = phi_p
@@ -219,7 +220,7 @@ class Backtracking(LineSearch):
         """
         super().__init__(f, max_f_eval, m1, a_start, tau, min_a, verbose)
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None):
 
         def f2phi(f, d, x, a, f_eval):
             # phi(a) = f(x + a * d)
@@ -229,15 +230,16 @@ class Backtracking(LineSearch):
             f_eval += 1
             return phi_a, last_wrt, last_g, f_eval
 
+        _as = self.a_start
         ls_iter = 1  # count ls iterations
-        while f_eval <= self.max_f_eval and a_start > self.min_a:
-            phi_a, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, a_start, f_eval)
-            if phi_a <= phi0 + self.m1 * a_start * phi_p0:  # Armijo condition
+        while f_eval <= self.max_f_eval and _as > self.min_a:
+            phi_a, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, _as, f_eval)
+            if phi_a <= phi0 + self.m1 * _as * phi_p0:  # Armijo condition
                 break
 
-            a_start *= self.tau
+            _as *= self.tau
             ls_iter += 1
 
         if self.verbose:
             print('\t{:2d}'.format(ls_iter), end='')
-        return a_start, phi_a, last_wrt, last_g, f_eval
+        return _as, phi_a, last_wrt, last_g, f_eval
