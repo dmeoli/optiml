@@ -1,4 +1,4 @@
-import statistics
+from statistics import stdev
 
 import numpy as np
 
@@ -188,7 +188,7 @@ class BatchNormalizationLayer(Layer):
         # mean value of inputs
         mu = sum(inputs) / len(inputs)
         # standard error of inputs
-        stderr = statistics.stdev(inputs)
+        stderr = stdev(inputs)
         self.inputs = inputs
         res = []
         # get normalized value of each input

@@ -87,19 +87,20 @@ def BackPropagation(inputs, targets, theta, net, loss):
     return total_gradients, batch_loss
 
 
-def stochastic_gradient_descent(x, inputs, target, net, loss, epochs=1000, l_rate=0.01, batch_size=1, verbose=None):
+def gradient_descent(dataset, net, loss, epochs=1000, l_rate=0.01, batch_size=1, verbose=None):
     """
     Gradient descent algorithm to update the learnable parameters of a network.
     :return: the updated network
     """
+    examples = dataset.examples
 
     for e in range(epochs):
         total_loss = 0
-        random.shuffle(x)
+        random.shuffle(examples)
         weights = [[node.weights for node in layer.nodes] for layer in net]
 
-        for batch in get_batch(x, batch_size):
-            inputs, targets = init_examples(batch, inputs, target, len(net[-1].nodes))
+        for batch in get_batch(examples, batch_size):
+            inputs, targets = init_examples(batch, dataset.inputs, dataset.target, len(net[-1].nodes))
             # compute gradients of weights
             gs, batch_loss = BackPropagation(inputs, targets, weights, net, loss)
             # update weights with gradient descent
@@ -117,13 +118,14 @@ def stochastic_gradient_descent(x, inputs, target, net, loss, epochs=1000, l_rat
     return net
 
 
-def adam(x, inputs, target, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
+def adam(dataset, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
          l_rate=0.001, batch_size=1, verbose=None):
     """
     Adam optimizer to update the learnable parameters of a network.
     Required parameters are similar to gradient descent.
     :return the updated network
     """
+    examples = dataset.examples
 
     # init s,r and t
     s = [[[0] * len(node.weights) for node in layer.nodes] for layer in net]
@@ -134,12 +136,12 @@ def adam(x, inputs, target, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 
     for e in range(epochs):
         # total loss of each epoch
         total_loss = 0
-        random.shuffle(x)
+        random.shuffle(examples)
         weights = [[node.weights for node in layer.nodes] for layer in net]
 
-        for batch in get_batch(x, batch_size):
+        for batch in get_batch(examples, batch_size):
             t += 1
-            inputs, targets = init_examples(batch, inputs, target, len(net[-1].nodes))
+            inputs, targets = init_examples(batch, dataset.inputs, dataset.target, len(net[-1].nodes))
 
             # compute gradients of weights
             gs, batch_loss = BackPropagation(inputs, targets, weights, net, loss)
@@ -173,7 +175,7 @@ def adam(x, inputs, target, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 
 
 
 def NeuralNetLearner(dataset, hidden_layer_sizes=None, learning_rate=0.01, epochs=100,
-                     optimizer=stochastic_gradient_descent, batch_size=1, verbose=None):
+                     optimizer=gradient_descent, batch_size=1, verbose=None):
     """
     Simple dense multilayer neural network.
     :param hidden_layer_sizes: size of hidden layers in the form of a list
@@ -194,8 +196,8 @@ def NeuralNetLearner(dataset, hidden_layer_sizes=None, learning_rate=0.01, epoch
     raw_net.append(DenseLayer(hidden_input_size, output_size))
 
     # update parameters of the network
-    learned_net = optimizer(dataset.examples, dataset.inputs, dataset.target, raw_net, mean_squared_error_loss,
-                            epochs, l_rate=learning_rate, batch_size=batch_size, verbose=verbose)
+    learned_net = optimizer(dataset, raw_net, mean_squared_error_loss, epochs, l_rate=learning_rate,
+                            batch_size=batch_size, verbose=verbose)
 
     def predict(example):
         n_layers = len(learned_net)
@@ -213,8 +215,7 @@ def NeuralNetLearner(dataset, hidden_layer_sizes=None, learning_rate=0.01, epoch
     return predict
 
 
-def PerceptronLearner(dataset, learning_rate=0.01, epochs=100, optimizer=stochastic_gradient_descent,
-                      batch_size=1, verbose=None):
+def PerceptronLearner(dataset, learning_rate=0.01, epochs=100, optimizer=gradient_descent, batch_size=1, verbose=None):
     """
     Simple perceptron neural network.
     """
@@ -225,8 +226,8 @@ def PerceptronLearner(dataset, learning_rate=0.01, epochs=100, optimizer=stochas
     raw_net = [InputLayer(input_size), DenseLayer(input_size, output_size)]
 
     # update the network
-    learned_net = optimizer(dataset.examples, dataset.inputs, dataset.target, raw_net, mean_squared_error_loss,
-                            epochs, l_rate=learning_rate, batch_size=batch_size, verbose=verbose)
+    learned_net = optimizer(dataset, raw_net, mean_squared_error_loss, epochs, l_rate=learning_rate,
+                            batch_size=batch_size, verbose=verbose)
 
     def predict(example):
         layer_out = learned_net[1].forward(example)

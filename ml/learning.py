@@ -1,7 +1,7 @@
 import copy
-import heapq
 from collections import defaultdict
-from statistics import mode
+from heapq import nsmallest
+from statistics import mode, mean
 
 from ml.activations import Sigmoid
 from ml.datasets import iris, orings, zoo, Majority, Parity, Xor
@@ -134,7 +134,7 @@ def NearestNeighborLearner(dataset, k=1):
 
     def predict(example):
         """Find the k closest items, and have them vote for the best."""
-        best = heapq.nsmallest(k, ((dataset.distance(e, example), e) for e in dataset.examples))
+        best = nsmallest(k, ((dataset.distance(e, example), e) for e in dataset.examples))
         return mode(e[dataset.target] for (d, e) in best)
 
     return predict
@@ -282,7 +282,6 @@ def weighted_mode(values, weights):
 
 def WeightedLearner(unweighted_learner):
     """
-    [Page 749 footnote 14]
     Given a learner that takes just an unweighted dataset, return
     one that takes also a weight for each example.
     """

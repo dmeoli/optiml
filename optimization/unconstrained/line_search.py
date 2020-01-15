@@ -159,7 +159,6 @@ class ArmijoWolfe(LineSearch):
             # a = max(am * (1 + self.sfgrd), min(_as * (1 - self.sfgrd), a))
             a = max(am + (_as - am) * self.sfgrd, min(_as - (_as - am) * self.sfgrd, a))
 
-            # compute phi(a)
             phi_a, phi_p, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, a, f_eval)
             # Armijo and strong Wolfe conditions
             if phi_a <= phi0 + self.m1 * a * phi_p0 and abs(phi_p) <= -self.m2 * phi_p0:
