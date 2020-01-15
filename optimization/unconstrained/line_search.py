@@ -1,10 +1,56 @@
+import numpy as np
+
+
 class LineSearch:
-    def __init__(self, f, max_f_eval=1000, min_a=1e-16, m1=0.01, tau=0.9, verbose=False):
+
+    def __init__(self, f, max_f_eval=1000, m1=0.01, a_start=1, tau=0.9, min_a=1e-16, verbose=False):
+        """
+
+        :param f:          the objective function.
+        :param max_f_eval: (integer scalar, optional, default value 1000): the maximum number of
+                           function evaluations (hence, iterations will be not more than max_f_eval
+                           because at each iteration at least a function evaluation is performed,
+                           possibly more due to the line search).
+        :param m1:         (real scalar, optional, default value 0.01): first parameter of the
+                           Armijo-Wolfe-type line search (sufficient decrease). Has to be in (0,1).
+        :param a_start:    (real scalar, optional, default value 1): starting value of alpha in the
+                           line search (> 0).
+        :param tau:        (real scalar, optional, default value 0.9): scaling parameter for the line
+                           search. In the Armijo-Wolfe line search it is used in the first phase: if the
+                           derivative is not positive, then the step is divided by tau (which is < 1,
+                           hence it is increased). In the Backtracking line search, each time the step is
+                           multiplied by tau (hence it is decreased).
+        :param min_a:      (real scalar, optional, default value 1e-16): if the algorithm determines a step size
+                           value <= min_a, this is taken as an indication that something has gone wrong (the gradient
+                           is not a direction of descent, so maybe the function is not differentiable) and computation
+                           is stopped. It is legal to take min_a = 0, thereby in fact skipping this test.
+        :param verbose:    (boolean, optional, default value False): print details about each iteration
+                           if True, nothing otherwise.
+        """
         self.f = f
+        if not np.isscalar(max_f_eval):
+            raise ValueError('max_f_eval is not an integer scalar')
         self.max_f_eval = max_f_eval
-        self.min_a = min_a
+        if not np.isscalar(m1):
+            raise ValueError('m1 is not a real scalar')
+        if m1 <= 0 or m1 >= 1:
+            raise ValueError('m1 is not in (0,1)')
         self.m1 = m1
+        if not np.isscalar(a_start):
+            raise ValueError('a_start is not a real scalar')
+        if a_start < 0:
+            raise ValueError('a_start must be > 0')
+        self.a_start = a_start
+        if not np.isscalar(tau):
+            raise ValueError('tau is not a real scalar')
+        if tau <= 0 or tau >= 1:
+            raise ValueError('tau is not in (0,1)')
         self.tau = tau
+        if not np.isscalar(min_a):
+            raise ValueError('min_a is not a real scalar')
+        if min_a < 0:
+            raise ValueError('min_a is < 0')
+        self.min_a = min_a
         self.verbose = verbose
 
     def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
@@ -25,9 +71,50 @@ class ArmijoWolfe(LineSearch):
     :returns: the optimal step and the optimal f-value
     """
 
-    def __init__(self, f, max_f_eval=1000, min_a=1e-16, sfgrd=0.01, m1=0.01, m2=0.9, tau=0.9, verbose=False):
-        super().__init__(f, max_f_eval, min_a, m1, tau, verbose)
+    def __init__(self, f, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, min_a=1e-16, verbose=False):
+        """
+
+        :param f:          the objective function.
+        :param max_f_eval: (integer scalar, optional, default value 1000): the maximum number of
+                           function evaluations (hence, iterations will be not more than max_f_eval
+                           because at each iteration at least a function evaluation is performed,
+                           possibly more due to the line search).
+        :param m1:         (real scalar, optional, default value 0.01): first parameter of the
+                           Armijo-Wolfe-type line search (sufficient decrease). Has to be in (0,1).
+        :param m2:         (real scalar, optional, default value 0.9): typically the second parameter
+                           of the Armijo-Wolfe-type line search (strong curvature condition). It should
+                           to be in (0,1); if not, it is taken to mean that the simpler Backtracking
+                           line search should be used instead.
+        :param a_start:    (real scalar, optional, default value 1): starting value of alpha in the
+                           line search (> 0).
+        :param tau:        (real scalar, optional, default value 0.9): scaling parameter for the line
+                           search. In the Armijo-Wolfe line search it is used in the first phase: if the
+                           derivative is not positive, then the step is divided by tau (which is < 1,
+                           hence it is increased). In the Backtracking line search, each time the step is
+                           multiplied by tau (hence it is decreased).
+        :param sfgrd:      (real scalar, optional, default value 0.01): safeguard parameter for the line search.
+                           To avoid numerical problems that can occur with the quadratic interpolation if the
+                           derivative at one endpoint is too large w.r.t. The one at the other (which leads to
+                           choosing a point extremely near to the other endpoint), a *safeguarded* version of
+                           interpolation is used whereby the new point is chosen in the interval
+                           [as * (1 + sfgrd) , am * (1 - sfgrd)], being [as , am] the current interval, whatever
+                           quadratic interpolation says. If you experience problems with the line search taking
+                           too many iterations to converge at "nasty" points, try to increase this.
+        :param min_a:      (real scalar, optional, default value 1e-16): if the algorithm determines a step size
+                           value <= min_a, this is taken as an indication that something has gone wrong (the gradient
+                           is not a direction of descent, so maybe the function is not differentiable) and computation
+                           is stopped. It is legal to take min_a = 0, thereby in fact skipping this test.
+        :param verbose:    (boolean, optional, default value False): print details about each iteration
+                           if True, nothing otherwise.
+        """
+        super().__init__(f, max_f_eval, m1, a_start, tau, min_a, verbose)
+        if not np.isscalar(sfgrd):
+            raise ValueError('sfgrd is not a real scalar')
+        if sfgrd <= 0 or sfgrd >= 1:
+            raise ValueError('sfgrd is not in (0,1)')
         self.sfgrd = sfgrd
+        if not np.isscalar(m2):
+            raise ValueError('m2 is not a real scalar')
         self.m2 = m2
 
     def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
@@ -106,8 +193,31 @@ class Backtracking(LineSearch):
     :returns: the optimal step and the optimal f-value
     """
 
-    def __init__(self, f, max_f_eval=1000, min_a=1e-16, m1=0.01, tau=0.9, verbose=False):
-        super().__init__(f, max_f_eval, min_a, m1, tau, verbose)
+    def __init__(self, f, max_f_eval=1000, m1=0.01, a_start=1, tau=0.9, min_a=1e-16, verbose=False):
+        """
+
+        :param f:          the objective function.
+        :param max_f_eval: (integer scalar, optional, default value 1000): the maximum number of
+                           function evaluations (hence, iterations will be not more than max_f_eval
+                           because at each iteration at least a function evaluation is performed,
+                           possibly more due to the line search).
+        :param m1:         (real scalar, optional, default value 0.01): first parameter of the
+                           Armijo-Wolfe-type line search (sufficient decrease). Has to be in (0,1).
+        :param a_start:    (real scalar, optional, default value 1): starting value of alpha in the
+                           line search (> 0).
+        :param tau:        (real scalar, optional, default value 0.9): scaling parameter for the line
+                           search. In the Armijo-Wolfe line search it is used in the first phase: if the
+                           derivative is not positive, then the step is divided by tau (which is < 1,
+                           hence it is increased). In the Backtracking line search, each time the step is
+                           multiplied by tau (hence it is decreased).
+        :param min_a:      (real scalar, optional, default value 1e-16): if the algorithm determines a step size
+                           value <= min_a, this is taken as an indication that something has gone wrong (the gradient
+                           is not a direction of descent, so maybe the function is not differentiable) and computation
+                           is stopped. It is legal to take min_a = 0, thereby in fact skipping this test.
+        :param verbose:    (boolean, optional, default value False): print details about each iteration
+                           if True, nothing otherwise.
+        """
+        super().__init__(f, max_f_eval, m1, a_start, tau, min_a, verbose)
 
     def search(self, d, wrt, last_wrt, last_g, f_eval, a_start=1, phi0=None, phi_p0=None):
 

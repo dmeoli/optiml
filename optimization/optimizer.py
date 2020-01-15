@@ -4,8 +4,8 @@ from optimization.test_functions import Function
 from optimization.unconstrained.line_search import ArmijoWolfe, Backtracking
 
 
-class Minimizer:
-    def __init__(self, f, wrt=None, eps=1e-6, verbose=False, plot=False):
+class Optimizer:
+    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         """
 
         :param f:        the objective function.
@@ -13,6 +13,7 @@ class Minimizer:
         :param eps:      (real scalar, optional, default value 1e-6): the accuracy in the stopping
                          criterion: the algorithm is stopped when the norm of the gradient is less
                          than or equal to eps.
+        :param max_iter: (integer scalar, optional, default value 1000): the maximum number of iterations.
         :param verbose:  (boolean, optional, default value False): print details about each iteration
                          if True, nothing otherwise.
         :param plot:     (boolean, optional, default value False): plot the function's surface and its contours
@@ -32,33 +33,15 @@ class Minimizer:
         if eps < 0:
             raise ValueError('eps can not be negative')
         self.eps = eps
+        if not np.isscalar(max_iter):
+            raise ValueError('max_iter is not an integer scalar')
+        self.max_iter = max_iter
         self.iter = 1
         self.verbose = verbose
         self.plot = plot
 
 
-class Optimizer(Minimizer):
-    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        """
-
-        :param f:        the objective function.
-        :param wrt:      ([n x 1] real column vector): the point where to start the algorithm from.
-        :param eps:      (real scalar, optional, default value 1e-6): the accuracy in the stopping
-                         criterion: the algorithm is stopped when the norm of the gradient is less
-                         than or equal to eps.
-        :param max_iter: (integer scalar, optional, default value 1000): the maximum number of iterations.
-        :param verbose:  (boolean, optional, default value False): print details about each iteration
-                         if True, nothing otherwise.
-        :param plot:     (boolean, optional, default value False): plot the function's surface and its contours
-                         if True and the function's dimension is 2, nothing otherwise.
-        """
-        super().__init__(f, wrt, eps, verbose, plot)
-        if not np.isscalar(max_iter):
-            raise ValueError('max_iter is not an integer scalar')
-        self.max_iter = max_iter
-
-
-class LineSearchOptimizer(Minimizer):
+class LineSearchOptimizer(Optimizer):
     def __init__(self, f, wrt=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
                  sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         """
@@ -105,44 +88,12 @@ class LineSearchOptimizer(Minimizer):
         :param plot:       (boolean, optional, default value False): plot the function's surface and its contours
                            if True and the function's dimension is 2, nothing otherwise.
         """
-        super().__init__(f, wrt, eps, verbose, plot)
-        if not np.isscalar(max_f_eval):
-            raise ValueError('max_f_eval is not an integer scalar')
-        self.max_f_eval = max_f_eval
-        if not np.isscalar(m1):
-            raise ValueError('m1 is not a real scalar')
-        if m1 <= 0 or m1 >= 1:
-            raise ValueError('m1 is not in (0,1)')
-        self.m1 = m1
-        if not np.isscalar(m2):
-            raise ValueError('m2 is not a real scalar')
-        self.m2 = m2
-        if not np.isscalar(a_start):
-            raise ValueError('a_start is not a real scalar')
-        if a_start < 0:
-            raise ValueError('a_start must be > 0')
-        self.a_start = a_start
-        if not np.isscalar(tau):
-            raise ValueError('tau is not a real scalar')
-        if tau <= 0 or tau >= 1:
-            raise ValueError('tau is not in (0,1)')
-        self.tau = tau
-        if not np.isscalar(sfgrd):
-            raise ValueError('sfgrd is not a real scalar')
-        if sfgrd <= 0 or sfgrd >= 1:
-            raise ValueError('sfgrd is not in (0,1)')
-        self.sfgrd = sfgrd
+        super().__init__(f, wrt, eps, verbose=verbose, plot=plot)
         if not np.isscalar(m_inf):
             raise ValueError('m_inf is not a real scalar')
         self.m_inf = m_inf
-        if not np.isscalar(min_a):
-            raise ValueError('min_a is not a real scalar')
-        if min_a < 0:
-            raise ValueError('min_a is < 0')
-        self.min_a = min_a
-        if 0 < self.m2 < 1:
-            self.line_search = ArmijoWolfe(self.f, self.max_f_eval, self.min_a, self.sfgrd,
-                                           self.m1, self.m2, self.tau, self.verbose)
+        self.a_start = a_start
+        if 0 < m2 < 1:
+            self.line_search = ArmijoWolfe(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a, verbose)
         else:
-            self.line_search = Backtracking(self.f, self.max_f_eval, self.min_a,
-                                            self.m1, self.tau, self.verbose)
+            self.line_search = Backtracking(f, max_f_eval, m1, a_start, min_a, tau, verbose)

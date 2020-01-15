@@ -131,7 +131,7 @@ class Subgradient(LineSearchOptimizer):
                 if v <= f_ref - delta:  # found a "significantly" better point
                     delta = self.a_start * max(abs(v), 1)  # reset delta
                 else:  # decrease delta
-                    delta = max(delta * self.tau, self.eps * max(abs(min(v, f_ref)), 1))
+                    delta = max(delta * self.line_search.tau, self.eps * max(abs(min(v, f_ref)), 1))
 
             if v < f_ref:  # found a better f-value (however slightly better)
                 f_ref = v  # update f_ref
@@ -155,7 +155,7 @@ class Subgradient(LineSearchOptimizer):
                 status = 'optimal'
                 break
 
-            if self.iter > self.max_f_eval:
+            if self.iter > self.line_search.max_f_eval:
                 status = 'stopped'
                 break
 
@@ -172,7 +172,7 @@ class Subgradient(LineSearchOptimizer):
                 print('\t{:1.4e}'.format(a))
 
             # stopping criteria
-            if a <= self.min_a:
+            if a <= self.line_search.min_a:
                 status = 'stopped'
                 break
 

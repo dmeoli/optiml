@@ -182,7 +182,7 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
                 status = 'optimal'
                 break
 
-            if f_eval > self.max_f_eval:
+            if f_eval > self.line_search.max_f_eval:
                 status = 'stopped'
                 break
 
@@ -235,7 +235,7 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
             if self.verbose:
                 print('\t{:1.2e}'.format(a))
 
-            if a <= self.min_a:
+            if a <= self.line_search.min_a:
                 status = 'error'
                 break
 
