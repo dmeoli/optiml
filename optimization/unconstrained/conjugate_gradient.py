@@ -202,7 +202,7 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
                 else:
                     if self.wf == 0:
                         betaFR = (ng / np.linalg.norm(past_g)) ** 2  # Fletcher-Reeves
-                        betaPR = g.T.dot(g - past_g) / np.linalg.norm(past_g) ** 2  # Polak-Ribiere
+                        betaPR = max(g.T.dot(g - past_g) / np.linalg.norm(past_g) ** 2, 0)  # Polak-Ribiere
                         beta = max(-betaFR, min(betaPR, betaFR))
                     if self.wf == 1:  # Fletcher-Reeves
                         beta = (ng / np.linalg.norm(past_g)) ** 2
