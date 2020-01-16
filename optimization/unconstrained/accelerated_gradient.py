@@ -127,13 +127,13 @@ class AcceleratedGradient(LineSearchOptimizer):
         self.wf = wf
 
     def minimize(self):
-        f_star = self.f.function([])
 
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
+            f_star = self.f.function(np.zeros((self.n,)))
             if f_star > -np.inf:
                 print('f_eval\trel gap', end='')
             else:
@@ -213,8 +213,9 @@ class AcceleratedGradient(LineSearchOptimizer):
 
             # possibly plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, last_wrt))
-                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
+                p_xy = np.vstack((self.wrt, last_wrt)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
 
             if self.mon:  # in the monotone version
                 if xv > past_xv:  # if the new x is worse than the last x
@@ -245,8 +246,9 @@ class AcceleratedGradient(LineSearchOptimizer):
 
             # possibly plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((y, past_y))
-                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='b')
+                p_xy = np.vstack((y, past_y)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='b')
                 past_y = y
 
             self.iter += 1
@@ -261,4 +263,4 @@ class AcceleratedGradient(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(AcceleratedGradient(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    print(AcceleratedGradient(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

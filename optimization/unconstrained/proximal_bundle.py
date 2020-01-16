@@ -97,7 +97,7 @@ class ProximalBundle(Optimizer):
         self.m_inf = m_inf
 
     def minimize(self):
-        f_star = self.f.function([])
+        f_star = self.f.function(np.zeros((self.n,)))
 
         if self.verbose:
             if f_star > -np.inf:
@@ -185,16 +185,18 @@ class ProximalBundle(Optimizer):
             if fd <= fx + self.m1 * (v - fx):
                 print('\tSS')
                 if self.plot and self.n == 2:
-                    p_xy = np.vstack((self.wrt, new_x))
-                    contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
+                    p_xy = np.vstack((self.wrt, new_x)).T
+                    contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
+                                        p_xy[1, 1:] - p_xy[1, :-1], scale_units='xy', angles='xy', scale=1, color='k')
 
                 self.wrt = new_x
                 fx = fd
             else:
                 print('\tNS')
                 if self.plot and self.n == 2:
-                    p_xy = np.vstack((self.wrt, new_x))
-                    contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='b')
+                    p_xy = np.vstack((self.wrt, new_x)).T
+                    contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
+                                        p_xy[1, 1:] - p_xy[1, :-1], scale_units='xy', angles='xy', scale=1, color='b')
 
             self.iter += 1
 
@@ -208,4 +210,4 @@ class ProximalBundle(Optimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(ProximalBundle(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    print(ProximalBundle(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

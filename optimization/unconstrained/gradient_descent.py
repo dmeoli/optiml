@@ -25,43 +25,35 @@ class SteepestGradientDescentQuadratic(Optimizer):
                      x is the best solution found so far, but not necessarily the optimal one.
     """
 
-    def __init__(self, f, wrt=None, f_star=np.inf, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, wrt, eps, max_iter, verbose, plot)
         if self.wrt.size != self.f.hessian().shape[0]:
             raise ValueError('x size does not match with Q')
-        if not np.isrealobj(f_star) or not np.isscalar(f_star):
-            raise ValueError('f_star is not a real scalar')
-        self.f_star = f_star
 
     def minimize(self):
         if self.verbose:
+            f_star = self.f.function(np.zeros((self.n,)))
             print('iter\tf(x)\t\t\t||g(x)||', end='')
-        if self.f_star < np.inf:
-            if self.verbose:
+            if f_star < np.inf:
                 print('\tf(x) - f*\trate', end='')
-            prev_v = np.inf
-        if self.verbose:
+                prev_v = np.inf
             print()
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
-            # compute function value and gradient
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            g = self.f.jacobian(self.wrt)
             ng = np.linalg.norm(g)
 
-            # output statistics
             if self.verbose:
-                print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(self.iter, v, ng), end='')
-            if self.f_star < np.inf:
-                if self.verbose:
-                    print('\t{:1.4e}'.format(v - self.f_star), end='')
-                if prev_v < np.inf:
-                    if self.verbose:
-                        print('\t{:1.4e}'.format((v - self.f_star) / (prev_v - self.f_star)), end='')
-                prev_v = v
-            if self.verbose:
+                v = self.f.function(self.wrt)
+                print('{:4d}\t{:1.8e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                if f_star < np.inf:
+                    print('\t{:1.4e}'.format(v - f_star), end='')
+                    if prev_v < np.inf:
+                        print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
+                    prev_v = v
                 print()
 
             # stopping criteria
@@ -99,8 +91,9 @@ class SteepestGradientDescentQuadratic(Optimizer):
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, last_wrt))
-                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
+                p_xy = np.vstack((self.wrt, last_wrt)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
 
             # <\nabla f(x_i), \nabla f(x_i+1)> = 0
             # assert np.isclose(self.f.jacobian(self.wrt).T.dot(self.f.jacobian(last_wrt)), 0)
@@ -246,24 +239,22 @@ class SteepestGradientDescent(LineSearchOptimizer):
         super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
 
     def minimize(self):
-        f_star = self.f.function([])
-
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
-        if f_star > -np.inf:
-            if self.verbose:
-                print('f_eval\trel gap\t\t|| g(x) ||\t\trate\t', end='')
-            prev_v = np.inf
-        else:
-            if self.verbose:
-                print('f_eval\tf(x)\t\t\t|| g(x) ||\t', end='')
         if self.verbose:
+            f_star = self.f.function(np.zeros((self.n,)))
+            if f_star > -np.inf:
+                print('f_eval\trel gap\t\t|| g(x) ||\t\trate\t', end='')
+                prev_v = np.inf
+            else:
+                print('f_eval\tf(x)\t\t\t|| g(x) ||\t', end='')
             print('ls f_eval\ta*')
 
         v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
         ng = np.linalg.norm(g)
+
         if self.eps < 0:
             ng0 = -ng  # norm of first subgradient
         else:
@@ -273,19 +264,15 @@ class SteepestGradientDescent(LineSearchOptimizer):
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
-            # output statistics
-            if f_star > -np.inf:
-                if self.verbose:
+            if self.verbose:
+                if f_star > -np.inf:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
-                if prev_v < np.inf:
-                    if self.verbose:
+                    if prev_v < np.inf:
                         print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
-                else:
-                    if self.verbose:
+                    else:
                         print('\t\t\t', end='')
-                prev_v = v
-            else:
-                if self.verbose:
+                    prev_v = v
+                else:
                     print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng), end='')
 
             # stopping criteria
@@ -318,8 +305,9 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, last_wrt))
-                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
+                p_xy = np.vstack((self.wrt, last_wrt)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
 
             # update new point
             self.wrt = last_wrt
@@ -360,45 +348,39 @@ class GradientDescent(Optimizer):
         self.state_fields = 'step_rate momentum momentum_type step iter'.split()
 
     def minimize(self):
-        f_star = self.f.function([])
-
-        f_eval = 1  # f() evaluations count ("common" with LSs)
-
-        if f_star > -np.inf:
-            if self.verbose:
-                print('f_eval\trel gap\t\t|| g(x) ||\t\trate\t', end='')
-            prev_v = np.inf
-        else:
-            if self.verbose:
-                print('f_eval\tf(x)\t\t\t|| g(x) ||\t', end='')
         if self.verbose:
-            print('ls f_eval\ta*')
-
-        v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
-        ng = np.linalg.norm(g)
-        if self.eps < 0:
-            ng0 = -ng  # norm of first subgradient
-        else:
-            ng0 = 1  # un-scaled stopping criterion
+            f_star = self.f.function(np.zeros((self.n,)))
+            print('iter\tf(x)\t\t\t||g(x)||', end='')
+            if f_star < np.inf:
+                print('\tf(x) - f*\trate', end='')
+                prev_v = np.inf
+            print()
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
-            # output statistics
-            if f_star > -np.inf:
-                if self.verbose:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
-                if prev_v < np.inf:
-                    if self.verbose:
+            g = self.f.jacobian(self.wrt)
+            ng = np.linalg.norm(g)
+
+            if self.verbose:
+                v = self.f.function(self.wrt)
+                print('{:4d}\t{:1.8e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                if f_star < np.inf:
+                    print('\t{:1.4e}'.format(v - f_star), end='')
+                    if prev_v < np.inf:
                         print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
-                else:
-                    if self.verbose:
-                        print('\t\t\t', end='')
-                prev_v = v
-            else:
-                if self.verbose:
-                    print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng), end='')
+                    prev_v = v
+                print()
+
+            # stopping criteria
+            if ng <= self.eps:
+                status = 'optimal'
+                break
+
+            if self.iter > self.max_iter:
+                status = 'stopped'
+                break
 
             step_m1 = self.step
 
@@ -418,19 +400,11 @@ class GradientDescent(Optimizer):
                 step = self.step_rate * gradient
                 self.wrt -= step
 
-            # stopping criteria
-            if ng <= self.eps * ng0:
-                status = 'optimal'
-                break
-
-            if self.iter > self.max_iter:
-                status = 'stopped'
-                break
-
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, step_m1))
-                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
+                p_xy = np.vstack((self.wrt, step_m1)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
 
             self.step = step
 
@@ -446,7 +420,9 @@ class GradientDescent(Optimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
+    print(SteepestGradientDescentQuadratic(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    print()
     print(SteepestGradientDescent(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
     print()
-    print(GradientDescent(tf.quad1, [-1, 1], [-1, 1], step_rate=0.01, momentum_type='standard',
+    print(GradientDescent(tf.Rosenbrock(), [-1, 1], step_rate=0.01, momentum_type='standard',
                           verbose=True, plot=True).minimize())

@@ -145,14 +145,13 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
         self.r_start = r_start
 
     def minimize(self):
-        f_star = self.f.function([])
-
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         # initializations
         if self.verbose:
+            f_star = self.f.function(np.zeros((self.n,)))
             if f_star > -np.inf:
                 print('f_eval\trel gap', end='')
             else:
@@ -171,7 +170,6 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
 
         while True:
             if self.verbose:
-                # output statistics
                 if f_star > -np.inf:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
                 else:
@@ -244,8 +242,9 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, last_wrt))
-                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
+                p_xy = np.vstack((self.wrt, last_wrt)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
 
             # update new point
             self.wrt = last_wrt
@@ -266,4 +265,4 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(NonLinearConjugateGradient(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    print(NonLinearConjugateGradient(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

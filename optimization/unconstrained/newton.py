@@ -115,15 +115,13 @@ class Newton(LineSearchOptimizer):
         self.delta = delta
 
     def minimize(self):
-        f_star = self.f.function([])
-
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
         last_g = np.zeros((self.n,))  # gradient of last_wrt
-        last_h = np.zeros((self.n, self.n))  # Hessian of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         # initializations
         if self.verbose:
+            f_star = self.f.function(np.zeros((self.n,)))
             if f_star > -np.inf:
                 print('f_eval\trel gap\t\t|| g(x) ||\trate\t\tdelta\t', end='')
                 prev_v = np.inf
@@ -133,6 +131,7 @@ class Newton(LineSearchOptimizer):
 
         v, g, H = self.f.function(self.wrt), self.f.jacobian(self.wrt), self.f.hessian(self.wrt)
         ng = np.linalg.norm(g)
+
         if self.eps < 0:
             ng0 = -ng  # norm of first subgradient
         else:
@@ -194,8 +193,9 @@ class Newton(LineSearchOptimizer):
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, last_wrt))
-                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
+                p_xy = np.vstack((self.wrt, last_wrt)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
 
             # update new point
             self.wrt = last_wrt
@@ -217,4 +217,4 @@ class Newton(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(Newton(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    print(Newton(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

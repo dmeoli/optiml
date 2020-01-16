@@ -102,7 +102,7 @@ class Subgradient(LineSearchOptimizer):
                          min_a=min_a, verbose=verbose, plot=plot)
 
     def minimize(self):
-        f_star = self.f.function([])
+        f_star = self.f.function(np.zeros((self.n,)))
 
         if self.eps < 0 and f_star == -np.inf:
             # no way of cheating since the true optimal value is unknown
@@ -182,8 +182,9 @@ class Subgradient(LineSearchOptimizer):
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, self.wrt - (a / ng) * g))
-                contour_axes.plot(p_xy[:, 0], p_xy[:, 1], color='k')
+                p_xy = np.vstack((self.wrt, self.wrt - (a / ng) * g)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
 
             # compute new point
             self.wrt = self.wrt - (a / ng) * g
