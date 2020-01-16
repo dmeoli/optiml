@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.optimizer import LineSearchOptimizer
+from optimization.optimizer import LineSearchOptimizer, Optimizer
 
 
-class CGQ(LineSearchOptimizer):
-    def __init__(self, f, wrt=None, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
-                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+class CGQ(Optimizer):
+    def __init__(self, f, wrt=None, r_start=0, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+        super().__init__(f, wrt, eps, max_iter, verbose, plot)
+        if self.wrt.size != self.f.hessian().shape[0]:
+            raise ValueError('x size does not match with Q')
         if not np.isscalar(r_start):
             raise ValueError('r_start is not an integer scalar')
         self.r_start = r_start
@@ -17,7 +18,7 @@ class CGQ(LineSearchOptimizer):
             f_star = self.f.function(np.zeros((self.n,)))
             print('iter\tf(x)\t\t\t||g(x)||', end='')
             if f_star < np.inf:
-                print('\tf(x) - f*\trate', end='')
+                print('\tf(x) - f*\trate\t\tbeta', end='')
                 prev_v = np.inf
             print()
 
@@ -36,7 +37,6 @@ class CGQ(LineSearchOptimizer):
                     if prev_v < np.inf:
                         print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
                     prev_v = v
-                print()
 
             # stopping criteria
             if ng <= self.eps:
@@ -51,7 +51,7 @@ class CGQ(LineSearchOptimizer):
             if self.iter == 1:  # first iteration is off-line, standard gradient
                 d = -g
                 if self.verbose:
-                    print('\t', end='')
+                    print('\t\t')
             else:  # normal iterations, use appropriate formula
                 if self.r_start > 0 and self.iter % self.n * self.r_start == 0:
                     # ... unless a restart is being performed
@@ -61,7 +61,7 @@ class CGQ(LineSearchOptimizer):
                 else:
                     beta = g.T.dot(self.f.hessian()).dot(past_d) / past_d.T.dot(self.f.hessian()).dot(past_d)
                     if self.verbose:
-                        print('\t{:1.4f}'.format(beta), end='')
+                        print('\t{:1.4f}'.format(beta))
 
                 if beta != 0:
                     d = -g + beta * past_d
@@ -296,7 +296,7 @@ class NCG(LineSearchOptimizer):
             if self.iter == 1:  # first iteration is off-line, standard gradient
                 d = -g
                 if self.verbose:
-                    print('\t', end='')
+                    print('\t\t', end='')
             else:  # normal iterations, use appropriate formula
                 if self.r_start > 0 and self.iter % self.n * self.r_start == 0:
                     # ... unless a restart is being performed
@@ -371,4 +371,6 @@ class NCG(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(NCG(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    print(CGQ(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    print()
+    print(NCG(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
