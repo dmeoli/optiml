@@ -33,7 +33,7 @@ class SDQ(Optimizer):
     def minimize(self):
         if self.verbose:
             f_star = self.f.function(np.zeros((self.n,)))
-            print('iter\tf(x)\t\t\t||g(x)||', end='')
+            print('iter\tf(x)\t\t||g(x)||', end='')
             if f_star < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
@@ -48,7 +48,7 @@ class SDQ(Optimizer):
 
             if self.verbose:
                 v = self.f.function(self.wrt)
-                print('{:4d}\t{:1.8e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if f_star < np.inf:
                     print('\t{:1.4e}'.format(v - f_star), end='')
                     if prev_v < np.inf:
@@ -246,11 +246,11 @@ class SDG(LineSearchOptimizer):
         if self.verbose:
             f_star = self.f.function(np.zeros((self.n,)))
             if f_star > -np.inf:
-                print('f_eval\trel gap\t\t|| g(x) ||\t\trate\t', end='')
+                print('f eval\trel gap\t\t||g(x)||\trate\t', end='')
                 prev_v = np.inf
             else:
-                print('f_eval\tf(x)\t\t\t|| g(x) ||\t', end='')
-            print('ls f_eval\ta*')
+                print('f eval\tf(x)\t\t||g(x)||', end='')
+            print('\tls\tit\ta*')
 
         v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
         ng = np.linalg.norm(g)
@@ -273,7 +273,7 @@ class SDG(LineSearchOptimizer):
                         print('\t\t\t', end='')
                     prev_v = v
                 else:
-                    print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng), end='')
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, v, ng), end='')
 
             # stopping criteria
             if ng <= self.eps * ng0:
@@ -293,7 +293,7 @@ class SDG(LineSearchOptimizer):
 
             # output statistics
             if self.verbose:
-                print('\t\t{:1.4e}'.format(a))
+                print('\t{:1.4e}'.format(a))
 
             if a <= self.line_search.min_a:
                 status = 'error'
@@ -350,7 +350,7 @@ class GD(Optimizer):
     def minimize(self):
         if self.verbose:
             f_star = self.f.function(np.zeros((self.n,)))
-            print('iter\tf(x)\t\t\t||g(x)||', end='')
+            print('iter\tf(x)\t\t||g(x)||', end='')
             if f_star < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
@@ -365,7 +365,7 @@ class GD(Optimizer):
 
             if self.verbose:
                 v = self.f.function(self.wrt)
-                print('{:4d}\t{:1.8e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if f_star < np.inf:
                     print('\t{:1.4e}'.format(v - f_star), end='')
                     if prev_v < np.inf:
@@ -420,9 +420,8 @@ class GD(Optimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(SDQ(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
-    print()
-    print(SDG(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
-    print()
-    print(GD(tf.Rosenbrock(), [-1, 1], step_rate=0.01, momentum_type='standard',
-             verbose=True, plot=True).minimize())
+    # print(SDQ(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    # print()
+    # print(SDG(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    # print()
+    print(GD(tf.Rosenbrock(), [-1, 1], step_rate=0.01, momentum_type='standard', verbose=True, plot=True).minimize())

@@ -110,9 +110,9 @@ class SGM(LineSearchOptimizer):
 
         if self.verbose:
             if f_star > -np.inf:
-                print('iter\trel gap\t\t|| g(x) ||\ta')
+                print('iter\trel gap\t\t||g(x)||\ta*')
             else:
-                print('iter\tf(x)\t\t\t|| g(x) ||\ta')
+                print('iter\tf(x)\t\t||g(x)||\ta*')
 
         x_ref = self.wrt
         f_ref = np.inf  # best f-value found so far
@@ -129,7 +129,7 @@ class SGM(LineSearchOptimizer):
 
             if self.eps > 0:  # target-level step size
                 if v <= f_ref - delta:  # found a "significantly" better point
-                    delta = self.a_start * max(abs(v), 1)  # reset delta
+                    delta = self.line_search.a_start * max(abs(v), 1)  # reset delta
                 else:  # decrease delta
                     delta = max(delta * self.line_search.tau, self.eps * max(abs(min(v, f_ref)), 1))
 
@@ -142,7 +142,7 @@ class SGM(LineSearchOptimizer):
                 if f_star > -np.inf:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, (v - f_star) / max(abs(f_star), 1), ng), end='')
                 else:
-                    print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(self.iter, v, ng), end='')
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
 
             # stopping criteria
             if self.eps < 0 and f_ref - f_star <= -self.eps * max(abs(f_star), 1):
@@ -165,7 +165,7 @@ class SGM(LineSearchOptimizer):
             elif self.eps < 0:  # true Polyak step size (cheating)
                 a = (v - f_star) / ng
             else:  # diminishing square-summable step size
-                a = self.a_start * (1 / self.iter)
+                a = self.line_search.a_start * (1 / self.iter)
 
             # output statistics
             if self.verbose:

@@ -123,10 +123,10 @@ class NWTN(LineSearchOptimizer):
         if self.verbose:
             f_star = self.f.function(np.zeros((self.n,)))
             if f_star > -np.inf:
-                print('f_eval\trel gap\t\t|| g(x) ||\trate\t\tdelta\t', end='')
+                print('f eval\trel gap\t\t||g(x)||\trate\t\tdelta\t', end='')
                 prev_v = np.inf
             else:
-                print('f_eval\tf(x)\t\t\t|| g(x) ||\tdelta\t', end='')
+                print('f eval\tf(x)\t\t||g(x)||\tdelta\t', end='')
             print('\tls\tit\ta*')
 
         v, g, H = self.f.function(self.wrt), self.f.jacobian(self.wrt), self.f.hessian(self.wrt)
@@ -151,7 +151,7 @@ class NWTN(LineSearchOptimizer):
                         print('\t\t\t', end='')
                     prev_v = v
                 else:
-                    print('{:4d}\t{:1.4e}\t\t{:1.4e}'.format(f_eval, v, ng), end='')
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, v, ng), end='')
 
             # stopping criteria
             if ng <= self.eps * ng0:

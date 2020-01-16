@@ -16,11 +16,11 @@ class CGQ(Optimizer):
     def minimize(self):
         if self.verbose:
             f_star = self.f.function(np.zeros((self.n,)))
-            print('iter\tf(x)\t\t\t||g(x)||', end='')
+            print('iter\tf(x)\t\t||g(x)||', end='')
             if f_star < np.inf:
-                print('\tf(x) - f*\trate\t\tbeta', end='')
+                print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
-            print()
+            print('\t\tbeta')
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
@@ -31,7 +31,7 @@ class CGQ(Optimizer):
 
             if self.verbose:
                 v = self.f.function(self.wrt)
-                print('{:4d}\t{:1.8e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if f_star < np.inf:
                     print('\t{:1.4e}'.format(v - f_star), end='')
                     if prev_v < np.inf:
@@ -261,10 +261,10 @@ class NCG(LineSearchOptimizer):
         if self.verbose:
             f_star = self.f.function(np.zeros((self.n,)))
             if f_star > -np.inf:
-                print('f_eval\trel gap', end='')
+                print('f eval\trel gap', end='')
             else:
-                print('f_eval\tf(x)', end='')
-            print('\t\t|| g(x) ||\tbeta\tls f_eval\ta*')
+                print('f eval\tf(x)', end='')
+            print('\t\t||g(x)||\tbeta\tls\tit\ta*')
 
         v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
         ng = np.linalg.norm(g)
@@ -281,7 +281,7 @@ class NCG(LineSearchOptimizer):
                 if f_star > -np.inf:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
                 else:
-                    print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng), end='')
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, v, ng), end='')
 
             # stopping criteria
             if ng <= self.eps * ng0:
@@ -371,6 +371,6 @@ class NCG(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(CGQ(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    print(CGQ(tf.quad2, [-1, 1], verbose=True, plot=True).minimize())
     print()
-    print(NCG(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    print(NCG(tf.quad2, [-1, 1], wf=1, verbose=True, plot=True).minimize())

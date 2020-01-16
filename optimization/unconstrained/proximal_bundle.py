@@ -103,7 +103,7 @@ class PBM(Optimizer):
             if f_star > -np.inf:
                 print('iter\trel gap\t\t|| d ||\t\tstep')
             else:
-                print('iter\tf(x)\t\t\t|| d ||\t\tstep')
+                print('iter\tf(x)\t\t|| d ||\t\tstep')
 
         # compute first function and subgradient
         fx, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
@@ -155,7 +155,7 @@ class PBM(Optimizer):
             if f_star > -np.inf:
                 print('%4d\t%1.4e\t%1.4e'.format(self.iter, (fx - f_star) / max(abs(f_star), 1), nd))
             else:
-                print('%4d\t%1.8e\t\t%1.4e'.format(self.iter, fx, nd))
+                print('%4d\t%1.4e\t%1.4e'.format(self.iter, fx, nd))
 
             # stopping criteria
 

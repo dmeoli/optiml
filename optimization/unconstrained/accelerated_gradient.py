@@ -135,10 +135,10 @@ class ACCG(LineSearchOptimizer):
         if self.verbose:
             f_star = self.f.function(np.zeros((self.n,)))
             if f_star > -np.inf:
-                print('f_eval\trel gap', end='')
+                print('f eval\trel gap', end='')
             else:
-                print('f_eval\tf(x)', end='')
-            print('\t\t|| g(x) ||\tgamma\tls fev\ta*')
+                print('f eval\tf(x)', end='')
+            print('\t\t||g(x)||\tgamma\tls\tit\ta*')
 
         gamma = 1
         if self.wf == 3:
@@ -175,7 +175,7 @@ class ACCG(LineSearchOptimizer):
                     print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4f}'.format(
                         f_eval, (v - f_star) / max(abs(f_star), 1), ng, gamma), end='')
                 else:
-                    print('{:4d}\t{:1.8e}\t\t{:1.4e}\t{:1.4f}'.format(f_eval, v, ng, gamma), end='')
+                    print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4f}'.format(f_eval, v, ng, gamma), end='')
 
             # stopping criteria
             if ng <= self.eps * ng0:

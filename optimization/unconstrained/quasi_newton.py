@@ -123,10 +123,10 @@ class BFGS(LineSearchOptimizer):
         if self.verbose:
             f_star = self.f.function(np.zeros((self.n,)))
             if f_star > -np.inf:
-                print('f_eval\trel gap', end='')
+                print('f eval\trel gap', end='')
             else:
-                print('f_eval\tf(x)', end='')
-            print('\t\t|| g(x) ||\tls fev\ta*\t\t\trho')
+                print('f eval\tf(x)', end='')
+            print('\t\t||g(x)||\tls\tit\ta*\t\t\trho')
 
         v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
         ng = np.linalg.norm(g)
@@ -163,7 +163,7 @@ class BFGS(LineSearchOptimizer):
                 if f_star > -np.inf:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
                 else:
-                    print('{:4d}\t{:1.8e}\t\t{:1.4e}'.format(f_eval, v, ng), end='')
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, v, ng), end='')
 
             # stopping criteria
             if ng <= self.eps * ng0:
