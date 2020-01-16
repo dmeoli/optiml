@@ -4,7 +4,7 @@ import numpy as np
 from optimization.optimizer import LineSearchOptimizer
 
 
-class Newton(LineSearchOptimizer):
+class NWTN(LineSearchOptimizer):
     # Apply a classical Newton's method for the minimization of the provided
     # function f.
     #
@@ -217,4 +217,4 @@ class Newton(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(Newton(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    print(NWTN(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

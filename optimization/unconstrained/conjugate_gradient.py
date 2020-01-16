@@ -4,7 +4,113 @@ import numpy as np
 from optimization.optimizer import LineSearchOptimizer
 
 
-class ConjugateGradient(LineSearchOptimizer):
+class CGQ(LineSearchOptimizer):
+    def __init__(self, f, wrt=None, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        if not np.isscalar(r_start):
+            raise ValueError('r_start is not an integer scalar')
+        self.r_start = r_start
+
+    def minimize(self):
+        if self.verbose:
+            f_star = self.f.function(np.zeros((self.n,)))
+            print('iter\tf(x)\t\t\t||g(x)||', end='')
+            if f_star < np.inf:
+                print('\tf(x) - f*\trate', end='')
+                prev_v = np.inf
+            print()
+
+        if self.plot and self.n == 2:
+            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
+
+        while True:
+            g = self.f.jacobian(self.wrt)
+            ng = np.linalg.norm(g)
+
+            if self.verbose:
+                v = self.f.function(self.wrt)
+                print('{:4d}\t{:1.8e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                if f_star < np.inf:
+                    print('\t{:1.4e}'.format(v - f_star), end='')
+                    if prev_v < np.inf:
+                        print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
+                    prev_v = v
+                print()
+
+            # stopping criteria
+            if ng <= self.eps:
+                status = 'optimal'
+                break
+
+            if self.iter > self.max_iter:
+                status = 'stopped'
+                break
+
+            # compute search direction
+            if self.iter == 1:  # first iteration is off-line, standard gradient
+                d = -g
+                if self.verbose:
+                    print('\t', end='')
+            else:  # normal iterations, use appropriate formula
+                if self.r_start > 0 and self.iter % self.n * self.r_start == 0:
+                    # ... unless a restart is being performed
+                    beta = 0
+                    if self.verbose:
+                        print('\t(res)', end='')
+                else:
+                    beta = g.T.dot(self.f.hessian()).dot(past_d) / past_d.T.dot(self.f.hessian()).dot(past_d)
+                    if self.verbose:
+                        print('\t{:1.4f}'.format(beta), end='')
+
+                if beta != 0:
+                    d = -g + beta * past_d
+                else:
+                    d = -g
+
+            # check if f is unbounded below
+            den = d.T.dot(self.f.hessian()).dot(d)
+
+            if den <= 1e-12:
+                # this is actually two different cases:
+                #
+                # - d.T.dot(Q).dot(d) = 0, i.e., f is linear along d, and since the
+                #   gradient is not zero, it is unbounded below;
+                #
+                # - d.T.dot(Q).dot(d) < 0, i.e., d is a direction of negative curvature
+                #   for f, which is then necessarily unbounded below.
+                status = 'unbounded'
+                break
+
+            # compute step size
+            a = d.T.dot(d) / den  # or ng ** 2 / den
+
+            # assert np.isclose(d.T.dot(d), ng ** 2)
+
+            # compute new point
+            last_wrt = self.wrt + a * d
+
+            past_d = d  # previous search direction
+
+            # plot the trajectory
+            if self.plot and self.n == 2:
+                p_xy = np.vstack((self.wrt, last_wrt)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
+
+            # update new point
+            self.wrt = last_wrt
+
+            self.iter += 1
+
+        if self.verbose:
+            print()
+        if self.plot and self.n == 2:
+            plt.show()
+        return self.wrt, status
+
+
+class CGA(LineSearchOptimizer):
     def __init__(self, f, wrt=None, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
                  tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
@@ -21,7 +127,7 @@ class ConjugateGradient(LineSearchOptimizer):
         return NotImplementedError
 
 
-class NonLinearConjugateGradient(LineSearchOptimizer):
+class NCG(LineSearchOptimizer):
     # Apply a Nonlinear Conjugated Gradient algorithm for the minimization of
     # the provided function f.
     #
@@ -137,6 +243,8 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
     def __init__(self, f, wrt=None, wf=0, eps=1e-6, max_f_eval=1000, r_start=0, m1=0.01, m2=0.9, a_start=1,
                  tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        if not np.isscalar(wf):
+            raise ValueError('wf is not a real scalar')
         if wf < 0 or wf > 4:
             raise ValueError('unknown NCG formula {:d}'.format(wf))
         self.wf = wf
@@ -185,13 +293,11 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
                 break
 
             # compute search direction
-            # formulae could be streamlined somewhat and some
-            # norms could be saved from previous iterations
             if self.iter == 1:  # first iteration is off-line, standard gradient
                 d = -g
                 if self.verbose:
                     print('\t', end='')
-            else:  # normal iterations, use appropriate NCG formula
+            else:  # normal iterations, use appropriate formula
                 if self.r_start > 0 and self.iter % self.n * self.r_start == 0:
                     # ... unless a restart is being performed
                     beta = 0
@@ -265,4 +371,4 @@ class NonLinearConjugateGradient(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(NonLinearConjugateGradient(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    print(NCG(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

@@ -4,7 +4,7 @@ import numpy as np
 from optimization.optimizer import LineSearchOptimizer
 
 
-class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
+class BFGS(LineSearchOptimizer):
     # Apply a Quasi-Newton approach, in particular using the celebrated
     # Broyden-Fletcher-Goldfarb-Shanno (BFGS) formula, for the minimization of
     # the provided function f.
@@ -238,4 +238,4 @@ class BroydenFletcherGoldfarbShanno(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(BroydenFletcherGoldfarbShanno(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    print(BFGS(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

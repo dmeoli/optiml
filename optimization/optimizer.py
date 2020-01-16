@@ -1,7 +1,7 @@
 import numpy as np
 
 from optimization.test_functions import Function
-from optimization.unconstrained.line_search import ArmijoWolfe, Backtracking
+from optimization.unconstrained.line_search import AWLS, BLS
 
 
 class Optimizer:
@@ -93,6 +93,6 @@ class LineSearchOptimizer(Optimizer):
             raise ValueError('m_inf is not a real scalar')
         self.m_inf = m_inf
         if 0 < m2 < 1:
-            self.line_search = ArmijoWolfe(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a, verbose)
+            self.line_search = AWLS(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a, verbose)
         else:
-            self.line_search = Backtracking(f, max_f_eval, m1, a_start, min_a, tau, verbose)
+            self.line_search = BLS(f, max_f_eval, m1, a_start, min_a, tau, verbose)

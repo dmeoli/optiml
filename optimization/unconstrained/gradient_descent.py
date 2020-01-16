@@ -4,7 +4,7 @@ import numpy as np
 from optimization.optimizer import Optimizer, LineSearchOptimizer
 
 
-class SteepestGradientDescentQuadratic(Optimizer):
+class SDQ(Optimizer):
     """
     Apply the Steepest Gradient Descent algorithm with exact line search to the quadratic function.
 
@@ -108,7 +108,7 @@ class SteepestGradientDescentQuadratic(Optimizer):
         return self.wrt, status
 
 
-class SteepestGradientDescent(LineSearchOptimizer):
+class SDG(LineSearchOptimizer):
     """
     Apply the classical Steepest Descent algorithm for the minimization of
     the provided function f.
@@ -325,7 +325,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
         return self.wrt, status
 
 
-class GradientDescent(Optimizer):
+class GD(Optimizer):
 
     def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.01, momentum=0.,
                  momentum_type='none', verbose=False, plot=False):
@@ -420,9 +420,9 @@ class GradientDescent(Optimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(SteepestGradientDescentQuadratic(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    print(SDQ(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
     print()
-    print(SteepestGradientDescent(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    print(SDG(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
     print()
-    print(GradientDescent(tf.Rosenbrock(), [-1, 1], step_rate=0.01, momentum_type='standard',
-                          verbose=True, plot=True).minimize())
+    print(GD(tf.Rosenbrock(), [-1, 1], step_rate=0.01, momentum_type='standard',
+             verbose=True, plot=True).minimize())

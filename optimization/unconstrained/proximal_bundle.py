@@ -4,7 +4,7 @@ import numpy as np
 from optimization.optimizer import Optimizer
 
 
-class ProximalBundle(Optimizer):
+class PBM(Optimizer):
     # Apply the Proximal Bundle Method for the minimization of the provided
     # function f.
     #
@@ -210,4 +210,4 @@ class ProximalBundle(Optimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(ProximalBundle(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    print(PBM(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

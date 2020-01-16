@@ -4,7 +4,7 @@ import numpy as np
 from optimization.optimizer import LineSearchOptimizer
 
 
-class Subgradient(LineSearchOptimizer):
+class SGM(LineSearchOptimizer):
     # Apply the classical Subgradient Method for the minimization of the
     # provided function f.
     #
@@ -203,4 +203,4 @@ class Subgradient(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(Subgradient(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    print(SGM(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())

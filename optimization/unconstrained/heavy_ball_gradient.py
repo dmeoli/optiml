@@ -4,7 +4,7 @@ import numpy as np
 from optimization.optimizer import LineSearchOptimizer
 
 
-class HeavyBallGradient(LineSearchOptimizer):
+class HBG(LineSearchOptimizer):
     # Apply a Heavy Ball Gradient approach for the minimization of the
     # provided function f.
     #
@@ -213,4 +213,4 @@ class HeavyBallGradient(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(HeavyBallGradient(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    print(HBG(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

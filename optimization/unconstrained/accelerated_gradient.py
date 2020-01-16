@@ -4,7 +4,7 @@ import numpy as np
 from optimization.optimizer import LineSearchOptimizer
 
 
-class AcceleratedGradient(LineSearchOptimizer):
+class ACCG(LineSearchOptimizer):
     # Apply a Accelerated Gradient approach for the minimization of the
     # provided function f.
     #
@@ -263,4 +263,4 @@ class AcceleratedGradient(LineSearchOptimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    print(AcceleratedGradient(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    print(ACCG(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
