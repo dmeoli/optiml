@@ -39,68 +39,68 @@ def test_SDG_Rosenbrock():
 
 
 def test_GD_quadratic():
-    x, _ = GD(quad1, step_rate=0.01).minimize()
+    x, _ = GD(quad1).minimize()
     np.allclose(quad1.jacobian(x), 0)
 
-    x, _ = GD(quad2, step_rate=0.01).minimize()
+    x, _ = GD(quad2).minimize()
     np.allclose(quad2.jacobian(x), 0)
 
-    x, _ = GD(quad5, step_rate=0.01).minimize()
+    x, _ = GD(quad5).minimize()
     np.allclose(quad5.jacobian(x), 0)
 
 
 @utils.not_test
 def test_GD_Rosenbrock():
     obj = Rosenbrock(autodiff=True)
-    x, _ = GD(obj, step_rate=0.01).minimize()
+    x, _ = GD(obj).minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
 
     obj = Rosenbrock(autodiff=False)
-    x, _ = GD(obj, step_rate=0.01).minimize()
+    x, _ = GD(obj).minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
 
 
 def test_GD_standard_quadratic():
-    x, _ = GD(quad1, step_rate=0.01, momentum=0.9, momentum_type='standard').minimize()
+    x, _ = GD(quad1, momentum_type='standard').minimize()
     np.allclose(quad1.jacobian(x), 0)
 
-    x, _ = GD(quad2, step_rate=0.01, momentum=0.9, momentum_type='standard').minimize()
+    x, _ = GD(quad2, momentum_type='standard').minimize()
     np.allclose(quad2.jacobian(x), 0)
 
-    x, _ = GD(quad5, step_rate=0.01, momentum=0.9, momentum_type='standard').minimize()
+    x, _ = GD(quad5, momentum_type='standard').minimize()
     np.allclose(quad5.jacobian(x), 0)
 
 
 @utils.not_test
 def test_GD_standard_Rosenbrock():
     obj = Rosenbrock(autodiff=True)
-    x, _ = GD(obj, step_rate=0.01, momentum=0.9, momentum_type='standard').minimize()
+    x, _ = GD(obj, momentum_type='standard').minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
 
     obj = Rosenbrock(autodiff=False)
-    x, _ = GD(obj, step_rate=0.01, momentum=0.9, momentum_type='standard').minimize()
+    x, _ = GD(obj, momentum_type='standard').minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
 
 
 def test_GD_Nesterov_quadratic():
-    x, _ = GD(quad1, step_rate=0.01, momentum=0.9, momentum_type='nesterov').minimize()
+    x, _ = GD(quad1, momentum_type='nesterov').minimize()
     np.allclose(quad1.jacobian(x), 0)
 
-    x, _ = GD(quad2, step_rate=0.01, momentum=0.9, momentum_type='nesterov').minimize()
+    x, _ = GD(quad2, momentum_type='nesterov').minimize()
     np.allclose(quad2.jacobian(x), 0)
 
-    x, _ = GD(quad5, step_rate=0.01, momentum=0.9, momentum_type='nesterov').minimize()
+    x, _ = GD(quad5, momentum_type='nesterov').minimize()
     np.allclose(quad5.jacobian(x), 0)
 
 
 @utils.not_test
 def test_GD_Nesterov_Rosenbrock():
     obj = Rosenbrock(autodiff=True)
-    x, _ = GD(obj, step_rate=0.01, momentum=0.9, momentum_type='nesterov').minimize()
+    x, _ = GD(obj, momentum_type='nesterov').minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
 
     obj = Rosenbrock(autodiff=False)
-    x, _ = GD(obj, step_rate=0.01, momentum=0.9, momentum_type='nesterov').minimize()
+    x, _ = GD(obj, momentum_type='nesterov').minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
 
 

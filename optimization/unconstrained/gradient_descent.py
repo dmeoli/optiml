@@ -327,7 +327,7 @@ class SDG(LineSearchOptimizer):
 
 class GD(Optimizer):
 
-    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.01, momentum=0.,
+    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.01, momentum=0.9,
                  momentum_type='none', verbose=False, plot=False):
         super().__init__(f, wrt, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
