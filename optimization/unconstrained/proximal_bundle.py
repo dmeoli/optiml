@@ -84,12 +84,12 @@ class PBM(Optimizer):
         super().__init__(f, wrt, eps, max_iter, verbose, plot)
         if not np.isscalar(mu):
             raise ValueError('mu is not a real scalar')
-        if mu <= 0:
+        if not mu > 0:
             raise ValueError('mu must be > 0')
         self.mu = mu
         if not np.isscalar(m1):
             raise ValueError('m1 is not a real scalar')
-        if m1 < 0 or m1 > 1:
+        if not 0 <= m1 <= 1:
             raise ValueError('m1 is not in [0,1]')
         self.m1 = m1
         if not np.isscalar(m_inf):

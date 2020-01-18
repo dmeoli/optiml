@@ -110,7 +110,7 @@ class NWTN(LineSearchOptimizer):
         super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if not np.isscalar(delta):
             raise ValueError('delta is not a real scalar')
-        if delta < 0:
+        if not delta > 0:
             raise ValueError('delta must be > 0')
         self.delta = delta
 

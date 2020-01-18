@@ -127,7 +127,7 @@ def adam(dataset, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
     """
     examples = dataset.examples
 
-    # init s,r and t
+    # init s, r and t
     s = [[[0] * len(node.weights) for node in layer.nodes] for layer in net]
     r = [[[0] * len(node.weights) for node in layer.nodes] for layer in net]
     t = 0

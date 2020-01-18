@@ -332,12 +332,12 @@ class GD(Optimizer):
         super().__init__(f, wrt, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
-        if step_rate < 0:
+        if not step_rate > 0:
             raise ValueError('step_rate must be > 0')
         self.step_rate = step_rate
         if not np.isscalar(momentum):
             raise ValueError('momentum is not a real scalar')
-        if momentum < 0:
+        if not momentum > 0:
             raise ValueError('momentum must be > 0')
         self.momentum = momentum
         if momentum_type not in ('nesterov', 'standard', 'none'):

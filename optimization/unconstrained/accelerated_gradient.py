@@ -114,7 +114,7 @@ class ACCG(LineSearchOptimizer):
                          min_a=min_a, verbose=verbose, plot=plot)
         if not np.isscalar(m1):
             raise ValueError('m1 is not a real scalar')
-        if m1 < 0 or m1 >= 1:
+        if not 0 <= m1 < 1:
             raise ValueError('m1 is not in [0,1)')
         self.m1 = m1
         if not np.isscalar(mon):
@@ -122,7 +122,7 @@ class ACCG(LineSearchOptimizer):
         self.mon = mon
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
-        if wf < 0 or wf > 3:
+        if not 0 <= wf <= 3:
             raise ValueError('unknown fast gradient formula {:d}'.format(wf))
         self.wf = wf
 

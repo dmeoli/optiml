@@ -244,7 +244,7 @@ class NCG(LineSearchOptimizer):
         super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
-        if wf < 0 or wf > 3:
+        if not 0 <= wf <= 3:
             raise ValueError('unknown NCG formula {:d}'.format(wf))
         self.wf = wf
         if not np.isscalar(r_start):
