@@ -384,11 +384,11 @@ class GD(Optimizer):
             if self.momentum_type == 'standard':
                 step_m1 = self.step
                 g = self.f.jacobian(self.wrt)
-                self.step = step_m1 * self.momentum + self.step_rate * -g
+                self.step = self.step_rate * -g + self.momentum * step_m1
                 last_wrt = self.wrt + self.step
             elif self.momentum_type == 'nesterov':
                 step_m1 = self.step
-                big_jump = step_m1 * self.momentum
+                big_jump = self.momentum * step_m1
                 self.wrt = self.wrt - big_jump
                 g = self.f.jacobian(self.wrt)
                 correction = self.step_rate * -g
