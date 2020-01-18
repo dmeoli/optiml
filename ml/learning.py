@@ -4,7 +4,6 @@ from statistics import mode, mean
 
 from ml.activations import Sigmoid
 from ml.datasets import iris, orings, zoo, Majority, Parity, Xor
-from ml.neural_network import NeuralNetLearner, PerceptronLearner
 from utils import *
 
 
@@ -291,9 +290,8 @@ def replicated_dataset(dataset, weights, n=None):
 
 def weighted_replicate(seq, weights, n):
     """
-    Return n selections from seq, with the count of each element of
-    seq proportional to the corresponding weight (filling in fractions
-    randomly).
+    Return n selections from seq, with the count of each element of seq
+    proportional to the corresponding weight (filling in fractions randomly).
     """
     assert len(seq) == len(weights)
     weights = normalize(weights)
@@ -309,7 +307,7 @@ def compare(algorithms=None, datasets=None, k=10, trials=1):
     Print results as a table.
     """
     # default list of algorithms
-    algorithms = algorithms or [NeuralNetLearner, PerceptronLearner]
+    # algorithms = algorithms or [NeuralNetLearner, PerceptronLearner]
 
     # default list of datasets
     datasets = datasets or [iris, orings, zoo, Majority(7, 100), Parity(7, 100), Xor(100)]
