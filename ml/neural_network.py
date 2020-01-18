@@ -215,7 +215,8 @@ def NeuralNetLearner(dataset, hidden_layer_sizes=None, learning_rate=0.01, epoch
     return predict
 
 
-def PerceptronLearner(dataset, learning_rate=0.01, epochs=100, optimizer=stochastic_gradient_descent, batch_size=1, verbose=None):
+def PerceptronLearner(dataset, learning_rate=0.01, epochs=100, optimizer=stochastic_gradient_descent,
+                      batch_size=1, verbose=None):
     """
     Simple perceptron neural network.
     """

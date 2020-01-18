@@ -33,6 +33,10 @@ def unique(seq):
     return list(set(seq))
 
 
+def flatten(seqs):
+    return sum(seqs, [])
+
+
 def num_or_str(x):
     """The argument is a string; convert to a number if
        possible, or strip it."""
