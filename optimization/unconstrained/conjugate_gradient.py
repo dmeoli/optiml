@@ -156,11 +156,10 @@ class NCG(LineSearchOptimizer):
     #
     # - wf (integer scalar, optional, default value 0): which of the Nonlinear
     #   Conjugated Gradient formulae to use. Possible values are:
-    #   = 0: compromise between Fletcher-Reeves and Polak-Ribiere
-    #   = 1: Fletcher-Reeves
-    #   = 2: Polak-Ribiere
-    #   = 3: Hestenes-Stiefel
-    #   = 4: Dai-Yuan
+    #   = 0: Fletcher-Reeves
+    #   = 1: Polak-Ribiere
+    #   = 2: Hestenes-Stiefel
+    #   = 3: Dai-Yuan
     #
     # - r_start (integer scalar, optional, default value 0): if > 0, restarts
     #   (setting beta = 0) are performed every n * r_start iterations
@@ -245,7 +244,7 @@ class NCG(LineSearchOptimizer):
         super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
-        if wf < 0 or wf > 4:
+        if wf < 0 or wf > 3:
             raise ValueError('unknown NCG formula {:d}'.format(wf))
         self.wf = wf
         if not np.isscalar(r_start):
@@ -304,18 +303,14 @@ class NCG(LineSearchOptimizer):
                     if self.verbose:
                         print('\t(res)', end='')
                 else:
-                    if self.wf == 0:
-                        betaFR = (ng / np.linalg.norm(past_g)) ** 2  # Fletcher-Reeves
-                        betaPR = max(g.T.dot(g - past_g) / np.linalg.norm(past_g) ** 2, 0)  # Polak-Ribiere
-                        beta = max(-betaFR, min(betaPR, betaFR))
-                    if self.wf == 1:  # Fletcher-Reeves
+                    if self.wf == 0:  # Fletcher-Reeves
                         beta = (ng / np.linalg.norm(past_g)) ** 2
-                    elif self.wf == 2:  # Polak-Ribiere
+                    elif self.wf == 1:  # Polak-Ribiere
                         beta = g.T.dot(g - past_g) / np.linalg.norm(past_g) ** 2
                         beta = max(beta, 0)
-                    elif self.wf == 3:  # Hestenes-Stiefel
+                    elif self.wf == 2:  # Hestenes-Stiefel
                         beta = g.T.dot(g - past_g) / (g - past_g).T.dot(past_d)
-                    elif self.wf == 4:  # Dai-Yuan
+                    elif self.wf == 3:  # Dai-Yuan
                         beta = ng ** 2 / (g - past_g).T.dot(past_d)
                     if self.verbose:
                         print('\t{:1.4f}'.format(beta), end='')
@@ -366,11 +361,3 @@ class NCG(LineSearchOptimizer):
         if self.plot and self.n == 2:
             plt.show()
         return self.wrt, status
-
-
-if __name__ == "__main__":
-    import optimization.test_functions as tf
-
-    print(CGQ(tf.quad2, [-1, 1], verbose=True, plot=True).minimize())
-    print()
-    print(NCG(tf.quad2, [-1, 1], wf=1, verbose=True, plot=True).minimize())

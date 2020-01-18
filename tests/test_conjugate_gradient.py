@@ -16,7 +16,7 @@ def test_CGQ_quadratic():
     assert np.allclose(x, quad5.x_star)
 
 
-def test_NCG_quadratic():
+def test_NCG_quadratic_wf0():
     x, _ = NCG(quad1).minimize()
     assert np.allclose(quad1.jacobian(x), 0)
 
@@ -27,14 +27,43 @@ def test_NCG_quadratic():
     assert np.allclose(quad5.jacobian(x), 0)
 
 
-def test_NCG_Rosenbrock():
-    obj = Rosenbrock(autodiff=True)
-    x, _ = NCG(obj, wf=4).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
+def test_NCG_quadratic_wf1():
+    x, _ = NCG(quad1, wf=1).minimize()
+    assert np.allclose(quad1.jacobian(x), 0)
 
-    obj = Rosenbrock(autodiff=False)
-    x, _ = NCG(obj, wf=4).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
+    x, _ = NCG(quad2, wf=1).minimize()
+    assert np.allclose(quad2.jacobian(x), 0)
+
+    x, _ = NCG(quad5, wf=1).minimize()
+    assert np.allclose(quad5.jacobian(x), 0)
+
+
+def test_NCG_quadratic_wf2():
+    x, _ = NCG(quad1, wf=2).minimize()
+    assert np.allclose(quad1.jacobian(x), 0)
+
+    x, _ = NCG(quad2, wf=2).minimize()
+    assert np.allclose(quad2.jacobian(x), 0)
+
+    x, _ = NCG(quad5, wf=2).minimize()
+    assert np.allclose(quad5.jacobian(x), 0)
+
+
+def test_NCG_quadratic_wf3():
+    x, _ = NCG(quad1, wf=3).minimize()
+    assert np.allclose(quad1.jacobian(x), 0)
+
+    x, _ = NCG(quad2, wf=3).minimize()
+    assert np.allclose(quad2.jacobian(x), 0)
+
+    x, _ = NCG(quad5, wf=3).minimize()
+    assert np.allclose(quad5.jacobian(x), 0)
+
+
+def test_NCG_Rosenbrock():
+    obj = Rosenbrock()
+    x, _ = NCG(obj, wf=3).minimize()
+    assert np.allclose(x, obj.x_star)
 
 
 if __name__ == "__main__":

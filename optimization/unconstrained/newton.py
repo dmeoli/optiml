@@ -212,9 +212,3 @@ class NWTN(LineSearchOptimizer):
         if self.plot and self.n == 2:
             plt.show()
         return self.wrt, status
-
-
-if __name__ == "__main__":
-    import optimization.test_functions as tf
-
-    print(NWTN(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

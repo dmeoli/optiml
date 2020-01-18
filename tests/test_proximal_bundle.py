@@ -20,13 +20,9 @@ def test_quadratic():
 
 @utils.not_test
 def test_Rosenbrock():
-    obj = Rosenbrock(autodiff=True)
+    obj = Rosenbrock()
     x, _ = PBM(obj).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
-
-    obj = Rosenbrock(autodiff=False)
-    x, _ = PBM(obj).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
+    assert np.allclose(x, obj.x_star)
 
 
 if __name__ == "__main__":

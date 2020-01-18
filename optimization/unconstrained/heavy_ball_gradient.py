@@ -120,7 +120,6 @@ class HBG(LineSearchOptimizer):
         self.beta = beta
 
     def minimize(self):
-
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
@@ -208,9 +207,3 @@ class HBG(LineSearchOptimizer):
         if self.plot and self.n == 2:
             plt.show()
         return self.wrt, status
-
-
-if __name__ == "__main__":
-    import optimization.test_functions as tf
-
-    print(HBG(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

@@ -17,11 +17,7 @@ def test_quadratic():
 
 
 def test_Rosenbrock():
-    obj = Rosenbrock(autodiff=True)
-    x, _ = NWTN(obj).minimize()
-    assert np.allclose(x, obj.x_star)
-
-    obj = Rosenbrock(autodiff=False)
+    obj = Rosenbrock()
     x, _ = NWTN(obj).minimize()
     assert np.allclose(x, obj.x_star)
 

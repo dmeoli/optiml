@@ -11,6 +11,11 @@ def not_test(func):
     return func
 
 
+def isnonzerofinite(arr):
+    """Return True if the array is neither zero, NaN or infinite."""
+    return (arr != 0).any() and np.isfinite(arr).all()
+
+
 def remove_all(item, seq):
     """Return a copy of seq (or string) with all occurrences of item removed."""
     if isinstance(seq, str):

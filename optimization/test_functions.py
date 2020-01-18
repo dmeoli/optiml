@@ -11,7 +11,6 @@ class Function:
         self._jacobian = jacobian(self.function)
         self._hessian = hessian(self.function)
         self.n = n
-        self.x_star = None
 
     def function(self, x):
         return NotImplementedError
@@ -39,7 +38,7 @@ class Function:
         :param p: 1D array, the vector to be multiplied by the Hessian matrix.
         :return:  the Hessian matrix of the function at x multiplied by the vector p.
         """
-        return np.dot(self.hessian(x), p)
+        return self.hessian(x).dot(p)
 
     def plot(self, x_min, x_max, y_min, y_max):
         return NotImplementedError
@@ -147,98 +146,22 @@ quad5 = Quadratic([[101, -99], [-99, 101]], [10, 5])
 
 class Rosenbrock(Function):
 
-    def __init__(self, n=2, autodiff=True):
+    def __init__(self, n=2, a=1, b=2):
         super().__init__(n)
-        self.autodiff = autodiff
-        self.x_star = np.ones(n)
+        self.a = a
+        self.b = b
+        # only in the trivial case where a = 0 the function
+        # is symmetric and the minimum is at the origin
+        self.x_star = np.zeros(n) if a is 0 else np.ones(n)
 
     def function(self, x):
         """
         The Rosenbrock function.
         :param x: 1D array of points at which the Rosenbrock function is to be computed.
         :return:  the value of the Rosenbrock function at x.
-        >>> x = 0.1 * np.arange(10)
-        >>> Rosenbrock().function(x)
-        76.56
         """
         x = np.array(x)
-        return np.sum(100.0 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2, axis=0)
-
-    def jacobian(self, x):
-        """
-        The Jacobian (i.e. gradient) of the Rosenbrock function.
-        :param x: 1D array of points at which the Jacobian is to be computed.
-        :return:  the Jacobian of the function at x.
-        >>> x = 0.1 * np.arange(9)
-        >>> Rosenbrock(autodiff=True).jacobian(x)
-        array([ -2. ,  10.6,  15.6,  13.4,   6.4,  -3. , -12.4, -19.4,  62. ])
-        >>> Rosenbrock(autodiff=False).jacobian(x)
-        array([ -2. ,  10.6,  15.6,  13.4,   6.4,  -3. , -12.4, -19.4,  62. ])
-        """
-        if not self.autodiff:
-            x = np.array(x, dtype=float)
-            xm = x[1:-1]
-            xm_m1 = x[:-2]
-            xm_p1 = x[2:]
-            jac = np.zeros_like(x)
-            jac[1:-1] = (200 * (xm - xm_m1 ** 2) -
-                         400 * (xm_p1 - xm ** 2) * xm - 2 * (1 - xm))
-            jac[0] = -400 * x[0] * (x[1] - x[0] ** 2) - 2 * (1 - x[0])
-            jac[-1] = 200 * (x[-1] - x[-2] ** 2)
-            return jac
-        return super().jacobian(x)
-
-    def hessian(self, x):
-        """
-        The Hessian matrix of the Rosenbrock function.
-        :param x: 1D array of points at which the Hessian matrix is to be computed.
-        :return:  the Hessian matrix of the Rosenbrock function at x.
-        >>> x = 0.1 * np.arange(4)
-        >>> Rosenbrock(autodiff=True).hessian(x)
-        array([[-38.,   0.,   0.,   0.],
-               [  0., 134., -40.,   0.],
-               [  0., -40., 130., -80.],
-               [  0.,   0., -80., 200.]])
-        >>> Rosenbrock(autodiff=False).hessian(x)
-        array([[-38.,   0.,   0.,   0.],
-               [  0., 134., -40.,   0.],
-               [  0., -40., 130., -80.],
-               [  0.,   0., -80., 200.]])
-        """
-        if not self.autodiff:
-            x = np.atleast_1d(x)
-            H = np.diag(-400 * x[:-1], 1) - np.diag(400 * x[:-1], -1)
-            diag = np.zeros(len(x), dtype=x.dtype)
-            diag[0] = 1200 * x[0] ** 2 - 400 * x[1] + 2
-            diag[-1] = 200
-            diag[1:-1] = 202 + 1200 * x[1:-1] ** 2 - 400 * x[2:]
-            H = H + np.diag(diag)
-            return H
-        return super().hessian(x)
-
-    def hessian_product(self, x, p):
-        """
-        Product of the Hessian matrix of the Rosenbrock function with a vector.
-        :param x: 1D array of points at which the Hessian matrix is to be computed.
-        :param p: 1D array, the vector to be multiplied by the Hessian matrix.
-        :return:  the Hessian matrix of the Rosenbrock function at x multiplied by the vector p.
-        >>> x = 0.1 * np.arange(9)
-        >>> p = 0.5 * np.arange(9)
-        >>> Rosenbrock(autodiff=True).hessian_product(x, p)
-        array([   0.,   27.,  -10.,  -95., -192., -265., -278., -195., -180.])
-        >>> Rosenbrock(autodiff=False).hessian_product(x, p)
-        array([  -0.,   27.,  -10.,  -95., -192., -265., -278., -195., -180.])
-        """
-        if not self.autodiff:
-            x = np.atleast_1d(x)
-            Hp = np.zeros(len(x), dtype=x.dtype)
-            Hp[0] = (1200 * x[0] ** 2 - 400 * x[1] + 2) * p[0] - 400 * x[0] * p[1]
-            Hp[1:-1] = (-400 * x[:-2] * p[:-2] +
-                        (202 + 1200 * x[1:-1] ** 2 - 400 * x[2:]) * p[1:-1] -
-                        400 * x[1:-1] * p[2:])
-            Hp[-1] = -400 * x[-2] * p[-2] + 200 * p[-1]
-            return Hp
-        return super().hessian_product(x, p)
+        return np.sum(self.b * (x[1:] - x[:-1] ** 2) ** 2 + (self.a - x[:-1]) ** 2)
 
     def plot(self, x_min=-2, x_max=2, y_min=-1, y_max=3):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))

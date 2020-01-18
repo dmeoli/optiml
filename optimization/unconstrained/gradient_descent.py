@@ -345,7 +345,6 @@ class GD(Optimizer):
         self.momentum_type = momentum_type
 
         self.step = 0
-        self.state_fields = 'step_rate momentum momentum_type step iter'.split()
 
     def minimize(self):
         if self.verbose:
@@ -386,23 +385,26 @@ class GD(Optimizer):
 
             if self.momentum_type == 'standard':
                 gradient = self.f.jacobian(self.wrt)
-                step = step_m1 * self.momentum + self.step_rate * gradient
-                self.wrt -= step
+                step = step_m1 * self.momentum + self.step_rate * -gradient
+                past_wrt = self.wrt
+                self.wrt = past_wrt + step
             elif self.momentum_type == 'nesterov':
                 big_jump = step_m1 * self.momentum
-                self.wrt -= big_jump
+                self.wrt = self.wrt - big_jump
                 gradient = self.f.jacobian(self.wrt)
                 correction = self.step_rate * gradient
-                self.wrt -= correction
+                past_wrt = self.wrt
+                self.wrt = self.wrt - correction
                 step = big_jump + correction
             elif self.momentum_type == 'none':
                 gradient = self.f.jacobian(self.wrt)
-                step = self.step_rate * gradient
-                self.wrt -= step
+                step = self.step_rate * -gradient
+                past_wrt = self.wrt
+                self.wrt = past_wrt + step
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, step_m1)).T
+                p_xy = np.vstack((past_wrt, self.wrt)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
@@ -420,8 +422,12 @@ class GD(Optimizer):
 if __name__ == "__main__":
     import optimization.test_functions as tf
 
-    # print(SDQ(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
-    # print()
-    # print(SDG(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
-    # print()
-    print(GD(tf.Rosenbrock(), [-1, 1], step_rate=0.01, momentum_type='standard', verbose=True, plot=True).minimize())
+    print(SDQ(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
+    print()
+    print(SDG(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    print()
+    print(GD(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
+    print()
+    print(GD(tf.Rosenbrock(), [-1, 1], momentum_type='standard', verbose=True, plot=True).minimize())
+    print()
+    print(GD(tf.Rosenbrock(), [-1, 1], momentum_type='nesterov', verbose=True, plot=True).minimize())

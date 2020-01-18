@@ -1,6 +1,5 @@
 import pytest
 
-import utils
 from optimization.test_functions import quad1, quad2, quad5, Rosenbrock
 from optimization.unconstrained.gradient_descent import *
 
@@ -27,15 +26,10 @@ def test_SDG_quadratic():
     assert np.allclose(x, quad5.x_star)
 
 
-@utils.not_test
 def test_SDG_Rosenbrock():
-    obj = Rosenbrock(autodiff=True)
+    obj = Rosenbrock()
     x, _ = SDG(obj).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
-
-    obj = Rosenbrock(autodiff=False)
-    x, _ = SDG(obj).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
+    assert np.allclose(x, obj.x_star)
 
 
 def test_GD_quadratic():
@@ -49,18 +43,13 @@ def test_GD_quadratic():
     np.allclose(quad5.jacobian(x), 0)
 
 
-@utils.not_test
 def test_GD_Rosenbrock():
-    obj = Rosenbrock(autodiff=True)
-    x, _ = GD(obj).minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
-
-    obj = Rosenbrock(autodiff=False)
+    obj = Rosenbrock()
     x, _ = GD(obj).minimize()
     assert np.allclose(x, obj.x_star, rtol=0.1)
 
 
-def test_GD_standard_quadratic():
+def test_GD_standard_momentum_quadratic():
     x, _ = GD(quad1, momentum_type='standard').minimize()
     np.allclose(quad1.jacobian(x), 0)
 
@@ -71,18 +60,13 @@ def test_GD_standard_quadratic():
     np.allclose(quad5.jacobian(x), 0)
 
 
-@utils.not_test
-def test_GD_standard_Rosenbrock():
-    obj = Rosenbrock(autodiff=True)
+def test_GD_standard_momentum_Rosenbrock():
+    obj = Rosenbrock()
     x, _ = GD(obj, momentum_type='standard').minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
-
-    obj = Rosenbrock(autodiff=False)
-    x, _ = GD(obj, momentum_type='standard').minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
+    assert np.allclose(x, obj.x_star)
 
 
-def test_GD_Nesterov_quadratic():
+def test_GD_Nesterov_momentum_quadratic():
     x, _ = GD(quad1, momentum_type='nesterov').minimize()
     np.allclose(quad1.jacobian(x), 0)
 
@@ -93,15 +77,10 @@ def test_GD_Nesterov_quadratic():
     np.allclose(quad5.jacobian(x), 0)
 
 
-@utils.not_test
-def test_GD_Nesterov_Rosenbrock():
-    obj = Rosenbrock(autodiff=True)
+def test_GD_Nesterov_momentum_Rosenbrock():
+    obj = Rosenbrock()
     x, _ = GD(obj, momentum_type='nesterov').minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
-
-    obj = Rosenbrock(autodiff=False)
-    x, _ = GD(obj, momentum_type='nesterov').minimize()
-    assert np.allclose(x, obj.x_star, rtol=0.1)
+    assert np.allclose(x, obj.x_star)
 
 
 if __name__ == "__main__":
