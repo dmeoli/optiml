@@ -127,7 +127,6 @@ class ACCG(LineSearchOptimizer):
         self.wf = wf
 
     def minimize(self):
-
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)

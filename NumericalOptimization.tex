@@ -115,15 +115,15 @@
 \caption{Pseudocode for accelerated gradient method.}
 \begin{algorithmic}
     \Procedure{\bf ACCG}{$f, x, \varepsilon$}
-        \State~$x_- \gets x$
+        \State~$x^- \gets x$
         \State~$\gamma \gets 1$
         \Repeat
-            \State~$\gamma_- \gets \gamma$
+            \State~$\gamma^- \gets \gamma$
             \State~$\gamma \gets ( \, \sqrt{ \, 4 \gamma^2 + \gamma^4 \, } - \gamma^2 \, ) / 2$
-            \State~$\beta \gets \gamma ( \, 1 \,/\, \gamma_-  \,-\, 1 \, )$
-            \State~$y \gets x + \beta ( \, x \,-\, x_- \, )$
+            \State~$\beta \gets \gamma ( \, 1 \,/\, \gamma^-  \,-\, 1 \, )$
+            \State~$y \gets x + \beta ( \, x \,-\, x^- \, )$
             \State~$g \gets \nabla f(y)$
-            \State~$x_- \gets x$
+            \State~$x^- \gets x$
             \State~$x \gets y - ( \, 1 \,/\, L \,) g$
         \Until{($\norm{g} > \varepsilon$)}
     \EndProcedure
