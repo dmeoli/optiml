@@ -384,9 +384,8 @@ class GD(Optimizer):
             if self.momentum_type == 'standard':
                 step_m1 = self.step
                 gradient = self.f.jacobian(self.wrt)
-                step = step_m1 * self.momentum + self.step_rate * -gradient
-                last_wrt = self.wrt + step
-                self.step = step
+                self.step = step_m1 * self.momentum + self.step_rate * -gradient
+                last_wrt = self.wrt + self.step
             elif self.momentum_type == 'nesterov':
                 step_m1 = self.step
                 big_jump = step_m1 * self.momentum
@@ -397,8 +396,7 @@ class GD(Optimizer):
                 self.step = big_jump - correction
             elif self.momentum_type == 'none':
                 gradient = self.f.jacobian(self.wrt)
-                step = self.step_rate * -gradient
-                last_wrt = self.wrt + step
+                last_wrt = self.wrt + self.step_rate * -gradient
 
             # plot the trajectory
             if self.plot and self.n == 2:
