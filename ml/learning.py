@@ -1,10 +1,10 @@
 import copy
 from collections import defaultdict
-from heapq import nsmallest
 from statistics import mode, mean
 
 from ml.activations import Sigmoid
 from ml.datasets import iris, orings, zoo, Majority, Parity, Xor
+from ml.neural_network import NeuralNetLearner, PerceptronLearner
 from utils import *
 
 
@@ -127,17 +127,6 @@ def learning_curve(learner, dataset, trials=10, sizes=None):
         return cross_validation(learner, dataset, size, trials)
 
     return [(size, mean([score(learner, size) for _ in range(trials)])) for size in sizes]
-
-
-def NearestNeighborLearner(dataset, k=1):
-    """k-NearestNeighbor: the k nearest neighbors vote."""
-
-    def predict(example):
-        """Find the k closest items, and have them vote for the best."""
-        best = nsmallest(k, ((dataset.distance(e, example), e) for e in dataset.examples))
-        return mode(e[dataset.target] for (d, e) in best)
-
-    return predict
 
 
 def random_weights(min_value, max_value, num_weights):
@@ -314,17 +303,13 @@ def weighted_replicate(seq, weights, n):
             weighted_sample_with_replacement(n - sum(wholes), seq, fractions))
 
 
-def flatten(seqs):
-    return sum(seqs, [])
-
-
 def compare(algorithms=None, datasets=None, k=10, trials=1):
     """
     Compare various learners on various datasets using cross-validation.
     Print results as a table.
     """
     # default list of algorithms
-    algorithms = algorithms or [NearestNeighborLearner]
+    algorithms = algorithms or [NeuralNetLearner, PerceptronLearner]
 
     # default list of datasets
     datasets = datasets or [iris, orings, zoo, Majority(7, 100), Parity(7, 100), Xor(100)]
