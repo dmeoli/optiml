@@ -87,7 +87,7 @@ def BackPropagation(inputs, targets, theta, net, loss):
     return total_gradients, batch_loss
 
 
-def gradient_descent(dataset, net, loss, epochs=1000, l_rate=0.01, batch_size=1, verbose=None):
+def stochastic_gradient_descent(dataset, net, loss, epochs=1000, l_rate=0.01, batch_size=1, verbose=None):
     """
     Gradient descent algorithm to update the learnable parameters of a network.
     :return: the updated network
@@ -175,7 +175,7 @@ def adam(dataset, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
 
 
 def NeuralNetLearner(dataset, hidden_layer_sizes=None, learning_rate=0.01, epochs=100,
-                     optimizer=gradient_descent, batch_size=1, verbose=None):
+                     optimizer=stochastic_gradient_descent, batch_size=1, verbose=None):
     """
     Simple dense multilayer neural network.
     :param hidden_layer_sizes: size of hidden layers in the form of a list
@@ -215,7 +215,7 @@ def NeuralNetLearner(dataset, hidden_layer_sizes=None, learning_rate=0.01, epoch
     return predict
 
 
-def PerceptronLearner(dataset, learning_rate=0.01, epochs=100, optimizer=gradient_descent, batch_size=1, verbose=None):
+def PerceptronLearner(dataset, learning_rate=0.01, epochs=100, optimizer=stochastic_gradient_descent, batch_size=1, verbose=None):
     """
     Simple perceptron neural network.
     """
