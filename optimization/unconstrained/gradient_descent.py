@@ -343,8 +343,8 @@ class GD(Optimizer):
         if momentum_type not in ('nesterov', 'standard', 'none'):
             raise ValueError('unknown momentum type')
         self.momentum_type = momentum_type
-
-        self.step = 0
+        if momentum_type in ('nesterov', 'standard'):
+            self.step = 0
 
     def minimize(self):
         if self.verbose:
@@ -381,35 +381,32 @@ class GD(Optimizer):
                 status = 'stopped'
                 break
 
-            step_m1 = self.step
-
             if self.momentum_type == 'standard':
+                step_m1 = self.step
                 gradient = self.f.jacobian(self.wrt)
                 step = step_m1 * self.momentum + self.step_rate * -gradient
-                past_wrt = self.wrt
-                self.wrt = past_wrt + step
+                last_wrt = self.wrt + step
+                self.step = step
             elif self.momentum_type == 'nesterov':
+                step_m1 = self.step
                 big_jump = step_m1 * self.momentum
                 self.wrt = self.wrt - big_jump
                 gradient = self.f.jacobian(self.wrt)
-                correction = self.step_rate * gradient
-                past_wrt = self.wrt
-                self.wrt = self.wrt - correction
-                step = big_jump + correction
+                correction = self.step_rate * -gradient
+                last_wrt = self.wrt + correction
+                self.step = big_jump - correction
             elif self.momentum_type == 'none':
                 gradient = self.f.jacobian(self.wrt)
                 step = self.step_rate * -gradient
-                past_wrt = self.wrt
-                self.wrt = past_wrt + step
+                last_wrt = self.wrt + step
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((past_wrt, self.wrt)).T
+                p_xy = np.vstack((self.wrt, last_wrt)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
-            self.step = step
-
+            self.wrt = last_wrt
             self.iter += 1
 
         if self.verbose:
@@ -417,17 +414,3 @@ class GD(Optimizer):
         if self.plot and self.n == 2:
             plt.show()
         return self.wrt, status
-
-
-if __name__ == "__main__":
-    import optimization.test_functions as tf
-
-    print(SDQ(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())
-    print()
-    print(SDG(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
-    print()
-    print(GD(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
-    print()
-    print(GD(tf.Rosenbrock(), [-1, 1], momentum_type='standard', verbose=True, plot=True).minimize())
-    print()
-    print(GD(tf.Rosenbrock(), [-1, 1], momentum_type='nesterov', verbose=True, plot=True).minimize())
