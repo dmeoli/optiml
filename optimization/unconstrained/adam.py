@@ -6,19 +6,14 @@ from optimization.optimizer import Optimizer
 
 class Adam(Optimizer):
 
-    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.00, momentum=0.9, beta1=0.1,
-                 beta2=0.999, momentum_type='none', offset=1e-8, verbose=False, plot=False):
+    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.00, beta1=0.1, beta2=0.999,
+                 momentum=0.9, momentum_type='none', offset=1e-8, verbose=False, plot=False):
         super().__init__(f, wrt, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
         if not step_rate > 0:
             raise ValueError('step_rate must be > 0')
         self.step_rate = step_rate
-        if not np.isscalar(momentum):
-            raise ValueError('momentum is not a real scalar')
-        if not momentum > 0:
-            raise ValueError('momentum must be > 0')
-        self.momentum = momentum
         if not 0 < beta1 <= 1:
             raise ValueError('beta1 has to lie in (0, 1]')
         self.beta1 = beta1
@@ -29,6 +24,11 @@ class Adam(Optimizer):
         self.est_mom2 = 0
         if not (1 - beta1 * 2) / (1 - beta2) ** 0.5 < 1:
             raise ValueError('constraint from convergence analysis for adam not satisfied')
+        if not np.isscalar(momentum):
+            raise ValueError('momentum is not a real scalar')
+        if not momentum > 0:
+            raise ValueError('momentum must be > 0')
+        self.momentum = momentum
         if momentum_type not in ('nesterov', 'standard', 'none'):
             raise ValueError('unknown momentum type')
         self.momentum_type = momentum_type

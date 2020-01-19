@@ -191,7 +191,7 @@ def open_data(name, mode='r'):
 
 
 def parse_csv(input, delim=','):
-    r"""
+    """
     Input is a string consisting of lines, each line has comma-delimited
     fields. Convert this into a list of lists. Blank lines are skipped.
     Fields that look like numbers are converted to numbers.
