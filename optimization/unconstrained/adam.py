@@ -6,7 +6,7 @@ from optimization.optimizer import Optimizer
 
 class Adam(Optimizer):
 
-    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.00, beta1=0.1, beta2=0.999,
+    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.001, beta1=0.9, beta2=0.999,
                  momentum=0.9, momentum_type='none', offset=1e-8, verbose=False, plot=False):
         super().__init__(f, wrt, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
@@ -84,12 +84,12 @@ class Adam(Optimizer):
             step1 = step_m1 * m
             self.wrt = self.wrt - step1
 
-            est_mom1_b_m1 = self.est_mom1
-            est_mom2_b_m1 = self.est_mom2
+            est_mom1_m1 = self.est_mom1
+            est_mom2_m1 = self.est_mom2
 
             g = self.f.jacobian(self.wrt)
-            self.est_mom1 = dm1 * g + (1 - dm1) * est_mom1_b_m1
-            self.est_mom2 = dm2 * g ** 2 + (1 - dm2) * est_mom2_b_m1
+            self.est_mom1 = dm1 * g + (1 - dm1) * est_mom1_m1
+            self.est_mom2 = dm2 * g ** 2 + (1 - dm2) * est_mom2_m1
 
             step_t = self.step_rate * (1 - (1 - dm2) ** t) ** 0.5 / (1 - (1 - dm1) ** t)
             step2 = step_t * self.est_mom1 / (self.est_mom2 ** 0.5 + o)
