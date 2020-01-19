@@ -28,10 +28,10 @@ class Optimizer:
             raise ValueError('x not a real vector')
         self.wrt = np.asarray(wrt)
         self.n = self.wrt.size
-        if not np.isrealobj(eps) or not np.isscalar(eps):
+        if not np.isscalar(eps):
             raise ValueError('eps is not a real scalar')
-        if eps < 0:
-            raise ValueError('eps can not be negative')
+        if not eps > 0:
+            raise ValueError('eps must be > 0')
         self.eps = eps
         if not np.isscalar(max_iter):
             raise ValueError('max_iter is not an integer scalar')

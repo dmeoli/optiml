@@ -1,4 +1,4 @@
-import autograd.numpy as np
+import numpy as np
 from autograd import jacobian, hessian
 from matplotlib import cm
 from matplotlib import pyplot as plt
@@ -21,7 +21,7 @@ class Function:
         :param x: 1D array of points at which the Jacobian is to be computed.
         :return:  the Jacobian of the function at x.
         """
-        return self._jacobian(np.array(x, dtype=float))
+        return self._jacobian(np.asarray(x, dtype=float))
 
     def hessian(self, x):
         """
@@ -29,7 +29,7 @@ class Function:
         :param x: 1D array of points at which the Hessian is to be computed.
         :return:  the Hessian matrix of the function at x.
         """
-        return self._hessian(np.array(x, dtype=float)).reshape((x.size, x.size))
+        return self._hessian(np.asarray(x, dtype=float)).reshape((x.size, x.size))
 
     def hessian_product(self, x, p):
         """
@@ -55,8 +55,8 @@ class Quadratic(Function):
         :param q: ([n x 1] real column vector): the linear part of f.
         """
 
-        Q = np.array(Q)
-        q = np.array(q)
+        Q = np.asarray(Q)
+        q = np.asarray(q)
 
         if not np.isrealobj(Q):
             raise ValueError('Q not a real matrix')
@@ -88,7 +88,7 @@ class Quadratic(Function):
         :return:  the value of a general quadratic function if x, the optimal solution of a
                   linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
         """
-        x = np.array(x)
+        x = np.asarray(x)
         return 0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x)
 
     def jacobian(self, x):
@@ -160,7 +160,7 @@ class Rosenbrock(Function):
         :param x: 1D array of points at which the Rosenbrock function is to be computed.
         :return:  the value of the Rosenbrock function at x.
         """
-        x = np.array(x)
+        x = np.asarray(x)
         return np.sum(self.b * (x[1:] - x[:-1] ** 2) ** 2 + (self.a - x[:-1]) ** 2)
 
     def plot(self, x_min=-2, x_max=2, y_min=-1, y_max=3):
