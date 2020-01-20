@@ -7,7 +7,7 @@ from ml.datasets import iris, orings, zoo, Majority, Parity, Xor
 from utils import *
 
 
-def err_ratio(predict, dataset, examples=None, verbose=0):
+def err_ratio(learner, dataset, examples=None, verbose=0):
     """
     Return the proportion of the examples that are NOT correctly predicted.
     verbose - 0: No output; 1: Output wrong; 2 (or greater): Output correct
@@ -18,7 +18,7 @@ def err_ratio(predict, dataset, examples=None, verbose=0):
     right = 0
     for example in examples:
         desired = example[dataset.target]
-        output = predict(dataset.sanitize(example))
+        output = learner.predict(dataset.sanitize(example))
         if output == desired:
             right += 1
             if verbose >= 2:
@@ -28,12 +28,12 @@ def err_ratio(predict, dataset, examples=None, verbose=0):
     return 1 - (right / len(examples))
 
 
-def grade_learner(predict, tests):
+def grade_learner(learner, tests):
     """
     Grades the given learner based on how many tests it passes.
     tests is a list with each element in the form: (values, output).
     """
-    return mean(int(predict(X) == y) for X, y in tests)
+    return mean(int(learner.predict(X) == y) for X, y in tests)
 
 
 def train_test_split(dataset, start=None, end=None, test_split=None):
@@ -132,87 +132,65 @@ def random_weights(min_value, max_value, num_weights):
     return [random.uniform(min_value, max_value) for _ in range(num_weights)]
 
 
-def LinearLearner(dataset, learning_rate=0.01, epochs=100):
+class LinearLearner:
     """
     Linear classifier with hard threshold.
     """
-    idx_i = dataset.inputs
-    idx_t = dataset.target
-    examples = dataset.examples
-    num_examples = len(examples)
 
-    # X transpose
-    X_col = [dataset.values[i] for i in idx_i]  # vertical columns of X
+    def __init__(self, learning_rate=0.01, epochs=100):
+        self.learning_rate = learning_rate
+        self.epochs = epochs
 
-    # add dummy
-    ones = [1 for _ in range(len(examples))]
-    X_col = [ones] + X_col
+    def fit(self, X, y):
+        # initialize random weights
+        self.w = random_weights(-0.5, 0.5, X.shape[1])
 
-    # initialize random weights
-    num_weights = len(idx_i) + 1
-    w = random_weights(min_value=-0.5, max_value=0.5, num_weights=num_weights)
+        for epoch in range(self.epochs):
+            err = []
+            # pass over all examples
+            for x in X:
+                y = np.dot(self.w, x)
+                t = x[X.shape[0]]
+                err.append(t - y)
 
-    for epoch in range(epochs):
-        err = []
-        # pass over all examples
-        for example in examples:
-            x = [1] + example
-            y = dot_product(w, x)
-            t = example[idx_t]
-            err.append(t - y)
+            # update weights
+            for i in range(len(self.w)):
+                self.w[i] = self.w[i] + self.learning_rate * (np.dot(err, X.T[i]) / X.shape[0])
 
-        # update weights
-        for i in range(len(w)):
-            w[i] = w[i] + learning_rate * (dot_product(err, X_col[i]) / num_examples)
-
-    def predict(example):
-        x = [1] + example
-        return dot_product(w, x)
-
-    return predict
+    def predict(self, x):
+        return np.dot(x, self.w)
 
 
-def LogisticLinearLeaner(dataset, learning_rate=0.01, epochs=100):
+class LogisticLinearLearner:
     """
     Linear classifier with logistic regression.
     """
-    idx_i = dataset.inputs
-    idx_t = dataset.target
-    examples = dataset.examples
-    num_examples = len(examples)
 
-    # X transpose
-    X_col = [dataset.values[i] for i in idx_i]  # vertical columns of X
+    def __init__(self, learning_rate=0.01, epochs=100):
+        self.learning_rate = learning_rate
+        self.epochs = epochs
 
-    # add dummy
-    ones = [1 for _ in range(len(examples))]
-    X_col = [ones] + X_col
+    def fit(self, X, y):
+        # initialize random weights
+        self.w = random_weights(-0.5, 0.5, X.shape[1])
 
-    # initialize random weights
-    num_weights = len(idx_i) + 1
-    w = random_weights(min_value=-0.5, max_value=0.5, num_weights=num_weights)
+        for epoch in range(self.epochs):
+            err = []
+            h = []
+            # pass over all examples
+            for x in X:
+                y = Sigmoid().function(np.dot(self.w, x))
+                h.append(Sigmoid().derivative(y))
+                t = x[X.shape[0]]
+                err.append(t - y)
 
-    for epoch in range(epochs):
-        err = []
-        h = []
-        # pass over all examples
-        for example in examples:
-            x = [1] + example
-            y = Sigmoid().function(dot_product(w, x))
-            h.append(Sigmoid().derivative(y))
-            t = example[idx_t]
-            err.append(t - y)
+            # update weights
+            for i in range(len(self.w)):
+                buffer = [x * y for x, y in zip(err, h)]
+                self.w[i] = self.w[i] + self.learning_rate * (np.dot(buffer, X.T[i]) / X.shape[0])
 
-        # update weights
-        for i in range(len(w)):
-            buffer = [x * y for x, y in zip(err, h)]
-            w[i] = w[i] + learning_rate * (dot_product(buffer, X_col[i]) / num_examples)
-
-    def predict(example):
-        x = [1] + example
-        return Sigmoid().function(dot_product(w, x))
-
-    return predict
+    def predict(self, x):
+        return Sigmoid().function(np.dot(self.w, x))
 
 
 def EnsembleLearner(learners):
@@ -307,7 +285,7 @@ def compare(algorithms=None, datasets=None, k=10, trials=1):
     Print results as a table.
     """
     # default list of algorithms
-    # algorithms = algorithms or [NeuralNetLearner, PerceptronLearner]
+    # algorithms = algorithms or [LinearLearner, LogisticLinearLearner, MultiSVM, PerceptronLearner, NeuralNetLearner]
 
     # default list of datasets
     datasets = datasets or [iris, orings, zoo, Majority(7, 100), Parity(7, 100), Xor(100)]

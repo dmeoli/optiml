@@ -1,7 +1,6 @@
 import os
 import random
-from collections import defaultdict
-from statistics import mean, stdev
+from statistics import mean
 
 from utils import remove_all, unique, num_or_str
 
@@ -99,11 +98,6 @@ class DataSet:
             # only check if values are provided while initializing DataSet
             list(map(self.check_example, self.examples))
 
-    def add_example(self, example):
-        """Add an example to the list of examples, checking it first."""
-        self.check_example(example)
-        self.examples.append(example)
-
     def check_example(self, example):
         """Raise ValueError if example has any invalid values."""
         if self.values:
@@ -135,52 +129,6 @@ class DataSet:
             classes = sorted(self.values[self.target])
         for item in self.examples:
             item[self.target] = classes.index(item[self.target])
-
-    def remove_examples(self, value=''):
-        """Remove examples that contain given value."""
-        self.examples = [x for x in self.examples if value not in x]
-        self.update_values()
-
-    def split_values_by_classes(self):
-        """Split values into buckets according to their class."""
-        buckets = defaultdict(lambda: [])
-        target_names = self.values[self.target]
-
-        for v in self.examples:
-            item = [a for a in v if a not in target_names]  # remove target from item
-            buckets[v[self.target]].append(item)  # add item to bucket of its class
-
-        return buckets
-
-    def find_means_and_deviations(self):
-        """
-        Finds the means and standard deviations of self.dataset.
-        means     : a dictionary for each class/target. Holds a list of the means
-                    of the features for the class.
-        deviations: a dictionary for each class/target. Holds a list of the sample
-                    standard deviations of the features for the class.
-        """
-        target_names = self.values[self.target]
-        feature_numbers = len(self.inputs)
-
-        item_buckets = self.split_values_by_classes()
-
-        means = defaultdict(lambda: [0] * feature_numbers)
-        deviations = defaultdict(lambda: [0] * feature_numbers)
-
-        for t in target_names:
-            # find all the item feature values for item in class t
-            features = [[] for _ in range(feature_numbers)]
-            for item in item_buckets[t]:
-                for i in range(feature_numbers):
-                    features[i].append(item[i])
-
-            # calculate means and deviations fo the class
-            for i in range(feature_numbers):
-                means[t][i] = mean(features[i])
-                deviations[t][i] = stdev(features[i])
-
-        return means, deviations
 
     def __repr__(self):
         return '<DataSet({}): {:d} examples, {:d} attributes>'.format(self.name, len(self.examples), len(self.attrs))
