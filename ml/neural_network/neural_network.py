@@ -2,8 +2,9 @@ import random
 
 import numpy as np
 
-from ml.layers import InputLayer, DenseLayer
-from ml.losses import mean_squared_error_loss
+from ml.neural_network.layers import InputLayer, DenseLayer
+from ml.learning import Learner
+from ml.neural_network.losses import mean_squared_error_loss
 from utils import element_wise_product, vector_add, scalar_vector_product, matrix_multiplication, map_vector
 
 
@@ -172,7 +173,36 @@ def adam(X, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
     return net
 
 
-class NeuralNetLearner:
+class PerceptronLearner(Learner):
+    """
+    Simple perceptron neural network.
+    """
+
+    def __init__(self, learning_rate=0.01, epochs=100, optimizer=stochastic_gradient_descent,
+                 batch_size=1, verbose=None):
+        self.learning_rate = learning_rate
+        self.epochs = epochs
+        self.optimizer = optimizer
+        self.batch_size = batch_size
+        self.verbose = verbose
+
+    def fit(self, X, y):
+        input_size = X.shape[1]
+        output_size = len(set(y))
+
+        # initialize the network, add dense layer
+        raw_net = [InputLayer(input_size), DenseLayer(input_size, output_size)]
+
+        # update the network
+        self.learned_net = self.optimizer(X, raw_net, mean_squared_error_loss, self.epochs, l_rate=self.learning_rate,
+                                          batch_size=self.batch_size, verbose=self.verbose)
+
+    def predict(self, x):
+        layer_out = self.learned_net[1].forward(x)
+        return layer_out.index(max(layer_out))
+
+
+class NeuralNetLearner(Learner):
     """
     Simple dense multilayer neural network.
     :param hidden_layer_sizes: size of hidden layers in the form of a list
@@ -215,33 +245,4 @@ class NeuralNetLearner:
             layer_out = self.learned_net[i].forward(layer_input)
             layer_input = layer_out
 
-        return layer_out.index(max(layer_out))
-
-
-class PerceptronLearner:
-    """
-    Simple perceptron neural network.
-    """
-
-    def __init__(self, learning_rate=0.01, epochs=100, optimizer=stochastic_gradient_descent,
-                 batch_size=1, verbose=None):
-        self.learning_rate = learning_rate
-        self.epochs = epochs
-        self.optimizer = optimizer
-        self.batch_size = batch_size
-        self.verbose = verbose
-
-    def fit(self, X, y):
-        input_size = X.shape[1]
-        output_size = len(set(y))
-
-        # initialize the network, add dense layer
-        raw_net = [InputLayer(input_size), DenseLayer(input_size, output_size)]
-
-        # update the network
-        self.learned_net = self.optimizer(X, raw_net, mean_squared_error_loss, self.epochs, l_rate=self.learning_rate,
-                                          batch_size=self.batch_size, verbose=self.verbose)
-
-    def predict(self, x):
-        layer_out = self.learned_net[1].forward(x)
         return layer_out.index(max(layer_out))

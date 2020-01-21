@@ -2,30 +2,36 @@ import copy
 from collections import defaultdict
 from statistics import mode, mean
 
-from ml.activations import Sigmoid
-from ml.datasets import iris, orings, zoo, Majority, Parity, Xor
+from ml.neural_network.activations import Sigmoid
+from ml.dataset import iris, orings, zoo, Majority, Parity, Xor
 from utils import *
 
 
-def err_ratio(learner, dataset, examples=None, verbose=0):
+class Learner:
+    def fit(self, X, y):
+        return NotImplementedError
+
+    def predict(self, x):
+        return NotImplementedError
+
+
+def err_ratio(learner, X, y, verbose=0):
     """
     Return the proportion of the examples that are NOT correctly predicted.
     verbose - 0: No output; 1: Output wrong; 2 (or greater): Output correct
     """
-    examples = examples or dataset.examples
-    if len(examples) == 0:
+    if X.shape[0] == 0:
         return 0.0
     right = 0
-    for example in examples:
-        desired = example[dataset.target]
-        output = learner.predict(dataset.sanitize(example))
-        if output == desired:
+    for x, y in zip(X, y):
+        output = learner.predict(x.reshape((1, -1)))
+        if output == y:
             right += 1
             if verbose >= 2:
-                print('   OK: got {} for {}'.format(desired, example))
+                print('     OK: got {} for {}'.format(y, x))
         elif verbose:
-            print('WRONG: got {}, expected {} for {}'.format(output, desired, example))
-    return 1 - (right / len(examples))
+            print('WRONG: got {}, expected {} for {}'.format(output, y, x))
+    return 1 - (right / X.shape[0])
 
 
 def grade_learner(learner, tests):
@@ -33,7 +39,7 @@ def grade_learner(learner, tests):
     Grades the given learner based on how many tests it passes.
     tests is a list with each element in the form: (values, output).
     """
-    return mean(int(learner.predict(X) == y) for X, y in tests)
+    return mean(int(learner.predict(x) == y) for x, y in tests)
 
 
 def train_test_split(dataset, start=None, end=None, test_split=None):
@@ -132,7 +138,7 @@ def random_weights(min_value, max_value, num_weights):
     return [random.uniform(min_value, max_value) for _ in range(num_weights)]
 
 
-class LinearLearner:
+class LinearLearner(Learner):
     """
     Linear classifier with hard threshold.
     """
@@ -161,7 +167,7 @@ class LinearLearner:
         return np.dot(x, self.w)
 
 
-class LogisticLinearLearner:
+class LogisticLinearLearner(Learner):
     """
     Linear classifier with logistic regression.
     """
@@ -207,19 +213,20 @@ def EnsembleLearner(learners):
     return train
 
 
-def ada_boost(dataset, L, K):
-    examples, target = dataset.examples, dataset.target
-    n = len(examples)
-    eps = 1 / (2 * n)
-    w = [1 / n] * n
+def ada_boost(L, X, y, K):
+    target = [x for x in range(X.shape[1])]
+    eps = 1 / (2 * X.shape[0])
+    w = [1 / X.shape[0]] * X.shape[0]
     h, z = [], []
     for k in range(K):
-        h_k = L(dataset, w)
+        h_k = L(w)
+        h_k.fit(X, y)
         h.append(h_k)
-        error = sum(weight for example, weight in zip(examples, w) if example[target] != h_k(example))
+        error = sum(weight for example, weight in zip(X, w)
+                    if example[target] != h_k(example))
         # avoid divide-by-0 from either 0% or 100% error rates
         error = np.clip(error, eps, 1 - eps)
-        for j, example in enumerate(examples):
+        for j, example in enumerate(X):
             if example[target] == h_k(example):
                 w[j] *= error / (1 - error)
         w = normalize(w)

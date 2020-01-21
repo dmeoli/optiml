@@ -4,6 +4,8 @@ from qpsolvers import solve_qp
 
 import numpy as np
 
+from ml.learning import Learner
+
 
 def linear_kernel(x, y=None):
     if y is None:
@@ -27,7 +29,7 @@ def rbf_kernel(x, y=None, gamma=None):
                             np.sum(x * x, axis=1).reshape((-1, 1)) + np.sum(y * y, axis=1).reshape((1, -1))))
 
 
-class BinarySVM:
+class BinarySVM(Learner):
     def __init__(self, kernel=linear_kernel, C=1.0):
         self.kernel = kernel
         self.C = C  # hyper-parameter
@@ -91,7 +93,7 @@ class BinarySVM:
         return np.sign(self.predict_score(x))
 
 
-class MultiSVM:
+class MultiSVM(Learner):
     def __init__(self, kernel=linear_kernel, decision_function='ovr', C=1.0):
         self.kernel = kernel
         self.decision_function = decision_function
