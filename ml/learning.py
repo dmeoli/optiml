@@ -6,7 +6,6 @@ from ml.dataset import iris, orings, zoo, Majority, Parity, Xor
 from ml.losses import MSE
 from ml.neural_network.activations import Sigmoid
 from optimization.optimizer import LineSearchOptimizer
-from optimization.unconstrained.adam import Adam
 from optimization.unconstrained.gradient_descent import GD
 from utils import *
 
@@ -158,6 +157,7 @@ class LinearRegressionLearner(Learner):
         else:
             self.w = self.optimizer(MSE(X, y), np.random.uniform(-0.5, 0.5, (X.shape[1], 1)),
                                     step_rate=self.l_rate, max_iter=self.epochs).minimize()[0]
+        return self
 
     def predict(self, x):
         return np.dot(x, self.w)
@@ -191,6 +191,7 @@ class LogisticRegressionLearner(Learner):
             for i in range(len(self.w)):
                 buffer = [x * y for x, y in zip(err, h)]
                 self.w[i] = self.w[i] + self.l_rate * (np.dot(buffer, X.T[i]) / X.shape[0])
+        return self
 
     def predict(self, x):
         return Sigmoid().function(np.dot(x, self.w))

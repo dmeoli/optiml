@@ -196,6 +196,7 @@ class PerceptronLearner(Learner):
         # update the network
         self.learned_net = self.optimizer(X, raw_net, mean_squared_error_loss, self.epochs, l_rate=self.l_rate,
                                           batch_size=self.batch_size, verbose=self.verbose)
+        return self
 
     def predict(self, x):
         layer_out = self.learned_net[1].forward(x)
@@ -233,6 +234,7 @@ class NeuralNetLearner(Learner):
         # update parameters of the network
         self.learned_net = self.optimizer(X, raw_net, mean_squared_error_loss, self.epochs, l_rate=self.l_rate,
                                           batch_size=self.batch_size, verbose=self.verbose)
+        return self
 
     def predict(self, x):
         n_layers = len(self.learned_net)

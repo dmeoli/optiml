@@ -10,11 +10,11 @@ def test_svm():
     iris = DataSet(name='iris')
     classes = ['setosa', 'versicolor', 'virginica']
     iris.classes_to_numbers(classes)
-    svm = MultiSVM()
+
     n_samples, n_features = len(iris.examples), iris.target
     X, y = np.array([x[:n_features] for x in iris.examples]), \
            np.array([x[n_features] for x in iris.examples])
-    svm.fit(X, y)
+    svm = MultiSVM().fit(X, y)
     tests = [([[5.0, 3.1, 0.9, 0.1]], 0),
              ([[5.1, 3.5, 1.0, 0.0]], 0),
              ([[4.9, 3.3, 1.1, 0.1]], 0),

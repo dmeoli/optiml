@@ -57,6 +57,7 @@ class BinarySVM(Learner):
         sv_boundary = self.alphas < self.C - self.eps
         self.b = np.mean(self.sv_y[sv_boundary] - np.dot(self.alphas * self.sv_y,
                                                          self.kernel(self.sv_x, self.sv_x[sv_boundary])))
+        return self
 
     def QP(self, X, y):
         """
@@ -131,6 +132,7 @@ class MultiSVM(Learner):
                     self.classifiers.append(copy.deepcopy(clf))
         else:
             return ValueError("Decision function must be either 'ovr' or 'ovo'.")
+        return self
 
     def predict(self, x):
         """

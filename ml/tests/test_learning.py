@@ -32,8 +32,7 @@ def test_linear_learner():
     n_samples, n_features = len(iris.examples), iris.target
     X, y = np.array([x[:n_features] for x in iris.examples]), \
            np.array([x[n_features] for x in iris.examples])[:, np.newaxis]
-    ll = LinearRegressionLearner()
-    ll.fit(X, y)
+    ll = LinearRegressionLearner().fit(X, y)
 
 
 if __name__ == "__main__":
