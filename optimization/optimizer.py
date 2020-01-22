@@ -1,6 +1,6 @@
 import numpy as np
 
-from optimization.test_functions import Function
+from optimization.functions import Function
 from optimization.unconstrained.line_search import AWLS, BLS
 
 
@@ -39,6 +39,9 @@ class Optimizer:
         self.iter = 1
         self.verbose = verbose
         self.plot = plot
+
+    def minimize(self):
+        return NotImplementedError
 
 
 class LineSearchOptimizer(Optimizer):

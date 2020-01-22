@@ -3,7 +3,6 @@ from statistics import stdev
 import numpy as np
 
 from ml.neural_network.activations import Sigmoid
-from ml.learning import random_weights
 from utils import dot_product
 
 
@@ -98,7 +97,7 @@ class DenseLayer(Layer):
         self.activation = Sigmoid() if not activation else activation
         # initialize weights
         for node in self.nodes:
-            node.weights = random_weights(-0.5, 0.5, in_size)
+            node.weights = np.random.uniform(-0.5, 0.5, in_size)
 
     def forward(self, inputs):
         self.inputs = inputs

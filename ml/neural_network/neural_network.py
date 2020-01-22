@@ -4,7 +4,7 @@ import numpy as np
 
 from ml.neural_network.layers import InputLayer, DenseLayer
 from ml.learning import Learner
-from ml.neural_network.losses import mean_squared_error_loss
+from ml.losses import mean_squared_error_loss
 from utils import element_wise_product, vector_add, scalar_vector_product, matrix_multiplication, map_vector
 
 
@@ -178,9 +178,9 @@ class PerceptronLearner(Learner):
     Simple perceptron neural network.
     """
 
-    def __init__(self, learning_rate=0.01, epochs=100, optimizer=stochastic_gradient_descent,
+    def __init__(self, l_rate=0.01, epochs=100, optimizer=stochastic_gradient_descent,
                  batch_size=1, verbose=None):
-        self.learning_rate = learning_rate
+        self.l_rate = l_rate
         self.epochs = epochs
         self.optimizer = optimizer
         self.batch_size = batch_size
@@ -194,7 +194,7 @@ class PerceptronLearner(Learner):
         raw_net = [InputLayer(input_size), DenseLayer(input_size, output_size)]
 
         # update the network
-        self.learned_net = self.optimizer(X, raw_net, mean_squared_error_loss, self.epochs, l_rate=self.learning_rate,
+        self.learned_net = self.optimizer(X, raw_net, mean_squared_error_loss, self.epochs, l_rate=self.l_rate,
                                           batch_size=self.batch_size, verbose=self.verbose)
 
     def predict(self, x):
@@ -208,10 +208,10 @@ class NeuralNetLearner(Learner):
     :param hidden_layer_sizes: size of hidden layers in the form of a list
     """
 
-    def __init__(self, hidden_layer_sizes, learning_rate=0.01, epochs=100,
+    def __init__(self, hidden_layer_sizes, l_rate=0.01, epochs=100,
                  optimizer=stochastic_gradient_descent, batch_size=1, verbose=False):
         self.hidden_layer_sizes = hidden_layer_sizes
-        self.learning_rate = learning_rate
+        self.l_rate = l_rate
         self.epochs = epochs
         self.optimizer = optimizer
         self.batch_size = batch_size
@@ -231,7 +231,7 @@ class NeuralNetLearner(Learner):
         raw_net.append(DenseLayer(hidden_input_size, output_size))
 
         # update parameters of the network
-        self.learned_net = self.optimizer(X, raw_net, mean_squared_error_loss, self.epochs, l_rate=self.learning_rate,
+        self.learned_net = self.optimizer(X, raw_net, mean_squared_error_loss, self.epochs, l_rate=self.l_rate,
                                           batch_size=self.batch_size, verbose=self.verbose)
 
     def predict(self, x):

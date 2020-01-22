@@ -22,11 +22,11 @@ def test_neural_net():
              ([7.5, 4.1, 6.2, 2.3], 2),
              ([7.3, 4.0, 6.1, 2.4], 2),
              ([7.0, 3.3, 6.1, 2.5], 2)]
-    nnl_adam = NeuralNetLearner([4], learning_rate=0.001, epochs=200, optimizer=adam)
+    nnl_adam = NeuralNetLearner([4], l_rate=0.001, epochs=200, optimizer=adam)
     nnl_adam.fit(X, y)
     assert grade_learner(nnl_adam, tests) >= 1 / 3
     assert err_ratio(nnl_adam, X, y) < 0.21
-    nnl_gd = NeuralNetLearner([4], learning_rate=0.15, epochs=100, optimizer=stochastic_gradient_descent)
+    nnl_gd = NeuralNetLearner([4], l_rate=0.15, epochs=100, optimizer=stochastic_gradient_descent)
     nnl_gd.fit(X, y)
     assert grade_learner(nnl_gd, tests) >= 1 / 3
     assert err_ratio(nnl_gd, X, y) < 0.21
@@ -39,7 +39,7 @@ def test_perceptron():
     n_samples, n_features = len(iris.examples), iris.target
     X, y = np.array([x[:n_features] for x in iris.examples]), \
            np.array([x[n_features] for x in iris.examples])
-    pl = PerceptronLearner(learning_rate=0.01, epochs=100)
+    pl = PerceptronLearner(l_rate=0.01, epochs=100)
     pl.fit(X, y)
     tests = [([5.0, 3.1, 0.9, 0.1], 0),
              ([5.1, 3.5, 1.0, 0.0], 0),

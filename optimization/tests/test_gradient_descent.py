@@ -1,6 +1,6 @@
 import pytest
 
-from optimization.test_functions import quad1, quad2, quad5, Rosenbrock
+from optimization.functions import quad1, quad2, quad5, Rosenbrock
 from optimization.unconstrained.gradient_descent import *
 
 

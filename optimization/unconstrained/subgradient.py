@@ -201,6 +201,6 @@ class SGM(LineSearchOptimizer):
 
 
 if __name__ == "__main__":
-    import optimization.test_functions as tf
+    import optimization.functions as tf
 
     print(SGM(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import utils
-from optimization.test_functions import quad1, quad2, quad5, Rosenbrock
+from optimization.functions import quad1, quad2, quad5, Rosenbrock
 from optimization.unconstrained.subgradient import SGM
 
 

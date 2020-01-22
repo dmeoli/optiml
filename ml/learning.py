@@ -2,8 +2,12 @@ import copy
 from collections import defaultdict
 from statistics import mode, mean
 
-from ml.neural_network.activations import Sigmoid
 from ml.dataset import iris, orings, zoo, Majority, Parity, Xor
+from ml.losses import MSE
+from ml.neural_network.activations import Sigmoid
+from optimization.optimizer import LineSearchOptimizer
+from optimization.unconstrained.adam import Adam
+from optimization.unconstrained.gradient_descent import GD
 from utils import *
 
 
@@ -15,7 +19,7 @@ class Learner:
         return NotImplementedError
 
 
-def err_ratio(learner, X, y, verbose=0):
+def err_ratio(learner, X, y):
     """
     Return the proportion of the examples that are NOT correctly predicted.
     verbose - 0: No output; 1: Output wrong; 2 (or greater): Output correct
@@ -24,13 +28,8 @@ def err_ratio(learner, X, y, verbose=0):
         return 0.0
     right = 0
     for x, y in zip(X, y):
-        output = learner.predict(x.reshape((1, -1)))
-        if output == y:
+        if np.isclose(learner.predict(x.reshape((1, -1))), y):
             right += 1
-            if verbose >= 2:
-                print('     OK: got {} for {}'.format(y, x))
-        elif verbose:
-            print('WRONG: got {}, expected {} for {}'.format(output, y, x))
     return 1 - (right / X.shape[0])
 
 
@@ -134,51 +133,49 @@ def learning_curve(learner, dataset, trials=10, sizes=None):
     return [(size, mean([score(learner, size) for _ in range(trials)])) for size in sizes]
 
 
-def random_weights(min_value, max_value, num_weights):
-    return [random.uniform(min_value, max_value) for _ in range(num_weights)]
+def mean_squared_error(y, y_pred):
+    return ((y - y_pred) ** 2).mean()
 
 
-class LinearLearner(Learner):
+def r2_score(y, y_pred):
+    return 1 - (np.sum((y - y_pred) ** 2) / np.sum((y - np.mean(y)) ** 2))
+
+
+class LinearRegressionLearner(Learner):
     """
     Linear classifier with hard threshold.
     """
 
-    def __init__(self, learning_rate=0.01, epochs=100):
-        self.learning_rate = learning_rate
+    def __init__(self, l_rate=0.01, epochs=1000, optimizer=GD):
+        self.l_rate = l_rate
         self.epochs = epochs
+        self.optimizer = optimizer
 
     def fit(self, X, y):
-        # initialize random weights
-        self.w = random_weights(-0.5, 0.5, X.shape[1])
-
-        for epoch in range(self.epochs):
-            err = []
-            # pass over all examples
-            for x in X:
-                y = np.dot(self.w, x)
-                t = x[X.shape[0]]
-                err.append(t - y)
-
-            # update weights
-            for i in range(len(self.w)):
-                self.w[i] = self.w[i] + self.learning_rate * (np.dot(err, X.T[i]) / X.shape[0])
+        if issubclass(self.optimizer, LineSearchOptimizer):
+            self.w = self.optimizer(MSE(X, y), np.random.uniform(-0.5, 0.5, (X.shape[1], 1)),
+                                    max_f_eval=self.epochs).minimize()[0]
+        else:
+            self.w = self.optimizer(MSE(X, y), np.random.uniform(-0.5, 0.5, (X.shape[1], 1)),
+                                    step_rate=self.l_rate, max_iter=self.epochs).minimize()[0]
 
     def predict(self, x):
         return np.dot(x, self.w)
 
 
-class LogisticLinearLearner(Learner):
+class LogisticRegressionLearner(Learner):
     """
     Linear classifier with logistic regression.
     """
 
-    def __init__(self, learning_rate=0.01, epochs=100):
-        self.learning_rate = learning_rate
+    def __init__(self, l_rate=0.01, epochs=1000, optimizer=GD):
+        self.l_rate = l_rate
         self.epochs = epochs
+        self.optimizer = optimizer
 
     def fit(self, X, y):
         # initialize random weights
-        self.w = random_weights(-0.5, 0.5, X.shape[1])
+        self.w = np.random.uniform(-0.5, 0.5, (X.shape[1], 1))
 
         for epoch in range(self.epochs):
             err = []
@@ -193,10 +190,10 @@ class LogisticLinearLearner(Learner):
             # update weights
             for i in range(len(self.w)):
                 buffer = [x * y for x, y in zip(err, h)]
-                self.w[i] = self.w[i] + self.learning_rate * (np.dot(buffer, X.T[i]) / X.shape[0])
+                self.w[i] = self.w[i] + self.l_rate * (np.dot(buffer, X.T[i]) / X.shape[0])
 
     def predict(self, x):
-        return Sigmoid().function(np.dot(self.w, x))
+        return Sigmoid().function(np.dot(x, self.w))
 
 
 def EnsembleLearner(learners):
@@ -292,7 +289,7 @@ def compare(algorithms=None, datasets=None, k=10, trials=1):
     Print results as a table.
     """
     # default list of algorithms
-    # algorithms = algorithms or [LinearLearner, LogisticLinearLearner, MultiSVM, PerceptronLearner, NeuralNetLearner]
+    algorithms = algorithms or [LogisticRegressionLearner, MultiSVM, PerceptronLearner, NeuralNetLearner]
 
     # default list of datasets
     datasets = datasets or [iris, orings, zoo, Majority(7, 100), Parity(7, 100), Xor(100)]

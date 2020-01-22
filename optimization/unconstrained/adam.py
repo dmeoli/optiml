@@ -114,6 +114,6 @@ class Adam(Optimizer):
 
 
 if __name__ == "__main__":
-    import optimization.test_functions as tf
+    import optimization.functions as tf
 
     print(Adam(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())
