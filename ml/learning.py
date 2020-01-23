@@ -3,8 +3,7 @@ from collections import defaultdict
 from statistics import mode, mean
 
 from ml.dataset import iris, orings, zoo, Majority, Parity, Xor
-from ml.losses import MSE
-from ml.neural_network.activations import Sigmoid
+from ml.losses import MSE, LogLikelihood
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GD
 from utils import *
@@ -152,10 +151,9 @@ class LinearRegressionLearner(Learner):
 
     def fit(self, X, y):
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(MSE(X, y), np.random.uniform(-0.5, 0.5, (X.shape[1], 1)),
-                                    max_f_eval=self.epochs).minimize()[0]
+            self.w = self.optimizer(MSE(X, y), np.zeros((X.shape[1], 1)), max_f_eval=self.epochs).minimize()[0]
         else:
-            self.w = self.optimizer(MSE(X, y), np.random.uniform(-0.5, 0.5, (X.shape[1], 1)),
+            self.w = self.optimizer(MSE(X, y), np.zeros((X.shape[1], 1)),
                                     step_rate=self.l_rate, max_iter=self.epochs).minimize()[0]
         return self
 
@@ -163,7 +161,7 @@ class LinearRegressionLearner(Learner):
         return np.dot(x, self.w)
 
 
-class LogisticRegressionLearner(Learner):
+class BinaryLogisticRegressionLearner(Learner):
     """
     Linear classifier with logistic regression.
     """
@@ -174,27 +172,161 @@ class LogisticRegressionLearner(Learner):
         self.optimizer = optimizer
 
     def fit(self, X, y):
-        # initialize random weights
-        self.w = np.random.uniform(-0.5, 0.5, (X.shape[1], 1))
+        # if issubclass(self.optimizer, LineSearchOptimizer):
+        #     self.w = self.optimizer(LogLikelihood(X, y), np.zeros((X.shape[1], 1)),
+        #                             max_f_eval=self.epochs).minimize()[0]
+        # else:
+        #     self.w = self.optimizer(LogLikelihood(X, y), np.zeros((X.shape[1], 1)),
+        #                             step_rate=self.l_rate, max_iter=self.epochs).minimize()[0]
+        # return self
 
-        for epoch in range(self.epochs):
-            err = []
-            h = []
-            # pass over all examples
-            for x in X:
-                y = Sigmoid().function(np.dot(self.w, x))
-                h.append(Sigmoid().derivative(y))
-                t = x[X.shape[0]]
-                err.append(t - y)
+        def sigmoid(x):
+            # activation function used to map any real value between 0 and 1
+            return 1 / (1 + np.exp(-x))
 
-            # update weights
-            for i in range(len(self.w)):
-                buffer = [x * y for x, y in zip(err, h)]
-                self.w[i] = self.w[i] + self.l_rate * (np.dot(buffer, X.T[i]) / X.shape[0])
+        def probability(theta, X):
+            # calculates the probability that an instance belongs to a particular class
+            return sigmoid(np.dot(X, theta))
+
+        def function(theta, X, y):
+            # computes the cost function for all the training samples
+            return -(1 / X.shape[0]) * np.sum(y * np.log(probability(theta, X)) +
+                                              (1 - y) * np.log(1 - probability(theta, X)))
+
+        def jacobian(theta, X, y):
+            return (1 / X.shape[0]) * np.dot(X.T, sigmoid(np.dot(X, theta)) - y)
+
+        from scipy.optimize import fmin_tnc
+        self.w = fmin_tnc(func=function, x0=np.zeros((X.shape[1], 1)), fprime=jacobian,
+                          args=(X, y.flatten()), disp=False)[0]
+
+    def predict_score(self, x):
+        return LogLikelihood.probability(self.w[:, np.newaxis], x)[:, 0]
+
+    def predict(self, x, tol=0.5):
+        return (self.predict_score(x) >= tol).astype(int)
+
+
+class MultiLogisticRegressionLearner(Learner):
+    def __init__(self, l_rate=0.01, epochs=1000, optimizer=GD, decision_function='ovr'):
+        self.l_rate = l_rate
+        self.epochs = epochs
+        self.optimizer = optimizer
+        self.decision_function = decision_function
+        self.n_class, self.classifiers = 0, []
+
+    def fit(self, X, y):
+        """
+        Trains n_class or n_class * (n_class - 1) / 2 classifiers
+        according to the training method, ovr or ovo respectively.
+        :param X: array of size [n_samples, n_features] holding the training samples
+        :param y: array of size [n_samples] holding the class labels
+        :return: array of classifiers
+        """
+        labels = np.unique(y)
+        self.n_class = len(labels)
+        if self.decision_function == 'ovr':  # one-vs-rest method
+            for label in labels:
+                y1 = np.array(y)
+                y1[y1 != label] = -1.0
+                y1[y1 == label] = 1.0
+                clf = BinaryLogisticRegressionLearner(self.l_rate, self.epochs, self.optimizer)
+                clf.fit(X, y1)
+                self.classifiers.append(copy.deepcopy(clf))
+        elif self.decision_function == 'ovo':  # use one-vs-one method
+            n_labels = len(labels)
+            for i in range(n_labels):
+                for j in range(i + 1, n_labels):
+                    neg_id, pos_id = y == labels[i], y == labels[j]
+                    x1, y1 = np.r_[X[neg_id], X[pos_id]], np.r_[y[neg_id], y[pos_id]]
+                    y1[y1 == labels[i]] = -1.0
+                    y1[y1 == labels[j]] = 1.0
+                    clf = BinaryLogisticRegressionLearner(self.l_rate, self.epochs, self.optimizer)
+                    clf.fit(x1, y1)
+                    self.classifiers.append(copy.deepcopy(clf))
+        else:
+            return ValueError("Decision function must be either 'ovr' or 'ovo'.")
         return self
 
     def predict(self, x):
-        return Sigmoid().function(np.dot(x, self.w))
+        """
+        Predicts the class of a given example according to the training method.
+        """
+        n_samples = len(x)
+        if self.decision_function == 'ovr':  # one-vs-rest method
+            assert len(self.classifiers) == self.n_class
+            score = np.zeros((n_samples, self.n_class))
+            for i in range(self.n_class):
+                clf = self.classifiers[i]
+                score[:, i] = clf.predict_score(x)
+            return np.argmax(score, axis=1)
+        elif self.decision_function == 'ovo':  # use one-vs-one method
+            assert len(self.classifiers) == self.n_class * (self.n_class - 1) / 2
+            vote = np.zeros((n_samples, self.n_class))
+            clf_id = 0
+            for i in range(self.n_class):
+                for j in range(i + 1, self.n_class):
+                    res = self.classifiers[clf_id].predict(x)
+                    vote[res < 0, i] += 1.0  # negative sample: class i
+                    vote[res > 0, j] += 1.0  # positive sample: class j
+                    clf_id += 1
+            return np.argmax(vote, axis=1)
+        else:
+            return ValueError("Decision function must be either 'ovr' or 'ovo'.")
+
+
+if __name__ == "__main__":
+    import numpy as np
+    from ml.dataset import DataSet
+
+    # np.random.seed(0)
+    # X = np.random.rand(100, 1)
+    # y = 2 + 3 * X + np.random.rand(100, 1)
+    # m = X.shape[0]
+    # X = np.c_[np.ones((m, 1)), X]
+
+    iris = DataSet(name='iris')
+    classes = ['setosa', 'versicolor', 'virginica']
+    iris.classes_to_numbers(classes)
+    n_samples, n_features = len(iris.examples), iris.target
+    X, y = np.array([x[:n_features] for x in iris.examples]), \
+           np.array([x[n_features] for x in iris.examples])[:, np.newaxis]
+    X = np.c_[np.ones((X.shape[0], 1)), X]
+
+    linear_regression_model = MultiLogisticRegressionLearner()
+    linear_regression_model.fit(X, y)
+
+    # print('Linear Regression')
+    # print(linear_regression_model.w)
+    # print()
+    # print('Linear Algebra')
+    # print(MSE(X, y).x_star)
+
+    predicted_values = linear_regression_model.predict(X)
+    print(predicted_values.T)
+
+    # print(mean_squared_error(y, predicted_values))
+    # print(r2_score(y, predicted_values))
+    #
+    from sklearn.linear_model import LogisticRegression
+
+    log_regression_model = LogisticRegression()
+    log_regression_model.fit(X, y)
+    # print('SKlearn')
+    # print(log_regression_model.intercept_)
+    # print(log_regression_model.coef_)
+
+    sk_pred_vals = log_regression_model.predict(X)
+    print(sk_pred_vals)
+
+    # print(mean_squared_error(y, sk_pred_vals))
+    # print(r2_score(y, sk_pred_vals))
+
+    # logistic_regression = LogisticRegressionLearner().fit(X, y)
+    # print(logistic_regression.w)
+    #
+    # logistic_regression_2 = LogisticRegressionUsingGD().fit(X, y)
+    # print(logistic_regression_2.w_)
 
 
 def EnsembleLearner(learners):
@@ -290,7 +422,7 @@ def compare(algorithms=None, datasets=None, k=10, trials=1):
     Print results as a table.
     """
     # default list of algorithms
-    algorithms = algorithms or [LogisticRegressionLearner, MultiSVM, PerceptronLearner, NeuralNetLearner]
+    # algorithms = algorithms or [LogisticRegressionLearner, MultiSVM, PerceptronLearner, NeuralNetLearner]
 
     # default list of datasets
     datasets = datasets or [iris, orings, zoo, Majority(7, 100), Parity(7, 100), Xor(100)]

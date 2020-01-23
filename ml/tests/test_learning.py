@@ -1,8 +1,6 @@
-import numpy as np
 import pytest
 
-from ml.dataset import DataSet
-from ml.learning import WeightedLearner, ada_boost, grade_learner, err_ratio, LinearRegressionLearner
+from ml.learning import *
 from ml.neural_network.neural_network import PerceptronLearner
 
 
@@ -33,6 +31,16 @@ def test_linear_learner():
     X, y = np.array([x[:n_features] for x in iris.examples]), \
            np.array([x[n_features] for x in iris.examples])[:, np.newaxis]
     ll = LinearRegressionLearner().fit(X, y)
+
+
+def test_logistic_learner():
+    iris = DataSet(name='iris')
+    classes = ['setosa', 'versicolor', 'virginica']
+    iris.classes_to_numbers(classes)
+    n_samples, n_features = len(iris.examples), iris.target
+    X, y = np.array([x[:n_features] for x in iris.examples]), \
+           np.array([x[n_features] for x in iris.examples])[:, np.newaxis]
+    ll = BinaryLogisticRegressionLearner().fit(X, y)
 
 
 if __name__ == "__main__":
