@@ -180,25 +180,10 @@ class BinaryLogisticRegressionLearner(Learner):
         #                             step_rate=self.l_rate, max_iter=self.epochs).minimize()[0]
         # return self
 
-        def sigmoid(x):
-            # activation function used to map any real value between 0 and 1
-            return 1 / (1 + np.exp(-x))
-
-        def probability(theta, X):
-            # calculates the probability that an instance belongs to a particular class
-            return sigmoid(np.dot(X, theta))
-
-        def function(theta, X, y):
-            # computes the cost function for all the training samples
-            return -(1 / X.shape[0]) * np.sum(y * np.log(probability(theta, X)) +
-                                              (1 - y) * np.log(1 - probability(theta, X)))
-
-        def jacobian(theta, X, y):
-            return (1 / X.shape[0]) * np.dot(X.T, sigmoid(np.dot(X, theta)) - y)
-
-        from scipy.optimize import fmin_tnc
-        self.w = fmin_tnc(func=function, x0=np.zeros((X.shape[1], 1)), fprime=jacobian,
-                          args=(X, y.flatten()), disp=False)[0]
+        from scipy.optimize import minimize
+        ll = LogLikelihood(X, y)
+        self.w = minimize(ll.function, np.zeros((X.shape[1], 1)),
+                          method='tnc', jac=ll.jacobian).x
 
     def predict_score(self, x):
         return LogLikelihood.probability(self.w[:, np.newaxis], x)[:, 0]

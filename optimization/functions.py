@@ -31,15 +31,6 @@ class Function:
         """
         return self._hessian(np.asarray(x, dtype=float)).reshape((x.size, x.size))
 
-    def hessian_product(self, x, p):
-        """
-        Product of the Hessian matrix of the function with a vector.
-        :param x: 1D array of points at which the Hessian matrix is to be computed.
-        :param p: 1D array, the vector to be multiplied by the Hessian matrix.
-        :return:  the Hessian matrix of the function at x multiplied by the vector p.
-        """
-        return self.hessian(x).dot(p)
-
     def plot(self, x_min, x_max, y_min, y_max):
         return NotImplementedError
 

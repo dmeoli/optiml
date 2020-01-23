@@ -35,7 +35,8 @@ class LogLikelihood(Function):
     def __init__(self, X, y):
         super().__init__(X.shape[1])
         self.X = X
-        self.y = y
+        #  self.y = y
+        self.y = y.flatten()
 
     @staticmethod
     def sigmoid(x):
