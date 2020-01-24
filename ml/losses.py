@@ -20,15 +20,15 @@ class MSE(Function):
         self.y = y
         self.x_star = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)  # or np.linalg.lstsq(X, y)[0]
 
+    @staticmethod
+    def probability(X, theta):
+        return np.dot(X, theta)
+
     def function(self, theta):
-        y_pred = np.dot(self.X, theta)
-        residuals = y_pred - self.y
-        return (1 / 2 * self.X.shape[0]) * np.sum(residuals ** 2)
+        return (1 / 2 * self.X.shape[0]) * np.sum(self.probability(self.X, theta) - self.y ** 2)
 
     def jacobian(self, theta):
-        y_pred = np.dot(self.X, theta)
-        residuals = y_pred - self.y
-        return (1 / self.X.shape[0]) * np.dot(self.X.T, residuals)
+        return (1 / self.X.shape[0]) * np.dot(self.X.T, self.probability(self.X, theta) - self.y)
 
 
 class LogLikelihood(Function):
@@ -40,12 +40,10 @@ class LogLikelihood(Function):
 
     @staticmethod
     def sigmoid(x):
-        # activation function used to map any real value between 0 and 1
         return 1 / (1 + np.exp(-x))
 
     @staticmethod
     def probability(X, theta):
-        # calculates the probability that an instance belongs to a particular class
         return LogLikelihood.sigmoid(np.dot(X, theta))
 
     def function(self, theta):

@@ -13,10 +13,6 @@ class Activation:
 class Sigmoid(Activation):
 
     def function(self, x):
-        if x >= 100:
-            return 1
-        if x <= -100:
-            return 0
         return 1 / (1 + np.exp(-x))
 
     def derivative(self, x):
