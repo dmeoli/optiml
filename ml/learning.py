@@ -189,7 +189,7 @@ class BinaryLogisticRegressionLearner(Learner):
                           method='tnc', jac=LogLikelihood(X, y).jacobian).x
 
     def predict_score(self, x):
-        return LogLikelihood.probability(self.w[:, np.newaxis], x)[:, 0]
+        return LogLikelihood.probability(x, self.w[:, np.newaxis])[:, 0]
 
     def predict(self, x, tol=0.5):
         return (self.predict_score(x) >= tol).astype(int)

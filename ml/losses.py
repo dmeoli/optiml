@@ -44,17 +44,17 @@ class LogLikelihood(Function):
         return 1 / (1 + np.exp(-x))
 
     @staticmethod
-    def probability(theta, X):
+    def probability(X, theta):
         # calculates the probability that an instance belongs to a particular class
         return LogLikelihood.sigmoid(np.dot(X, theta))
 
     def function(self, theta):
         # computes the cost function for all the training samples
-        return -(1 / self.X.shape[0]) * np.sum(self.y * np.log(self.probability(theta, self.X)) +
-                                               (1 - self.y) * np.log(1 - self.probability(theta, self.X)))
+        return -(1 / self.X.shape[0]) * np.sum(self.y * np.log(self.probability(self.X, theta)) +
+                                               (1 - self.y) * np.log(1 - self.probability(self.X, theta)))
 
     def jacobian(self, theta):
-        return (1 / self.X.shape[0]) * np.dot(self.X.T, self.probability(theta, self.X) - self.y)
+        return (1 / self.X.shape[0]) * np.dot(self.X.T, self.probability(self.X, theta) - self.y)
 
 
 class CrossEntropy(Function):
