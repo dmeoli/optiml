@@ -1,5 +1,4 @@
 import bisect
-import collections
 import random
 
 import numpy as np
@@ -79,36 +78,9 @@ def weighted_sampler(seq, weights):
     return lambda: seq[bisect.bisect(totals, random.uniform(0, totals[-1]))]
 
 
-# argmin and argmax
-
-identity = lambda x: x
-
-
-def argmin_random_tie(seq, key=identity):
-    """Return a minimum element of seq; break ties at random."""
-    return min(shuffled(seq), key=key)
-
-
-def argmax_random_tie(seq, key=identity):
-    """Return an element with highest fn(seq[i]) score; break ties at random."""
-    return max(shuffled(seq), key=key)
-
-
-def shuffled(iterable):
-    """Randomly shuffle a copy of iterable."""
-    items = list(iterable)
-    random.shuffle(items)
-    return items
-
-
 def isnumber(x):
     """Is x a number?"""
     return hasattr(x, '__int__')
-
-
-def issequence(x):
-    """Is x a sequence?"""
-    return isinstance(x, collections.abc.Sequence)
 
 
 def print_table(table, header=None, sep='   ', numfmt='{}'):

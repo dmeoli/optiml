@@ -3,7 +3,6 @@ from statistics import stdev
 import numpy as np
 
 from ml.neural_network.activations import Sigmoid
-from utils import dot_product
 
 
 class Node:
@@ -104,7 +103,7 @@ class DenseLayer(Layer):
         res = []
         # get the output value of each unit
         for unit in self.nodes:
-            val = self.activation.function(dot_product(unit.weights, inputs))
+            val = self.activation.function(np.dot(unit.weights, inputs))
             unit.val = val
             res.append(val)
         return res
