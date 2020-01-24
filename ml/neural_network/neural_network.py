@@ -106,6 +106,7 @@ def stochastic_gradient_descent(X, net, loss, epochs=1000, l_rate=0.01, batch_si
             # update weights with gradient descent
             weights = vector_add(weights, scalar_vector_product(-l_rate, gs))
             total_loss += batch_loss
+
             # update the weights of network each batch
             for i in range(len(net)):
                 if weights[i]:

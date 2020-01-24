@@ -54,7 +54,7 @@ class LogLikelihood(Function):
                                                (1 - self.y) * np.log(1 - self.probability(theta, self.X)))
 
     def jacobian(self, theta):
-        return (1 / self.X.shape[0]) * np.dot(self.X.T, self.sigmoid(np.dot(self.X, theta)) - self.y)
+        return (1 / self.X.shape[0]) * np.dot(self.X.T, self.probability(theta, self.X) - self.y)
 
 
 class CrossEntropy(Function):
