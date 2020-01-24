@@ -91,6 +91,7 @@ class DenseLayer(Layer):
             node.weights = np.random.uniform(-0.5, 0.5, in_size)
 
     def forward(self, inputs):
+        assert len(self.nodes) == len(inputs)
         self.inputs = inputs
         res = []
         # get the output value of each unit
@@ -98,6 +99,33 @@ class DenseLayer(Layer):
             val = self.activation.function(np.dot(unit.weights, inputs))
             unit.value = val
             res.append(val)
+        return res
+
+
+class BatchNormalizationLayer(Layer):
+    """Batch normalization layer."""
+
+    def __init__(self, size, eps=0.001):
+        super().__init__(size)
+        self.eps = eps
+        # self.weights = [beta, gamma]
+        self.weights = [0, 0]
+        self.inputs = None
+
+    def forward(self, inputs):
+        assert len(self.nodes) == len(inputs)
+        # mean value of inputs
+        mu = sum(inputs) / len(inputs)
+        # standard error of inputs
+        stderr = stdev(inputs)
+        self.inputs = inputs
+        res = []
+        # get normalized value of each input
+        for i in range(len(self.nodes)):
+            val = [(inputs[i] - mu) * self.weights[0] /
+                   np.sqrt(self.eps + stderr ** 2) + self.weights[1]]
+            res.append(val)
+            self.nodes[i].value = val
         return res
 
 
@@ -156,29 +184,4 @@ class MaxPoolingLayer1D(Layer):
                    for i in range(len(feature) - self.kernel_size + 1)]
             res.append(out)
             self.nodes[i].value = out
-        return res
-
-
-class BatchNormalizationLayer(Layer):
-    """Batch normalization layer."""
-
-    def __init__(self, size, eps=0.001):
-        super().__init__(size)
-        self.eps = eps
-        # self.weights = [beta, gamma]
-        self.weights = [0, 0]
-        self.inputs = None
-
-    def forward(self, inputs):
-        # mean value of inputs
-        mu = sum(inputs) / len(inputs)
-        # standard error of inputs
-        stderr = stdev(inputs)
-        self.inputs = inputs
-        res = []
-        # get normalized value of each input
-        for i in range(len(self.nodes)):
-            val = [(inputs[i] - mu) * self.weights[0] / np.sqrt(self.eps + stderr ** 2) + self.weights[1]]
-            res.append(val)
-            self.nodes[i].value = val
         return res
