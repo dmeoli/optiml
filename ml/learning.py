@@ -150,6 +150,8 @@ class LinearRegressionLearner(Learner):
         self.optimizer = optimizer
 
     def fit(self, X, y):
+        if y.ndim == 1:
+            y = y[:, np.newaxis]
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(MSE(X, y), np.zeros((X.shape[1], 1)), max_f_eval=self.epochs).minimize()[0]
         else:
@@ -172,6 +174,8 @@ class BinaryLogisticRegressionLearner(Learner):
         self.optimizer = optimizer
 
     def fit(self, X, y):
+        if y.ndim == 1:
+            y = y[:, np.newaxis]
         # if issubclass(self.optimizer, LineSearchOptimizer):
         #     self.w = self.optimizer(LogLikelihood(X, y), np.zeros((X.shape[1], 1)),
         #                             max_f_eval=self.epochs).minimize()[0]
@@ -181,9 +185,8 @@ class BinaryLogisticRegressionLearner(Learner):
         # return self
 
         from scipy.optimize import minimize
-        ll = LogLikelihood(X, y)
-        self.w = minimize(ll.function, np.zeros((X.shape[1], 1)),
-                          method='tnc', jac=ll.jacobian).x
+        self.w = minimize(LogLikelihood(X, y).function, np.zeros((X.shape[1], 1)),
+                          method='tnc', jac=LogLikelihood(X, y).jacobian).x
 
     def predict_score(self, x):
         return LogLikelihood.probability(self.w[:, np.newaxis], x)[:, 0]
@@ -258,60 +261,6 @@ class MultiLogisticRegressionLearner(Learner):
             return np.argmax(vote, axis=1)
         else:
             return ValueError("Decision function must be either 'ovr' or 'ovo'.")
-
-
-if __name__ == "__main__":
-    import numpy as np
-    from ml.dataset import DataSet
-
-    # np.random.seed(0)
-    # X = np.random.rand(100, 1)
-    # y = 2 + 3 * X + np.random.rand(100, 1)
-    # m = X.shape[0]
-    # X = np.c_[np.ones((m, 1)), X]
-
-    iris = DataSet(name='iris')
-    classes = ['setosa', 'versicolor', 'virginica']
-    iris.classes_to_numbers(classes)
-    n_samples, n_features = len(iris.examples), iris.target
-    X, y = np.array([x[:n_features] for x in iris.examples]), \
-           np.array([x[n_features] for x in iris.examples])[:, np.newaxis]
-    X = np.c_[np.ones((X.shape[0], 1)), X]
-
-    linear_regression_model = MultiLogisticRegressionLearner()
-    linear_regression_model.fit(X, y)
-
-    # print('Linear Regression')
-    # print(linear_regression_model.w)
-    # print()
-    # print('Linear Algebra')
-    # print(MSE(X, y).x_star)
-
-    predicted_values = linear_regression_model.predict(X)
-    print(predicted_values.T)
-
-    # print(mean_squared_error(y, predicted_values))
-    # print(r2_score(y, predicted_values))
-    #
-    from sklearn.linear_model import LogisticRegression
-
-    log_regression_model = LogisticRegression()
-    log_regression_model.fit(X, y)
-    # print('SKlearn')
-    # print(log_regression_model.intercept_)
-    # print(log_regression_model.coef_)
-
-    sk_pred_vals = log_regression_model.predict(X)
-    print(sk_pred_vals)
-
-    # print(mean_squared_error(y, sk_pred_vals))
-    # print(r2_score(y, sk_pred_vals))
-
-    # logistic_regression = LogisticRegressionLearner().fit(X, y)
-    # print(logistic_regression.w)
-    #
-    # logistic_regression_2 = LogisticRegressionUsingGD().fit(X, y)
-    # print(logistic_regression_2.w_)
 
 
 def EnsembleLearner(learners):
