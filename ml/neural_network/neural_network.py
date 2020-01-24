@@ -178,8 +178,7 @@ class PerceptronLearner(Learner):
     Simple perceptron neural network.
     """
 
-    def __init__(self, l_rate=0.01, epochs=1000, optimizer=stochastic_gradient_descent,
-                 batch_size=1, verbose=None):
+    def __init__(self, l_rate=0.01, epochs=1000, batch_size=1, optimizer=stochastic_gradient_descent, verbose=None):
         self.l_rate = l_rate
         self.epochs = epochs
         self.optimizer = optimizer
@@ -209,8 +208,8 @@ class NeuralNetLearner(Learner):
     :param hidden_layer_sizes: size of hidden layers in the form of a list
     """
 
-    def __init__(self, hidden_layer_sizes, l_rate=0.01, epochs=1000,
-                 optimizer=stochastic_gradient_descent, batch_size=1, verbose=False):
+    def __init__(self, hidden_layer_sizes, l_rate=0.01, epochs=1000, batch_size=1,
+                 optimizer=stochastic_gradient_descent, verbose=False):
         self.hidden_layer_sizes = hidden_layer_sizes
         self.l_rate = l_rate
         self.epochs = epochs

@@ -26,7 +26,7 @@ class Sigmoid(Activation):
 class Relu(Activation):
 
     def function(self, x):
-        return max(0, x)
+        return np.max(0, x)
 
     def derivative(self, x):
         return 1 if x > 0 else 0
@@ -57,3 +57,12 @@ class LeakyRelu(Activation):
 
     def derivative(self, x, alpha=0.01):
         return 1 if x > 0 else alpha
+
+
+class Softmax(Activation):
+
+    def function(self, x):
+        return np.exp(x) / np.sum(np.exp(x))
+
+    def derivative(self, x):
+        return np.diagflat(x) - np.dot(x, x.T)
