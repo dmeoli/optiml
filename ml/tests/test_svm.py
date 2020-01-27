@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 from ml.dataset import DataSet
-from ml.learning import grade_learner, err_ratio
 from ml.svm import MultiSVM
+from ml.validation import grade_learner, err_ratio
 
 
 def test_svm():

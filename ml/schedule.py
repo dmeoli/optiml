@@ -4,7 +4,7 @@ rate or momentum for gradient descent.
 
 A schedule is implemented as an iterator. This allows it to have iterators
 of infinite length. It also makes it possible to manipulate scheduls with
-the ``itertools`` python module, e.g. for chaining iterators.
+the itertools python module, e.g. for chaining iterators.
 """
 
 import itertools
@@ -15,8 +15,8 @@ import numpy as np
 def decaying(start, decay):
     """
     Return an iterator of exponentially decaying values.
-    The first value is ``start``. Every further value is obtained by multiplying
-    the last one by a factor of ``decay``.
+    The first value is start. Every further value is obtained by multiplying
+    the last one by a factor of decay.
     >>> s = decaying(10, .9)
     >>> [next(s) for i in range(5)]
     [10.0, 9.0, 8.100000000000001, 7.290000000000001, 6.561]
@@ -27,8 +27,8 @@ def decaying(start, decay):
 def linear_annealing(start, stop, n_steps):
     """
     Return an iterator that anneals linearly to a point linearly.
-    The first value is ``start``, the last value is ``stop``. The annealing will
-    be linear over ``n_steps`` iterations. After that, ``stop`` is yielded.
+    The first value is start, the last value is stop. The annealing will
+    be linear over n_steps iterations. After that, stop is yielded.
     >>> s = linear_annealing(1, 0, 4)
     >>> [next(s) for i in range(10)]
     [1.0, 0.75, 0.5, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -54,22 +54,16 @@ def repeater(iter, n):
             yield i
 
 
-class SutskeverBlend:
+def sutskever_blend(max_momentum, stretch=250):
     """
     Class representing a schedule that step-wise increases from zero to a
     maximum value, as described in [sutskever2013importance]
     On the importance of initialization and momentum in deep learning,
     Sutskever et al (ICML 2013)
-    >>> s = iter(SutskeverBlend(0.9, 2))
+    >>> s = sutskever_blend(0.9, 2)
     >>> [next(s) for i in range(10)]
     [0.5, 0.75, 0.75, 0.8333333333333333, 0.8333333333333333, 0.875, 0.875, 0.9, 0.9, 0.9]
     """
-
-    def __init__(self, max_momentum, stretch=250):
-        self.max_momentum = max_momentum
-        self.stretch = stretch
-
-    def __iter__(self):
-        for i in itertools.count(1):
-            m = 1 - (2 ** (-1 - np.log2(np.floor_divide(i, self.stretch) + 1)))
-            yield min(m, self.max_momentum)
+    for i in itertools.count(1):
+        m = 1 - (2 ** (-1 - np.log2(np.floor_divide(i, stretch) + 1)))
+        yield min(m, max_momentum)

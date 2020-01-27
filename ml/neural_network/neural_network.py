@@ -4,7 +4,6 @@ import numpy as np
 
 from ml.neural_network.layers import InputLayer, DenseLayer
 from ml.learning import Learner
-from ml.losses import mean_squared_error_loss
 from utils import element_wise_product, vector_add, scalar_vector_product, matrix_multiplication, map_vector
 
 
