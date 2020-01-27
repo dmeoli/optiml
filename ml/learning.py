@@ -17,9 +17,6 @@ class Learner:
 
 
 class LinearRegressionLearner(Learner):
-    """
-    Linear classifier with hard threshold.
-    """
 
     def __init__(self, l_rate=0.01, epochs=1000, optimizer=BFGS):
         self.l_rate = l_rate
@@ -40,9 +37,6 @@ class LinearRegressionLearner(Learner):
 
 
 class BinaryLogisticRegressionLearner(Learner):
-    """
-    Linear classifier with logistic regression.
-    """
 
     def __init__(self, l_rate=0.01, epochs=1000, optimizer=BFGS):
         self.l_rate = l_rate
