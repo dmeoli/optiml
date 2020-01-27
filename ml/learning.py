@@ -4,7 +4,6 @@ import numpy as np
 
 from ml.losses import MeanSquaredError, CrossEntropy
 from ml.neural_network.initializers import zeros
-from ml.validation import err_ratio
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.quasi_newton import BFGS
 
@@ -51,6 +50,8 @@ class BinaryLogisticRegressionLearner(Learner):
         self.optimizer = optimizer
 
     def fit(self, X, y):
+        self.labels = np.unique(y)
+        y = np.where(y == self.labels[0], 0, 1)
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(CrossEntropy(X, y), zeros((X.shape[1], 1)),
                                     max_f_eval=self.epochs).minimize()[0]
@@ -62,8 +63,8 @@ class BinaryLogisticRegressionLearner(Learner):
     def predict_score(self, x):
         return CrossEntropy.predict(x, self.w)[:, 0]
 
-    def predict(self, x, tol=0.5):
-        return (self.predict_score(x) >= tol).astype(int)
+    def predict(self, x):
+        return np.where(self.predict_score(x) >= 0.5, self.labels[1], self.labels[0]).astype(int)
 
 
 class MultiLogisticRegressionLearner(Learner):
