@@ -1,8 +1,10 @@
+import random
 from statistics import mean
 
 from ml.dataset import iris, orings, zoo, Majority, Parity, Xor
-# from ml.neural_network.neural_network import PerceptronLearner, NeuralNetLearner
-# from ml.svm import MultiSVM
+from ml.learning import MultiLogisticRegressionLearner
+from ml.neural_network.neural_network import PerceptronLearner, NeuralNetLearner
+from ml.svm import MultiSVM
 from utils import *
 
 

@@ -1,6 +1,3 @@
-import bisect
-import random
-
 import numpy as np
 
 
@@ -8,11 +5,6 @@ def not_test(func):
     """Decorator to mark a function or method as *not* a test"""
     func.__test__ = False
     return func
-
-
-def isnonzerofinite(arr):
-    """Return True if the array is neither zero, NaN or infinite."""
-    return (arr != 0).any() and np.isfinite(arr).all()
 
 
 def remove_all(item, seq):
@@ -32,10 +24,6 @@ def unique(seq):
     return list(set(seq))
 
 
-def flatten(seqs):
-    return sum(seqs, [])
-
-
 def num_or_str(x):
     """The argument is a string; convert to a number if
        possible, or strip it."""
@@ -46,36 +34,6 @@ def num_or_str(x):
             return float(x)
         except ValueError:
             return str(x).strip()
-
-
-def normalize(dist):
-    """Multiply each number by a constant such that the sum is 1.0"""
-    if isinstance(dist, dict):
-        total = sum(dist.values())
-        for key in dist:
-            dist[key] = dist[key] / total
-            assert 0 <= dist[key] <= 1  # probabilities must be between 0 and 1
-        return dist
-    total = sum(dist)
-    return [(n / total) for n in dist]
-
-
-def weighted_sample_with_replacement(n, seq, weights):
-    """Pick n samples from seq at random, with replacement, with the
-    probability of each element in proportion to its corresponding
-    weight."""
-    sample = weighted_sampler(seq, weights)
-
-    return [sample() for _ in range(n)]
-
-
-def weighted_sampler(seq, weights):
-    """Return a random-sample function that picks from seq weighted by weights."""
-    totals = []
-    for w in weights:
-        totals.append(w + totals[-1] if totals else w)
-
-    return lambda: seq[bisect.bisect(totals, random.uniform(0, totals[-1]))]
 
 
 def isnumber(x):
@@ -111,11 +69,6 @@ def scalar_vector_product(x, y):
 def map_vector(f, x):
     """Apply function f to iterable x."""
     return [map_vector(f, _x) for _x in x] if hasattr(x, '__iter__') else list(map(f, [x]))[0]
-
-
-def dot_product(x, y):
-    """Return the sum of the element-wise product of vectors x and y."""
-    return sum(_x * _y for _x, _y in zip(x, y))
 
 
 def element_wise_product(x, y):
