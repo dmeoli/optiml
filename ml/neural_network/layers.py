@@ -75,7 +75,6 @@ class DenseLayer(Layer):
             node.w = initializer(in_size)
 
     def forward(self, inputs):
-        assert len(self.nodes) == len(inputs)
         self.inputs = inputs
         res = []
         for unit in self.nodes:

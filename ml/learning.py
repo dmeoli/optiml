@@ -25,15 +25,15 @@ class LinearRegressionLearner(Learner):
 
     def fit(self, X, y):
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(MeanSquaredError(X, y), zeros((X.shape[1], 1)),
-                                    max_f_eval=self.epochs).minimize()[0]
+            self.w = self.optimizer(MeanSquaredError(X, y[:, np.newaxis]), zeros((X.shape[1], 1)),
+                                    max_f_eval=self.epochs).minimize()[0][:, 0]
         else:
-            self.w = self.optimizer(MeanSquaredError(X, y), zeros((X.shape[1], 1)),
-                                    step_rate=self.l_rate, max_iter=self.epochs).minimize()[0]
+            self.w = self.optimizer(MeanSquaredError(X, y[:, np.newaxis]), zeros((X.shape[1], 1)),
+                                    step_rate=self.l_rate, max_iter=self.epochs).minimize()[0][:, 0]
         return self
 
     def predict(self, x):
-        return np.dot(x, self.w)[:, 0]
+        return np.dot(x, self.w)
 
 
 class BinaryLogisticRegressionLearner(Learner):
@@ -47,15 +47,15 @@ class BinaryLogisticRegressionLearner(Learner):
         self.labels = np.unique(y)
         y = np.where(y == self.labels[0], 0, 1)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(CrossEntropy(X, y), zeros((X.shape[1], 1)),
-                                    max_f_eval=self.epochs).minimize()[0]
+            self.w = self.optimizer(CrossEntropy(X, y[:, np.newaxis]), zeros((X.shape[1], 1)),
+                                    max_f_eval=self.epochs).minimize()[0][:, 0]
         else:
-            self.w = self.optimizer(CrossEntropy(X, y), zeros((X.shape[1], 1)),
-                                    step_rate=self.l_rate, max_iter=self.epochs).minimize()[0]
+            self.w = self.optimizer(CrossEntropy(X, y[:, np.newaxis]), zeros((X.shape[1], 1)),
+                                    step_rate=self.l_rate, max_iter=self.epochs).minimize()[0][:, 0]
         return self
 
     def predict_score(self, x):
-        return CrossEntropy.predict(x, self.w)[:, 0]
+        return CrossEntropy.predict(x, self.w)
 
     def predict(self, x):
         return np.where(self.predict_score(x) >= 0.5, self.labels[1], self.labels[0]).astype(int)

@@ -24,7 +24,7 @@ def init_examples(examples, idx_i, idx_t, o_units):
         if o_units > 1:
             # one-hot representation of e's target
             t = [0 for i in range(o_units)]
-            t[e[idx_t]] = 1
+            t[int(e[idx_t])] = 1
             targets[i] = t
         else:
             # target value of e
@@ -50,7 +50,7 @@ def BackPropagation(inputs, targets, theta, net, loss):
     batch_size = len(inputs)
 
     gradients = [[[] for _ in layer.nodes] for layer in net]
-    total_gradients = [[[0] * len(node.weights) for node in layer.nodes] for layer in net]
+    total_gradients = [[[0] * len(node.w) for node in layer.nodes] for layer in net]
 
     batch_loss = 0
 
@@ -74,7 +74,7 @@ def BackPropagation(inputs, targets, theta, net, loss):
         # backward pass
         for i in range(h_layers, 0, -1):
             layer = net[i]
-            derivative = [layer.activation.derivative(node.val) for node in layer.nodes]
+            derivative = [layer.activation.derivative(node.value) for node in layer.nodes]
             delta[i] = element_wise_product(previous, derivative)
             # pass to layer i-1 in the next iteration
             previous = matrix_multiplication([delta[i]], theta[i])[0]
@@ -96,10 +96,11 @@ def stochastic_gradient_descent(X, net, loss, epochs=1000, l_rate=0.01, batch_si
     for e in range(epochs):
         total_loss = 0
         random.shuffle(X)
-        weights = [[node.weights for node in layer.nodes] for layer in net]
+        weights = [[node.w for node in layer.nodes] for layer in net]
 
         for batch in get_batch(X, batch_size):
-            inputs, targets = init_examples(batch, [x for x in range(X.shape[1])], X.shape[1], len(net[-1].nodes))
+            inputs, targets = init_examples(batch, [x for x in range(X.shape[1] - 1)], X.shape[1] - 1,
+                                            len(net[-1].nodes))
             # compute gradients of weights
             gs, batch_loss = BackPropagation(inputs, targets, weights, net, loss)
             # update weights with gradient descent
@@ -110,9 +111,9 @@ def stochastic_gradient_descent(X, net, loss, epochs=1000, l_rate=0.01, batch_si
             for i in range(len(net)):
                 if weights[i]:
                     for j in range(len(weights[i])):
-                        net[i].nodes[j].weights = weights[i][j]
+                        net[i].nodes[j].w = weights[i][j]
 
-        if verbose and (e + 1) % verbose == 0:
+        if verbose:
             print("epoch:{}, total_loss:{}".format(e + 1, total_loss))
 
     return net
@@ -127,8 +128,8 @@ def adam(X, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
     """
 
     # init s, r and t
-    s = [[[0] * len(node.weights) for node in layer.nodes] for layer in net]
-    r = [[[0] * len(node.weights) for node in layer.nodes] for layer in net]
+    s = [[[0] * len(node.w) for node in layer.nodes] for layer in net]
+    r = [[[0] * len(node.w) for node in layer.nodes] for layer in net]
     t = 0
 
     # repeat util converge
@@ -136,11 +137,12 @@ def adam(X, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
         # total loss of each epoch
         total_loss = 0
         random.shuffle(X)
-        weights = [[node.weights for node in layer.nodes] for layer in net]
+        weights = [[node.w for node in layer.nodes] for layer in net]
 
         for batch in get_batch(X, batch_size):
             t += 1
-            inputs, targets = init_examples(batch, [x for x in range(X.shape[1])], X.shape[1], len(net[-1].nodes))
+            inputs, targets = init_examples(batch, [x for x in range(X.shape[1] - 1)], X.shape[1] - 1,
+                                            len(net[-1].nodes))
 
             # compute gradients of weights
             gs, batch_loss = BackPropagation(inputs, targets, weights, net, loss)
@@ -165,12 +167,22 @@ def adam(X, net, loss, epochs=1000, rho=(0.9, 0.999), delta=1 / 10 ** 8,
             for i in range(len(net)):
                 if weights[i]:
                     for j in range(len(weights[i])):
-                        net[i].nodes[j].weights = weights[i][j]
+                        net[i].nodes[j].w = weights[i][j]
 
-        if verbose and (e + 1) % verbose == 0:
+        if verbose:
             print("epoch:{}, total_loss:{}".format(e + 1, total_loss))
 
     return net
+
+
+def cross_entropy_loss(x, y):
+    """Cross entropy loss function. x and y are 1D iterable objects."""
+    return (-1.0 / len(x)) * sum(x * np.log(_y) + (1 - _x) * np.log(1 - _y) for _x, _y in zip(x, y))
+
+
+def mean_squared_error_loss(x, y):
+    """Min square loss function. x and y are 1D iterable objects."""
+    return (1.0 / len(x)) * sum((_x - _y) ** 2 for _x, _y in zip(x, y))
 
 
 class PerceptronLearner(Learner):
@@ -193,8 +205,9 @@ class PerceptronLearner(Learner):
         raw_net = [InputLayer(input_size), DenseLayer(input_size, output_size)]
 
         # update the network
-        self.learned_net = self.optimizer(X, raw_net, mean_squared_error_loss, self.epochs, l_rate=self.l_rate,
-                                          batch_size=self.batch_size, verbose=self.verbose)
+        self.learned_net = self.optimizer(np.hstack((X, y[:, np.newaxis])), raw_net, mean_squared_error_loss,
+                                          epochs=self.epochs, l_rate=self.l_rate, batch_size=self.batch_size,
+                                          verbose=self.verbose)
         return self
 
     def predict(self, x):
@@ -231,8 +244,9 @@ class NeuralNetLearner(Learner):
         raw_net.append(DenseLayer(hidden_input_size, output_size))
 
         # update parameters of the network
-        self.learned_net = self.optimizer(X, raw_net, mean_squared_error_loss, self.epochs, l_rate=self.l_rate,
-                                          batch_size=self.batch_size, verbose=self.verbose)
+        self.learned_net = self.optimizer(np.hstack((X, y[:, np.newaxis])), raw_net, mean_squared_error_loss,
+                                          epochs=self.epochs, l_rate=self.l_rate, batch_size=self.batch_size,
+                                          verbose=self.verbose)
         return self
 
     def predict(self, x):
