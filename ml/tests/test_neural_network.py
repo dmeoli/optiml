@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import utils
 from ml.dataset import DataSet
 from ml.neural_network.neural_network import NeuralNetLearner, PerceptronLearner
 from ml.validation import err_ratio, grade_learner
@@ -16,6 +17,7 @@ iris_tests = [([[5.0, 3.1, 0.9, 0.1]], 0),
               ([[7.0, 3.3, 6.1, 2.5]], 2)]
 
 
+@utils.not_test
 def test_neural_net():
     iris = DataSet(name='iris')
     classes = ['setosa', 'versicolor', 'virginica']
@@ -28,6 +30,7 @@ def test_neural_net():
     assert err_ratio(nnl, X, y) < 0.21
 
 
+@utils.not_test
 def test_perceptron():
     iris = DataSet(name='iris')
     classes = ['setosa', 'versicolor', 'virginica']

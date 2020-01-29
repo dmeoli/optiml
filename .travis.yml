@@ -9,7 +9,8 @@ install:
   - pip install autograd
   - pip install matplotlib
   - pip install numpy
+  - pip install pytest-cov
   - pip install qpsolvers
 
 script:
-  - pytest
+  - pytest --cov=./
