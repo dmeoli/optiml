@@ -1,4 +1,0 @@
-[report]
-omit = 
-    ml/tests/*
-    optimization/tests/*
