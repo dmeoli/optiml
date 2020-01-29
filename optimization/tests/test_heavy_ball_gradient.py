@@ -13,7 +13,7 @@ def test_quadratic():
     assert np.allclose(x, quad2.x_star)
 
     x, _ = HBG(quad5).minimize()
-    assert np.allclose(x, quad5.x_star, rtol=1e-4)
+    assert np.allclose(x, quad5.x_star, rtol=1e-3)
 
 
 def test_Rosenbrock():

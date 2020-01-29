@@ -24,7 +24,7 @@ def test_NCG_quadratic_wf0():
     assert np.allclose(quad2.jacobian(x), 0)
 
     x, _ = NCG(quad5).minimize()
-    assert np.allclose(quad5.jacobian(x), 0)
+    assert np.allclose(quad5.jacobian(x), 0, atol=1e-6)
 
 
 def test_NCG_quadratic_wf1():
@@ -57,7 +57,7 @@ def test_NCG_quadratic_wf3():
     assert np.allclose(quad2.jacobian(x), 0)
 
     x, _ = NCG(quad5, wf=3).minimize()
-    assert np.allclose(quad5.jacobian(x), 0)
+    assert np.allclose(quad5.jacobian(x), 0, atol=1e-6)
 
 
 def test_NCG_Rosenbrock():
