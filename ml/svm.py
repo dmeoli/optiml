@@ -97,6 +97,8 @@ class BinarySVM(Learner):
 class MultiSVM(Learner):
     def __init__(self, kernel=linear_kernel, decision_function='ovr', C=1.0):
         self.kernel = kernel
+        if decision_function not in ('ovr', 'ovo'):
+            raise ValueError("decision function must be either 'ovr' or 'ovo'")
         self.decision_function = decision_function
         self.C = C  # hyper-parameter
         self.n_class, self.classifiers = 0, []
@@ -130,8 +132,6 @@ class MultiSVM(Learner):
                     clf = BinarySVM(self.kernel, self.C)
                     clf.fit(x1, y1)
                     self.classifiers.append(copy.deepcopy(clf))
-        else:
-            return ValueError("Decision function must be either 'ovr' or 'ovo'.")
         return self
 
     def predict(self, x):
@@ -157,5 +157,3 @@ class MultiSVM(Learner):
                     vote[res > 0, j] += 1.0  # positive sample: class j
                     clf_id += 1
             return np.argmax(vote, axis=1)
-        else:
-            return ValueError("Decision function must be either 'ovr' or 'ovo'.")

@@ -28,7 +28,7 @@ class SDQ(Optimizer):
     def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, wrt, eps, max_iter, verbose, plot)
         if self.wrt.size != self.f.hessian().shape[0]:
-            raise ValueError('x size does not match with Q')
+            raise ValueError('wrt size does not match with Q')
 
     def minimize(self):
         if self.verbose:
@@ -341,7 +341,7 @@ class GD(Optimizer):
             raise ValueError('momentum must be > 0')
         self.momentum = momentum
         if momentum_type not in ('nesterov', 'standard', 'none'):
-            raise ValueError('unknown momentum type')
+            raise ValueError('unknown momentum type {}'.format(momentum_type))
         self.momentum_type = momentum_type
         if momentum_type in ('nesterov', 'standard'):
             self.step = 0

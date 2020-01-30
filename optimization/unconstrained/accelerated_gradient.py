@@ -123,7 +123,7 @@ class ACCG(LineSearchOptimizer):
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if not 0 <= wf <= 3:
-            raise ValueError('unknown fast gradient formula {:d}'.format(wf))
+            raise ValueError('unknown fast gradient formula {}'.format(wf))
         self.wf = wf
 
     def minimize(self):

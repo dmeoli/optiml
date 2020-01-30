@@ -8,7 +8,7 @@ class CGQ(Optimizer):
     def __init__(self, f, wrt=None, r_start=0, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, wrt, eps, max_iter, verbose, plot)
         if self.wrt.size != self.f.hessian().shape[0]:
-            raise ValueError('x size does not match with Q')
+            raise ValueError('wrt size does not match with Q')
         if not np.isscalar(r_start):
             raise ValueError('r_start is not an integer scalar')
         self.r_start = r_start
@@ -117,7 +117,7 @@ class CGA(LineSearchOptimizer):
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if wf < 0 or wf > 4:
-            raise ValueError('unknown NCG formula {:d}'.format(wf))
+            raise ValueError('unknown NCG formula {}'.format(wf))
         self.wf = wf
         if not np.isscalar(r_start):
             raise ValueError('r_start is not an integer scalar')
@@ -245,7 +245,7 @@ class NCG(LineSearchOptimizer):
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if not 0 <= wf <= 3:
-            raise ValueError('unknown NCG formula {:d}'.format(wf))
+            raise ValueError('unknown NCG formula {}'.format(wf))
         self.wf = wf
         if not np.isscalar(r_start):
             raise ValueError('r_start is not an integer scalar')

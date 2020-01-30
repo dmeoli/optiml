@@ -30,7 +30,7 @@ class Adam(Optimizer):
             raise ValueError('momentum must be > 0')
         self.momentum = momentum
         if momentum_type not in ('nesterov', 'standard', 'none'):
-            raise ValueError('unknown momentum type')
+            raise ValueError('unknown momentum type {}'.format(momentum_type))
         self.momentum_type = momentum_type
         if not np.isscalar(offset):
             raise ValueError('offset is not a real scalar')

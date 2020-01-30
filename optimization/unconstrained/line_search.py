@@ -223,7 +223,6 @@ class BLS(LineSearch):
 
         def f2phi(f, d, x, a, f_eval):
             # phi(a) = f(x + a * d)
-
             last_wrt = x + a * d
             phi_a, last_g = f.function(last_wrt), f.jacobian(last_wrt)
             f_eval += 1
