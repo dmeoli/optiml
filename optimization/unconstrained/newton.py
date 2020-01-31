@@ -140,7 +140,7 @@ class NWTN(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        while True:
+        for args, kwargs in self.args:
             if self.verbose:
                 # output statistics
                 if f_star > -np.inf:

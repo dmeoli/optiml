@@ -122,9 +122,9 @@ class SGM(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        while True:
+        for args, kwargs in self.args:
             # compute function and subgradient
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            v, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
             ng = np.linalg.norm(g)
 
             if self.eps > 0:  # target-level step size

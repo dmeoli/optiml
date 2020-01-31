@@ -126,7 +126,7 @@ class PBM(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        while True:
+        for args, kwargs in self.args:
             # construct the master problem
             d = sdpvar(self.n, 1)
             v = sdpvar(1, 1)
@@ -170,7 +170,7 @@ class PBM(Optimizer):
 
             # compute function and subgradient
 
-            fd, g = self.f.function(self.wrt + d)
+            fd, g = self.f.function(self.wrt + d, *args, **kwargs)
 
             if fd <= self.m_inf:
                 status = 'unbounded'

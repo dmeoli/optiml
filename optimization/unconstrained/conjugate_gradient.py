@@ -25,12 +25,12 @@ class CGQ(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        while True:
-            g = self.f.jacobian(self.wrt)
+        for args, kwargs in self.args:
+            g = self.f.jacobian(self.wrt, *args, **kwargs)
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt)
+                v = self.f.function(self.wrt, *args, **kwargs)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if f_star < np.inf:
                     print('\t{:1.4e}'.format(v - f_star), end='')
@@ -275,7 +275,7 @@ class NCG(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        while True:
+        for args, kwargs in self.args:
             if self.verbose:
                 if f_star > -np.inf:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')

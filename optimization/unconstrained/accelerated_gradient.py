@@ -152,9 +152,9 @@ class ACCG(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        while True:
+        for args, kwargs in self.args:
             # compute f(y)
-            v, g = self.f.function(y), self.f.jacobian(y)
+            v, g = self.f.function(y, *args, **kwargs), self.f.jacobian(y, *args, **kwargs)
             ng = np.linalg.norm(g)
             if f_eval == 1 and self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
@@ -196,7 +196,7 @@ class ACCG(LineSearchOptimizer):
                 last_wrt = y + a * -g
 
                 if self.mon:  # in the monotone version
-                    xv = self.f.function(last_wrt)
+                    xv = self.f.function(last_wrt, *args, **kwargs)
 
             # output statistics
             if self.verbose:

@@ -42,12 +42,12 @@ class SDQ(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        while True:
-            g = self.f.jacobian(self.wrt)
+        for args, kwargs in self.args:
+            g = self.f.jacobian(self.wrt, *args, **kwargs)
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt)
+                v = self.f.function(self.wrt, *args, **kwargs)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if f_star < np.inf:
                     print('\t{:1.4e}'.format(v - f_star), end='')
@@ -96,7 +96,8 @@ class SDQ(Optimizer):
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
             # <\nabla f(x_i), \nabla f(x_i+1)> = 0
-            # assert np.isclose(self.f.jacobian(self.wrt).T.dot(self.f.jacobian(last_wrt)), 0)
+            # assert np.isclose(
+            #     self.f.jacobian(self.wrt, *args, **kwargs).T.dot(self.f.jacobian(last_wrt, *args, **kwargs)), 0)
 
             self.wrt = last_wrt
             self.iter += 1
@@ -263,7 +264,7 @@ class SDG(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        while True:
+        for args, kwargs in self.args:
             if self.verbose:
                 if f_star > -np.inf:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
@@ -358,12 +359,12 @@ class GD(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        while True:
-            g = self.f.jacobian(self.wrt)
+        for args, kwargs in self.args:
+            g = self.f.jacobian(self.wrt, *args, **kwargs)
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt)
+                v = self.f.function(self.wrt, *args, **kwargs)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if f_star < np.inf:
                     print('\t{:1.4e}'.format(v - f_star), end='')
@@ -389,7 +390,7 @@ class GD(Optimizer):
                 step_m1 = self.step
                 big_jump = self.momentum * step_m1
                 self.wrt = self.wrt - big_jump
-                g = self.f.jacobian(self.wrt)
+                g = self.f.jacobian(self.wrt, *args, **kwargs)
                 correction = self.step_rate * -g
                 last_wrt = self.wrt + correction
                 self.step = big_jump - correction

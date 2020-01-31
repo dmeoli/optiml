@@ -51,12 +51,12 @@ class Adam(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        while True:
-            g = self.f.jacobian(self.wrt)
+        for args, kwargs in self.args:
+            g = self.f.jacobian(self.wrt, *args, **kwargs)
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt)
+                v = self.f.function(self.wrt, *args, **kwargs)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if f_star < np.inf:
                     print('\t{:1.4e}'.format(v - f_star), end='')
@@ -87,7 +87,7 @@ class Adam(Optimizer):
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
 
-            g = self.f.jacobian(self.wrt)
+            g = self.f.jacobian(self.wrt, *args, **kwargs)
             self.est_mom1 = dm1 * g + (1 - dm1) * est_mom1_m1
             self.est_mom2 = dm2 * g ** 2 + (1 - dm2) * est_mom2_m1
 
