@@ -290,7 +290,8 @@ class SDG(LineSearchOptimizer):
             phi_p0 = -ng * ng
 
             # compute step size
-            a, v, last_wrt, last_g, f_eval = self.line_search.search(d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0)
+            a, v, last_wrt, last_g, f_eval = self.line_search.search(
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, *args, **kwargs)
 
             # output statistics
             if self.verbose:

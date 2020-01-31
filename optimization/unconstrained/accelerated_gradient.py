@@ -187,8 +187,8 @@ class ACCG(LineSearchOptimizer):
 
             # compute step size
             if self.m1 > 0:
-                a, xv, last_wrt, last_g, f_eval = \
-                    self.line_search.search(-g, self.wrt, last_wrt, last_g, f_eval, v, -ng)
+                a, xv, last_wrt, last_g, f_eval = self.line_search.search(
+                    -g, self.wrt, last_wrt, last_g, f_eval, v, -ng, *args, **kwargs)
                 if self.line_search.a_start < 0:
                     self.line_search.a_start = abs(-a)
             else:  # fixed step size

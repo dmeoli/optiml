@@ -177,7 +177,8 @@ class NWTN(LineSearchOptimizer):
             phi_p0 = g.T.dot(d)
 
             # compute step size: in Newton's method, the default initial step size is 1
-            a, v, last_wrt, last_g, f_eval = self.line_search.search(d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0)
+            a, v, last_wrt, last_g, f_eval = self.line_search.search(
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, *args, **kwargs)
 
             # output statistics
             if self.verbose:

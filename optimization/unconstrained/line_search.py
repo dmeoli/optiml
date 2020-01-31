@@ -53,8 +53,69 @@ class LineSearch:
         self.min_a = min_a
         self.verbose = verbose
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None,  args=[], kwargs={}):
         return NotImplementedError
+
+
+class BLS(LineSearch):
+    """
+    Performs a Backtracking Line Search.
+
+        phi0 = phi(0), phi_p0 = phi'(0) < 0
+
+    a_start > 0 is the first value to be tested, which is decreased by multiplying
+    it by tau < 1 until the Armijo condition with parameter m1 is satisfied.
+    :returns: the optimal step and the optimal f-value
+    """
+
+    def __init__(self, f, max_f_eval=1000, m1=0.01, a_start=1, tau=0.9, min_a=1e-16, verbose=False):
+        """
+
+        :param f:          the objective function.
+        :param max_f_eval: (integer scalar, optional, default value 1000): the maximum number of
+                           function evaluations (hence, iterations will be not more than max_f_eval
+                           because at each iteration at least a function evaluation is performed,
+                           possibly more due to the line search).
+        :param m1:         (real scalar, optional, default value 0.01): first parameter of the
+                           Armijo-Wolfe-type line search (sufficient decrease). Has to be in (0,1).
+        :param a_start:    (real scalar, optional, default value 1): starting value of alpha in the
+                           line search (> 0).
+        :param tau:        (real scalar, optional, default value 0.9): scaling parameter for the line
+                           search. In the Armijo-Wolfe line search it is used in the first phase: if the
+                           derivative is not positive, then the step is divided by tau (which is < 1,
+                           hence it is increased). In the Backtracking line search, each time the step is
+                           multiplied by tau (hence it is decreased).
+        :param min_a:      (real scalar, optional, default value 1e-16): if the algorithm determines a step size
+                           value <= min_a, this is taken as an indication that something has gone wrong (the gradient
+                           is not a direction of descent, so maybe the function is not differentiable) and computation
+                           is stopped. It is legal to take min_a = 0, thereby in fact skipping this test.
+        :param verbose:    (boolean, optional, default value False): print details about each iteration
+                           if True, nothing otherwise.
+        """
+        super().__init__(f, max_f_eval, m1, a_start, tau, min_a, verbose)
+
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, args=[], kwargs={}):
+
+        def f2phi(f, d, x, a, f_eval):
+            # phi(a) = f(x + a * d)
+            last_wrt = x + a * d
+            phi_a, last_g = f.function(last_wrt, *args, **kwargs), f.jacobian(last_wrt, *args, **kwargs)
+            f_eval += 1
+            return phi_a, last_wrt, last_g, f_eval
+
+        _as = self.a_start
+        ls_iter = 1  # count ls iterations
+        while f_eval <= self.max_f_eval and _as > self.min_a:
+            phi_a, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, _as, f_eval)
+            if phi_a <= phi0 + self.m1 * _as * phi_p0:  # Armijo condition
+                break
+
+            _as *= self.tau
+            ls_iter += 1
+
+        if self.verbose:
+            print('\t{:2d}'.format(ls_iter), end='')
+        return _as, phi_a, last_wrt, last_g, f_eval
 
 
 class AWLS(LineSearch):
@@ -117,14 +178,14 @@ class AWLS(LineSearch):
             raise ValueError('m2 is not a real scalar')
         self.m2 = m2
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None,  args=[], kwargs={}):
 
         def f2phi(f, d, x, a, f_eval):
             # phi(a) = f(x + a * d)
             # phi'(a) = <\nabla f(x + a * d), d>
 
             last_wrt = x + a * d
-            phi_a, last_g = f.function(last_wrt), f.jacobian(last_wrt)
+            phi_a, last_g = f.function(last_wrt, *args, **kwargs), f.jacobian(last_wrt, *args, **kwargs)
             phi_p = d.T.dot(last_g)
             f_eval += 1
             return phi_a, phi_p, last_wrt, last_g, f_eval
@@ -180,64 +241,3 @@ class AWLS(LineSearch):
         if self.verbose:
             print('{:2d}'.format(ls_iter), end='')
         return a, phi_a, last_wrt, last_g, f_eval
-
-
-class BLS(LineSearch):
-    """
-    Performs a Backtracking Line Search.
-
-        phi0 = phi(0), phi_p0 = phi'(0) < 0
-
-    a_start > 0 is the first value to be tested, which is decreased by multiplying
-    it by tau < 1 until the Armijo condition with parameter m1 is satisfied.
-    :returns: the optimal step and the optimal f-value
-    """
-
-    def __init__(self, f, max_f_eval=1000, m1=0.01, a_start=1, tau=0.9, min_a=1e-16, verbose=False):
-        """
-
-        :param f:          the objective function.
-        :param max_f_eval: (integer scalar, optional, default value 1000): the maximum number of
-                           function evaluations (hence, iterations will be not more than max_f_eval
-                           because at each iteration at least a function evaluation is performed,
-                           possibly more due to the line search).
-        :param m1:         (real scalar, optional, default value 0.01): first parameter of the
-                           Armijo-Wolfe-type line search (sufficient decrease). Has to be in (0,1).
-        :param a_start:    (real scalar, optional, default value 1): starting value of alpha in the
-                           line search (> 0).
-        :param tau:        (real scalar, optional, default value 0.9): scaling parameter for the line
-                           search. In the Armijo-Wolfe line search it is used in the first phase: if the
-                           derivative is not positive, then the step is divided by tau (which is < 1,
-                           hence it is increased). In the Backtracking line search, each time the step is
-                           multiplied by tau (hence it is decreased).
-        :param min_a:      (real scalar, optional, default value 1e-16): if the algorithm determines a step size
-                           value <= min_a, this is taken as an indication that something has gone wrong (the gradient
-                           is not a direction of descent, so maybe the function is not differentiable) and computation
-                           is stopped. It is legal to take min_a = 0, thereby in fact skipping this test.
-        :param verbose:    (boolean, optional, default value False): print details about each iteration
-                           if True, nothing otherwise.
-        """
-        super().__init__(f, max_f_eval, m1, a_start, tau, min_a, verbose)
-
-    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None):
-
-        def f2phi(f, d, x, a, f_eval):
-            # phi(a) = f(x + a * d)
-            last_wrt = x + a * d
-            phi_a, last_g = f.function(last_wrt), f.jacobian(last_wrt)
-            f_eval += 1
-            return phi_a, last_wrt, last_g, f_eval
-
-        _as = self.a_start
-        ls_iter = 1  # count ls iterations
-        while f_eval <= self.max_f_eval and _as > self.min_a:
-            phi_a, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, _as, f_eval)
-            if phi_a <= phi0 + self.m1 * _as * phi_p0:  # Armijo condition
-                break
-
-            _as *= self.tau
-            ls_iter += 1
-
-        if self.verbose:
-            print('\t{:2d}'.format(ls_iter), end='')
-        return _as, phi_a, last_wrt, last_g, f_eval
