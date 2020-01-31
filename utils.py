@@ -2,13 +2,13 @@ import random
 
 
 def not_test(func):
-    """Decorator to mark a function or method as *not* a test"""
+    """Decorator to mark a function or method as not a test"""
     func.__test__ = False
     return func
 
 
 def arbitrary_slice(arr, start, stop=None, axis=0):
-    """Return a slice from `start` to `stop` in dimension `axis` of array `arr`.
+    """Return a slice from start to stop in dimension axis of array arr.
 
 
     Parameters
@@ -45,8 +45,8 @@ def arbitrary_slice(arr, start, stop=None, axis=0):
     n_axes = len(arr.shape)
 
     if axis >= n_axes:
-        raise IndexError('Argument `axis` with value {} out of range. '
-                         'Must be smaller than rank {} of `arr`.'.format(axis, n_axes))
+        raise IndexError('Argument axis with value {} out of range. '
+                         'Must be smaller than rank {} of arr.'.format(axis, n_axes))
 
     this_slice = [slice(None) for _ in range(n_axes)]
     this_slice[axis] = slice(start, stop)
@@ -54,13 +54,13 @@ def arbitrary_slice(arr, start, stop=None, axis=0):
     return arr[tuple(this_slice)]
 
 
-def iter_mini_batches(lst, batch_size, dims, random_state=None):
+def iter_mini_batches(lst, batch_size, dims=None, random_state=None):
     """Return an iterator that successively yields tuples containing aligned
-    mini batches of size `batch_size` from sliceable objects given in `lst`, in
+    mini batches of size batch_size from sliceable objects given in lst, in
     random order without replacement.
     Because different containers might require slicing over different
     dimensions, the dimension of each container has to be givens as a list
-    `dims`.
+    dims.
 
 
     Parameters
@@ -85,6 +85,12 @@ def iter_mini_batches(lst, batch_size, dims, random_state=None):
     batches : iterator
         Infinite iterator of mini batches in random order (without replacement).
     """
+
+    if dims is None:
+        dims = [0, 0]
+
+    if batch_size > lst[0].shape[0]:
+        raise ValueError('batch size must be less or equal than the number of examples')
 
     try:
         # case distinction for handling lists
@@ -114,8 +120,8 @@ def iter_mini_batches(lst, batch_size, dims, random_state=None):
             for i in indices:
                 start = i * batch_size
                 stop = (i + 1) * batch_size
-                batch = [arbitrary_slice(arr, start, stop, axis) for (arr, axis)
-                         in zip(lst, dims)]
+                batch = [arbitrary_slice(arr, start, stop, axis)
+                         for (arr, axis) in zip(lst, dims)]
                 yield tuple(batch)
 
 

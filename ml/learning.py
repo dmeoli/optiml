@@ -33,7 +33,7 @@ class LinearRegressionLearner(Learner):
     def fit(self, X, y):
         loss_function = MeanSquaredError(self.regularization_type, self.lmbda, self.alpha)
         args = itertools.repeat(([X, y[:, np.newaxis]], {})) if self.batch_size is None \
-            else ((i, {}) for i in utils.iter_mini_batches([X, y[:, np.newaxis]], self.batch_size, [0, 0]))
+            else ((i, {}) for i in utils.iter_mini_batches([X, y[:, np.newaxis]], self.batch_size))
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(loss_function, zeros((X.shape[1], 1)), max_f_eval=self.epochs,
                                     args=args).minimize()[0][:, 0]
@@ -63,7 +63,7 @@ class BinaryLogisticRegressionLearner(Learner):
         y = np.where(y == self.labels[0], 0, 1)
         loss_function = CrossEntropy(self.regularization_type, self.lmbda, self.alpha)
         args = itertools.repeat(([X, y[:, np.newaxis]], {})) if self.batch_size is None \
-            else ((i, {}) for i in utils.iter_mini_batches([X, y[:, np.newaxis]], self.batch_size, [0, 0]))
+            else ((i, {}) for i in utils.iter_mini_batches([X, y[:, np.newaxis]], self.batch_size))
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(loss_function, zeros((X.shape[1], 1)), max_f_eval=self.epochs,
                                     args=args).minimize()[0][:, 0]
