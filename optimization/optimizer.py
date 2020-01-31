@@ -1,3 +1,5 @@
+import itertools
+
 import numpy as np
 
 from optimization.functions import Function
@@ -5,7 +7,7 @@ from optimization.unconstrained.line_search import AWLS, BLS
 
 
 class Optimizer:
-    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, verbose=False, plot=False, args=None):
         """
 
         :param f:        the objective function.
@@ -39,6 +41,10 @@ class Optimizer:
         self.iter = 1
         self.verbose = verbose
         self.plot = plot
+        if args is None:
+            self.args = itertools.repeat(([], {}))
+        else:
+            self.args = args
 
     def minimize(self):
         return NotImplementedError
@@ -46,7 +52,7 @@ class Optimizer:
 
 class LineSearchOptimizer(Optimizer):
     def __init__(self, f, wrt=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
-                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
         """
 
         :param f:          the objective function.
@@ -91,7 +97,7 @@ class LineSearchOptimizer(Optimizer):
         :param plot:       (boolean, optional, default value False): plot the function's surface and its contours
                            if True and the function's dimension is 2, nothing otherwise.
         """
-        super().__init__(f, wrt, eps, verbose=verbose, plot=plot)
+        super().__init__(f, wrt, eps, verbose=verbose, plot=plot, args=args)
         if not np.isscalar(m_inf):
             raise ValueError('m_inf is not a real scalar')
         self.m_inf = m_inf

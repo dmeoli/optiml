@@ -5,8 +5,8 @@ from optimization.optimizer import LineSearchOptimizer, Optimizer
 
 
 class CGQ(Optimizer):
-    def __init__(self, f, wrt=None, r_start=0, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot)
+    def __init__(self, f, wrt=None, r_start=0, eps=1e-6, max_iter=1000, verbose=False, plot=False, args=None):
+        super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
         if self.wrt.size != self.f.hessian().shape[0]:
             raise ValueError('wrt size does not match with Q')
         if not np.isscalar(r_start):
@@ -112,8 +112,8 @@ class CGQ(Optimizer):
 
 class CGA(LineSearchOptimizer):
     def __init__(self, f, wrt=None, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
-                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
+        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot, args)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if wf < 0 or wf > 4:
@@ -240,8 +240,8 @@ class NCG(LineSearchOptimizer):
     #     continuing optimization (see min_a above)
 
     def __init__(self, f, wrt=None, wf=0, eps=1e-6, max_f_eval=1000, r_start=0, m1=0.01, m2=0.9, a_start=1,
-                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
+        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot, args)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if not 0 <= wf <= 3:

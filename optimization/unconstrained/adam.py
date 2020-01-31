@@ -7,8 +7,8 @@ from optimization.optimizer import Optimizer
 class Adam(Optimizer):
 
     def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.001, beta1=0.9, beta2=0.999,
-                 momentum=0.9, momentum_type='none', offset=1e-8, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot)
+                 momentum=0.9, momentum_type='none', offset=1e-8, verbose=False, plot=False, args=None):
+        super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
         if not step_rate > 0:

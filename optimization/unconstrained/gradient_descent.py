@@ -25,8 +25,8 @@ class SDQ(Optimizer):
                      x is the best solution found so far, but not necessarily the optimal one.
     """
 
-    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot)
+    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, verbose=False, plot=False, args=None):
+        super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
         if self.wrt.size != self.f.hessian().shape[0]:
             raise ValueError('wrt size does not match with Q')
 
@@ -173,7 +173,7 @@ class SDG(LineSearchOptimizer):
     """
 
     def __init__(self, f, wrt=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
-                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
         """
 
         :param f:          the objective function.
@@ -236,7 +236,7 @@ class SDG(LineSearchOptimizer):
                               - 'error': the algorithm found a numerical error that prev_vents it from continuing
                            optimization (see min_a above).
         """
-        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot, args)
 
     def minimize(self):
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
@@ -328,8 +328,8 @@ class SDG(LineSearchOptimizer):
 class GD(Optimizer):
 
     def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.01, momentum=0.9,
-                 momentum_type='none', verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot)
+                 momentum_type='none', verbose=False, plot=False, args=None):
+        super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
         if not step_rate > 0:

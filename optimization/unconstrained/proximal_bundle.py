@@ -80,8 +80,9 @@ class PBM(Optimizer):
     #   = 'error': the solver of the master QP problem solver reported
     #     some error, which requires to stop optimization
 
-    def __init__(self, f, wrt=None, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot)
+    def __init__(self, f, wrt=None, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf,
+                 verbose=False, plot=False, args=None):
+        super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
         if not np.isscalar(mu):
             raise ValueError('mu is not a real scalar')
         if not mu > 0:

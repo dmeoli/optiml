@@ -97,9 +97,9 @@ class SGM(LineSearchOptimizer):
     #     necessarily the optimal one
 
     def __init__(self, f, wrt=None, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000,
-                 m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+                 m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
         super().__init__(f, wrt, eps, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf,
-                         min_a=min_a, verbose=verbose, plot=plot)
+                         min_a=min_a, verbose=verbose, plot=plot, args=args)
 
     def minimize(self):
         f_star = self.f.function(np.zeros((self.n,)))

@@ -109,9 +109,9 @@ class ACCG(LineSearchOptimizer):
     #     continuing optimization (see min_a above)
 
     def __init__(self, f, wrt=None, wf=0, eps=1e-6, max_f_eval=1000, mon=1e-6, m1=0.1, a_start=0.01,
-                 tau=0.9, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+                 tau=0.9, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
         super().__init__(f, wrt, eps, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf,
-                         min_a=min_a, verbose=verbose, plot=plot)
+                         min_a=min_a, verbose=verbose, plot=plot, args=args)
         if not np.isscalar(m1):
             raise ValueError('m1 is not a real scalar')
         if not 0 <= m1 < 1:

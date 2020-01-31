@@ -106,8 +106,8 @@ class NWTN(LineSearchOptimizer):
     #     continuing optimization (see mina above)
 
     def __init__(self, f, wrt=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, delta=1e-6, tau=0.9,
-                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False, args=None):
+        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot, args)
         if not np.isscalar(delta):
             raise ValueError('delta is not a real scalar')
         if not delta > 0:
