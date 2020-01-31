@@ -1,10 +1,7 @@
-import random
 from statistics import mean
 
-from ml.dataset import iris, orings, zoo, Majority, Parity, Xor
-from ml.learning import MultiLogisticRegressionLearner
-from ml.neural_network.neural_network import PerceptronLearner, NeuralNetLearner
-from ml.svm import MultiSVM
+import numpy as np
+
 from utils import *
 
 
@@ -123,18 +120,3 @@ def mean_squared_error(y, y_pred):
 
 def r2_score(y, y_pred):
     return 1 - (np.sum((y - y_pred) ** 2) / np.sum((y - np.mean(y)) ** 2))
-
-
-def compare(algorithms=None, datasets=None, k=10, trials=1):
-    """
-    Compare various learners on various datasets using cross-validation.
-    Print results as a table.
-    """
-    # default list of algorithms
-    algorithms = algorithms or [MultiLogisticRegressionLearner, MultiSVM, PerceptronLearner, NeuralNetLearner]
-
-    # default list of datasets
-    datasets = datasets or [iris, orings, zoo, Majority(7, 100), Parity(7, 100), Xor(100)]
-
-    print_table([[a.__name__.replace('Learner', '')] + [cross_validation(a, d, k=k, trials=trials) for d in datasets]
-                 for a in algorithms], header=[''] + [d.name[0:7] for d in datasets], numfmt='%.2f')

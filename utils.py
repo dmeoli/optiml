@@ -96,12 +96,6 @@ def iter_mini_batches(lst, batch_size, dims, n_cycles=None, random_state=None, d
         Infinite iterator of mini batches in random order (without replacement).
     """
 
-    # This if clause is for backward compatibility.
-    if type(n_cycles) == bool and not n_cycles:
-        n_cycles = None
-        warnings.warn("n_cycles=False kwarg to iter_mini_batches deprecated. "
-                      "Using n_cycles=None instead.")
-
     try:
         # case distinction for handling lists
         dm_result = [divmod(len(arr), batch_size)
