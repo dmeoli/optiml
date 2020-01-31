@@ -22,7 +22,7 @@ class Optimizer:
                          if True and the function's dimension is 2, nothing otherwise.
         """
         if not isinstance(f, Function):
-            raise ValueError('f not a function')
+            raise ValueError('f is not a function')
         self.f = f
         if wrt is None:
             wrt = np.random.standard_normal(f.n)

@@ -1,10 +1,147 @@
-import numpy as np
+import itertools
+import random
 
 
 def not_test(func):
     """Decorator to mark a function or method as *not* a test"""
     func.__test__ = False
     return func
+
+
+def arbitrary_slice(arr, start, stop=None, axis=0):
+    """Return a slice from `start` to `stop` in dimension `axis` of array `arr`.
+
+
+    Parameters
+    ----------
+
+    arr : array_like
+        Can be numpy ndarray, hdf5 dataset, or list.
+        If ``arr`` is a list, ``axis`` must be 0.
+
+    start : int
+        Index at which to start slicing.
+
+    stop : int, optional [default: None]
+        Index at which to stop slicing.
+        If not specified, the axis is sliced until its end.
+
+    axis : int, optional [default: 0]
+        Axis along which should be sliced
+
+
+    Returns
+    -------
+
+    slice : array_like
+        The respective slice of ``arr``
+    """
+
+    if type(arr) is list:
+        if axis == 0:
+            return arr[start:stop]
+        else:
+            raise ValueError("Cannot slice a list in non-zero axis {}".format(axis))
+
+    n_axes = len(arr.shape)
+
+    if axis >= n_axes:
+        raise IndexError('Argument `axis` with value {} out of range. '
+                         'Must be smaller than rank {} of `arr`.'.format(axis, n_axes))
+
+    this_slice = [slice(None) for _ in range(n_axes)]
+    this_slice[axis] = slice(start, stop)
+
+    return arr[tuple(this_slice)]
+
+
+def iter_mini_batches(lst, batch_size, dims, n_cycles=None, random_state=None, discard_illsized_batch=False):
+    """Return an iterator that successively yields tuples containing aligned
+    mini batches of size `batch_size` from sliceable objects given in `lst`, in
+    random order without replacement.
+    Because different containers might require slicing over different
+    dimensions, the dimension of each container has to be givens as a list
+    `dims`.
+
+
+    Parameters
+    ----------
+
+    lst : list of array_like
+        Each item of the list will be sliced into mini batches in alignment
+        with the others.
+
+    batch_size : int
+        Size of each batch. Last batch might be smaller.
+
+    dims : list
+        Aligned with ``lst``, gives the dimension along which the data samples
+        are separated.
+
+    n_cycles : int, optional [default: None]
+        Number of cycles after which to stop the iterator. If ``None``, will
+        yield forever.
+
+    random_state : a numpy.random.RandomState object, optional [default : None]
+        Random number generator that will act as a seed for the mini batch order.
+
+    discard_illsized_batch : bool, optional [default : False]
+        If ``True`` and the length of the sliced dimension is not divisible by
+        ``batch_size``, the leftover samples are discarded.
+
+
+    Returns
+    -------
+    batches : iterator
+        Infinite iterator of mini batches in random order (without replacement).
+    """
+
+    # This if clause is for backward compatibility.
+    if type(n_cycles) == bool and not n_cycles:
+        n_cycles = None
+        warnings.warn("n_cycles=False kwarg to iter_mini_batches deprecated. "
+                      "Using n_cycles=None instead.")
+
+    try:
+        # case distinction for handling lists
+        dm_result = [divmod(len(arr), batch_size)
+                     if d == 0 else divmod(arr.shape[d], batch_size)
+                     for (arr, d) in zip(lst, dims)]
+    except AttributeError:
+        raise AttributeError("'list' object has no attribute 'shape'. "
+                             "Trying to slice a list in a non-zero axis.")
+    except IndexError:
+        raise IndexError("tuple index out of range. "
+                         "Trying to slice along a non-existing dimension.")
+
+    # check if all to-be-sliced dimensions have the same length
+    if dm_result.count(dm_result[0]) == len(dm_result):
+        n_batches, rest = dm_result[0]
+        if rest and not discard_illsized_batch:
+            n_batches += 1
+    else:
+        raise ValueError("The axes along which to slice have unequal lengths.")
+
+    if random_state is not None:
+        random.seed(random_state.normal())
+
+    counter = itertools.count()
+    count = next(counter)
+
+    while True:
+        indices = range(n_batches)
+        while True:
+            if n_cycles is not None and count >= n_cycles:
+                raise StopIteration()
+            count = next(counter)
+
+            random.shuffle(indices)
+            for i in indices:
+                start = i * batch_size
+                stop = (i + 1) * batch_size
+                batch = [arbitrary_slice(arr, start, stop, axis) for (arr, axis)
+                         in zip(lst, dims)]
+                yield tuple(batch)
 
 
 def remove_all(item, seq):
@@ -25,8 +162,7 @@ def unique(seq):
 
 
 def num_or_str(x):
-    """The argument is a string; convert to a number if
-       possible, or strip it."""
+    """The argument is a string; convert to a number if possible, or strip it."""
     try:
         return int(x)
     except ValueError:
@@ -34,72 +170,3 @@ def num_or_str(x):
             return float(x)
         except ValueError:
             return str(x).strip()
-
-
-def isnumber(x):
-    """Is x a number?"""
-    return hasattr(x, '__int__')
-
-
-def print_table(table, header=None, sep='   ', numfmt='{}'):
-    """Print a list of lists as a table, so that columns line up nicely.
-    header, if specified, will be printed as the first row.
-    numfmt is the format for all numbers; you might want e.g. '{:.2f}'.
-    (If you want different formats in different columns,
-    don't use print_table.) sep is the separator between columns."""
-    justs = ['rjust' if isnumber(x) else 'ljust' for x in table[0]]
-
-    if header:
-        table.insert(0, header)
-
-    table = [[numfmt.format(x) if isnumber(x) else x for x in row]
-             for row in table]
-
-    sizes = list(map(lambda seq: max(map(len, seq)), list(zip(*[map(str, row) for row in table]))))
-
-    for row in table:
-        print(sep.join(getattr(str(x), j)(size) for (j, size, x) in zip(justs, sizes, row)))
-
-
-def scalar_vector_product(x, y):
-    """Return vector as a product of a scalar and a vector recursively."""
-    return [scalar_vector_product(x, _y) for _y in y] if hasattr(y, '__iter__') else x * y
-
-
-def map_vector(f, x):
-    """Apply function f to iterable x."""
-    return [map_vector(f, _x) for _x in x] if hasattr(x, '__iter__') else list(map(f, [x]))[0]
-
-
-def element_wise_product(x, y):
-    if hasattr(x, '__iter__') and hasattr(y, '__iter__'):
-        assert len(x) == len(y)
-        return [element_wise_product(_x, _y) for _x, _y in zip(x, y)]
-    elif hasattr(x, '__iter__') == hasattr(y, '__iter__'):
-        return x * y
-    else:
-        raise Exception('Inputs must be in the same size!')
-
-
-def matrix_multiplication(x, *y):
-    """Return a matrix as a matrix-multiplication of x and arbitrary number of matrices *y."""
-
-    result = x
-    for _y in y:
-        result = np.matmul(result, _y)
-
-    return result
-
-
-def vector_add(a, b):
-    """Component-wise addition of two vectors."""
-    if not (a and b):
-        return a or b
-    if hasattr(a, '__iter__') and hasattr(b, '__iter__'):
-        assert len(a) == len(b)
-        return list(map(vector_add, a, b))
-    else:
-        try:
-            return a + b
-        except TypeError:
-            raise Exception('Inputs must be in the same size!')

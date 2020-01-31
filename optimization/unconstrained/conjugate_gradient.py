@@ -1,12 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from optimization.functions import Quadratic
 from optimization.optimizer import LineSearchOptimizer, Optimizer
 
 
 class CGQ(Optimizer):
     def __init__(self, f, wrt=None, r_start=0, eps=1e-6, max_iter=1000, verbose=False, plot=False, args=None):
         super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
+        if not isinstance(f, Quadratic):
+            raise ValueError('f is not a quadratic function')
         if self.wrt.size != self.f.hessian().shape[0]:
             raise ValueError('wrt size does not match with Q')
         if not np.isscalar(r_start):
