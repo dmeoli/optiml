@@ -17,7 +17,7 @@ def arbitrary_slice(arr, start, stop=None, axis=0):
 
     arr : array_like
         Can be numpy ndarray, hdf5 dataset, or list.
-        If ``arr`` is a list, ``axis`` must be 0.
+        If arr is a list, axis must be 0.
 
     start : int
         Index at which to start slicing.
@@ -34,7 +34,7 @@ def arbitrary_slice(arr, start, stop=None, axis=0):
     -------
 
     slice : array_like
-        The respective slice of ``arr``
+        The respective slice of arr
     """
 
     if type(arr) is list:
@@ -55,7 +55,7 @@ def arbitrary_slice(arr, start, stop=None, axis=0):
     return arr[tuple(this_slice)]
 
 
-def iter_mini_batches(lst, batch_size, dims, n_cycles=None, random_state=None, discard_illsized_batch=False):
+def iter_mini_batches(lst, batch_size, dims, random_state=None):
     """Return an iterator that successively yields tuples containing aligned
     mini batches of size `batch_size` from sliceable objects given in `lst`, in
     random order without replacement.
@@ -75,20 +75,11 @@ def iter_mini_batches(lst, batch_size, dims, n_cycles=None, random_state=None, d
         Size of each batch. Last batch might be smaller.
 
     dims : list
-        Aligned with ``lst``, gives the dimension along which the data samples
+        Aligned with lst, gives the dimension along which the data samples
         are separated.
-
-    n_cycles : int, optional [default: None]
-        Number of cycles after which to stop the iterator. If ``None``, will
-        yield forever.
 
     random_state : a numpy.random.RandomState object, optional [default : None]
         Random number generator that will act as a seed for the mini batch order.
-
-    discard_illsized_batch : bool, optional [default : False]
-        If ``True`` and the length of the sliced dimension is not divisible by
-        ``batch_size``, the leftover samples are discarded.
-
 
     Returns
     -------
@@ -103,32 +94,23 @@ def iter_mini_batches(lst, batch_size, dims, n_cycles=None, random_state=None, d
                      for (arr, d) in zip(lst, dims)]
     except AttributeError:
         raise AttributeError("'list' object has no attribute 'shape'. "
-                             "Trying to slice a list in a non-zero axis.")
+                             'Trying to slice a list in a non-zero axis.')
     except IndexError:
-        raise IndexError("tuple index out of range. "
-                         "Trying to slice along a non-existing dimension.")
+        raise IndexError('tuple index out of range. '
+                         'Trying to slice along a non-existing dimension.')
 
     # check if all to-be-sliced dimensions have the same length
     if dm_result.count(dm_result[0]) == len(dm_result):
         n_batches, rest = dm_result[0]
-        if rest and not discard_illsized_batch:
-            n_batches += 1
     else:
-        raise ValueError("The axes along which to slice have unequal lengths.")
+        raise ValueError('The axes along which to slice have unequal lengths')
 
     if random_state is not None:
         random.seed(random_state.normal())
 
-    counter = itertools.count()
-    count = next(counter)
-
     while True:
         indices = range(n_batches)
         while True:
-            if n_cycles is not None and count >= n_cycles:
-                raise StopIteration()
-            count = next(counter)
-
             random.shuffle(indices)
             for i in indices:
                 start = i * batch_size
