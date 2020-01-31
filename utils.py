@@ -1,4 +1,3 @@
-import itertools
 import random
 
 
@@ -111,7 +110,7 @@ def iter_mini_batches(lst, batch_size, dims, random_state=None):
     while True:
         indices = range(n_batches)
         while True:
-            random.shuffle(indices)
+            random.shuffle(list(indices))
             for i in indices:
                 start = i * batch_size
                 stop = (i + 1) * batch_size
