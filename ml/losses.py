@@ -30,6 +30,9 @@ class LossFunction(Function):
         else:
             return 0
 
+    def jacobian(self, theta):
+        return (1 / self.X.shape[0]) * np.dot(self.X.T, self.predict(self.X, theta) - self.y)
+
 
 class MeanSquaredError(LossFunction):
     def __init__(self, X, y, regularization_type='l1', lmbda=0.1, alpha=0.2):
@@ -44,9 +47,6 @@ class MeanSquaredError(LossFunction):
         return (1 / 2 * self.X.shape[0]) * np.sum(
             np.square(self.predict(self.X, theta) - self.y)) + self.regularization(theta)
 
-    def jacobian(self, theta):
-        return (1 / self.X.shape[0]) * np.dot(self.X.T, self.predict(self.X, theta) - self.y)
-
 
 class MeanAbsoluteError(LossFunction):
     def __init__(self, X, y, regularization_type='l2', lmbda=0.1, alpha=0.2):
@@ -60,9 +60,6 @@ class MeanAbsoluteError(LossFunction):
         return (1 / 2 * self.X.shape[0]) * np.sum(
             np.abs(self.predict(self.X, theta) - self.y)) + self.regularization(theta)
 
-    def jacobian(self, theta):
-        return (1 / self.X.shape[0]) * np.dot(self.X.T, self.predict(self.X, theta) - self.y)
-
 
 class CrossEntropy(LossFunction):
     def __init__(self, X, y, regularization_type='l2', lmbda=0.1, alpha=0.2):
@@ -72,10 +69,7 @@ class CrossEntropy(LossFunction):
     def predict(X, theta, activation=Sigmoid):
         return activation().function(np.dot(X, theta))
 
-    def function(self, theta):
-        pred = self.predict(self.X, theta)
+    def function(self, theta, activation=Sigmoid):
+        pred = self.predict(self.X, theta, activation)
         return -(1 / self.X.shape[0]) * np.sum(
             self.y * np.log(pred) + (1 - self.y) * np.log(1 - pred)) + self.regularization(theta)
-
-    def jacobian(self, theta):
-        return (1 / self.X.shape[0]) * np.dot(self.X.T, self.predict(self.X, theta) - self.y)
