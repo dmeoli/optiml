@@ -1,14 +1,7 @@
 import random
 
-import numpy as np
-
-import utils
 from ml.learning import Learner
-from ml.losses import MeanSquaredError
-from ml.neural_network.initializers import zeros
 from ml.neural_network.layers import InputLayer, DenseLayer
-from optimization.unconstrained.adam import Adam
-from optimization.unconstrained.gradient_descent import GD
 
 
 def get_batch(examples, batch_size=1):

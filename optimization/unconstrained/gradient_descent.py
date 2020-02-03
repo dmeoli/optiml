@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.functions import Quadratic
+from ml.neural_network.initializers import random_normal
+from optimization.optimization_function import Quadratic
 from optimization.optimizer import Optimizer, LineSearchOptimizer
 
 
@@ -26,18 +27,17 @@ class SDQ(Optimizer):
                      x is the best solution found so far, but not necessarily the optimal one.
     """
 
-    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, verbose=False, plot=False, args=None):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
+    def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not isinstance(f, Quadratic):
             raise ValueError('f is not a quadratic function')
-        if self.wrt.size != self.f.hessian().shape[0]:
+        if self.wrt.size != self.f.Q.shape[0]:
             raise ValueError('wrt size does not match with Q')
 
     def minimize(self):
         if self.verbose:
-            f_star = self.f.function(np.zeros((self.n,)))
             print('iter\tf(x)\t\t||g(x)||', end='')
-            if f_star < np.inf:
+            if self.f.f_star() and self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
             print()
@@ -52,10 +52,10 @@ class SDQ(Optimizer):
             if self.verbose:
                 v = self.f.function(self.wrt, *args, **kwargs)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
-                if f_star < np.inf:
-                    print('\t{:1.4e}'.format(v - f_star), end='')
+                if self.f.f_star() and self.f.f_star() < np.inf:
+                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
+                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     prev_v = v
                 print()
 
@@ -71,7 +71,7 @@ class SDQ(Optimizer):
             d = -g
 
             # check if f is unbounded below
-            den = d.T.dot(self.f.hessian()).dot(d)
+            den = d.T.dot(self.f.hessian(self.wrt, *args, **kwargs)).dot(d)
 
             if den <= 1e-12:
                 # this is actually two different cases:
@@ -176,8 +176,8 @@ class SDG(LineSearchOptimizer):
     #   test.
     """
 
-    def __init__(self, f, wrt=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
-                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
+    def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9,
+                 a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         """
 
         :param f:          the objective function.
@@ -240,7 +240,7 @@ class SDG(LineSearchOptimizer):
                               - 'error': the algorithm found a numerical error that prev_vents it from continuing
                            optimization (see min_a above).
         """
-        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot, args)
+        super().__init__(f, wrt, batch_size, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
 
     def minimize(self):
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
@@ -248,31 +248,32 @@ class SDG(LineSearchOptimizer):
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
-            f_star = self.f.function(np.zeros((self.n,)))
-            if f_star > -np.inf:
+            if self.f.f_star() and self.f.f_star() > -np.inf:
                 print('f eval\trel gap\t\t||g(x)||\trate\t', end='')
                 prev_v = np.inf
             else:
                 print('f eval\tf(x)\t\t||g(x)||', end='')
             print('\tls\tit\ta*')
 
-        v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
-        ng = np.linalg.norm(g)
-
-        if self.eps < 0:
-            ng0 = -ng  # norm of first subgradient
-        else:
-            ng0 = 1  # un-scaled stopping criterion
-
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args, kwargs in self.args:
+            if self.iter == 1:
+                v, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
+                ng = np.linalg.norm(g)
+
+                if self.eps < 0:
+                    ng0 = -ng  # norm of first subgradient
+                else:
+                    ng0 = 1  # un-scaled stopping criterion
+
             if self.verbose:
-                if f_star > -np.inf:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
+                if self.f.f_star() and self.f.f_star() > -np.inf:
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - self.f.f_star()) /
+                                                           max(abs(self.f.f_star()), 1), ng), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
+                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
                         print('\t\t\t', end='')
                     prev_v = v
@@ -294,7 +295,7 @@ class SDG(LineSearchOptimizer):
 
             # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, *args, **kwargs)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args, kwargs)
 
             # output statistics
             if self.verbose:
@@ -332,9 +333,9 @@ class SDG(LineSearchOptimizer):
 
 class GD(Optimizer):
 
-    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.01, momentum=0.9,
-                 momentum_type='none', verbose=False, plot=False, args=None):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
+    def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.01,
+                 momentum_type='none', momentum=0.9, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
         if not step_rate > 0:
@@ -353,9 +354,8 @@ class GD(Optimizer):
 
     def minimize(self):
         if self.verbose:
-            f_star = self.f.function(np.zeros((self.n,)))
             print('iter\tf(x)\t\t||g(x)||', end='')
-            if f_star < np.inf:
+            if self.f.f_star() and self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
             print()
@@ -370,10 +370,10 @@ class GD(Optimizer):
             if self.verbose:
                 v = self.f.function(self.wrt, *args, **kwargs)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
-                if f_star < np.inf:
-                    print('\t{:1.4e}'.format(v - f_star), end='')
+                if self.f.f_star() and self.f.f_star() < np.inf:
+                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
+                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     prev_v = v
                 print()
 

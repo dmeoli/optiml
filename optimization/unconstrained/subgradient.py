@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from ml.neural_network.initializers import random_normal
 from optimization.optimizer import LineSearchOptimizer
 
 
@@ -96,20 +97,18 @@ class SGM(LineSearchOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, wrt=None, eps=1e-6, a_start=1e-4, tau=0.95, max_f_eval=1000,
-                 m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
-        super().__init__(f, wrt, eps, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf,
-                         min_a=min_a, verbose=verbose, plot=plot, args=args)
+    def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, a_start=1e-4, tau=0.95,
+                 max_f_eval=1000, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_f_eval, a_start=a_start, tau=tau,
+                         m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
 
     def minimize(self):
-        f_star = self.f.function(np.zeros((self.n,)))
-
-        if self.eps < 0 and f_star == -np.inf:
+        if self.eps < 0 and self.f.f_star() == -np.inf:
             # no way of cheating since the true optimal value is unknown
             self.eps = -self.eps  # revert to ordinary target level step size
 
         if self.verbose:
-            if f_star > -np.inf:
+            if self.f.f_star() and self.f.f_star() > -np.inf:
                 print('iter\trel gap\t\t||g(x)||\ta*')
             else:
                 print('iter\tf(x)\t\t||g(x)||\ta*')
@@ -139,13 +138,14 @@ class SGM(LineSearchOptimizer):
 
             # output statistics
             if self.verbose:
-                if f_star > -np.inf:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, (v - f_star) / max(abs(f_star), 1), ng), end='')
+                if self.f.f_star() and self.f.f_star() > -np.inf:
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, (v - self.f.f_star()) /
+                                                           max(abs(self.f.f_star()), 1), ng), end='')
                 else:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
 
             # stopping criteria
-            if self.eps < 0 and f_ref - f_star <= -self.eps * max(abs(f_star), 1):
+            if self.eps < 0 and f_ref - self.f.f_star() <= -self.eps * max(abs(self.f.f_star()), 1):
                 x_ref = self.wrt
                 status = 'optimal'
                 break
@@ -163,7 +163,7 @@ class SGM(LineSearchOptimizer):
             if self.eps > 0:  # Polyak step size with target level
                 a = (v - f_ref + delta) / ng
             elif self.eps < 0:  # true Polyak step size (cheating)
-                a = (v - f_star) / ng
+                a = (v - self.f.f_star()) / ng
             else:  # diminishing square-summable step size
                 a = self.line_search.a_start * (1 / self.iter)
 
@@ -198,9 +198,3 @@ class SGM(LineSearchOptimizer):
         if self.plot and self.n == 2:
             plt.show()
         return x, status
-
-
-if __name__ == "__main__":
-    import optimization.functions as tf
-
-    print(SGM(tf.quad1, [-1, 1], verbose=True, plot=True).minimize())

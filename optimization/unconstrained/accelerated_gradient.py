@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from ml.neural_network.initializers import random_normal
 from optimization.optimizer import LineSearchOptimizer
 
 
@@ -108,10 +109,10 @@ class ACCG(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, wrt=None, wf=0, eps=1e-6, max_f_eval=1000, mon=1e-6, m1=0.1, a_start=0.01,
-                 tau=0.9, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
-        super().__init__(f, wrt, eps, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf,
-                         min_a=min_a, verbose=verbose, plot=plot, args=args)
+    def __init__(self, f, wrt=random_normal, batch_size=None, wf=0, eps=1e-6, max_f_eval=1000, mon=1e-6,
+                 m1=0.1, a_start=0.01, tau=0.9, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_f_eval, a_start=a_start, tau=tau,
+                         m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
         if not np.isscalar(m1):
             raise ValueError('m1 is not a real scalar')
         if not 0 <= m1 < 1:
@@ -132,8 +133,7 @@ class ACCG(LineSearchOptimizer):
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
-            f_star = self.f.function(np.zeros((self.n,)))
-            if f_star > -np.inf:
+            if self.f.f_star() and self.f.f_star() > -np.inf:
                 print('f eval\trel gap', end='')
             else:
                 print('f eval\tf(x)', end='')
@@ -170,9 +170,9 @@ class ACCG(LineSearchOptimizer):
 
             # output statistics
             if self.verbose:
-                if f_star > -np.inf:
+                if self.f.f_star() and self.f.f_star() > -np.inf:
                     print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4f}'.format(
-                        f_eval, (v - f_star) / max(abs(f_star), 1), ng, gamma), end='')
+                        f_eval, (v - self.f.f_star()) / max(abs(self.f.f_star()), 1), ng, gamma), end='')
                 else:
                     print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4f}'.format(f_eval, v, ng, gamma), end='')
 
@@ -188,7 +188,7 @@ class ACCG(LineSearchOptimizer):
             # compute step size
             if self.m1 > 0:
                 a, xv, last_wrt, last_g, f_eval = self.line_search.search(
-                    -g, self.wrt, last_wrt, last_g, f_eval, v, -ng, *args, **kwargs)
+                    -g, self.wrt, last_wrt, last_g, f_eval, v, -ng, args, kwargs)
                 if self.line_search.a_start < 0:
                     self.line_search.a_start = abs(-a)
             else:  # fixed step size

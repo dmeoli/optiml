@@ -1,14 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from ml.neural_network.initializers import random_normal
 from optimization.optimizer import Optimizer
 
 
 class Adam(Optimizer):
 
-    def __init__(self, f, wrt=None, eps=1e-6, max_iter=1000, step_rate=0.001, beta1=0.9, beta2=0.999,
-                 momentum=0.9, momentum_type='none', offset=1e-8, verbose=False, plot=False, args=None):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
+    def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.001,
+                 momentum_type='none', momentum=0.9, beta1=0.9, beta2=0.999, offset=1e-8, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
         if not step_rate > 0:
@@ -41,9 +42,8 @@ class Adam(Optimizer):
 
     def minimize(self):
         if self.verbose:
-            f_star = self.f.function(np.zeros((self.n,)))
             print('iter\tf(x)\t\t||g(x)||', end='')
-            if f_star < np.inf:
+            if self.f.f_star() and self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
             print()
@@ -58,10 +58,10 @@ class Adam(Optimizer):
             if self.verbose:
                 v = self.f.function(self.wrt, *args, **kwargs)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
-                if f_star < np.inf:
-                    print('\t{:1.4e}'.format(v - f_star), end='')
+                if self.f.f_star() and self.f.f_star() < np.inf:
+                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
+                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     prev_v = v
                 print()
 
@@ -111,9 +111,3 @@ class Adam(Optimizer):
         if self.plot and self.n == 2:
             plt.show()
         return self.wrt, status
-
-
-if __name__ == "__main__":
-    import optimization.functions as tf
-
-    print(Adam(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from ml.neural_network.initializers import random_normal
 from optimization.optimizer import Optimizer
 
 
@@ -80,9 +81,9 @@ class PBM(Optimizer):
     #   = 'error': the solver of the master QP problem solver reported
     #     some error, which requires to stop optimization
 
-    def __init__(self, f, wrt=None, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf,
-                 verbose=False, plot=False, args=None):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
+    def __init__(self, f, wrt=random_normal, batch_size=None, mu=1, m1=0.01, eps=1e-6,
+                 max_iter=1000, m_inf=-np.inf, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(mu):
             raise ValueError('mu is not a real scalar')
         if not mu > 0:
@@ -98,44 +99,43 @@ class PBM(Optimizer):
         self.m_inf = m_inf
 
     def minimize(self):
-        f_star = self.f.function(np.zeros((self.n,)))
-
         if self.verbose:
-            if f_star > -np.inf:
+            if self.f.f_star() and self.f.f_star() > -np.inf:
                 print('iter\trel gap\t\t|| d ||\t\tstep')
             else:
                 print('iter\tf(x)\t\t|| d ||\t\tstep')
-
-        # compute first function and subgradient
-        fx, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
-
-        G = g.T  # matrix of subgradients
-        F = fx - g.T * self.wrt  # vector of translated function values
-        # each (fxi , gi , xi) gives the constraint
-        #
-        #  v >= fxi + gi' * (x + d - xi) = gi' * (x + d) + (fi - gi' * xi)
-        #
-        # so we just keep the single constant fi - gi' * xi instead of xi
-
-        ng = np.linalg.norm(g)
-        if self.eps < 0:
-            ng0 = -ng  # norm of first subgradient
-        else:
-            ng0 = 1  # un-scaled stopping criterion
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args, kwargs in self.args:
+            if self.iter == 1:
+                # compute first function and subgradient
+                fx, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
+
+                G = g.T  # matrix of subgradients
+                F = fx - g.T * self.wrt  # vector of translated function values
+                # each (fxi , gi , xi) gives the constraint
+                #
+                #  v >= fxi + gi' * (x + d - xi) = gi' * (x + d) + (fi - gi' * xi)
+                #
+                # so we just keep the single constant fi - gi' * xi instead of xi
+
+                ng = np.linalg.norm(g)
+                if self.eps < 0:
+                    ng0 = -ng  # norm of first subgradient
+                else:
+                    ng0 = 1  # un-scaled stopping criterion
+
             # construct the master problem
             d = sdpvar(self.n, 1)
             v = sdpvar(1, 1)
 
             M = v * np.ones(np.size(G, 1), 1) >= F + G * (d + self.wrt)
 
-            if f_star > -np.inf:
-                # this is cheating: use information about f_star in the model
-                M = M + [v >= f_star]
+            if self.f.f_star() and self.f.f_star() > -np.inf:
+                # this is cheating: use information about x_star in the model
+                M = M + [v >= self.f.f_star()]
 
             c = v + self.mu * np.linalg.norm(d) ** 2 / 2
 
@@ -153,8 +153,8 @@ class PBM(Optimizer):
             nd = np.linalg.norm(d)
 
             # output statistics
-            if f_star > -np.inf:
-                print('%4d\t%1.4e\t%1.4e'.format(self.iter, (fx - f_star) / max(abs(f_star), 1), nd))
+            if self.f.f_star() and self.f.f_star() > -np.inf:
+                print('%4d\t%1.4e\t%1.4e'.format(self.iter, (fx - self.f.f_star()) / max(abs(self.f.f_star()), 1), nd))
             else:
                 print('%4d\t%1.4e\t%1.4e'.format(self.iter, fx, nd))
 
@@ -206,9 +206,3 @@ class PBM(Optimizer):
         if self.plot and self.n == 2:
             plt.show()
         return self.wrt, status
-
-
-if __name__ == "__main__":
-    import optimization.functions as tf
-
-    print(PBM(tf.Rosenbrock(), [-1, 1], verbose=True, plot=True).minimize())

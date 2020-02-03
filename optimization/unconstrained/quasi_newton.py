@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from ml.neural_network.initializers import random_normal
 from optimization.optimizer import LineSearchOptimizer
 
 
@@ -107,9 +108,9 @@ class BFGS(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, wrt=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, delta=1,
-                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
-        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot, args)
+    def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+                 delta=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if not np.isscalar(delta):
             raise ValueError('delta is not a real scalar')
         self.delta = delta
@@ -121,47 +122,48 @@ class BFGS(LineSearchOptimizer):
 
         # initializations
         if self.verbose:
-            f_star = self.f.function(np.zeros((self.n,)))
-            if f_star > -np.inf:
+            if self.f.f_star() and self.f.f_star() > -np.inf:
                 print('f eval\trel gap', end='')
             else:
                 print('f eval\tf(x)', end='')
             print('\t\t||g(x)||\tls\tit\ta*\t\t\trho')
 
-        v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
-        ng = np.linalg.norm(g)
-        if self.eps < 0:
-            ng0 = -ng  # norm of first subgradient
-        else:
-            ng0 = 1  # un-scaled stopping criterion
-
-        if self.delta > 0:
-            # initial approximation of inverse of Hessian = scaled identity
-            B = self.delta * np.eye(self.n)
-        else:
-            # initial approximation of inverse of Hessian computed by finite
-            # differences of gradient
-            small_step = max(-self.delta, 1e-8)
-            B = np.zeros((self.n, self.n))
-            for i in range(self.n):
-                xp = self.wrt
-                xp[i] = xp[i] + small_step
-                gp = self.f.jacobian(xp)
-                B[i] = ((gp - g) / small_step).T
-            B = (B + B.T) / 2  # ensure it is symmetric
-            lambda_n = min(np.linalg.eigvalsh(B))  # smallest eigenvalue
-            if lambda_n < 1e-6:
-                B = B + (1e-6 - lambda_n) * np.eye(self.n)
-            B = np.linalg.inv(B)
-
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args, kwargs in self.args:
+            if self.iter == 1:
+                v, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
+                ng = np.linalg.norm(g)
+                if self.eps < 0:
+                    ng0 = -ng  # norm of first subgradient
+                else:
+                    ng0 = 1  # un-scaled stopping criterion
+
+                if self.delta > 0:
+                    # initial approximation of inverse of Hessian = scaled identity
+                    B = self.delta * np.eye(self.n)
+                else:
+                    # initial approximation of inverse of Hessian computed by finite
+                    # differences of gradient
+                    small_step = max(-self.delta, 1e-8)
+                    B = np.zeros((self.n, self.n))
+                    for i in range(self.n):
+                        xp = self.wrt
+                        xp[i] = xp[i] + small_step
+                        gp = self.f.jacobian(xp, *args, **kwargs)
+                        B[i] = ((gp - g) / small_step).T
+                    B = (B + B.T) / 2  # ensure it is symmetric
+                    lambda_n = min(np.linalg.eigvalsh(B))  # smallest eigenvalue
+                    if lambda_n < 1e-6:
+                        B = B + (1e-6 - lambda_n) * np.eye(self.n)
+                    B = np.linalg.inv(B)
+
             # output statistics
             if self.verbose:
-                if f_star > -np.inf:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
+                if self.f.f_star() and self.f.f_star() > -np.inf:
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - self.f.f_star()) /
+                                                           max(abs(self.f.f_star()), 1), ng), end='')
                 else:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, v, ng), end='')
 
@@ -181,7 +183,7 @@ class BFGS(LineSearchOptimizer):
 
             # compute step size: as in Newton's method, the default initial step size is 1
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, *args, **kwargs)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args, kwargs)
 
             # output statistics
             if self.verbose:

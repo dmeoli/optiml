@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from ml.neural_network.initializers import random_normal
 from optimization.optimizer import LineSearchOptimizer
 
 
@@ -105,9 +106,9 @@ class NWTN(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see mina above)
 
-    def __init__(self, f, wrt=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, delta=1e-6, tau=0.9,
-                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False, args=None):
-        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot, args)
+    def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+                 delta=1e-6, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if not np.isscalar(delta):
             raise ValueError('delta is not a real scalar')
         if not delta > 0:
@@ -121,32 +122,34 @@ class NWTN(LineSearchOptimizer):
 
         # initializations
         if self.verbose:
-            f_star = self.f.function(np.zeros((self.n,)))
-            if f_star > -np.inf:
+            if self.f.f_star() and self.f.f_star() > -np.inf:
                 print('f eval\trel gap\t\t||g(x)||\trate\t\tdelta\t', end='')
                 prev_v = np.inf
             else:
                 print('f eval\tf(x)\t\t||g(x)||\tdelta\t', end='')
             print('\tls\tit\ta*')
 
-        v, g, H = self.f.function(self.wrt), self.f.jacobian(self.wrt), self.f.hessian(self.wrt)
-        ng = np.linalg.norm(g)
-
-        if self.eps < 0:
-            ng0 = -ng  # norm of first subgradient
-        else:
-            ng0 = 1  # un-scaled stopping criterion
-
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args, kwargs in self.args:
+            if self.iter == 1:
+                v, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
+                H = self.f.hessian(self.wrt, *args, **kwargs)
+                ng = np.linalg.norm(g)
+
+                if self.eps < 0:
+                    ng0 = -ng  # norm of first subgradient
+                else:
+                    ng0 = 1  # un-scaled stopping criterion
+
             if self.verbose:
                 # output statistics
-                if f_star > -np.inf:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
+                if self.f.f_star() and self.f.f_star() > -np.inf:
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - self.f.f_star()) /
+                                                           max(abs(self.f.f_star()), 1), ng), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
+                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
                         print('\t\t\t', end='')
                     prev_v = v
@@ -178,7 +181,7 @@ class NWTN(LineSearchOptimizer):
 
             # compute step size: in Newton's method, the default initial step size is 1
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, *args, **kwargs)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args, kwargs)
 
             # output statistics
             if self.verbose:
@@ -203,7 +206,7 @@ class NWTN(LineSearchOptimizer):
 
             # update gradient and Hessian
             g = last_g
-            H = self.f.hessian(self.wrt)
+            H = self.f.hessian(self.wrt, *args, **kwargs)
             ng = np.linalg.norm(g)
 
             self.iter += 1

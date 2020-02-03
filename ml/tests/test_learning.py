@@ -3,6 +3,7 @@ import pytest
 
 from ml.dataset import DataSet
 from ml.learning import MultiLogisticRegressionLearner, LinearRegressionLearner
+from ml.losses import MeanSquaredError
 from ml.validation import err_ratio, grade_learner
 from optimization.unconstrained.quasi_newton import BFGS
 
@@ -25,8 +26,7 @@ def test_linear_learner():
     X, y = np.array([x[:n_features] for x in iris.examples]), \
            np.array([x[n_features] for x in iris.examples])
     ll = LinearRegressionLearner(optimizer=BFGS).fit(X, y)
-    x_star = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)  # or np.linalg.lstsq(X, y)[0]
-    assert np.allclose(ll.w, x_star, rtol=1e-4)
+    assert np.allclose(ll.w, MeanSquaredError(X, y).f_star(), rtol=1e-3)
 
 
 def test_logistic_learner():

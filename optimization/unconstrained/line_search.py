@@ -53,7 +53,7 @@ class LineSearch:
         self.min_a = min_a
         self.verbose = verbose
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None,  args=[], kwargs={}):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, args=None, kwargs=None):
         return NotImplementedError
 
 
@@ -94,7 +94,12 @@ class BLS(LineSearch):
         """
         super().__init__(f, max_f_eval, m1, a_start, tau, min_a, verbose)
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, args=[], kwargs={}):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, args=None, kwargs=None):
+
+        if args is None:
+            args = []
+        if kwargs is None:
+            kwargs = {}
 
         def f2phi(f, d, x, a, f_eval):
             # phi(a) = f(x + a * d)
@@ -178,7 +183,12 @@ class AWLS(LineSearch):
             raise ValueError('m2 is not a real scalar')
         self.m2 = m2
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None,  args=[], kwargs={}):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, args=None, kwargs=None):
+
+        if args is None:
+            args = []
+        if kwargs is None:
+            kwargs = {}
 
         def f2phi(f, d, x, a, f_eval):
             # phi(a) = f(x + a * d)

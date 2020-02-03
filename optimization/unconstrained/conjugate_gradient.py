@@ -1,16 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.functions import Quadratic
+from ml.neural_network.initializers import random_normal
+from optimization.optimization_function import Quadratic
 from optimization.optimizer import LineSearchOptimizer, Optimizer
 
 
 class CGQ(Optimizer):
-    def __init__(self, f, wrt=None, r_start=0, eps=1e-6, max_iter=1000, verbose=False, plot=False, args=None):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot, args)
+    def __init__(self, f, wrt=random_normal, batch_size=None, r_start=0,
+                 eps=1e-6, max_iter=1000, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not isinstance(f, Quadratic):
             raise ValueError('f is not a quadratic function')
-        if self.wrt.size != self.f.hessian().shape[0]:
+        if self.wrt.size != self.f.Q.shape[0]:
             raise ValueError('wrt size does not match with Q')
         if not np.isscalar(r_start):
             raise ValueError('r_start is not an integer scalar')
@@ -18,9 +20,8 @@ class CGQ(Optimizer):
 
     def minimize(self):
         if self.verbose:
-            f_star = self.f.function(np.zeros((self.n,)))
             print('iter\tf(x)\t\t||g(x)||', end='')
-            if f_star < np.inf:
+            if self.f.f_star() and self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
             print('\t\tbeta')
@@ -35,10 +36,10 @@ class CGQ(Optimizer):
             if self.verbose:
                 v = self.f.function(self.wrt, *args, **kwargs)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
-                if f_star < np.inf:
-                    print('\t{:1.4e}'.format(v - f_star), end='')
+                if self.f.f_star() and self.f.f_star() < np.inf:
+                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - f_star) / (prev_v - f_star)), end='')
+                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     prev_v = v
 
             # stopping criteria
@@ -62,7 +63,8 @@ class CGQ(Optimizer):
                     if self.verbose:
                         print('\t(res)', end='')
                 else:
-                    beta = g.T.dot(self.f.hessian()).dot(past_d) / past_d.T.dot(self.f.hessian()).dot(past_d)
+                    beta = g.T.dot(self.f.hessian(self.wrt, *args, **kwargs)).dot(past_d) / \
+                           past_d.T.dot(self.f.hessian(self.wrt, *args, **kwargs)).dot(past_d)
                     if self.verbose:
                         print('\t{:1.4f}'.format(beta))
 
@@ -72,7 +74,7 @@ class CGQ(Optimizer):
                     d = -g
 
             # check if f is unbounded below
-            den = d.T.dot(self.f.hessian()).dot(d)
+            den = d.T.dot(self.f.hessian(self.wrt, *args, **kwargs)).dot(d)
 
             if den <= 1e-12:
                 # this is actually two different cases:
@@ -114,9 +116,9 @@ class CGQ(Optimizer):
 
 
 class CGA(LineSearchOptimizer):
-    def __init__(self, f, wrt=None, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
-                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
-        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot, args)
+    def __init__(self, f, wrt=random_normal, batch_size=None, wf=0, r_start=0, eps=1e-6, max_f_eval=1000, m1=0.01,
+                 m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if wf < 0 or wf > 4:
@@ -242,9 +244,9 @@ class NCG(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, wrt=None, wf=0, eps=1e-6, max_f_eval=1000, r_start=0, m1=0.01, m2=0.9, a_start=1,
-                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False, args=None):
-        super().__init__(f, wrt, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot, args)
+    def __init__(self, f, wrt=random_normal, batch_size=None, wf=0, eps=1e-6, max_f_eval=1000, r_start=0, m1=0.01,
+                 m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if not 0 <= wf <= 3:
@@ -261,27 +263,28 @@ class NCG(LineSearchOptimizer):
 
         # initializations
         if self.verbose:
-            f_star = self.f.function(np.zeros((self.n,)))
-            if f_star > -np.inf:
+            if self.f.f_star() and self.f.f_star() > -np.inf:
                 print('f eval\trel gap', end='')
             else:
                 print('f eval\tf(x)', end='')
             print('\t\t||g(x)||\tbeta\tls\tit\ta*')
 
-        v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
-        ng = np.linalg.norm(g)
-        if self.eps < 0:
-            ng0 = -ng  # np.linalg.norm of first subgradient
-        else:
-            ng0 = 1  # un-scaled stopping criterion
-
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args, kwargs in self.args:
+            if self.iter == 1:
+                v, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
+                ng = np.linalg.norm(g)
+                if self.eps < 0:
+                    ng0 = -ng  # np.linalg.norm of first subgradient
+                else:
+                    ng0 = 1  # un-scaled stopping criterion
+
             if self.verbose:
-                if f_star > -np.inf:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - f_star) / max(abs(f_star), 1), ng), end='')
+                if self.f.f_star() and self.f.f_star() > -np.inf:
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - self.f.f_star()) /
+                                                           max(abs(self.f.f_star()), 1), ng), end='')
                 else:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, v, ng), end='')
 
@@ -331,7 +334,7 @@ class NCG(LineSearchOptimizer):
 
             # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, *args, **kwargs)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args, kwargs)
 
             # output statistics
             if self.verbose:

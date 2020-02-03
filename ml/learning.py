@@ -1,11 +1,8 @@
 import copy
-import itertools
 
 import numpy as np
 
-import utils
 from ml.losses import MeanSquaredError, CrossEntropy
-from ml.neural_network.initializers import zeros
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GD
 
@@ -31,15 +28,12 @@ class LinearRegressionLearner(Learner):
         self.alpha = alpha
 
     def fit(self, X, y):
-        loss_function = MeanSquaredError(self.regularization_type, self.lmbda, self.alpha)
-        args = itertools.repeat(([X, y[:, np.newaxis]], {})) if self.batch_size is None \
-            else ((i, {}) for i in utils.iter_mini_batches([X, y[:, np.newaxis]], self.batch_size))
+        loss_function = MeanSquaredError(X, y, self.regularization_type, self.lmbda, self.alpha)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(loss_function, zeros((X.shape[1], 1)), max_f_eval=self.epochs,
-                                    args=args).minimize()[0][:, 0]
+            self.w = self.optimizer(loss_function, batch_size=self.batch_size, max_f_eval=self.epochs).minimize()[0]
         else:
-            self.w = self.optimizer(loss_function, zeros((X.shape[1], 1)), step_rate=self.l_rate,
-                                    max_iter=self.epochs, args=args).minimize()[0][:, 0]
+            self.w = self.optimizer(loss_function, batch_size=self.batch_size, step_rate=self.l_rate,
+                                    max_iter=self.epochs).minimize()[0]
         return self
 
     def predict(self, x):
@@ -61,15 +55,12 @@ class BinaryLogisticRegressionLearner(Learner):
     def fit(self, X, y):
         self.labels = np.unique(y)
         y = np.where(y == self.labels[0], 0, 1)
-        loss_function = CrossEntropy(self.regularization_type, self.lmbda, self.alpha)
-        args = itertools.repeat(([X, y[:, np.newaxis]], {})) if self.batch_size is None \
-            else ((i, {}) for i in utils.iter_mini_batches([X, y[:, np.newaxis]], self.batch_size))
+        loss_function = CrossEntropy(X, y, self.regularization_type, self.lmbda, self.alpha)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(loss_function, zeros((X.shape[1], 1)), max_f_eval=self.epochs,
-                                    args=args).minimize()[0][:, 0]
+            self.w = self.optimizer(loss_function, batch_size=self.batch_size, max_f_eval=self.epochs).minimize()[0]
         else:
-            self.w = self.optimizer(loss_function, zeros((X.shape[1], 1)), step_rate=self.l_rate,
-                                    max_iter=self.epochs, args=args).minimize()[0][:, 0]
+            self.w = self.optimizer(loss_function, batch_size=self.batch_size, step_rate=self.l_rate,
+                                    max_iter=self.epochs).minimize()[0]
         return self
 
     def predict_score(self, x):
