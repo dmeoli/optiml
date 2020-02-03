@@ -7,19 +7,19 @@ from optimization.unconstrained.newton import NWTN
 
 def test_quadratic():
     x, _ = NWTN(quad1).minimize()
-    assert np.allclose(x, quad1.f_star())
+    assert np.allclose(x, quad1.x_star())
 
     x, _ = NWTN(quad2).minimize()
-    assert np.allclose(x, quad2.f_star())
+    assert np.allclose(x, quad2.x_star())
 
     x, _ = NWTN(quad5).minimize()
-    assert np.allclose(x, quad5.f_star())
+    assert np.allclose(x, quad5.x_star())
 
 
 def test_Rosenbrock():
     obj = Rosenbrock()
     x, _ = NWTN(obj).minimize()
-    assert np.allclose(x, obj.f_star())
+    assert np.allclose(x, obj.x_star())
 
 
 if __name__ == "__main__":

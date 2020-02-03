@@ -27,8 +27,8 @@ class SDQ(Optimizer):
                      x is the best solution found so far, but not necessarily the optimal one.
     """
 
-    def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
+    def __init__(self, f, wrt=random_normal, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+        super().__init__(f, wrt, eps=eps, max_iter=max_iter, verbose=verbose, plot=plot)
         if not isinstance(f, Quadratic):
             raise ValueError('f is not a quadratic function')
         if self.wrt.size != self.f.Q.shape[0]:

@@ -44,13 +44,13 @@ class MeanSquaredError(LossFunction):
     def __init__(self, X, y, regularization_type='l1', lmbda=0.1, alpha=0.2):
         super().__init__(X, y, regularization_type, lmbda, alpha)
 
-    def f_star(self):
-        if self.x_star is not None:
-            return self.function(self.x_star, self.X, self.y)
+    def x_star(self):
+        if self.x_opt is not None:
+            return self.x_opt
         else:
-            self.x_star = np.linalg.inv(self.X.T.dot(self.X)).dot(
+            self.x_opt = np.linalg.inv(self.X.T.dot(self.X)).dot(
                 self.X.T).dot(self.y)  # or np.linalg.lstsq(self.X, self.y)[0]
-            return self.function(self.x_star, self.X, self.y)
+            return self.x_opt
 
     @staticmethod
     def predict(X, theta):

@@ -10,11 +10,14 @@ class OptimizationFunction:
     def __init__(self, n=2):
         self.jac = jacobian(self.function)
         self.hes = hessian(self.function)
-        self.x_star = None
+        self.x_opt = None
         self.n = n
 
+    def x_star(self):
+        return self.x_opt
+
     def f_star(self):
-        raise NotImplementedError
+        return self.function(self.x_star(), *self.args())
 
     def args(self):
         return ()
@@ -56,15 +59,15 @@ class Quadratic(OptimizationFunction):
         self.Q = Q
         self.q = q
 
-    def f_star(self):
-        if self.x_star is not None:
-            return self.function(self.x_star, self.Q, self.q)
+    def x_star(self):
+        if self.x_opt is not None:
+            return self.x_opt
         else:
             try:
-                self.x_star = np.linalg.inv(self.Q).dot(self.q)  # or np.linalg.solve(self.Q, self.q)
+                self.x_opt = np.linalg.inv(self.Q).dot(self.q)  # or np.linalg.solve(self.Q, self.q)
             except np.linalg.LinAlgError:
-                self.x_star = np.full((self.n,), np.nan)
-            return self.function(self.x_star, self.Q, self.q)
+                self.x_opt = np.full((self.n,), np.nan)
+            return self.x_opt
 
     def args(self):
         return self.Q, self.q
@@ -113,7 +116,7 @@ class Quadratic(OptimizationFunction):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*self.x_star, 'r*', markersize=10)
+        contour_axes.plot(*self.x_star(), 'r*', markersize=10)
         return surface_plot, surface_axes, contour_plot, contour_axes
 
 
@@ -139,13 +142,13 @@ class Rosenbrock(OptimizationFunction):
         self.a = a
         self.b = b
 
-    def f_star(self):
-        if self.x_star is not None:
-            return self.function(self.x_star)
+    def x_star(self):
+        if self.x_opt is not None:
+            return self.x_opt
         else:
             # only in the trivial case where a = 0 the function is symmetric and the minimum is at the origin
-            self.x_star = np.zeros(self.n) if self.a is 0 else np.ones(self.n)
-            return self.function(self.x_star)
+            self.x_opt = np.zeros(self.n) if self.a is 0 else np.ones(self.n)
+            return self.x_opt
 
     def function(self, x):
         """
@@ -171,6 +174,6 @@ class Rosenbrock(OptimizationFunction):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*self.x_star, 'r*', markersize=10)
+        contour_axes.plot(*self.x_star(), 'r*', markersize=10)
 
         return surface_plot, surface_axes, contour_plot, contour_axes

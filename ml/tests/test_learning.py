@@ -26,7 +26,7 @@ def test_linear_learner():
     X, y = np.array([x[:n_features] for x in iris.examples]), \
            np.array([x[n_features] for x in iris.examples])
     ll = LinearRegressionLearner(optimizer=BFGS).fit(X, y)
-    assert np.allclose(ll.w, MeanSquaredError(X, y).f_star(), rtol=1e-3)
+    assert np.allclose(ll.w, MeanSquaredError(X, y).x_star(), rtol=1e-3)
 
 
 def test_logistic_learner():
