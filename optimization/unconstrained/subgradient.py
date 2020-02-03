@@ -108,7 +108,7 @@ class SGM(LineSearchOptimizer):
             self.eps = -self.eps  # revert to ordinary target level step size
 
         if self.verbose:
-            if self.f.f_star() and self.f.f_star() > -np.inf:
+            if self.f.f_star() > -np.inf:
                 print('iter\trel gap\t\t||g(x)||\ta*')
             else:
                 print('iter\tf(x)\t\t||g(x)||\ta*')
@@ -138,7 +138,7 @@ class SGM(LineSearchOptimizer):
 
             # output statistics
             if self.verbose:
-                if self.f.f_star() and self.f.f_star() > -np.inf:
+                if self.f.f_star() > -np.inf:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, (v - self.f.f_star()) /
                                                            max(abs(self.f.f_star()), 1), ng), end='')
                 else:

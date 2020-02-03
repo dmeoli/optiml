@@ -14,7 +14,7 @@ class OptimizationFunction:
         self.n = n
 
     def f_star(self):
-        return self.x_star
+        raise NotImplementedError
 
     def args(self):
         return ()
@@ -58,13 +58,13 @@ class Quadratic(OptimizationFunction):
 
     def f_star(self):
         if self.x_star is not None:
-            return self.x_star
+            return self.function(self.x_star, self.Q, self.q)
         else:
             try:
                 self.x_star = np.linalg.inv(self.Q).dot(self.q)  # or np.linalg.solve(self.Q, self.q)
             except np.linalg.LinAlgError:
                 self.x_star = np.full((self.n,), np.nan)
-            return self.x_star
+            return self.function(self.x_star, self.Q, self.q)
 
     def args(self):
         return self.Q, self.q
@@ -113,7 +113,7 @@ class Quadratic(OptimizationFunction):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*self.f_star(), 'r*', markersize=10)
+        contour_axes.plot(*self.x_star, 'r*', markersize=10)
         return surface_plot, surface_axes, contour_plot, contour_axes
 
 
@@ -141,11 +141,11 @@ class Rosenbrock(OptimizationFunction):
 
     def f_star(self):
         if self.x_star is not None:
-            return self.x_star
+            return self.function(self.x_star)
         else:
             # only in the trivial case where a = 0 the function is symmetric and the minimum is at the origin
             self.x_star = np.zeros(self.n) if self.a is 0 else np.ones(self.n)
-            return self.x_star
+            return self.function(self.x_star)
 
     def function(self, x):
         """
@@ -171,6 +171,6 @@ class Rosenbrock(OptimizationFunction):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*self.f_star(), 'r*', markersize=10)
+        contour_axes.plot(*self.x_star, 'r*', markersize=10)
 
         return surface_plot, surface_axes, contour_plot, contour_axes

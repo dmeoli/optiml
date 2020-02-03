@@ -46,11 +46,11 @@ class MeanSquaredError(LossFunction):
 
     def f_star(self):
         if self.x_star is not None:
-            return self.x_star
+            return self.function(self.x_star, self.X, self.y)
         else:
             self.x_star = np.linalg.inv(self.X.T.dot(self.X)).dot(
                 self.X.T).dot(self.y)  # or np.linalg.lstsq(self.X, self.y)[0]
-            return self.x_star
+            return self.function(self.x_star, self.X, self.y)
 
     @staticmethod
     def predict(X, theta):
