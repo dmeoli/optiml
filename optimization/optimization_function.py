@@ -113,7 +113,7 @@ class Quadratic(OptimizationFunction):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(self.x_star(), 'r*', markersize=10)
+        contour_axes.plot(*self.f_star(), 'r*', markersize=10)
         return surface_plot, surface_axes, contour_plot, contour_axes
 
 
@@ -171,6 +171,6 @@ class Rosenbrock(OptimizationFunction):
         contour_plot, contour_axes = plt.subplots()
 
         contour_axes.contour(x, y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(self.x_star(), 'r*', markersize=10)
+        contour_axes.plot(*self.f_star(), 'r*', markersize=10)
 
         return surface_plot, surface_axes, contour_plot, contour_axes
