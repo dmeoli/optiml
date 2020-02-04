@@ -29,19 +29,18 @@ def stochastic_gradient_descent(dataset, net, loss, epochs=1000, l_rate=0.01, ba
         random.shuffle(examples)
         weights = [[node.weights for node in layer.nodes] for layer in net]
 
-        for batch in get_batch(examples, batch_size):
-            inputs, targets = init_examples(batch, dataset.inputs, dataset.target, len(net[-1].nodes))
-            # compute gradients of weights
-            gs, batch_loss = BackPropagation(inputs, targets, weights, net, loss)
-            # update weights with gradient descent
-            weights = [x + y for x, y in zip(weights, [np.array(tg) * -l_rate for tg in gs])]
-            total_loss += batch_loss
+        inputs, targets = init_examples(examples, dataset.inputs, dataset.target, len(net[-1].nodes))
+        # compute gradients of weights
+        gs, batch_loss = BackPropagation(inputs, targets, weights, net, loss)
+        # update weights with gradient descent
+        weights = [x + y for x, y in zip(weights, [np.array(tg) * -l_rate for tg in gs])]
+        total_loss += batch_loss
 
-            # update the weights of network each batch
-            for i in range(len(net)):
-                if weights[i].size != 0:
-                    for j in range(len(weights[i])):
-                        net[i].nodes[j].weights = weights[i][j]
+        # update the weights of network each batch
+        for i in range(len(net)):
+            if weights[i].size != 0:
+                for j in range(len(weights[i])):
+                    net[i].nodes[j].weights = weights[i][j]
 
         if verbose:
             print("epoch:{}, total_loss:{}".format(e + 1, total_loss))
@@ -118,12 +117,6 @@ def BackPropagation(inputs, targets, theta, net, loss):
         total_gradients = vector_add(total_gradients, gradients)
 
     return total_gradients, batch_loss
-
-
-def get_batch(examples, batch_size=1):
-    """Split examples into multiple batches"""
-    for i in range(0, len(examples), batch_size):
-        yield examples[i: i + batch_size]
 
 
 def mean_squared_error_loss(x, y):

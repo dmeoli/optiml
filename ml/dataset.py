@@ -149,8 +149,6 @@ def parse_csv(input, delim=','):
     return [list(map(num_or_str, line.split(delim))) for line in lines]
 
 
-orings = DataSet(name='orings', target='Distressed', attr_names='Rings Distressed Temp Pressure Flightnum')
-
 zoo = DataSet(name='zoo', target='type', exclude=['name'],
               attr_names='name hair feathers eggs milk airborne aquatic predator toothed backbone '
                          'breathes venomous fins legs tail domestic catsize type')
