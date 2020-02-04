@@ -14,7 +14,8 @@ def err_ratio(learner, X, y):
         return 0.0
     right = 0
     for x, y in zip(X, y):
-        if np.isclose(learner.predict(x.reshape((1, -1))), y):
+        if np.isclose(learner(x) if callable(learner)
+                      else learner.predict(x.reshape((1, -1))), y):
             right += 1
     return 1 - (right / X.shape[0])
 
@@ -24,7 +25,8 @@ def grade_learner(learner, tests):
     Grades the given learner based on how many tests it passes.
     tests is a list with each element in the form: (values, output).
     """
-    return mean(int(learner.predict(x) == y) for x, y in tests)
+    return mean(int((learner(X) if callable(learner)
+                     else learner.predict(X)) == y) for X, y in tests)
 
 
 def train_test_split(dataset, start=None, end=None, test_split=None):

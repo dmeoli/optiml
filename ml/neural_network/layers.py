@@ -11,9 +11,9 @@ class Node:
     :param value: value of current node
     """
 
-    def __init__(self, w=None, value=None):
+    def __init__(self, weights=None, value=None):
         self.value = value
-        self.w = w or []
+        self.weights = weights or []
 
 
 class Layer:
@@ -72,13 +72,13 @@ class DenseLayer(Layer):
         self.inputs = None
         self.activation = activation()
         for node in self.nodes:
-            node.w = initializer(in_size)
+            node.weights = initializer(in_size)
 
     def forward(self, inputs):
         self.inputs = inputs
         res = []
         for unit in self.nodes:
-            val = self.activation.function(np.dot(unit.w, inputs))
+            val = self.activation.function(np.dot(unit.weights, inputs))
             unit.value = val
             res.append(val)
         return res
