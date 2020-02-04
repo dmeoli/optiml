@@ -124,81 +124,97 @@ def mean_squared_error_loss(x, y):
     return (1.0 / len(x)) * sum((_x - _y) ** 2 for _x, _y in zip(x, y))
 
 
-def NeuralNetLearner(dataset, hidden_layer_sizes, l_rate=0.01, epochs=1000, batch_size=1,
-                     optimizer=stochastic_gradient_descent, verbose=False):
+class NeuralNetLearner:
     """
     Simple dense multilayer neural network.
     :param hidden_layer_sizes: size of hidden layers in the form of a list
     """
 
-    input_size = len(dataset.inputs)
-    output_size = len(dataset.values[dataset.target])
+    def __init__(self, dataset, hidden_layer_sizes, l_rate=0.01, epochs=1000, batch_size=1,
+                 optimizer=stochastic_gradient_descent, verbose=False):
+        self.dataset = dataset
+        self.l_rate = l_rate
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.optimizer = optimizer
+        self.verbose = verbose
 
-    # initialize the network
-    raw_net = [InputLayer(input_size)]
-    # add hidden layers
-    hidden_input_size = input_size
-    for h_size in hidden_layer_sizes:
-        raw_net.append(DenseLayer(hidden_input_size, h_size))
-        hidden_input_size = h_size
-    raw_net.append(DenseLayer(hidden_input_size, output_size))
+        input_size = len(dataset.inputs)
+        output_size = len(dataset.values[dataset.target])
 
-    # update parameters of the network
-    learned_net = optimizer(dataset, raw_net, mean_squared_error_loss, epochs=epochs,
-                            l_rate=l_rate, batch_size=batch_size, verbose=verbose)
+        # initialize the network
+        raw_net = [InputLayer(input_size)]
+        # add hidden layers
+        hidden_input_size = input_size
+        for h_size in hidden_layer_sizes:
+            raw_net.append(DenseLayer(hidden_input_size, h_size))
+            hidden_input_size = h_size
+        raw_net.append(DenseLayer(hidden_input_size, output_size))
+        self.raw_net = raw_net
 
-    def predict(example):
-        n_layers = len(learned_net)
+    def fit(self, X, y):
+        # update parameters of the network
+        self.learned_net = self.optimizer(self.dataset, self.raw_net, mean_squared_error_loss, epochs=self.epochs,
+                                          l_rate=self.l_rate, batch_size=self.batch_size, verbose=self.verbose)
+        return self
+
+    def predict(self, example):
+        n_layers = len(self.learned_net)
 
         layer_input = example
         layer_out = example
 
         # get the output of each layer by forward passing
         for i in range(1, n_layers):
-            layer_out = learned_net[i].forward(layer_input)
+            layer_out = self.learned_net[i].forward(layer_input)
             layer_input = layer_out
 
         return layer_out.index(max(layer_out))
 
-    return predict
 
-
-def PerceptronLearner(dataset, l_rate=0.01, epochs=1000, batch_size=1,
-                      optimizer=stochastic_gradient_descent, verbose=False):
+class PerceptronLearner:
     """
     Simple perceptron neural network.
     """
 
-    input_size = len(dataset.inputs)
-    output_size = len(dataset.values[dataset.target])
+    def __init__(self, dataset, l_rate=0.01, epochs=1000, batch_size=1,
+                 optimizer=stochastic_gradient_descent, verbose=False):
+        self.dataset = dataset
+        self.l_rate = l_rate
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.optimizer = optimizer
+        self.verbose = verbose
 
-    # initialize the network, add dense layer
-    raw_net = [InputLayer(input_size), DenseLayer(input_size, output_size)]
+        input_size = len(dataset.inputs)
+        output_size = len(dataset.values[dataset.target])
 
-    # update the network
-    learned_net = optimizer(dataset, raw_net, mean_squared_error_loss, epochs=epochs,
-                            l_rate=l_rate, batch_size=batch_size, verbose=verbose)
+        # initialize the network, add dense layer
+        self.raw_net = [InputLayer(input_size), DenseLayer(input_size, output_size)]
 
-    def predict(example):
-        layer_out = learned_net[1].forward(example)
+    def fit(self, X, y):
+        self.learned_net = self.optimizer(self.dataset, self.raw_net, mean_squared_error_loss, epochs=self.epochs,
+                                          l_rate=self.l_rate, batch_size=self.batch_size, verbose=self.verbose)
+        return self
+
+    def predict(self, example):
+        layer_out = self.learned_net[1].forward(example)
         return layer_out.index(max(layer_out))
-
-    return predict
 
 
 if __name__ == "__main__":
     from ml.dataset import DataSet
     from ml.validation import grade_learner, err_ratio
 
-    iris_tests = [([5.0, 3.1, 0.9, 0.1], 0),
-                  ([5.1, 3.5, 1.0, 0.0], 0),
-                  ([4.9, 3.3, 1.1, 0.1], 0),
-                  ([6.0, 3.0, 4.0, 1.1], 1),
-                  ([6.1, 2.2, 3.5, 1.0], 1),
-                  ([5.9, 2.5, 3.3, 1.1], 1),
-                  ([7.5, 4.1, 6.2, 2.3], 2),
-                  ([7.3, 4.0, 6.1, 2.4], 2),
-                  ([7.0, 3.3, 6.1, 2.5], 2)]
+    iris_tests = [([[5.0, 3.1, 0.9, 0.1]], 0),
+                  ([[5.1, 3.5, 1.0, 0.0]], 0),
+                  ([[4.9, 3.3, 1.1, 0.1]], 0),
+                  ([[6.0, 3.0, 4.0, 1.1]], 1),
+                  ([[6.1, 2.2, 3.5, 1.0]], 1),
+                  ([[5.9, 2.5, 3.3, 1.1]], 1),
+                  ([[7.5, 4.1, 6.2, 2.3]], 2),
+                  ([[7.3, 4.0, 6.1, 2.4]], 2),
+                  ([[7.0, 3.3, 6.1, 2.5]], 2)]
 
     iris = DataSet(name='iris')
     classes = ['setosa', 'versicolor', 'virginica']
@@ -206,10 +222,11 @@ if __name__ == "__main__":
     n_samples, n_features = len(iris.examples), iris.target
     X, y = np.array([x[:n_features] for x in iris.examples]), \
            np.array([x[n_features] for x in iris.examples])
-    nnl = NeuralNetLearner(iris, [4])
+
+    nnl = NeuralNetLearner(iris, [4]).fit(X, y)
     print(grade_learner(nnl, iris_tests))
     print(err_ratio(nnl, X, y))
 
-    pl = PerceptronLearner(iris)
+    pl = PerceptronLearner(iris).fit(X, y)
     print(grade_learner(pl, iris_tests))
     print(err_ratio(pl, X, y))

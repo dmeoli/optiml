@@ -23,7 +23,7 @@ def test_neural_net():
     n_samples, n_features = len(iris.examples), iris.target
     X, y = np.array([x[:n_features] for x in iris.examples]), \
            np.array([x[n_features] for x in iris.examples])
-    nnl = NeuralNetLearner(iris, [4])
+    nnl = NeuralNetLearner(iris, [4]).fit(X, y)
     assert grade_learner(nnl, iris_tests) == 1
     assert err_ratio(nnl, X, y) < 0.04
 
@@ -35,7 +35,7 @@ def test_perceptron():
     n_samples, n_features = len(iris.examples), iris.target
     X, y = np.array([x[:n_features] for x in iris.examples]), \
            np.array([x[n_features] for x in iris.examples])
-    pl = PerceptronLearner(iris)
+    pl = PerceptronLearner(iris).fit(X, y)
     assert grade_learner(pl, iris_tests) == 1
     assert err_ratio(pl, X, y) < 0.05
 
