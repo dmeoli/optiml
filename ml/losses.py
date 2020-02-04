@@ -57,7 +57,7 @@ class MeanSquaredError(LossFunction):
         return np.dot(X, theta)
 
     def function(self, theta, X, y):
-        return (1 / 2 * X.shape[0]) * np.sum((self.predict(X, theta) - y) ** 2) + self.regularization(theta, X)
+        return (1 / X.shape[0]) * np.sum((self.predict(X, theta) - y) ** 2) + self.regularization(theta, X)
 
 
 class MeanAbsoluteError(LossFunction):
@@ -69,7 +69,7 @@ class MeanAbsoluteError(LossFunction):
         return np.dot(X, theta)
 
     def function(self, theta, X, y):
-        return (1 / 2 * X.shape[0]) * np.sum(np.abs(self.predict(X, theta) - y)) + self.regularization(theta, X)
+        return (1 / X.shape[0]) * np.sum(np.abs(self.predict(X, theta) - y)) + self.regularization(theta, X)
 
 
 class CrossEntropy(LossFunction):
