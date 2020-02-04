@@ -37,7 +37,7 @@ def test_perceptron():
            np.array([x[n_features] for x in iris.examples])
     pl = PerceptronLearner(iris)
     assert grade_learner(pl, iris_tests) == 1
-    assert np.isclose(err_ratio(pl, X, y), 0.04)
+    assert err_ratio(pl, X, y) < 0.05
 
 
 if __name__ == "__main__":
