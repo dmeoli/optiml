@@ -2,8 +2,6 @@ import os
 import random
 from statistics import mean
 
-from utils import remove_all, unique, num_or_str
-
 
 def mean_boolean_error(x, y):
     return mean(_x != _y for _x, _y in zip(x, y))
@@ -147,6 +145,34 @@ def parse_csv(input, delim=','):
     """
     lines = [line for line in input.splitlines() if line.strip()]
     return [list(map(num_or_str, line.split(delim))) for line in lines]
+
+
+def remove_all(item, seq):
+    """Return a copy of seq (or string) with all occurrences of item removed."""
+    if isinstance(seq, str):
+        return seq.replace(item, '')
+    elif isinstance(seq, set):
+        rest = seq.copy()
+        rest.remove(item)
+        return rest
+    else:
+        return [x for x in seq if x != item]
+
+
+def unique(seq):
+    """Remove duplicate elements from seq. Assumes hashable elements."""
+    return list(set(seq))
+
+
+def num_or_str(x):
+    """The argument is a string; convert to a number if possible, or strip it."""
+    try:
+        return int(x)
+    except ValueError:
+        try:
+            return float(x)
+        except ValueError:
+            return str(x).strip()
 
 
 zoo = DataSet(name='zoo', target='type', exclude=['name'],

@@ -123,31 +123,3 @@ def iter_mini_batches(lst, batch_size, dims=None, random_state=None):
                 batch = [arbitrary_slice(arr, start, stop, axis)
                          for (arr, axis) in zip(lst, dims)]
                 yield tuple(batch)
-
-
-def remove_all(item, seq):
-    """Return a copy of seq (or string) with all occurrences of item removed."""
-    if isinstance(seq, str):
-        return seq.replace(item, '')
-    elif isinstance(seq, set):
-        rest = seq.copy()
-        rest.remove(item)
-        return rest
-    else:
-        return [x for x in seq if x != item]
-
-
-def unique(seq):
-    """Remove duplicate elements from seq. Assumes hashable elements."""
-    return list(set(seq))
-
-
-def num_or_str(x):
-    """The argument is a string; convert to a number if possible, or strip it."""
-    try:
-        return int(x)
-    except ValueError:
-        try:
-            return float(x)
-        except ValueError:
-            return str(x).strip()

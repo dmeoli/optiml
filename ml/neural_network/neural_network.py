@@ -2,6 +2,7 @@ import random
 
 import numpy as np
 
+from ml.learning import Learner
 from ml.losses import MeanSquaredError
 from ml.neural_network.layers import InputLayer, DenseLayer
 from optimization.unconstrained.gradient_descent import GD
@@ -124,7 +125,7 @@ def mean_squared_error_loss(x, y):
     return (1.0 / len(x)) * sum((_x - _y) ** 2 for _x, _y in zip(x, y))
 
 
-class NeuralNetLearner:
+class NeuralNetLearner(Learner):
     """
     Simple dense multilayer neural network.
     :param hidden_layer_sizes: size of hidden layers in the form of a list
@@ -174,7 +175,7 @@ class NeuralNetLearner:
         return layer_out.index(max(layer_out))
 
 
-class PerceptronLearner:
+class PerceptronLearner(Learner):
     """
     Simple perceptron neural network.
     """
@@ -205,33 +206,3 @@ class PerceptronLearner:
     def predict(self, example):
         layer_out = self.learned_net[1].forward(np.array(example).reshape((-1, 1)))
         return layer_out.index(max(layer_out))
-
-
-if __name__ == "__main__":
-    from ml.dataset import DataSet
-    from ml.validation import grade_learner, err_ratio
-
-    iris_tests = [([5.0, 3.1, 0.9, 0.1], 0),
-                  ([5.1, 3.5, 1.0, 0.0], 0),
-                  ([4.9, 3.3, 1.1, 0.1], 0),
-                  ([6.0, 3.0, 4.0, 1.1], 1),
-                  ([6.1, 2.2, 3.5, 1.0], 1),
-                  ([5.9, 2.5, 3.3, 1.1], 1),
-                  ([7.5, 4.1, 6.2, 2.3], 2),
-                  ([7.3, 4.0, 6.1, 2.4], 2),
-                  ([7.0, 3.3, 6.1, 2.5], 2)]
-
-    iris = DataSet(name='iris')
-    classes = ['setosa', 'versicolor', 'virginica']
-    iris.classes_to_numbers(classes)
-    n_samples, n_features = len(iris.examples), iris.target
-    X, y = np.array([x[:n_features] for x in iris.examples]), \
-           np.array([x[n_features] for x in iris.examples])
-
-    nnl = NeuralNetLearner(iris, [4]).fit(X, y)
-    print(grade_learner(nnl, iris_tests))
-    print(err_ratio(nnl, X, y))
-
-    pl = PerceptronLearner(iris).fit(X, y)
-    print(grade_learner(pl, iris_tests))
-    print(err_ratio(pl, X, y))
