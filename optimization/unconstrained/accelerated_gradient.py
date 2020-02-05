@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.neural_network.initializers import random_normal
+from ml.initializers import random_normal
 from optimization.optimizer import LineSearchOptimizer
 
 

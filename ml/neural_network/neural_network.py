@@ -120,19 +120,19 @@ def scalar_vector_product(x, y):
     return [scalar_vector_product(x, _y) for _y in y] if hasattr(y, '__iter__') else x * y
 
 
-def mean_squared_error_loss(x, y):
+def mse(x, y):
     """Min square loss function. x and y are 1D iterable objects."""
     return (1.0 / len(x)) * sum((_x - _y) ** 2 for _x, _y in zip(x, y))
 
 
-class NeuralNetLearner(Learner):
+class NeuralNetworkLearner(Learner):
     """
     Simple dense multilayer neural network.
     :param hidden_layer_sizes: size of hidden layers in the form of a list
     """
 
     def __init__(self, dataset, hidden_layer_sizes, l_rate=0.01, epochs=1000, batch_size=10,
-                 optimizer=GD, loss=MeanSquaredError, verbose=False, plot=False):
+                 optimizer=GD, loss=mse, verbose=False, plot=False):
         self.dataset = dataset
         self.l_rate = l_rate
         self.epochs = epochs
@@ -156,9 +156,9 @@ class NeuralNetLearner(Learner):
         self.raw_net = raw_net
 
     def fit(self, X, y):
-        self.learned_net = BackPropagationLearning(self.dataset, self.raw_net, optimizer=self.optimizer,
-                                                   loss=mean_squared_error_loss, epochs=self.epochs,
-                                                   l_rate=self.l_rate, batch_size=self.batch_size, verbose=self.verbose)
+        self.learned_net = BackPropagationLearning(self.dataset, self.raw_net, optimizer=self.optimizer, loss=self.loss,
+                                                   epochs=self.epochs, l_rate=self.l_rate, batch_size=self.batch_size,
+                                                   verbose=self.verbose)
         return self
 
     def predict(self, example):
@@ -181,7 +181,7 @@ class PerceptronLearner(Learner):
     """
 
     def __init__(self, dataset, l_rate=0.01, epochs=1000, batch_size=10,
-                 optimizer=GD, loss=MeanSquaredError, verbose=False, plot=False):
+                 optimizer=GD, loss=mse, verbose=False, plot=False):
         self.dataset = dataset
         self.l_rate = l_rate
         self.epochs = epochs
@@ -198,9 +198,9 @@ class PerceptronLearner(Learner):
         self.raw_net = [InputLayer(input_size), DenseLayer(input_size, output_size)]
 
     def fit(self, X, y):
-        self.learned_net = BackPropagationLearning(self.dataset, self.raw_net, optimizer=self.optimizer,
-                                                   loss=mean_squared_error_loss, epochs=self.epochs,
-                                                   l_rate=self.l_rate, batch_size=self.batch_size, verbose=self.verbose)
+        self.learned_net = BackPropagationLearning(self.dataset, self.raw_net, optimizer=self.optimizer, loss=self.loss,
+                                                   epochs=self.epochs, l_rate=self.l_rate, batch_size=self.batch_size,
+                                                   verbose=self.verbose)
         return self
 
     def predict(self, example):

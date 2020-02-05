@@ -1,7 +1,7 @@
 import numpy as np
 
 from ml.neural_network.activations import Sigmoid, Softmax
-from ml.neural_network.initializers import random_uniform
+from ml.initializers import random_uniform
 
 
 class Node:

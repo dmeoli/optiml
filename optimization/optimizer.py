@@ -3,7 +3,7 @@ import itertools
 import numpy as np
 
 import utils
-from ml.neural_network.initializers import random_normal
+from ml.initializers import random_normal
 from optimization.optimization_function import OptimizationFunction
 from optimization.unconstrained.line_search import AWLS, BLS
 
