@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 
 from ml.learning import Learner
@@ -8,23 +6,7 @@ from ml.neural_network.layers import InputLayer, DenseLayer
 from optimization.unconstrained.gradient_descent import GD
 
 
-def init_examples(examples, idx_i, idx_t, o_units):
-    inputs, targets = {}, {}
-    for i, e in enumerate(examples):
-        # input values of e
-        inputs[i] = [e[i] for i in idx_i]
-        if o_units > 1:
-            # one-hot representation of e's target
-            t = [0 for i in range(o_units)]
-            t[e[idx_t]] = 1
-            targets[i] = t
-        else:
-            # target value of e
-            targets[i] = [e[idx_t]]
-    return inputs, targets
-
-
-def BackPropagationLearning(dataset, network, optimizer=GD, loss=MeanSquaredError, epochs=1000,
+def BackPropagationLearning(X, y, network, optimizer=GD, loss=MeanSquaredError, epochs=1000,
                             l_rate=0.01, batch_size=10, verbose=False):
     """
     The back-propagation algorithm for multilayer networks in only one epoch, to calculate gradients of theta.
@@ -36,21 +18,13 @@ def BackPropagationLearning(dataset, network, optimizer=GD, loss=MeanSquaredErro
     :return: gradients of theta, loss of the input batch
     """
 
-    examples = dataset.examples  # init data
-
-    for e in range(epochs):
+    for x in range(epochs):
         total_loss = 0
-        random.shuffle(examples)
+        # random.shuffle(examples)
         theta = [[node.weights for node in layer.nodes] for layer in network]
-
-        inputs, targets = init_examples(examples, dataset.inputs, dataset.target, len(network[-1].nodes))
-
-        # compute gradients of weights
-        assert len(inputs) == len(targets)
 
         o_units = len(network[-1].nodes)
         n_layers = len(network)
-        batch_size = len(inputs)
 
         gradients = [[[] for _ in layer.nodes] for layer in network]
         total_gradients = [[[0] * len(node.weights) for node in layer.nodes] for layer in network]
@@ -58,9 +32,10 @@ def BackPropagationLearning(dataset, network, optimizer=GD, loss=MeanSquaredErro
         batch_loss = 0
 
         # iterate over each example in batch
-        for e in range(batch_size):
-            i_val = inputs[e]
-            t_val = targets[e]
+        for x, t in zip(X, y):
+            i_val = x
+            t_val = np.zeros(o_units)
+            t_val[t] = 1
 
             # forward pass and compute batch loss
             for i in range(1, n_layers):
@@ -80,6 +55,7 @@ def BackPropagationLearning(dataset, network, optimizer=GD, loss=MeanSquaredErro
                 derivative = np.array([layer.activation.derivative(node.value) for node in layer.nodes])
                 delta[i] = previous * derivative
                 # pass to layer i-1 in the next iteration
+                a = np.matmul([delta[i]], theta[i])
                 previous = np.matmul([delta[i]], theta[i])[0]
                 # compute gradient of layer i
                 gradients[i] = [scalar_vector_product(d, network[i].inputs) for d in delta[i]]
@@ -98,7 +74,7 @@ def BackPropagationLearning(dataset, network, optimizer=GD, loss=MeanSquaredErro
                     network[i].nodes[j].weights = theta[i][j]
 
         if verbose:
-            print("epoch:{}, total_loss:{}".format(e + 1, total_loss))
+            print("epoch:{}, total_loss:{}".format(x + 1, total_loss))
 
     return network
 
@@ -133,7 +109,6 @@ class NeuralNetworkLearner(Learner):
 
     def __init__(self, dataset, hidden_layer_sizes, l_rate=0.01, epochs=1000, batch_size=10,
                  optimizer=GD, loss=mse, verbose=False, plot=False):
-        self.dataset = dataset
         self.l_rate = l_rate
         self.epochs = epochs
         self.batch_size = batch_size
@@ -156,7 +131,7 @@ class NeuralNetworkLearner(Learner):
         self.raw_net = raw_net
 
     def fit(self, X, y):
-        self.learned_net = BackPropagationLearning(self.dataset, self.raw_net, optimizer=self.optimizer, loss=self.loss,
+        self.learned_net = BackPropagationLearning(X, y, self.raw_net, optimizer=self.optimizer, loss=self.loss,
                                                    epochs=self.epochs, l_rate=self.l_rate, batch_size=self.batch_size,
                                                    verbose=self.verbose)
         return self
@@ -182,7 +157,6 @@ class PerceptronLearner(Learner):
 
     def __init__(self, dataset, l_rate=0.01, epochs=1000, batch_size=10,
                  optimizer=GD, loss=mse, verbose=False, plot=False):
-        self.dataset = dataset
         self.l_rate = l_rate
         self.epochs = epochs
         self.batch_size = batch_size
@@ -198,7 +172,7 @@ class PerceptronLearner(Learner):
         self.raw_net = [InputLayer(input_size), DenseLayer(input_size, output_size)]
 
     def fit(self, X, y):
-        self.learned_net = BackPropagationLearning(self.dataset, self.raw_net, optimizer=self.optimizer, loss=self.loss,
+        self.learned_net = BackPropagationLearning(X, y, self.raw_net, optimizer=self.optimizer, loss=self.loss,
                                                    epochs=self.epochs, l_rate=self.l_rate, batch_size=self.batch_size,
                                                    verbose=self.verbose)
         return self
