@@ -1,5 +1,7 @@
 import random
 
+import numpy as np
+
 
 def not_test(func):
     """Decorator to mark a function or method as not a test"""
@@ -123,3 +125,15 @@ def iter_mini_batches(lst, batch_size, dims=None, random_state=None):
                 batch = [arbitrary_slice(arr, start, stop, axis)
                          for (arr, axis) in zip(lst, dims)]
                 yield tuple(batch)
+
+
+def gaussian(mean, st_dev, x):
+    return 1 / (np.sqrt(2 * np.pi) * st_dev) * np.exp(-0.5 * (float(x - mean) / st_dev) ** 2)
+
+
+def gaussian_kernel(size=3):
+    return [gaussian((size - 1) / 2, 0.1, x) for x in range(size)]
+
+
+def conv1D(x, k):
+    return np.convolve(x, k, mode='same')

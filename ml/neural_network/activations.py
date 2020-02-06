@@ -19,7 +19,7 @@ class Sigmoid(Activation):
         return x * (1 - x)
 
 
-class Relu(Activation):
+class ReLU(Activation):
 
     def function(self, x):
         return np.max(0, x)
@@ -28,7 +28,7 @@ class Relu(Activation):
         return 1 if x > 0 else 0
 
 
-class Elu(Activation):
+class ELU(Activation):
 
     def function(self, x, alpha=0.01):
         return x if x > 0 else alpha * (np.exp(x) - 1)
@@ -46,7 +46,7 @@ class Tanh(Activation):
         return 1 - (x ** 2)
 
 
-class LeakyRelu(Activation):
+class LeakyReLU(Activation):
 
     def function(self, x, alpha=0.01):
         return x if x > 0 else alpha * x

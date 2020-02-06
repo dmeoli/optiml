@@ -1,7 +1,10 @@
+from statistics import stdev
+
 import numpy as np
 
 from ml.neural_network.activations import Sigmoid, Softmax
 from ml.initializers import random_uniform
+from utils import gaussian_kernel, conv1D
 
 
 class Node:
@@ -81,4 +84,69 @@ class DenseLayer(Layer):
             val = self.activation.function(np.dot(unit.weights, inputs))
             unit.value = val
             res.append(val)
+        return res
+
+
+class ConvLayer1D(Layer):
+
+    def __init__(self, size=3, kernel_size=3):
+        super().__init__(size)
+        # init convolution kernel as gaussian kernel
+        for node in self.nodes:
+            node.weights = gaussian_kernel(kernel_size)
+
+    def forward(self, features):
+        # each node in layer takes a channel in the features
+        assert len(self.nodes) == len(features)
+        res = []
+        for node, feature in zip(self.nodes, features):
+            out = conv1D(feature, node.weights)
+            res.append(out)
+            node.value = out
+        return res
+
+
+class MaxPoolingLayer1D(Layer):
+
+    def __init__(self, size=3, kernel_size=3):
+        super().__init__(size)
+        self.kernel_size = kernel_size
+        self.inputs = None
+
+    def forward(self, features):
+        assert len(self.nodes) == len(features)
+        res = []
+        self.inputs = features
+        # do max pooling for each channel in features
+        for i in range(len(self.nodes)):
+            feature = features[i]
+            # get the max value in a kernel_size * kernel_size area
+            out = [max(feature[i:i + self.kernel_size])
+                   for i in range(len(feature) - self.kernel_size + 1)]
+            res.append(out)
+            self.nodes[i].value = out
+        return res
+
+
+class BatchNormalizationLayer(Layer):
+
+    def __init__(self, size, eps=0.001):
+        super().__init__(size)
+        self.eps = eps
+        # self.weights = [beta, gamma]
+        self.weights = [0, 0]
+        self.inputs = None
+
+    def forward(self, inputs):
+        # mean value of inputs
+        mu = sum(inputs) / len(inputs)
+        # standard error of inputs
+        stderr = stdev(inputs)
+        self.inputs = inputs
+        res = []
+        # get normalized value of each input
+        for i in range(len(self.nodes)):
+            val = [(inputs[i] - mu) * self.weights[0] / np.sqrt(self.eps + stderr ** 2) + self.weights[1]]
+            res.append(val)
+            self.nodes[i].value = val
         return res

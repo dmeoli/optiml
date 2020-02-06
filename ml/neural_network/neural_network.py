@@ -37,7 +37,7 @@ def BackPropagationLearning(X, y, network, optimizer=GD, loss=MeanSquaredError, 
             t_val = np.zeros(o_units)
             t_val[t] = 1
 
-            # forward pass and compute batch loss
+            # propagate the inputs forward to compute the outputs
             for i in range(1, n_layers):
                 layer_out = network[i].forward(i_val)
                 i_val = layer_out
@@ -49,13 +49,12 @@ def BackPropagationLearning(X, y, network, optimizer=GD, loss=MeanSquaredError, 
             previous = np.array([layer_out[i] - t_val[i] for i in range(o_units)])
             h_layers = n_layers - 1
 
-            # backward pass
+            # propagate deltas backward from output layer to input layer
             for i in range(h_layers, 0, -1):
                 layer = network[i]
                 derivative = np.array([layer.activation.derivative(node.value) for node in layer.nodes])
                 delta[i] = previous * derivative
                 # pass to layer i-1 in the next iteration
-                a = np.matmul([delta[i]], theta[i])
                 previous = np.matmul([delta[i]], theta[i])[0]
                 # compute gradient of layer i
                 gradients[i] = [scalar_vector_product(d, network[i].inputs) for d in delta[i]]
