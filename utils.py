@@ -12,12 +12,11 @@ def not_test(func):
 def arbitrary_slice(arr, start, stop=None, axis=0):
     """Return a slice from start to stop in dimension axis of array arr.
 
-
     Parameters
     ----------
 
     arr : array_like
-        Can be numpy ndarray, hdf5 dataset, or list.
+        Can be numpy ndarray or list.
         If arr is a list, axis must be 0.
 
     start : int
@@ -29,7 +28,6 @@ def arbitrary_slice(arr, start, stop=None, axis=0):
 
     axis : int, optional [default: 0]
         Axis along which should be sliced
-
 
     Returns
     -------
@@ -63,7 +61,6 @@ def iter_mini_batches(lst, batch_size, dims=None, random_state=None):
     Because different containers might require slicing over different
     dimensions, the dimension of each container has to be givens as a list
     dims.
-
 
     Parameters
     ----------

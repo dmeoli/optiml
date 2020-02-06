@@ -17,18 +17,16 @@ class Learner:
 
 class LinearRegressionLearner(Learner):
 
-    def __init__(self, l_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
-                 regularization_type='l1', lmbda=0.1, alpha=0.2):
+    def __init__(self, l_rate=0.01, epochs=1000, batch_size=None, optimizer=GD, regularization_type='l1', lmbda=0.1):
         self.l_rate = l_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
         self.regularization_type = regularization_type
         self.lmbda = lmbda
-        self.alpha = alpha
 
     def fit(self, X, y):
-        loss_function = MeanSquaredError(X, y, self.regularization_type, self.lmbda, self.alpha)
+        loss_function = MeanSquaredError(X, y, self.regularization_type, self.lmbda)
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(loss_function, batch_size=self.batch_size, max_f_eval=self.epochs).minimize()[0]
         else:
@@ -42,20 +40,18 @@ class LinearRegressionLearner(Learner):
 
 class BinaryLogisticRegressionLearner(Learner):
 
-    def __init__(self, l_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
-                 regularization_type='l2', lmbda=0.1, alpha=0.2):
+    def __init__(self, l_rate=0.01, epochs=1000, batch_size=None, optimizer=GD, regularization_type='l2', lmbda=0.1):
         self.l_rate = l_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
         self.regularization_type = regularization_type
         self.lmbda = lmbda
-        self.alpha = alpha
 
     def fit(self, X, y):
         self.labels = np.unique(y)
         y = np.where(y == self.labels[0], 0, 1)
-        loss_function = CrossEntropy(X, y, self.regularization_type, self.lmbda, self.alpha)
+        loss_function = CrossEntropy(X, y, self.regularization_type, self.lmbda)
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(loss_function, batch_size=self.batch_size, max_f_eval=self.epochs).minimize()[0]
         else:
@@ -72,14 +68,13 @@ class BinaryLogisticRegressionLearner(Learner):
 
 class MultiLogisticRegressionLearner(Learner):
     def __init__(self, l_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
-                 regularization_type='l2', lmbda=0.1, alpha=0.2, decision_function='ovr'):
+                 regularization_type='l2', lmbda=0.1, decision_function='ovr'):
         self.l_rate = l_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
         self.regularization_type = regularization_type
         self.lmbda = lmbda
-        self.alpha = alpha
         if decision_function not in ('ovr', 'ovo'):
             raise ValueError("decision function must be either 'ovr' or 'ovo'")
         self.decision_function = decision_function
@@ -101,7 +96,7 @@ class MultiLogisticRegressionLearner(Learner):
                 y1[y1 != label] = -1.0
                 y1[y1 == label] = 1.0
                 clf = BinaryLogisticRegressionLearner(self.l_rate, self.epochs, self.batch_size, self.optimizer,
-                                                      self.regularization_type, self.lmbda, self.alpha)
+                                                      self.regularization_type, self.lmbda)
                 clf.fit(X, y1)
                 self.classifiers.append(copy.deepcopy(clf))
         elif self.decision_function == 'ovo':  # use one-vs-one method
@@ -113,7 +108,7 @@ class MultiLogisticRegressionLearner(Learner):
                     y1[y1 == labels[i]] = -1.0
                     y1[y1 == labels[j]] = 1.0
                     clf = BinaryLogisticRegressionLearner(self.l_rate, self.epochs, self.batch_size, self.optimizer,
-                                                          self.regularization_type, self.lmbda, self.alpha)
+                                                          self.regularization_type, self.lmbda)
                     clf.fit(x1, y1)
                     self.classifiers.append(copy.deepcopy(clf))
         return self
