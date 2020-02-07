@@ -128,7 +128,7 @@ class CGA(LineSearchOptimizer):
         self.r_start = r_start
 
     def minimize(self):
-        return NotImplementedError
+        raise NotImplementedError
 
 
 class NCG(LineSearchOptimizer):

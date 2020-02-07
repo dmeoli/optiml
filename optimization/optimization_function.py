@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 import autograd.numpy as np
 from autograd import jacobian, hessian
 from matplotlib import cm
@@ -6,7 +8,9 @@ from matplotlib.colors import LogNorm
 from mpl_toolkits.mplot3d import Axes3D
 
 
-class OptimizationFunction:
+class OptimizationFunction(ABC):
+
+    @abstractmethod
     def __init__(self, n=2):
         self.jac = jacobian(self.function)
         self.hes = hessian(self.function)

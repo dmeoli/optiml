@@ -1,4 +1,5 @@
 import itertools
+from abc import ABC, abstractmethod
 
 import numpy as np
 
@@ -8,7 +9,9 @@ from optimization.optimization_function import OptimizationFunction
 from optimization.unconstrained.line_search import AWLS, BLS
 
 
-class Optimizer:
+class Optimizer(ABC):
+
+    @abstractmethod
     def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         """
 
@@ -54,6 +57,8 @@ class Optimizer:
 
 
 class LineSearchOptimizer(Optimizer):
+
+    @abstractmethod
     def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9,
                  a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         """

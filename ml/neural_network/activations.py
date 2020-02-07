@@ -1,13 +1,15 @@
+from abc import ABC
+
 import numpy as np
 
 
-class Activation:
+class Activation(ABC):
 
     def function(self, x):
-        return NotImplementedError
+        raise NotImplementedError
 
     def derivative(self, x):
-        return NotImplementedError
+        raise NotImplementedError
 
 
 class Sigmoid(Activation):

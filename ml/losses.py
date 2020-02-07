@@ -32,7 +32,7 @@ class LossFunction(OptimizationFunction):
         return 0
 
     def jacobian(self, theta, X, y):
-        return (1 / X.shape[0]) * np.dot(X.T, self.predict(X, theta) - y)
+        return np.dot(X.T, self.predict(X, theta) - y) / X.shape[0]
 
 
 class MeanSquaredError(LossFunction):

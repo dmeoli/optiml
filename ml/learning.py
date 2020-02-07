@@ -9,10 +9,10 @@ from optimization.unconstrained.gradient_descent import GD
 
 class Learner:
     def fit(self, X, y):
-        return NotImplementedError
+        raise NotImplementedError
 
     def predict(self, x):
-        return NotImplementedError
+        raise NotImplementedError
 
 
 class LinearRegressionLearner(Learner):

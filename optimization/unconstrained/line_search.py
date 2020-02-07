@@ -54,7 +54,7 @@ class LineSearch:
         self.verbose = verbose
 
     def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, args=None, kwargs=None):
-        return NotImplementedError
+        raise NotImplementedError
 
 
 class BLS(LineSearch):
