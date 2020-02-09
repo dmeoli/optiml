@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.initializers import random_normal
+from ml.initializers import RandomUniform
 from optimization.optimization_function import Quadratic
 from optimization.optimizer import Optimizer, LineSearchOptimizer
 
@@ -27,7 +27,7 @@ class SDQ(Optimizer):
                      x is the best solution found so far, but not necessarily the optimal one.
     """
 
-    def __init__(self, f, wrt=random_normal, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+    def __init__(self, f, wrt=RandomUniform, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, wrt, eps=eps, max_iter=max_iter, verbose=verbose, plot=plot)
         if not isinstance(f, Quadratic):
             raise ValueError('f is not a quadratic function')
@@ -176,7 +176,7 @@ class SDG(LineSearchOptimizer):
     #   test.
     """
 
-    def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9,
+    def __init__(self, f, wrt=RandomUniform, batch_size=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9,
                  a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         """
 
@@ -333,7 +333,7 @@ class SDG(LineSearchOptimizer):
 
 class GD(Optimizer):
 
-    def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.01,
+    def __init__(self, f, wrt=RandomUniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.01,
                  momentum_type='none', momentum=0.9, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):

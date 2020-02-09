@@ -175,10 +175,6 @@ def num_or_str(x):
             return str(x).strip()
 
 
-zoo = DataSet(name='zoo', target='type', exclude=['name'],
-              attr_names='name hair feathers eggs milk airborne aquatic predator toothed backbone '
-                         'breathes venomous fins legs tail domestic catsize type')
-
 iris = DataSet(name='iris', target='class', attr_names='sepal-len sepal-width petal-len petal-width class')
 
 

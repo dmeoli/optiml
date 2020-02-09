@@ -1,181 +1,142 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.learning import Learner
-from ml.losses import MeanSquaredError
-from ml.neural_network.layers import InputLayer, DenseLayer
-from optimization.unconstrained.gradient_descent import GD
+from ml.neural_network.activations import Tanh, Sigmoid, SoftMax
+from ml.neural_network.dataloader import DataLoader
+from ml.initializers import RandomUniform, Constant, Zeros, GlorotUniform
+from ml.neural_network.layers import Dense, Conv2D, MaxPool2D, Flatten
+from ml.neural_network.losses import SigmoidCrossEntropy, SparseSoftMaxCrossEntropyWithLogits, MSE
+from ml.neural_network.metrics import accuracy
+from ml.neural_network.model import Model
+from ml.neural_network.optimizers import Adam
 
 
-def BackPropagationLearning(X, y, network, optimizer=GD, loss=MeanSquaredError, epochs=1000,
-                            l_rate=0.01, batch_size=10, verbose=False):
-    """
-    The back-propagation algorithm for multilayer networks in only one epoch, to calculate gradients of theta.
-    :param inputs: a batch of inputs in an array. Each input is an iterable object
-    :param targets: a batch of targets in an array. Each target is an iterable object
-    :param theta: parameters to be updated
-    :param network: a list of predefined layer objects representing their linear sequence
-    :param loss: a predefined loss function taking array of inputs and targets
-    :return: gradients of theta, loss of the input batch
-    """
+class Net(Model):
+    def __init__(self):
+        super().__init__()
+        w_init = GlorotUniform()
+        b_init = Constant(0.1)
 
-    for x in range(epochs):
-        total_loss = 0
-        # random.shuffle(examples)
-        theta = [[node.weights for node in layer.nodes] for layer in network]
+        self.seq_layers = self.sequential(
+            Dense(4, 4, Tanh(), w_init, b_init),
+            Dense(4, 4, Tanh(), w_init, b_init),
+            Dense(4, 1, Sigmoid()))
 
-        o_units = len(network[-1].nodes)
-        n_layers = len(network)
-
-        gradients = [[[] for _ in layer.nodes] for layer in network]
-        total_gradients = [[[0] * len(node.weights) for node in layer.nodes] for layer in network]
-
-        batch_loss = 0
-
-        # iterate over each example in batch
-        for x, t in zip(X, y):
-            i_val = x
-            t_val = np.zeros(o_units)
-            t_val[t] = 1
-
-            # propagate the inputs forward to compute the outputs
-            for i in range(1, n_layers):
-                layer_out = network[i].forward(i_val)
-                i_val = layer_out
-            batch_loss += loss(t_val, layer_out)
-
-            # initialize delta
-            delta = [[] for _ in range(n_layers)]
-
-            previous = np.array([layer_out[i] - t_val[i] for i in range(o_units)])
-            h_layers = n_layers - 1
-
-            # propagate deltas backward from output layer to input layer
-            for i in range(h_layers, 0, -1):
-                layer = network[i]
-                derivative = np.array([layer.activation.derivative(node.value) for node in layer.nodes])
-                delta[i] = previous * derivative
-                # pass to layer i-1 in the next iteration
-                previous = np.matmul([delta[i]], theta[i])[0]
-                # compute gradient of layer i
-                gradients[i] = [scalar_vector_product(d, network[i].inputs) for d in delta[i]]
-
-            # add gradient of current example to batch gradient
-            total_gradients = vector_add(total_gradients, gradients)
-
-        # update theta with gradient descent
-        theta = [x + y for x, y in zip(theta, [np.array(tg) * -l_rate for tg in total_gradients])]
-        total_loss += batch_loss
-
-        # update the weights of network each batch
-        for i in range(len(network)):
-            if theta[i].size != 0:
-                for j in range(len(theta[i])):
-                    network[i].nodes[j].weights = theta[i][j]
-
-        if verbose:
-            print("epoch:{}, total_loss:{}".format(x + 1, total_loss))
-
-    return network
+    def forward(self, x):
+        return self.seq_layers.forward(x)
 
 
-def vector_add(a, b):
-    if not (a and b):
-        return a or b
-    if hasattr(a, '__iter__') and hasattr(b, '__iter__'):
-        assert len(a) == len(b)
-        return list(map(vector_add, a, b))
-    else:
-        try:
-            return a + b
-        except TypeError:
-            raise Exception('Inputs must be in the same size!')
+class CNN(Model):
+    def __init__(self):
+        super().__init__()
+        self.seq_layers = self.sequential(
+            Conv2D(1, 6, (5, 5), (1, 1), "same", channels_last=True),  # => [n,28,28,6]
+            MaxPool2D(2, 2),  # => [n, 14, 14, 6]
+            Conv2D(6, 16, 5, 1, "same", channels_last=True),  # => [n,14,14,16]
+            MaxPool2D(2, 2),  # => [n,7,7,16]
+            Flatten(),  # => [n,7*7*16]
+            Dense(7 * 7 * 16, 10))
+
+    def forward(self, x):
+        return self.seq_layers.forward(x)
 
 
-def scalar_vector_product(x, y):
-    return [scalar_vector_product(x, _y) for _y in y] if hasattr(y, '__iter__') else x * y
+if __name__ == "__main__":
+    from sklearn.datasets import load_iris
 
+    x, y = load_iris(return_X_y=True)
+    y = y[:, np.newaxis]
 
-def mse(x, y):
-    """Min square loss function. x and y are 1D iterable objects."""
-    return (1.0 / len(x)) * sum((_x - _y) ** 2 for _x, _y in zip(x, y))
+    net = Net()
+    opt = Adam(net.params, lr=0.1)
+    loss_fn = SigmoidCrossEntropy()
 
+    for epoch in range(30):
+        o = net.forward(x)
+        loss = loss_fn(o, y)
+        net.backward(loss)
+        opt.step()
+        acc = accuracy(o.data > 0.5, y)
+        print("Epoch: %i | loss: %.5f | acc: %.2f" % (epoch, loss.data, acc))
 
-class NeuralNetworkLearner(Learner):
-    """
-    Simple dense multilayer neural network.
-    :param hidden_layer_sizes: size of hidden layers in the form of a list
-    """
+    x_test = x
+    y_test = y.ravel()
+    print(net.forward(x_test).data.ravel(), "\n", y_test)
 
-    def __init__(self, dataset, hidden_layer_sizes, l_rate=0.01, epochs=1000, batch_size=10,
-                 optimizer=GD, loss=mse, verbose=False, plot=False):
-        self.l_rate = l_rate
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.optimizer = optimizer
-        self.loss = loss
-        self.verbose = verbose
-        self.plot = plot
+    # REGRESSION
+    # x = np.linspace(-1, 1, 200)[:, None]  # [batch, 1]
+    # y = x ** 2 + np.random.normal(0., 0.1, (200, 1))  # [batch, 1]
+    #
+    # net = Net()
+    # opt = Adam(net.params, lr=0.1)
+    # loss_fn = MSE()
+    #
+    # for step in range(100):
+    #     o = net.forward(x)
+    #     loss = loss_fn(o, y)
+    #     net.backward(loss)
+    #     opt.step()
+    #     print("Step: %i | loss: %.5f" % (step, loss.data))
+    #
+    # net.save("./params.pkl")
+    # net1 = Net()
+    # net1.restore("./params.pkl")
+    # o2 = net1.forward(x)
+    #
+    # plt.scatter(x, y, s=20)
+    # plt.plot(x, o2.data, c="red", lw=3)
+    # plt.show()
+    #
+    # # CNN
+    # f = np.load('./mnist.npz')
+    # train_x, train_y = f['x_train'][:, :, :, None], f['y_train'][:, None]
+    # test_x, test_y = f['x_test'][:2000][:, :, :, None], f['y_test'][:2000]
+    #
+    # # from keras.datasets import mnist
+    # #
+    # # (train_x, train_y), (test_x, test_y) = mnist.load_data()
+    #
+    # train_loader = DataLoader(train_x, train_y, batch_size=64)
+    #
+    # cnn = CNN()
+    # opt = Adam(cnn.params, 0.001)
+    # loss_fn = SparseSoftMaxCrossEntropyWithLogits()
+    #
+    # for epoch in range(300):
+    #     bx, by = train_loader.next_batch()
+    #     by_ = cnn.forward(bx)
+    #     loss = loss_fn(by_, by)
+    #     cnn.backward(loss)
+    #     opt.step()
+    #     if epoch % 50 == 0:
+    #         ty_ = cnn.forward(test_x)
+    #         acc = accuracy(np.argmax(ty_.data, axis=1), test_y)
+    #         print("Epoch: %i | loss: %.3f | acc: %.2f" % (epoch, loss.data, acc))
 
-        input_size = len(dataset.inputs)
-        output_size = len(dataset.values[dataset.target])
-
-        # initialize the network
-        raw_net = [InputLayer(input_size)]
-        # add hidden layers
-        hidden_input_size = input_size
-        for h_size in hidden_layer_sizes:
-            raw_net.append(DenseLayer(hidden_input_size, h_size))
-            hidden_input_size = h_size
-        raw_net.append(DenseLayer(hidden_input_size, output_size))
-        self.raw_net = raw_net
-
-    def fit(self, X, y):
-        self.learned_net = BackPropagationLearning(X, y, self.raw_net, optimizer=self.optimizer, loss=self.loss,
-                                                   epochs=self.epochs, l_rate=self.l_rate, batch_size=self.batch_size,
-                                                   verbose=self.verbose)
-        return self
-
-    def predict(self, example):
-        n_layers = len(self.learned_net)
-
-        layer_input = example
-        layer_out = example
-
-        # get the output of each layer by forward passing
-        for i in range(1, n_layers):
-            layer_out = self.learned_net[i].forward(np.array(layer_input).reshape((-1, 1)))
-            layer_input = layer_out
-
-        return layer_out.index(max(layer_out))
-
-
-class PerceptronLearner(Learner):
-    """
-    Simple perceptron neural network.
-    """
-
-    def __init__(self, dataset, l_rate=0.01, epochs=1000, batch_size=10,
-                 optimizer=GD, loss=mse, verbose=False, plot=False):
-        self.l_rate = l_rate
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.optimizer = optimizer
-        self.loss = loss
-        self.verbose = verbose
-        self.plot = plot
-
-        input_size = len(dataset.inputs)
-        output_size = len(dataset.values[dataset.target])
-
-        # initialize the network, add dense layer
-        self.raw_net = [InputLayer(input_size), DenseLayer(input_size, output_size)]
-
-    def fit(self, X, y):
-        self.learned_net = BackPropagationLearning(X, y, self.raw_net, optimizer=self.optimizer, loss=self.loss,
-                                                   epochs=self.epochs, l_rate=self.l_rate, batch_size=self.batch_size,
-                                                   verbose=self.verbose)
-        return self
-
-    def predict(self, example):
-        layer_out = self.learned_net[1].forward(np.array(example).reshape((-1, 1)))
-        return layer_out.index(max(layer_out))
+    # from ml.dataset import DataSet
+    # from ml.validation import grade_learner, err_ratio
+    #
+    # iris_tests = [([[5.0, 3.1, 0.9, 0.1]], 0),
+    #               ([[5.1, 3.5, 1.0, 0.0]], 0),
+    #               ([[4.9, 3.3, 1.1, 0.1]], 0),
+    #               ([[6.0, 3.0, 4.0, 1.1]], 1),
+    #               ([[6.1, 2.2, 3.5, 1.0]], 1),
+    #               ([[5.9, 2.5, 3.3, 1.1]], 1),
+    #               ([[7.5, 4.1, 6.2, 2.3]], 2),
+    #               ([[7.3, 4.0, 6.1, 2.4]], 2),
+    #               ([[7.0, 3.3, 6.1, 2.5]], 2)]
+    #
+    # iris = DataSet(name='iris')
+    # classes = ['setosa', 'versicolor', 'virginica']
+    # iris.classes_to_numbers(classes)
+    # n_samples, n_features = len(iris.examples), iris.target
+    # X, y = np.array([x[:n_features] for x in iris.examples]), \
+    #        np.array([x[n_features] for x in iris.examples])
+    #
+    # nnl = NeuralNetworkLearner(iris, [4]).fit(X, y)
+    # print(grade_learner(nnl, iris_tests))
+    # print(err_ratio(nnl, X, y))
+    #
+    # pl = PerceptronLearner(iris).fit(X, y)
+    # print(grade_learner(pl, iris_tests))
+    # print(err_ratio(pl, X, y))

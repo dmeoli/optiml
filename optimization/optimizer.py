@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 import utils
-from ml.initializers import random_normal
+from ml.initializers import RandomUniform
 from optimization.optimization_function import OptimizationFunction
 from optimization.unconstrained.line_search import AWLS, BLS
 
@@ -12,7 +12,7 @@ from optimization.unconstrained.line_search import AWLS, BLS
 class Optimizer(ABC):
 
     @abstractmethod
-    def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+    def __init__(self, f, wrt=RandomUniform, batch_size=None, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         """
 
         :param f:        the objective function.
@@ -27,7 +27,7 @@ class Optimizer(ABC):
                          if True and the function's dimension is 2, nothing otherwise.
         """
         if not isinstance(f, OptimizationFunction):
-            raise ValueError('f is not an optimization function')
+            raise TypeError('f is not an optimization function')
         self.f = f
         if callable(wrt):
             wrt = wrt(f.n)
@@ -59,7 +59,7 @@ class Optimizer(ABC):
 class LineSearchOptimizer(Optimizer):
 
     @abstractmethod
-    def __init__(self, f, wrt=random_normal, batch_size=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9,
+    def __init__(self, f, wrt=RandomUniform, batch_size=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9,
                  a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         """
 

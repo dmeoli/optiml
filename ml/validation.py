@@ -1,7 +1,5 @@
 from statistics import mean
 
-import numpy as np
-
 from utils import *
 
 
@@ -101,22 +99,3 @@ def cross_validation(learner, dataset, size=None, k=10, trials=1):
             # reverting back to original once test is completed
             dataset.examples = examples
         return fold_errs / k
-
-
-def learning_curve(learner, dataset, trials=10, sizes=None):
-    if sizes is None:
-        sizes = list(range(2, len(dataset.examples) - trials, 2))
-
-    def score(learner, size):
-        random.shuffle(dataset.examples)
-        return cross_validation(learner, dataset, size, trials)
-
-    return [(size, mean([score(learner, size) for _ in range(trials)])) for size in sizes]
-
-
-def mean_squared_error(y, y_pred):
-    return ((y - y_pred) ** 2).mean()
-
-
-def r2_score(y, y_pred):
-    return 1 - (np.sum((y - y_pred) ** 2) / np.sum((y - np.mean(y)) ** 2))

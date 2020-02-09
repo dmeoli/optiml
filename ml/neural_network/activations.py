@@ -4,63 +4,84 @@ import numpy as np
 
 
 class Activation(ABC):
-
-    def function(self, x):
+    def forward(self, x):
         raise NotImplementedError
 
     def derivative(self, x):
         raise NotImplementedError
 
+    def __call__(self, *inputs):
+        return self.forward(*inputs)
 
-class Sigmoid(Activation):
 
-    def function(self, x):
-        return 1 / (1 + np.exp(-x))
+class Linear(Activation):
+    def forward(self, x):
+        return x
 
     def derivative(self, x):
-        return x * (1 - x)
+        return np.ones_like(x)
 
 
 class ReLU(Activation):
-
-    def function(self, x):
-        return np.max(0, x)
-
-    def derivative(self, x):
-        return 1 if x > 0 else 0
-
-
-class ELU(Activation):
-
-    def function(self, x, alpha=0.01):
-        return x if x > 0 else alpha * (np.exp(x) - 1)
-
-    def derivative(self, x, alpha=0.01):
-        return 1 if x > 0 else alpha * np.exp(x)
-
-
-class Tanh(Activation):
-
-    def function(self, x):
-        return np.tanh(x)
+    def forward(self, x):
+        return np.maximum(0, x)
 
     def derivative(self, x):
-        return 1 - (x ** 2)
+        return np.where(x > 0, np.ones_like(x), np.zeros_like(x))
 
 
 class LeakyReLU(Activation):
+    def __init__(self, alpha=0.01):
+        self.alpha = alpha
 
-    def function(self, x, alpha=0.01):
-        return x if x > 0 else alpha * x
-
-    def derivative(self, x, alpha=0.01):
-        return 1 if x > 0 else alpha
-
-
-class Softmax(Activation):
-
-    def function(self, x):
-        return np.exp(x) / np.sum(np.exp(x))
+    def forward(self, x):
+        return np.maximum(self.alpha * x, x)
 
     def derivative(self, x):
-        return np.diagflat(x) - np.dot(x, x.T)
+        return np.where(x > 0., np.ones_like(x), np.full_like(x, self.alpha))
+
+
+class ELU(Activation):
+    def __init__(self, alpha=0.01):
+        self.alpha = alpha
+
+    def forward(self, x):
+        return np.maximum(x, self.alpha * (np.exp(x) - 1))
+
+    def derivative(self, x):
+        return np.where(x > 0., np.ones_like(x), self.forward(x) + self.alpha)
+
+
+class Tanh(Activation):
+    def forward(self, x):
+        return np.tanh(x)
+
+    def derivative(self, x):
+        return 1. - np.square(np.tanh(x))
+
+
+class Sigmoid(Activation):
+    def forward(self, x):
+        return 1. / (1. + np.exp(-x))
+
+    def derivative(self, x):
+        f = self.forward(x)
+        return f * (1. - f)
+
+
+class SoftPlus(Activation):
+    def forward(self, x):
+        return np.log(1. + np.exp(x))
+
+    def derivative(self, x):
+        return 1. / (1. + np.exp(-x))
+
+
+class SoftMax(Activation):
+    def forward(self, x, axis=-1):
+        shift_x = x - np.max(x, axis=axis, keepdims=True)
+        exp = np.exp(shift_x + 1e-6)
+        return exp / np.sum(exp, axis=axis, keepdims=True)
+
+    def derivative(self, x):
+        return np.ones_like(x)
