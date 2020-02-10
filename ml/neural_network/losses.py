@@ -1,11 +1,10 @@
-from abc import ABC
-
 import numpy as np
 
 from ml.neural_network.activations import SoftMax
 
 
-class Loss(ABC):
+class Loss:
+
     def __init__(self, loss, delta):
         self.data = loss
         self.delta = delta
@@ -15,6 +14,7 @@ class Loss(ABC):
 
 
 class LossFunction:
+
     def __init__(self):
         self._pred = None
         self._target = None
@@ -37,8 +37,6 @@ class LossFunction:
 
 
 class MSE(LossFunction):
-    def __init__(self):
-        super().__init__()
 
     def apply(self, prediction, target):
         t = target if target.dtype is np.float32 else target.astype(np.float32)
@@ -53,6 +51,7 @@ class MSE(LossFunction):
 
 
 class CrossEntropy(LossFunction):
+
     def __init__(self):
         super().__init__()
         self._eps = 1e-6
@@ -66,8 +65,6 @@ class CrossEntropy(LossFunction):
 
 
 class SoftMaxCrossEntropy(CrossEntropy):
-    def __init__(self):
-        super().__init__()
 
     def apply(self, prediction, target):
         t = target if target.dtype is np.float32 else target.astype(np.float32)
@@ -85,8 +82,6 @@ class SoftMaxCrossEntropy(CrossEntropy):
 
 
 class SoftMaxCrossEntropyWithLogits(CrossEntropy):
-    def __init__(self):
-        super().__init__()
 
     def apply(self, prediction, target):
         t = target if target.dtype is np.float32 else target.astype(np.float32)
@@ -104,8 +99,6 @@ class SoftMaxCrossEntropyWithLogits(CrossEntropy):
 
 
 class SparseSoftMaxCrossEntropy(CrossEntropy):
-    def __init__(self):
-        super().__init__()
 
     def apply(self, prediction, target):
         target = target.astype(np.int32) if target.dtype is not np.int32 else target
@@ -123,8 +116,6 @@ class SparseSoftMaxCrossEntropy(CrossEntropy):
 
 
 class SparseSoftMaxCrossEntropyWithLogits(CrossEntropy):
-    def __init__(self):
-        super().__init__()
 
     def apply(self, prediction, target):
         target = target.astype(np.int32) if target.dtype is not np.int32 else target
@@ -142,8 +133,6 @@ class SparseSoftMaxCrossEntropyWithLogits(CrossEntropy):
 
 
 class SigmoidCrossEntropy(CrossEntropy):
-    def __init__(self):
-        super().__init__()
 
     def apply(self, prediction, target):
         t = target if target.dtype is np.float32 else target.astype(np.float32)

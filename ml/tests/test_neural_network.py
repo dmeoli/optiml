@@ -1,43 +1,23 @@
 import numpy as np
 import pytest
+from sklearn.datasets import load_iris
 
-from ml.dataset import DataSet
-# from ml.neural_network.neural_network import NeuralNetworkLearner, PerceptronLearner
-from ml.validation import err_ratio, grade_learner
+from ml.neural_network.activations import Tanh, Sigmoid
+from ml.neural_network.layers import Dense
+from ml.neural_network.losses import MSE
+from ml.neural_network.neural_network import Network
+from ml.neural_network.optimizers import Adam
 
-iris_tests = [([[5.0, 3.1, 0.9, 0.1]], 0),
-              ([[5.1, 3.5, 1.0, 0.0]], 0),
-              ([[4.9, 3.3, 1.1, 0.1]], 0),
-              ([[6.0, 3.0, 4.0, 1.1]], 1),
-              ([[6.1, 2.2, 3.5, 1.0]], 1),
-              ([[5.9, 2.5, 3.3, 1.1]], 1),
-              ([[7.5, 4.1, 6.2, 2.3]], 2),
-              ([[7.3, 4.0, 6.1, 2.4]], 2),
-              ([[7.0, 3.3, 6.1, 2.5]], 2)]
+X, y = load_iris(return_X_y=True)
+X, y = X, y[:, np.newaxis]
 
 
-def test_neural_net():
-    iris = DataSet(name='iris')
-    classes = ['setosa', 'versicolor', 'virginica']
-    iris.classes_to_numbers(classes)
-    n_samples, n_features = len(iris.examples), iris.target
-    X, y = np.array([x[:n_features] for x in iris.examples]), \
-           np.array([x[n_features] for x in iris.examples])
-    # nnl = NeuralNetworkLearner(iris, [4]).fit(X, y)
-    # assert grade_learner(nnl, iris_tests) == 1
-    # assert err_ratio(nnl, X, y) < 0.05
-
-
-def test_perceptron():
-    iris = DataSet(name='iris')
-    classes = ['setosa', 'versicolor', 'virginica']
-    iris.classes_to_numbers(classes)
-    n_samples, n_features = len(iris.examples), iris.target
-    X, y = np.array([x[:n_features] for x in iris.examples]), \
-           np.array([x[n_features] for x in iris.examples])
-    # pl = PerceptronLearner(iris).fit(X, y)
-    # assert grade_learner(pl, iris_tests) == 1
-    # assert err_ratio(pl, X, y) < 0.08
+def test_neural_network():
+    net = Network(Dense(4, 4, Tanh()),
+                  Dense(4, 4, Tanh()),
+                  Dense(4, 2, Sigmoid()))
+    net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=30)
+    # net.predict(X)
 
 
 if __name__ == "__main__":

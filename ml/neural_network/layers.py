@@ -1,14 +1,12 @@
-from abc import ABC, abstractmethod
-
 import numpy as np
 
+from ml.initializers import GlorotUniform, Initializer, Zeros
 from ml.neural_network.activations import Linear, Activation
-from ml.initializers import TruncatedNormal, Initializer, Constant
 from ml.neural_network.variable import Variable
 
 
-class Layer(ABC):
-    @abstractmethod
+class Layer:
+
     def __init__(self):
         self.order = None
         self.name = None
@@ -64,7 +62,7 @@ class ParamLayer(Layer):
             raise TypeError
 
         if w_init is None:
-            TruncatedNormal(0., 0.01).initialize(self.w)
+            GlorotUniform().initialize(self.w)
         elif isinstance(w_init, Initializer):
             w_init.initialize(self.w)
         else:
@@ -72,7 +70,7 @@ class ParamLayer(Layer):
 
         if use_bias:
             if b_init is None:
-                Constant(0.01).initialize(self.b)
+                Zeros().initialize(self.b)
             elif isinstance(b_init, Initializer):
                 b_init.initialize(self.b)
             else:

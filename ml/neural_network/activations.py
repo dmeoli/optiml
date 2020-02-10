@@ -1,9 +1,8 @@
-from abc import ABC
-
 import numpy as np
 
 
-class Activation(ABC):
+class Activation:
+
     def forward(self, x):
         raise NotImplementedError
 
@@ -15,6 +14,7 @@ class Activation(ABC):
 
 
 class Linear(Activation):
+
     def forward(self, x):
         return x
 
@@ -23,6 +23,7 @@ class Linear(Activation):
 
 
 class ReLU(Activation):
+
     def forward(self, x):
         return np.maximum(0, x)
 
@@ -31,6 +32,7 @@ class ReLU(Activation):
 
 
 class LeakyReLU(Activation):
+
     def __init__(self, alpha=0.01):
         self.alpha = alpha
 
@@ -42,6 +44,7 @@ class LeakyReLU(Activation):
 
 
 class ELU(Activation):
+
     def __init__(self, alpha=0.01):
         self.alpha = alpha
 
@@ -53,6 +56,7 @@ class ELU(Activation):
 
 
 class Tanh(Activation):
+
     def forward(self, x):
         return np.tanh(x)
 
@@ -61,6 +65,7 @@ class Tanh(Activation):
 
 
 class Sigmoid(Activation):
+
     def forward(self, x):
         return 1. / (1. + np.exp(-x))
 
@@ -70,6 +75,7 @@ class Sigmoid(Activation):
 
 
 class SoftPlus(Activation):
+
     def forward(self, x):
         return np.log(1. + np.exp(x))
 
@@ -78,6 +84,7 @@ class SoftPlus(Activation):
 
 
 class SoftMax(Activation):
+
     def forward(self, x, axis=-1):
         shift_x = x - np.max(x, axis=axis, keepdims=True)
         exp = np.exp(shift_x + 1e-6)
