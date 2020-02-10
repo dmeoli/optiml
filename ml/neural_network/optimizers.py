@@ -19,7 +19,7 @@ class Optimizer:
 
 class SGD(Optimizer):
     def __init__(self, params, l_rate):
-        super().__init__(params=params, l_rate=l_rate)
+        super().__init__(params, l_rate)
 
     def step(self):
         for var, grad in zip(self.vars, self.grads):
@@ -28,7 +28,7 @@ class SGD(Optimizer):
 
 class Momentum(Optimizer):
     def __init__(self, params, l_rate=0.001, momentum=0.9):
-        super().__init__(params=params, l_rate=l_rate)
+        super().__init__(params, l_rate)
         self.momentum = momentum
         self.mv = [np.zeros_like(v) for v in self.vars]
 
@@ -41,7 +41,7 @@ class Momentum(Optimizer):
 
 class AdaGrad(Optimizer):
     def __init__(self, params, l_rate=0.01, eps=1e-06):
-        super().__init__(params=params, l_rate=l_rate)
+        super().__init__(params, l_rate)
         self.eps = eps
         self.v = [np.zeros_like(v) for v in self.vars]
 
@@ -53,7 +53,7 @@ class AdaGrad(Optimizer):
 
 class Adadelta(Optimizer):
     def __init__(self, params, l_rate=1., rho=0.9, eps=1e-06):
-        super().__init__(params=params, l_rate=l_rate)
+        super().__init__(params, l_rate)
         self.rho = rho
         self.eps = eps
         self.m = [np.zeros_like(v) for v in self.vars]
@@ -70,7 +70,7 @@ class Adadelta(Optimizer):
 
 class RMSProp(Optimizer):
     def __init__(self, params, l_rate=0.01, alpha=0.99, eps=1e-08):
-        super().__init__(params=params, l_rate=l_rate)
+        super().__init__(params, l_rate)
         self.alpha = alpha
         self.eps = eps
         self.v = [np.zeros_like(v) for v in self.vars]
@@ -83,7 +83,7 @@ class RMSProp(Optimizer):
 
 class Adam(Optimizer):
     def __init__(self, params, l_rate=0.01, betas=(0.9, 0.999), eps=1e-08):
-        super().__init__(params=params, l_rate=l_rate)
+        super().__init__(params, l_rate)
         self.betas = betas
         self.eps = eps
         self.m = [np.zeros_like(v) for v in self.vars]
@@ -103,7 +103,7 @@ class Adam(Optimizer):
 
 class AdaMax(Optimizer):
     def __init__(self, params, l_rate=0.01, betas=(0.9, 0.999), eps=1e-08):
-        super().__init__(params=params, l_rate=l_rate)
+        super().__init__(params, l_rate)
         self.betas = betas
         self.eps = eps
         self.m = [np.zeros_like(v) for v in self.vars]

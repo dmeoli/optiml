@@ -89,7 +89,6 @@ class ParamLayer(Layer):
 class Dense(ParamLayer):
     def __init__(self, n_in, n_out, activation=None, w_init=None, b_init=None, use_bias=True):
         super().__init__((n_in, n_out), activation, w_init, b_init, use_bias)
-
         self._n_in = n_in
         self._n_out = n_out
 
@@ -98,7 +97,6 @@ class Dense(ParamLayer):
         self._wx_b = self._x.dot(self.w)
         if self.use_bias:
             self._wx_b += self.b
-
         self._activated = self._a(self._wx_b)  # if act is None, act will be Linear
         wrapped_out = self._wrap_out(self._activated)
         return wrapped_out
