@@ -2,12 +2,12 @@ import pickle
 
 import numpy as np
 from sklearn.datasets import load_iris
+from sklearn.metrics import accuracy_score
 
 from ml.learning import Learner
-from ml.neural_network.activations import Sigmoid, Tanh
-from ml.neural_network.dataloader import DataLoader
-from ml.neural_network.layers import Dense, Conv2D, MaxPool2D, Flatten, Layer, ParamLayer
-from ml.neural_network.losses import MSE, SparseSoftMaxCrossEntropyWithLogits, Loss
+from ml.neural_network.activations import Sigmoid
+from ml.neural_network.layers import Dense, Layer, ParamLayer
+from ml.neural_network.losses import MSE, Loss
 from ml.neural_network.optimizers import Adam
 
 
@@ -49,14 +49,18 @@ class Network(Layer, Learner):
                 for k in layer.param_vars.keys():
                     self.params[layer.name]['grads'][k][:] = grads[k]
 
-    def fit(self, X, y, loss, optimizer, epochs=100, verbose=True):
+    def fit(self, X, y, loss, optimizer, epochs=100, verbose=True, use_accuracy=True):
         for epoch in range(epochs):
             o = self.forward(X)
             _loss = loss(o, y)
             self.backward(_loss)
             optimizer.step()
             if verbose:
-                print("Epoch: %i | loss: %.5f" % (epoch, _loss.data))
+                print('Epoch: %i | loss: %.5f' % (epoch, _loss.data), end='')
+                if use_accuracy:
+                    print(' | acc: %.2f' % (accuracy_score(y.ravel(), self.predict(X))))
+                else:
+                    print()
 
     def predict(self, X):
         return np.argmax(net.forward(X).data, axis=1)
@@ -88,53 +92,53 @@ class Network(Layer, Learner):
 
 
 if __name__ == "__main__":
-
-    # IRIS DATASET
     X, y = load_iris(return_X_y=True)
     X, y = X, y[:, np.newaxis]
 
-    net = Network(Dense(4, 4, Tanh()),
-                  Dense(4, 4, Tanh()),
-                  Dense(4, 2, Sigmoid()))
+    net = Network(Dense(4, 4, Sigmoid()),
+                  Dense(4, 4, Sigmoid()),
+                  Dense(4, 3, Sigmoid()))
 
     net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=30)
     print(net.predict(X), '\n', y.ravel())
 
-    # ML CUP 2019 DATASET
-    ml_cup = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
-    X, y = ml_cup[:, :-2], ml_cup[:, -2:]
+    # print(classification_report(y.ravel(), net.predict(X), target_names=['setosa', 'versicolor', 'virginica']))
 
-    net = Network(Dense(20, 20, Tanh()),
-                  Dense(20, 20, Tanh()),
-                  Dense(20, 2, Sigmoid()))
-    net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=100)
-
-    # MNIST DATASET
-    f = np.load('../data/mnist.npz')
-    train_x, train_y = f['x_train'][:, :, :, None], f['y_train'][:, None]
-    test_x, test_y = f['x_test'][:, :, :, None], f['y_test']
-
-    # from keras.datasets import mnist
+    # # ML CUP 2019 DATASET
+    # ml_cup = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
+    # X, y = ml_cup[:, :-2], ml_cup[:, -2:]
     #
-    # (train_x, train_y), (test_x, test_y) = mnist.load_data()
-
-    cnn = Network(Conv2D(1, 6, (5, 5), (1, 1), 'same', channels_last=True),  # => [n,28,28,6]
-                  MaxPool2D(2, 2),  # => [n, 14, 14, 6]
-                  Conv2D(6, 16, 5, 1, 'same', channels_last=True),  # => [n,14,14,16]
-                  MaxPool2D(2, 2),  # => [n,7,7,16]
-                  Flatten(),  # => [n,7*7*16]
-                  Dense(7 * 7 * 16, 10))
-    opt = Adam(cnn.params, 0.001)
-    loss_fn = SparseSoftMaxCrossEntropyWithLogits()
-
-    train_loader = DataLoader(train_x, train_y, batch_size=64)
-    for epoch in range(300):
-        bx, by = train_loader.next_batch()
-        by_ = cnn.forward(bx)
-        loss = loss_fn(by_, by)
-        cnn.backward(loss)
-        opt.step()
-        if epoch % 50 == 0:
-            # ty_ = cnn.forward(test_x)
-            # acc = accuracy(np.argmax(ty_.data, axis=1), test_y)
-            print("Epoch: %i | loss: %.3f | acc: %.2f" % (epoch, loss.data, 0.0))
+    # net = Network(Dense(20, 20, Tanh()),
+    #               Dense(20, 20, Tanh()),
+    #               Dense(20, 2, Sigmoid()))
+    # net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=100)
+    #
+    # # MNIST DATASET
+    # f = np.load('../data/mnist.npz')
+    # train_x, train_y = f['x_train'][:, :, :, None], f['y_train'][:, None]
+    # test_x, test_y = f['x_test'][:, :, :, None], f['y_test']
+    #
+    # # from keras.datasets import mnist
+    # #
+    # # (train_x, train_y), (test_x, test_y) = mnist.load_data()
+    #
+    # cnn = Network(Conv2D(1, 6, (5, 5), (1, 1), 'same', channels_last=True),  # => [n,28,28,6]
+    #               MaxPool2D(2, 2),  # => [n, 14, 14, 6]
+    #               Conv2D(6, 16, 5, 1, 'same', channels_last=True),  # => [n,14,14,16]
+    #               MaxPool2D(2, 2),  # => [n,7,7,16]
+    #               Flatten(),  # => [n,7*7*16]
+    #               Dense(7 * 7 * 16, 10))
+    # opt = Adam(cnn.params, 0.001)
+    # loss_fn = SparseSoftMaxCrossEntropyWithLogits()
+    #
+    # train_loader = DataLoader(train_x, train_y, batch_size=64)
+    # for epoch in range(300):
+    #     bx, by = train_loader.next_batch()
+    #     by_ = cnn.forward(bx)
+    #     loss = loss_fn(by_, by)
+    #     cnn.backward(loss)
+    #     opt.step()
+    #     if epoch % 50 == 0:
+    #         # ty_ = cnn.forward(test_x)
+    #         # acc = accuracy(np.argmax(ty_.data, axis=1), test_y)
+    #         print('Epoch: %i | loss: %.3f | acc: %.2f' % (epoch, loss.data, 0.0))

@@ -15,7 +15,7 @@ X, y = X, y[:, np.newaxis]
 def test_neural_network():
     net = Network(Dense(4, 4, Tanh()),
                   Dense(4, 4, Tanh()),
-                  Dense(4, 2, Sigmoid()))
+                  Dense(4, 3, Sigmoid()))
     net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=30)
     # net.predict(X)
 
