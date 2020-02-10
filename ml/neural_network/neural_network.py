@@ -51,9 +51,9 @@ class Network(Layer, Learner):
 
     def fit(self, X, y, loss, optimizer, epochs=100, verbose=True):
         for epoch in range(epochs):
-            o = net.forward(X)
+            o = self.forward(X)
             _loss = loss(o, y)
-            net.backward(_loss)
+            self.backward(_loss)
             optimizer.step()
             if verbose:
                 print("Epoch: %i | loss: %.5f" % (epoch, _loss.data))

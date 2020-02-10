@@ -73,7 +73,7 @@ class CrossEntropy(LossFunction):
 
     @staticmethod
     def predict(X, theta):
-        return Sigmoid().function(np.dot(X, theta))
+        return Sigmoid().forward(np.dot(X, theta))
 
     def function(self, theta, X, y):
         pred = self.predict(X, theta)
