@@ -2,10 +2,11 @@ import pickle
 
 import numpy as np
 from sklearn.datasets import load_iris
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_squared_error
+from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
-from ml.neural_network.activations import Sigmoid
+from ml.neural_network.activations import Sigmoid, SoftMax, Tanh, Linear
 from ml.neural_network.layers import Dense, Layer, ParamLayer
 from ml.neural_network.losses import MSE, Loss
 from ml.neural_network.optimizers import Adam
@@ -49,21 +50,27 @@ class Network(Layer, Learner):
                 for k in layer.param_vars.keys():
                     self.params[layer.name]['grads'][k][:] = grads[k]
 
-    def fit(self, X, y, loss, optimizer, epochs=100, verbose=True, use_accuracy=True):
+    def fit(self, X, y, loss, optimizer, epochs=100, verbose=False, task='classification'):
+        if y.ndim == 1:
+            y = y[:, np.newaxis]
+        assert task in ('classification', 'regression')
+        if task is 'classification':
+            lb = LabelBinarizer().fit(y)
+            y = lb.transform(y)
         for epoch in range(epochs):
             o = self.forward(X)
             _loss = loss(o, y)
             self.backward(_loss)
             optimizer.step()
             if verbose:
-                print('Epoch: %i | loss: %.5f' % (epoch, _loss.data), end='')
-                if use_accuracy:
-                    print(' | acc: %.2f' % (accuracy_score(y.ravel(), self.predict(X))))
-                else:
-                    print()
+                print('Epoch: %i | loss: %.5f | %s: %.2f' %
+                      (epoch, _loss.data, 'acc' if task is 'classification' else 'mse',
+                       accuracy_score(lb.inverse_transform(y), self.predict(X)) if task is 'classification'
+                       else mean_squared_error(y, self.predict(X, task='regression'))))
 
-    def predict(self, X):
-        return np.argmax(net.forward(X).data, axis=1)
+    def predict(self, X, task='classification'):
+        assert task in ('classification', 'regression')
+        return np.argmax(self.forward(X).data, axis=1) if task is 'classification' else self.forward(X).data
 
     def save(self, path):
         vars = {name: p['vars'] for name, p in self.params.items()}
@@ -92,27 +99,25 @@ class Network(Layer, Learner):
 
 
 if __name__ == "__main__":
+    # IRIS DATASET
     X, y = load_iris(return_X_y=True)
-    X, y = X, y[:, np.newaxis]
 
     net = Network(Dense(4, 4, Sigmoid()),
                   Dense(4, 4, Sigmoid()),
-                  Dense(4, 3, Sigmoid()))
+                  Dense(4, 3, SoftMax()))
 
-    net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=30)
-    print(net.predict(X), '\n', y.ravel())
+    net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=30, verbose=True)
+    print(net.predict(X), '\n', y)
 
-    # print(classification_report(y.ravel(), net.predict(X), target_names=['setosa', 'versicolor', 'virginica']))
+    # ML CUP 2019 DATASET
+    ml_cup = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
+    X, y = ml_cup[:, :-2], ml_cup[:, -2:]
 
-    # # ML CUP 2019 DATASET
-    # ml_cup = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
-    # X, y = ml_cup[:, :-2], ml_cup[:, -2:]
-    #
-    # net = Network(Dense(20, 20, Tanh()),
-    #               Dense(20, 20, Tanh()),
-    #               Dense(20, 2, Sigmoid()))
-    # net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=100)
-    #
+    net = Network(Dense(20, 20, Tanh()),
+                  Dense(20, 20, Tanh()),
+                  Dense(20, 2, Linear()))
+    net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=1000, task='regression', verbose=True)
+
     # # MNIST DATASET
     # f = np.load('../data/mnist.npz')
     # train_x, train_y = f['x_train'][:, :, :, None], f['y_train'][:, None]
