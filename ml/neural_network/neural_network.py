@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
-from ml.losses import LossFunction, MeanSquaredError, CrossEntropy, Loss
+from ml.losses import CrossEntropy, Loss
 from ml.neural_network.activations import Sigmoid, Softmax
 from ml.neural_network.layers import Dense, Layer, ParamLayer
 
@@ -109,4 +109,4 @@ if __name__ == "__main__":
     # net = Network(Dense(20, 20, Tanh()),
     #               Dense(20, 20, Tanh()),
     #               Dense(20, 2, Linear()))
-    # net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=1000, task='regression', verbose=True)
+    # net.fit(X, y, loss=MeanSquaredError(X, y), optimizer=Adam, epochs=1000, task='regression', verbose=True)

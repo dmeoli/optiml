@@ -54,12 +54,12 @@ class MeanSquaredError(LossFunction):
             return self.x_opt
 
     def function(self, theta, X, y):
-        return np.mean(np.sum(np.square(np.dot(X, theta) - y))) + self.regularization(theta, X)
+        return np.mean(np.square(np.dot(X, theta) - y)) + self.regularization(theta, X)
 
     def function(self, predict, y):
         self.prediction = predict
         self.target = y
-        return Loss(np.mean(np.sum(np.square(predict - y))), self.delta)
+        return Loss(np.mean(np.square(predict - y)), self.delta)
 
     @property
     def delta(self):
@@ -71,7 +71,7 @@ class MeanAbsoluteError(LossFunction):
         super().__init__(X, y, regularization_type, lmbda)
 
     def function(self, theta, X, y):
-        return np.mean(np.sum(np.abs(np.dot(X, theta) - y))) + self.regularization(theta, X)
+        return np.mean(np.abs(np.dot(X, theta) - y)) + self.regularization(theta, X)
 
 
 class CrossEntropy(LossFunction):
@@ -80,7 +80,7 @@ class CrossEntropy(LossFunction):
 
     def function(self, theta, X, y):
         pred = Sigmoid().function(np.dot(X, theta))
-        return -np.mean(np.sum(y * np.log(pred) + (1 - y) * np.log(1 - pred))) + self.regularization(theta, X)
+        return -np.mean(y * np.log(pred) + (1 - y) * np.log(1 - pred)) + self.regularization(theta, X)
 
     def function(self, predict, y):
         self.prediction = predict
