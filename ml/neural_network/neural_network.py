@@ -1,15 +1,15 @@
-import pickle
+import itertools
 
 import numpy as np
+from climin import Adam
 from sklearn.datasets import load_iris
 from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
-from ml.neural_network.activations import Sigmoid, SoftMax, Tanh, Linear
+from ml.neural_network.activations import Sigmoid, Softmax
 from ml.neural_network.layers import Dense, Layer, ParamLayer
 from ml.neural_network.losses import MSE, Loss
-from ml.neural_network.optimizers import Adam
 
 
 class Network(Layer, Learner):
@@ -24,7 +24,7 @@ class Network(Layer, Learner):
             self.__setattr__('layer_%i' % i, l)
         self.layers = layers
 
-    def forward(self, x):
+    def forward(self, x, *args):
         for l in self.layers:
             x = l.forward(x)
         return x
@@ -50,40 +50,37 @@ class Network(Layer, Learner):
                 for k in layer.param_vars.keys():
                     self.params[layer.name]['grads'][k][:] = grads[k]
 
-    def fit(self, X, y, loss, optimizer, epochs=100, verbose=False, task='classification'):
+    def fit(self, X, y, loss, optimizer, epochs=100, batch_size=None,
+            regularization_type='l1', lmbda=0.1, verbose=False, task='classification'):
         if y.ndim == 1:
             y = y[:, np.newaxis]
         assert task in ('classification', 'regression')
         if task is 'classification':
             lb = LabelBinarizer().fit(y)
             y = lb.transform(y)
+
+        vars = []
+        grads = []
+        for layer_p in self.params.values():
+            for p_name in layer_p['vars'].keys():
+                vars.append(layer_p['vars'][p_name])
+                grads.append(layer_p['grads'][p_name])
+
         for epoch in range(epochs):
             o = self.forward(X)
-            _loss = loss(o, y)
+            _loss = loss.function(o, y)
             self.backward(_loss)
-            optimizer.step()
+            for var, grad in zip(vars, grads):
+                next(iter(optimizer(wrt=var, fprime=lambda *args: grad, step_rate=0.01)))
             if verbose:
                 print('Epoch: %i | loss: %.5f | %s: %.2f' %
-                      (epoch, _loss.data, 'acc' if task is 'classification' else 'mse',
-                       accuracy_score(lb.inverse_transform(y), self.predict(X)) if task is 'classification'
-                       else mean_squared_error(y, self.predict(X, task='regression'))))
+                      (epoch + 1, _loss.data, 'acc' if task is 'classification' else 'mse',
+                       accuracy_score(lb.inverse_transform(y), np.argmax(o.data, axis=1))
+                       if task is 'classification' else mean_squared_error(y, o.data)))
 
     def predict(self, X, task='classification'):
         assert task in ('classification', 'regression')
         return np.argmax(self.forward(X).data, axis=1) if task is 'classification' else self.forward(X).data
-
-    def save(self, path):
-        vars = {name: p['vars'] for name, p in self.params.items()}
-        with open(path, 'wb') as f:
-            pickle.dump(vars, f)
-
-    def restore(self, path):
-        with open(path, 'rb') as f:
-            params = pickle.load(f)
-        for name, param in params.items():
-            for p_name in self.params[name]['vars'].keys():
-                self.params[name]['vars'][p_name][:] = param[p_name]
-                self.params[name]['vars'][p_name][:] = param[p_name]
 
     def __call__(self, *args):
         return self.forward(*args)
@@ -99,51 +96,19 @@ class Network(Layer, Learner):
 
 
 if __name__ == "__main__":
-    # IRIS DATASET
     X, y = load_iris(return_X_y=True)
 
     net = Network(Dense(4, 4, Sigmoid()),
                   Dense(4, 4, Sigmoid()),
-                  Dense(4, 3, SoftMax()))
+                  Dense(4, 3, Softmax()))
 
-    net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=30, verbose=True)
+    net.fit(X, y, loss=MSE(), optimizer=Adam, epochs=100, verbose=True)
     print(net.predict(X), '\n', y)
 
-    # ML CUP 2019 DATASET
-    ml_cup = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
-    X, y = ml_cup[:, :-2], ml_cup[:, -2:]
-
-    net = Network(Dense(20, 20, Tanh()),
-                  Dense(20, 20, Tanh()),
-                  Dense(20, 2, Linear()))
-    net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=1000, task='regression', verbose=True)
-
-    # # MNIST DATASET
-    # f = np.load('../data/mnist.npz')
-    # train_x, train_y = f['x_train'][:, :, :, None], f['y_train'][:, None]
-    # test_x, test_y = f['x_test'][:, :, :, None], f['y_test']
+    # ml_cup = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
+    # X, y = ml_cup[:, :-2], ml_cup[:, -2:]
     #
-    # # from keras.datasets import mnist
-    # #
-    # # (train_x, train_y), (test_x, test_y) = mnist.load_data()
-    #
-    # cnn = Network(Conv2D(1, 6, (5, 5), (1, 1), 'same', channels_last=True),  # => [n,28,28,6]
-    #               MaxPool2D(2, 2),  # => [n, 14, 14, 6]
-    #               Conv2D(6, 16, 5, 1, 'same', channels_last=True),  # => [n,14,14,16]
-    #               MaxPool2D(2, 2),  # => [n,7,7,16]
-    #               Flatten(),  # => [n,7*7*16]
-    #               Dense(7 * 7 * 16, 10))
-    # opt = Adam(cnn.params, 0.001)
-    # loss_fn = SparseSoftMaxCrossEntropyWithLogits()
-    #
-    # train_loader = DataLoader(train_x, train_y, batch_size=64)
-    # for epoch in range(300):
-    #     bx, by = train_loader.next_batch()
-    #     by_ = cnn.forward(bx)
-    #     loss = loss_fn(by_, by)
-    #     cnn.backward(loss)
-    #     opt.step()
-    #     if epoch % 50 == 0:
-    #         # ty_ = cnn.forward(test_x)
-    #         # acc = accuracy(np.argmax(ty_.data, axis=1), test_y)
-    #         print('Epoch: %i | loss: %.3f | acc: %.2f' % (epoch, loss.data, 0.0))
+    # net = Network(Dense(20, 20, Tanh()),
+    #               Dense(20, 20, Tanh()),
+    #               Dense(20, 2, Linear()))
+    # net.fit(X, y, loss=MSE(), optimizer=Adam(net.params, l_rate=0.1), epochs=1000, task='regression', verbose=True)

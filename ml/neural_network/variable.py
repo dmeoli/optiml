@@ -4,7 +4,7 @@ import numpy as np
 class Variable:
     def __init__(self, v):
         self.data = v
-        self._error = np.empty_like(v)   # for backpropagation of the last layer
+        self._error = np.empty_like(v)  # for backpropagation of the last layer
         self.info = {}
 
     def __repr__(self):

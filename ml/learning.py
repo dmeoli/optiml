@@ -3,6 +3,7 @@ import copy
 import numpy as np
 
 from ml.losses import MeanSquaredError, CrossEntropy
+from ml.neural_network.activations import Sigmoid
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GD
 
@@ -35,7 +36,7 @@ class LinearRegressionLearner(Learner):
         return self
 
     def predict(self, x):
-        return MeanSquaredError.predict(x, self.w)
+        return np.dot(x, self.w)
 
 
 class BinaryLogisticRegressionLearner(Learner):
@@ -60,7 +61,7 @@ class BinaryLogisticRegressionLearner(Learner):
         return self
 
     def predict_score(self, x):
-        return CrossEntropy.predict(x, self.w)
+        return Sigmoid().function(np.dot(x, self.w))
 
     def predict(self, x):
         return np.where(self.predict_score(x) >= 0.5, self.labels[1], self.labels[0]).astype(int)

@@ -3,19 +3,16 @@ import numpy as np
 
 class Activation:
 
-    def forward(self, x):
+    def function(self, x):
         raise NotImplementedError
 
     def derivative(self, x):
         raise NotImplementedError
 
-    def __call__(self, *inputs):
-        return self.forward(*inputs)
-
 
 class Linear(Activation):
 
-    def forward(self, x):
+    def function(self, x):
         return x
 
     def derivative(self, x):
@@ -24,40 +21,16 @@ class Linear(Activation):
 
 class ReLU(Activation):
 
-    def forward(self, x):
+    def function(self, x):
         return np.maximum(0, x)
 
     def derivative(self, x):
         return np.where(x > 0, np.ones_like(x), np.zeros_like(x))
 
 
-class LeakyReLU(Activation):
-
-    def __init__(self, alpha=0.01):
-        self.alpha = alpha
-
-    def forward(self, x):
-        return np.maximum(self.alpha * x, x)
-
-    def derivative(self, x):
-        return np.where(x > 0., np.ones_like(x), np.full_like(x, self.alpha))
-
-
-class ELU(Activation):
-
-    def __init__(self, alpha=0.01):
-        self.alpha = alpha
-
-    def forward(self, x):
-        return np.maximum(x, self.alpha * (np.exp(x) - 1))
-
-    def derivative(self, x):
-        return np.where(x > 0., np.ones_like(x), self.forward(x) + self.alpha)
-
-
 class Tanh(Activation):
 
-    def forward(self, x):
+    def function(self, x):
         return np.tanh(x)
 
     def derivative(self, x):
@@ -66,28 +39,18 @@ class Tanh(Activation):
 
 class Sigmoid(Activation):
 
-    def forward(self, x):
+    def function(self, x):
         return 1. / (1. + np.exp(-x))
 
     def derivative(self, x):
-        f = self.forward(x)
+        f = self.function(x)
         return f * (1. - f)
 
 
-class SoftPlus(Activation):
+class Softmax(Activation):
 
-    def forward(self, x):
-        return np.log(1. + np.exp(x))
-
-    def derivative(self, x):
-        return 1. / (1. + np.exp(-x))
-
-
-class SoftMax(Activation):
-
-    def forward(self, x, axis=-1):
-        shift_x = x - np.max(x, axis=axis, keepdims=True)
-        exp = np.exp(shift_x + 1e-6)
+    def function(self, x, axis=-1):
+        exp = np.exp(x - np.max(x, axis=axis, keepdims=True))
         return exp / np.sum(exp, axis=axis, keepdims=True)
 
     def derivative(self, x):
