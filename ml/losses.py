@@ -85,7 +85,7 @@ class CrossEntropy(LossFunction):
     def function(self, predict, y):
         self.prediction = predict
         self.target = y
-        return Loss(-np.mean(np.sum(y * np.log(predict) + (1 - y) * np.log(1 - predict))), self.delta)
+        return Loss(-np.mean(y * np.log(predict) + (1 - y) * np.log(1 - predict)), self.delta)
 
     @property
     def delta(self):
