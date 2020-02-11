@@ -1,5 +1,3 @@
-import itertools
-
 import numpy as np
 from climin import Adam
 from sklearn.datasets import load_iris
@@ -7,9 +5,9 @@ from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
+from ml.losses import LossFunction, MeanSquaredError, CrossEntropy, Loss
 from ml.neural_network.activations import Sigmoid, Softmax
 from ml.neural_network.layers import Dense, Layer, ParamLayer
-from ml.neural_network.losses import MSE, Loss
 
 
 class Network(Layer, Learner):
@@ -68,7 +66,7 @@ class Network(Layer, Learner):
 
         for epoch in range(epochs):
             o = self.forward(X)
-            _loss = loss.function(o, y)
+            _loss = loss.function(o.data, y)
             self.backward(_loss)
             for var, grad in zip(vars, grads):
                 next(iter(optimizer(wrt=var, fprime=lambda *args: grad, step_rate=0.01)))
@@ -102,7 +100,7 @@ if __name__ == "__main__":
                   Dense(4, 4, Sigmoid()),
                   Dense(4, 3, Softmax()))
 
-    net.fit(X, y, loss=MSE(), optimizer=Adam, epochs=100, verbose=True)
+    net.fit(X, y, loss=CrossEntropy(X, y), optimizer=Adam, epochs=100, verbose=True)
     print(net.predict(X), '\n', y)
 
     # ml_cup = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)

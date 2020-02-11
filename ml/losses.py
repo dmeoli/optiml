@@ -4,6 +4,16 @@ from ml.neural_network.activations import Sigmoid
 from optimization.optimization_function import OptimizationFunction
 
 
+class Loss:
+
+    def __init__(self, loss, delta):
+        self.data = loss
+        self.delta = delta
+
+    def __repr__(self):
+        return str(self.data)
+
+
 class LossFunction(OptimizationFunction):
     def __init__(self, X, y, regularization_type, lmbda=0.1):
         super().__init__(X.shape[1])
@@ -46,6 +56,15 @@ class MeanSquaredError(LossFunction):
     def function(self, theta, X, y):
         return np.mean(np.sum(np.square(np.dot(X, theta) - y))) + self.regularization(theta, X)
 
+    def function(self, predict, y):
+        self.prediction = predict
+        self.target = y
+        return Loss(np.mean(np.sum(np.square(predict - y))), self.delta)
+
+    @property
+    def delta(self):
+        return self.prediction - self.target
+
 
 class MeanAbsoluteError(LossFunction):
     def __init__(self, X, y, regularization_type='l2', lmbda=0.1):
@@ -61,7 +80,16 @@ class CrossEntropy(LossFunction):
 
     def function(self, theta, X, y):
         pred = Sigmoid().function(np.dot(X, theta))
-        return -np.sum(y * np.log(pred) + (1 - y) * np.log(1 - pred)) / X.shape[0] + self.regularization(theta, X)
+        return -np.mean(np.sum(y * np.log(pred) + (1 - y) * np.log(1 - pred))) + self.regularization(theta, X)
+
+    def function(self, predict, y):
+        self.prediction = predict
+        self.target = y
+        return Loss(-np.mean(np.sum(y * np.log(predict) + (1 - y) * np.log(1 - predict))), self.delta)
+
+    @property
+    def delta(self):
+        return self.prediction - self.target
 
     def jacobian(self, theta, X, y):
         return np.dot(X.T, Sigmoid().function(np.dot(X, theta)) - y) / X.shape[0]
