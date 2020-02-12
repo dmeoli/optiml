@@ -4,13 +4,6 @@ from ml.neural_network.activations import Sigmoid
 from optimization.optimization_function import OptimizationFunction
 
 
-class Loss:
-
-    def __init__(self, loss, delta):
-        self.data = loss
-        self.delta = delta
-
-
 class LossFunction(OptimizationFunction):
     def __init__(self, X, y, regularization_type, lmbda=0.1):
         super().__init__(X.shape[1])
@@ -56,7 +49,7 @@ class MeanSquaredError(LossFunction):
     def function(self, predict, y):
         self.prediction = predict
         self.target = y
-        return Loss(np.mean(np.square(predict - y)), self.delta)
+        return np.mean(np.square(predict - y))
 
     @property
     def delta(self):
@@ -73,7 +66,7 @@ class MeanAbsoluteError(LossFunction):
     def function(self, predict, y):
         self.prediction = predict
         self.target = y
-        return Loss(np.mean(np.abs(predict - y)), self.delta)
+        return np.mean(np.abs(predict - y))
 
     @property
     def delta(self):
@@ -91,7 +84,7 @@ class CrossEntropy(LossFunction):
     def function(self, predict, y):
         self.prediction = predict
         self.target = y
-        return Loss(-np.mean(y * np.log(predict) + (1 - y) * np.log(1 - predict)), self.delta)
+        return -np.mean(y * np.log(predict) + (1 - y) * np.log(1 - predict))
 
     @property
     def delta(self):

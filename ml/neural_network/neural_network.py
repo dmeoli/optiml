@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
-from ml.losses import CrossEntropy, Loss
+from ml.losses import CrossEntropy
 from ml.neural_network.activations import Sigmoid, Softmax
 from ml.neural_network.layers import Dense, Layer, ParamLayer
 
@@ -27,8 +27,7 @@ class Network(Layer, Learner):
             x = l.forward(x)
         return x
 
-    def backward(self, loss):
-        assert isinstance(loss, Loss)
+    def backward(self, delta):
         # find net order
         layers = []
         for name, v in self.__dict__.items():
@@ -41,7 +40,7 @@ class Network(Layer, Learner):
 
         # back propagate through this order
         last_layer = self._ordered_layers[-1]
-        last_layer.data_vars['out'].set_error(loss.delta)
+        last_layer.data_vars['out'].set_error(delta)
         for layer in self._ordered_layers[::-1]:
             grads = layer.backward()
             if isinstance(layer, ParamLayer):
@@ -66,13 +65,13 @@ class Network(Layer, Learner):
 
         for epoch in range(epochs):
             o = self.forward(X)
-            _loss = loss.function(o.data, y)
-            self.backward(_loss)
+            _loss, delta = loss.function(o.data, y), loss.delta
+            self.backward(delta)
             for var, grad in zip(vars, grads):
                 next(iter(optimizer(wrt=var, fprime=lambda *args: grad, step_rate=0.01)))
             if verbose:
                 print('Epoch: %i | loss: %.5f | %s: %.2f' %
-                      (epoch + 1, _loss.data, 'acc' if task is 'classification' else 'mse',
+                      (epoch + 1, _loss, 'acc' if task is 'classification' else 'mse',
                        accuracy_score(lb.inverse_transform(y), np.argmax(o.data, axis=1))
                        if task is 'classification' else mean_squared_error(y, o.data)))
 
