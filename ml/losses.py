@@ -10,9 +10,6 @@ class Loss:
         self.data = loss
         self.delta = delta
 
-    def __repr__(self):
-        return str(self.data)
-
 
 class LossFunction(OptimizationFunction):
     def __init__(self, X, y, regularization_type, lmbda=0.1):
@@ -32,9 +29,9 @@ class LossFunction(OptimizationFunction):
 
     def regularization(self, theta, X):
         if self.regularization_type is 'l1':
-            return self.lmbda / X.shape[0] * np.sum(np.abs(theta))
+            return self.lmbda * np.mean(np.abs(theta))
         elif self.regularization_type is 'l2':
-            return self.lmbda / X.shape[0] * np.sum(np.square(theta))
+            return self.lmbda * np.mean(np.square(theta))
         return 0
 
     def jacobian(self, theta, X, y):
@@ -72,6 +69,15 @@ class MeanAbsoluteError(LossFunction):
 
     def function(self, theta, X, y):
         return np.mean(np.abs(np.dot(X, theta) - y)) + self.regularization(theta, X)
+
+    def function(self, predict, y):
+        self.prediction = predict
+        self.target = y
+        return Loss(np.mean(np.abs(predict - y)), self.delta)
+
+    @property
+    def delta(self):
+        return self.prediction - self.target
 
 
 class CrossEntropy(LossFunction):
