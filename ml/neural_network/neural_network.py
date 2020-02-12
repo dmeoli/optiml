@@ -25,7 +25,7 @@ class Network(Layer, Learner):
     def forward(self, x, *args):
         for l in self.layers:
             x = l.forward(x)
-        return x
+        return x.data
 
     def backward(self, delta):
         # find net order
@@ -64,16 +64,16 @@ class Network(Layer, Learner):
                 grads.append(layer_p['grads'][p_name])
 
         for epoch in range(epochs):
-            o = self.forward(X)
-            _loss, delta = loss.function(o.data, y), loss.delta
+            predict = self.forward(X)
+            _loss, delta = loss.function(predict, y), loss.delta
             self.backward(delta)
             for var, grad in zip(vars, grads):
                 next(iter(optimizer(wrt=var, fprime=lambda *args: grad, step_rate=0.01)))
             if verbose:
                 print('Epoch: %i | loss: %.5f | %s: %.2f' %
                       (epoch + 1, _loss, 'acc' if task is 'classification' else 'mse',
-                       accuracy_score(lb.inverse_transform(y), np.argmax(o.data, axis=1))
-                       if task is 'classification' else mean_squared_error(y, o.data)))
+                       accuracy_score(lb.inverse_transform(y), np.argmax(predict, axis=1))
+                       if task is 'classification' else mean_squared_error(y, predict)))
 
     def predict(self, X, task='classification'):
         assert task in ('classification', 'regression')
@@ -100,7 +100,9 @@ if __name__ == "__main__":
                   Dense(4, 3, Softmax()))
 
     net.fit(X, y, loss=CrossEntropy(X, y), optimizer=Adam, epochs=100, verbose=True)
-    print(net.predict(X), '\n', y)
+    pred = net.predict(X)
+    print(pred, '\n', y)
+    print(accuracy_score(pred, y))
 
     # ml_cup = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
     # X, y = ml_cup[:, :-2], ml_cup[:, -2:]

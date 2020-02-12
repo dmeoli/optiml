@@ -86,7 +86,7 @@ class Dense(ParamLayer):
         self._wx_b = self._x.dot(self.w)
         if self.use_bias:
             self._wx_b += self.b
-        self._activated = self._a.function(self._wx_b)  # if act is None, act will be Linear
+        self._activated = self._a.function(self._wx_b)
         wrapped_out = self._wrap_out(self._activated)
         return wrapped_out
 
