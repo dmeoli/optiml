@@ -74,36 +74,31 @@ class Adam(Optimizer):
                 status = 'stopped'
                 break
 
-            m = self.momentum
-            dm1 = self.beta1
-            dm2 = self.beta2
-            o = self.offset
             t = self.iter + 1
 
             step_m1 = self.step
-            step1 = step_m1 * m
-            self.wrt = self.wrt - step1
+            step1 = step_m1 * self.momentum
+            self.wrt -= step1
 
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
 
             g = self.f.jacobian(self.wrt, *args, **kwargs)
-            self.est_mom1 = dm1 * g + (1 - dm1) * est_mom1_m1
-            self.est_mom2 = dm2 * g ** 2 + (1 - dm2) * est_mom2_m1
+            self.est_mom1 = self.beta1 * g + (1 - self.beta1) * est_mom1_m1
+            self.est_mom2 = self.beta2 * g ** 2 + (1 - self.beta2) * est_mom2_m1
 
-            step_t = self.step_rate * (1 - (1 - dm2) ** t) ** 0.5 / (1 - (1 - dm1) ** t)
-            step2 = step_t * self.est_mom1 / (self.est_mom2 ** 0.5 + o)
+            step_t = self.step_rate * (1 - (1 - self.beta2) ** t) ** 0.5 / (1 - (1 - self.beta1) ** t)
+            step2 = step_t * self.est_mom1 / (self.est_mom2 ** 0.5 + self.offset)
 
-            last_wrt = self.wrt - step2
+            self.wrt -= step2
             self.step = step1 + step2
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, last_wrt)).T
+                p_xy = np.vstack((self.wrt, self.wrt - step2)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
-            self.wrt = last_wrt
             self.iter += 1
 
         if self.verbose:

@@ -20,7 +20,7 @@ class LossFunction(OptimizationFunction):
     def function(self, theta, X, y):
         raise NotImplementedError
 
-    def regularization(self, theta, X):
+    def regularization(self, theta):
         if self.regularization_type is 'l1':
             return self.lmbda * np.mean(np.abs(theta))
         elif self.regularization_type is 'l2':
@@ -43,13 +43,13 @@ class MeanSquaredError(LossFunction):
             # or np.linalg.lstsq(self.X, self.y)[0]
             return self.x_opt
 
-    def function(self, theta, X, y):
-        return np.mean(np.square(np.dot(X, theta) - y)) + self.regularization(theta, X)
+    # def function(self, theta, X, y):
+    #     return np.mean(np.square(np.dot(X, theta) - y)) + self.regularization(theta)
 
-    def function(self, predict, y):
+    def function(self, theta, predict, y):
         self.prediction = predict
         self.target = y
-        return np.mean(np.square(predict - y))
+        return np.mean(np.square(predict - y))  # + self.regularization(theta)
 
     @property
     def delta(self):
@@ -60,13 +60,13 @@ class MeanAbsoluteError(LossFunction):
     def __init__(self, X, y, regularization_type='l2', lmbda=0.1):
         super().__init__(X, y, regularization_type, lmbda)
 
-    def function(self, theta, X, y):
-        return np.mean(np.abs(np.dot(X, theta) - y)) + self.regularization(theta, X)
+    # def function(self, theta, X, y):
+    #     return np.mean(np.abs(np.dot(X, theta) - y)) + self.regularization(theta)
 
-    def function(self, predict, y):
+    def function(self, theta, predict, y):
         self.prediction = predict
         self.target = y
-        return np.mean(np.abs(predict - y))
+        return np.mean(np.abs(predict - y))  # + self.regularization(theta)
 
     @property
     def delta(self):
@@ -77,14 +77,14 @@ class CrossEntropy(LossFunction):
     def __init__(self, X, y, regularization_type='l2', lmbda=0.1):
         super().__init__(X, y, regularization_type, lmbda)
 
-    def function(self, theta, X, y):
-        pred = Sigmoid().function(np.dot(X, theta))
-        return -np.mean(y * np.log(pred) + (1 - y) * np.log(1 - pred)) + self.regularization(theta, X)
+    # def function(self, theta, X, y):
+    #     pred = Sigmoid().function(np.dot(X, theta))
+    #     return -np.mean(y * np.log(pred) + (1 - y) * np.log(1 - pred)) + self.regularization(theta)
 
-    def function(self, predict, y):
+    def function(self, theta, predict, y):
         self.prediction = predict
         self.target = y
-        return -np.mean(y * np.log(predict) + (1 - y) * np.log(1 - predict))
+        return -np.mean(y * np.log(predict) + (1 - y) * np.log(1 - predict))  # + self.regularization(theta)
 
     @property
     def delta(self):

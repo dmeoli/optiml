@@ -16,7 +16,7 @@ def test_neural_network():
                   Dense(4, 4, Sigmoid()),
                   Dense(4, 3, Softmax()))
     net.fit(X, y, loss=MeanSquaredError(X, y), optimizer=BFGS, epochs=30)
-    assert accuracy_score(y, net.predict(X)) >= 0.90
+    assert accuracy_score(y, net.predict(X)) >= 0.97
 
 
 if __name__ == "__main__":
