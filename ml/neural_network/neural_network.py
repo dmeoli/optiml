@@ -8,7 +8,7 @@ from ml.losses import MeanSquaredError
 from ml.neural_network.activations import Sigmoid, Softmax
 from ml.neural_network.layers import Dense, Layer, ParamLayer
 from optimization.optimizer import LineSearchOptimizer
-from optimization.unconstrained.adam import Adam
+from optimization.unconstrained.gradient_descent import GD
 
 
 class Network(Layer, Learner):
@@ -109,7 +109,7 @@ if __name__ == "__main__":
                   Dense(4, 4, Sigmoid()),
                   Dense(4, 3, Softmax()))
 
-    net.fit(X, y, loss=MeanSquaredError(X, y), optimizer=Adam, epochs=100, batch_size=None, verbose=True)
+    net.fit(X, y, loss=MeanSquaredError(X, y), optimizer=GD, epochs=100, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred, '\n', y)
     print(accuracy_score(pred, y))

@@ -389,25 +389,27 @@ class GD(Optimizer):
             if self.momentum_type == 'standard':
                 step_m1 = self.step
                 self.step = self.step_rate * -g + self.momentum * step_m1
-                last_wrt = self.wrt + self.step
+                past_wrt = self.wrt
+                self.wrt += self.step
             elif self.momentum_type == 'nesterov':
                 step_m1 = self.step
                 big_jump = self.momentum * step_m1
-                self.wrt = self.wrt - big_jump
+                self.wrt -= big_jump
                 g = self.f.jacobian(self.wrt, *args, **kwargs)
                 correction = self.step_rate * -g
-                last_wrt = self.wrt + correction
+                past_wrt = self.wrt
+                self.wrt += correction
                 self.step = big_jump - correction
             elif self.momentum_type == 'none':
-                last_wrt = self.wrt + self.step_rate * -g
+                past_wrt = self.wrt
+                self.wrt += self.step_rate * -g
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, last_wrt)).T
+                p_xy = np.vstack((past_wrt, self.wrt)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
-            self.wrt = last_wrt
             self.iter += 1
 
         if self.verbose:
