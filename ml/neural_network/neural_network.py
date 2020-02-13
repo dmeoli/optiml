@@ -4,11 +4,12 @@ from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
-from ml.losses import MeanSquaredError
+from ml.losses import CrossEntropy
 from ml.neural_network.activations import Sigmoid, Softmax
 from ml.neural_network.layers import Dense, Layer, ParamLayer
 from optimization.optimizer import LineSearchOptimizer
-from optimization.unconstrained.gradient_descent import GD
+from optimization.unconstrained.adam import Adam
+from optimization.unconstrained.gradient_descent import GD, SDG
 
 
 class Network(Layer, Learner):
@@ -68,14 +69,17 @@ class Network(Layer, Learner):
             lb = LabelBinarizer().fit(y)
             y = lb.transform(y)
 
+        loss = loss(X, y)
+        loss.predict = lambda X, theta: self.forward(X)  # monkeypatch
+
         for epoch in range(epochs):
             for var, grad in zip(*self._params):
-                loss.jacobian = lambda theta, *args: grad.ravel()
+                loss.jacobian = lambda theta, *args: grad.ravel()  # monkeypatch
 
-                _loss = loss.function(None, self.forward(X), y)
+                _loss = loss.function(None, X, y)
                 self.backward(loss.delta)
                 if issubclass(optimizer, LineSearchOptimizer):
-                    optimizer(wrt=var.ravel(), step_rate=l_rate, f=loss, max_f_eval=1, batch_size=batch_size).minimize()
+                    optimizer(wrt=var.ravel(), f=loss, max_f_eval=1, batch_size=batch_size).minimize()
                 else:
                     optimizer(wrt=var.ravel(), step_rate=l_rate, f=loss, max_iter=1, batch_size=batch_size).minimize()
 
@@ -87,7 +91,7 @@ class Network(Layer, Learner):
 
     def predict(self, X, task='classification'):
         assert task in ('classification', 'regression')
-        return np.argmax(self.forward(X).data, axis=1) if task is 'classification' else self.forward(X).data
+        return np.argmax(self.forward(X), axis=1) if task is 'classification' else self.forward(X)
 
     def __call__(self, *args):
         return self.forward(*args)
@@ -109,10 +113,9 @@ if __name__ == "__main__":
                   Dense(4, 4, Sigmoid()),
                   Dense(4, 3, Softmax()))
 
-    net.fit(X, y, loss=MeanSquaredError(X, y), optimizer=GD, epochs=100, batch_size=None, verbose=True)
+    net.fit(X, y, loss=CrossEntropy, optimizer=Adam, epochs=100, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred, '\n', y)
-    print(accuracy_score(pred, y))
 
     # ml_cup = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
     # X, y = ml_cup[:, :-2], ml_cup[:, -2:]
@@ -120,4 +123,4 @@ if __name__ == "__main__":
     # net = Network(Dense(20, 20, Tanh()),
     #               Dense(20, 20, Tanh()),
     #               Dense(20, 2, Linear()))
-    # net.fit(X, y, loss=MeanSquaredError(X, y), optimizer=Adam, epochs=1000, task='regression', verbose=True)
+    # net.fit(X, y, loss=MeanSquaredError, optimizer=Adam, epochs=1000, task='regression', verbose=True)

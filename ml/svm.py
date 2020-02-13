@@ -87,11 +87,11 @@ class BinarySVM(Learner):
             return np.dot(self.alphas * self.sv_y, self.kernel(self.sv_x, x)) + self.b
         return np.dot(x, self.w) + self.b
 
-    def predict(self, x):
+    def predict(self, X):
         """
         Predicts the class of a given example.
         """
-        return np.sign(self.predict_score(x))
+        return np.sign(self.predict_score(X))
 
 
 class MultiSVM(Learner):
@@ -134,17 +134,17 @@ class MultiSVM(Learner):
                     self.classifiers.append(copy.deepcopy(clf))
         return self
 
-    def predict(self, x):
+    def predict(self, X):
         """
         Predicts the class of a given example according to the training method.
         """
-        n_samples = len(x)
+        n_samples = len(X)
         if self.decision_function == 'ovr':  # one-vs-rest method
             assert len(self.classifiers) == self.n_class
             score = np.zeros((n_samples, self.n_class))
             for i in range(self.n_class):
                 clf = self.classifiers[i]
-                score[:, i] = clf.predict_score(x)
+                score[:, i] = clf.predict_score(X)
             return np.argmax(score, axis=1)
         elif self.decision_function == 'ovo':  # use one-vs-one method
             assert len(self.classifiers) == self.n_class * (self.n_class - 1) / 2
@@ -152,7 +152,7 @@ class MultiSVM(Learner):
             clf_id = 0
             for i in range(self.n_class):
                 for j in range(i + 1, self.n_class):
-                    res = self.classifiers[clf_id].predict(x)
+                    res = self.classifiers[clf_id].predict(X)
                     vote[res < 0, i] += 1.0  # negative sample: class i
                     vote[res > 0, j] += 1.0  # positive sample: class j
                     clf_id += 1

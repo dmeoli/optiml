@@ -2,10 +2,10 @@ import itertools
 
 import numpy as np
 
-import utils
 from ml.initializers import RandomUniform
 from optimization.optimization_function import OptimizationFunction
 from optimization.unconstrained.line_search import AWLS, BLS
+from utils import iter_mini_batches
 
 
 class Optimizer:
@@ -50,7 +50,7 @@ class Optimizer:
         if batch_size is None:
             self.args = itertools.repeat((f.args(), {}))
         else:
-            self.args = ((i, {}) for i in utils.iter_mini_batches(f.args(), batch_size))
+            self.args = ((i, {}) for i in iter_mini_batches(f.args(), batch_size))
 
     def minimize(self):
         raise NotImplementedError

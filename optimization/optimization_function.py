@@ -56,8 +56,25 @@ class Quadratic(OptimizationFunction):
                            positive semidefinite, f(x) will be unbounded below.
         :param q: ([n x 1] real column vector): the linear part of f.
         """
-        super().__init__(Q.shape[1])
+        Q = np.array(Q)
+        q = np.array(q)
+
+        if not np.isrealobj(Q):
+            raise ValueError('Q not a real matrix')
+
+        n = Q.shape[1]
+        super().__init__(n)
+
+        if n <= 1:
+            raise ValueError('Q is too small')
+        if n != Q.shape[0]:
+            raise ValueError('Q is not square')
         self.Q = Q
+
+        if not np.isrealobj(q):
+            raise ValueError('q not a real vector')
+        if q.size != n:
+            raise ValueError('q size does not match with Q')
         self.q = q
 
     def x_star(self):

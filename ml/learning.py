@@ -3,7 +3,6 @@ import copy
 import numpy as np
 
 from ml.losses import MeanSquaredError, CrossEntropy
-from ml.neural_network.activations import Sigmoid
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GD
 
@@ -12,7 +11,7 @@ class Learner:
     def fit(self, X, y):
         raise NotImplementedError
 
-    def predict(self, x):
+    def predict(self, X):
         raise NotImplementedError
 
 
@@ -27,16 +26,16 @@ class LinearRegressionLearner(Learner):
         self.lmbda = lmbda
 
     def fit(self, X, y):
-        loss_function = MeanSquaredError(X, y, self.regularization_type, self.lmbda)
+        self.loss = MeanSquaredError(X, y, self.regularization_type, self.lmbda)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(loss_function, batch_size=self.batch_size, max_f_eval=self.epochs).minimize()[0]
+            self.w = self.optimizer(self.loss, batch_size=self.batch_size, max_f_eval=self.epochs).minimize()[0]
         else:
-            self.w = self.optimizer(loss_function, batch_size=self.batch_size, step_rate=self.l_rate,
+            self.w = self.optimizer(self.loss, batch_size=self.batch_size, step_rate=self.l_rate,
                                     max_iter=self.epochs).minimize()[0]
         return self
 
-    def predict(self, x):
-        return np.dot(x, self.w)
+    def predict(self, X):
+        return self.loss.predict(X, self.w)
 
 
 class BinaryLogisticRegressionLearner(Learner):
@@ -52,19 +51,19 @@ class BinaryLogisticRegressionLearner(Learner):
     def fit(self, X, y):
         self.labels = np.unique(y)
         y = np.where(y == self.labels[0], 0, 1)
-        loss_function = CrossEntropy(X, y, self.regularization_type, self.lmbda)
+        self.loss = CrossEntropy(X, y, self.regularization_type, self.lmbda)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(loss_function, batch_size=self.batch_size, max_f_eval=self.epochs).minimize()[0]
+            self.w = self.optimizer(self.loss, batch_size=self.batch_size, max_f_eval=self.epochs).minimize()[0]
         else:
-            self.w = self.optimizer(loss_function, batch_size=self.batch_size, step_rate=self.l_rate,
+            self.w = self.optimizer(self.loss, batch_size=self.batch_size, step_rate=self.l_rate,
                                     max_iter=self.epochs).minimize()[0]
         return self
 
-    def predict_score(self, x):
-        return Sigmoid().function(np.dot(x, self.w))
+    def predict_score(self, X):
+        return self.loss.predict(X, self.w)
 
-    def predict(self, x):
-        return np.where(self.predict_score(x) >= 0.5, self.labels[1], self.labels[0]).astype(int)
+    def predict(self, X):
+        return np.where(self.predict_score(X) >= 0.5, self.labels[1], self.labels[0]).astype(int)
 
 
 class MultiLogisticRegressionLearner(Learner):
@@ -114,17 +113,17 @@ class MultiLogisticRegressionLearner(Learner):
                     self.classifiers.append(copy.deepcopy(clf))
         return self
 
-    def predict(self, x):
+    def predict(self, X):
         """
         Predicts the class of a given example according to the training method.
         """
-        n_samples = len(x)
+        n_samples = len(X)
         if self.decision_function == 'ovr':  # one-vs-rest method
             assert len(self.classifiers) == self.n_class
             score = np.zeros((n_samples, self.n_class))
             for i in range(self.n_class):
                 clf = self.classifiers[i]
-                score[:, i] = clf.predict_score(x)
+                score[:, i] = clf.predict_score(X)
             return np.argmax(score, axis=1)
         elif self.decision_function == 'ovo':  # use one-vs-one method
             assert len(self.classifiers) == self.n_class * (self.n_class - 1) / 2
@@ -132,7 +131,7 @@ class MultiLogisticRegressionLearner(Learner):
             clf_id = 0
             for i in range(self.n_class):
                 for j in range(i + 1, self.n_class):
-                    res = self.classifiers[clf_id].predict(x)
+                    res = self.classifiers[clf_id].predict(X)
                     vote[res < 0, i] += 1.0  # negative sample: class i
                     vote[res > 0, j] += 1.0  # positive sample: class j
                     clf_id += 1

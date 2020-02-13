@@ -17,6 +17,9 @@ class LossFunction(OptimizationFunction):
     def args(self):
         return self.X, self.y
 
+    def predict(self, X, theta):
+        return np.dot(X, theta)
+
     def function(self, theta, X, y):
         raise NotImplementedError
 
@@ -28,7 +31,11 @@ class LossFunction(OptimizationFunction):
         return 0
 
     def jacobian(self, theta, X, y):
-        return np.dot(X.T, np.dot(X, theta) - y) / X.shape[0]
+        return np.dot(X.T, self.predict(X, theta) - y) / X.shape[0]
+
+    @property
+    def delta(self):
+        return self.pred - self.target
 
 
 class MeanSquaredError(LossFunction):
@@ -43,52 +50,30 @@ class MeanSquaredError(LossFunction):
             # or np.linalg.lstsq(self.X, self.y)[0]
             return self.x_opt
 
-    # def function(self, theta, X, y):
-    #     return np.mean(np.square(np.dot(X, theta) - y)) + self.regularization(theta)
-
-    def function(self, theta, predict, y):
-        self.prediction = predict
+    def function(self, theta, X, y):
+        self.pred = self.predict(X, theta)
         self.target = y
-        return np.mean(np.square(predict - y))  # + self.regularization(theta)
-
-    @property
-    def delta(self):
-        return self.prediction - self.target
+        return np.mean(np.square(self.pred - y))  # + self.regularization(theta)
 
 
 class MeanAbsoluteError(LossFunction):
     def __init__(self, X, y, regularization_type='l2', lmbda=0.1):
         super().__init__(X, y, regularization_type, lmbda)
 
-    # def function(self, theta, X, y):
-    #     return np.mean(np.abs(np.dot(X, theta) - y)) + self.regularization(theta)
-
-    def function(self, theta, predict, y):
-        self.prediction = predict
+    def function(self, theta, X, y):
+        self.pred = self.predict(X, theta)
         self.target = y
-        return np.mean(np.abs(predict - y))  # + self.regularization(theta)
-
-    @property
-    def delta(self):
-        return self.prediction - self.target
+        return np.mean(np.abs(self.pred - y))  # + self.regularization(theta)
 
 
 class CrossEntropy(LossFunction):
     def __init__(self, X, y, regularization_type='l2', lmbda=0.1):
         super().__init__(X, y, regularization_type, lmbda)
 
-    # def function(self, theta, X, y):
-    #     pred = Sigmoid().function(np.dot(X, theta))
-    #     return -np.mean(y * np.log(pred) + (1 - y) * np.log(1 - pred)) + self.regularization(theta)
+    def predict(self, X, theta):
+        return Sigmoid().function(np.dot(X, theta))
 
-    def function(self, theta, predict, y):
-        self.prediction = predict
+    def function(self, theta, X, y):
+        self.pred = self.predict(X, theta)
         self.target = y
-        return -np.mean(y * np.log(predict) + (1 - y) * np.log(1 - predict))  # + self.regularization(theta)
-
-    @property
-    def delta(self):
-        return self.prediction - self.target
-
-    def jacobian(self, theta, X, y):
-        return np.dot(X.T, Sigmoid().function(np.dot(X, theta)) - y) / X.shape[0]
+        return -np.mean(y * np.log(self.pred) + (1 - y) * np.log(1 - self.pred))  # + self.regularization(theta)
