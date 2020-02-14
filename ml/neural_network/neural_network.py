@@ -108,7 +108,7 @@ if __name__ == "__main__":
                         Dense(4, 4, Sigmoid()),
                         Dense(4, 3, Softmax()))
 
-    net.fit(X, y, loss=MeanSquaredError, optimizer=Adam, epochs=100, batch_size=None, verbose=True)
+    net.fit(X, y, loss=MeanSquaredError, optimizer=BFGS, epochs=100, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred, '\n', y)
 
