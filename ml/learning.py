@@ -28,7 +28,7 @@ class LinearRegressionLearner(Learner):
     def fit(self, X, y):
         self.loss = MeanSquaredError(X, y, self.regularization_type, self.lmbda)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(self.loss, batch_size=self.batch_size, max_f_eval=self.epochs).minimize()[0]
+            self.w = self.optimizer(self.loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
         else:
             self.w = self.optimizer(self.loss, batch_size=self.batch_size, step_rate=self.l_rate,
                                     max_iter=self.epochs).minimize()[0]
@@ -53,7 +53,7 @@ class BinaryLogisticRegressionLearner(Learner):
         y = np.where(y == self.labels[0], 0, 1)
         self.loss = CrossEntropy(X, y, self.regularization_type, self.lmbda)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(self.loss, batch_size=self.batch_size, max_f_eval=self.epochs).minimize()[0]
+            self.w = self.optimizer(self.loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
         else:
             self.w = self.optimizer(self.loss, batch_size=self.batch_size, step_rate=self.l_rate,
                                     max_iter=self.epochs).minimize()[0]

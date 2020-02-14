@@ -8,7 +8,9 @@ from ml.losses import MeanSquaredError
 from ml.neural_network.activations import Sigmoid, Softmax, Linear
 from ml.neural_network.layers import Dense, Layer, ParamLayer
 from optimization.optimizer import LineSearchOptimizer
+from optimization.unconstrained.adam import Adam
 from optimization.unconstrained.gradient_descent import SDG
+from optimization.unconstrained.quasi_newton import BFGS
 
 
 class NeuralNetwork(Layer, Learner):
@@ -73,12 +75,17 @@ class NeuralNetwork(Layer, Learner):
             for var, grad in zip(*self._params):
                 loss.jacobian = lambda theta, *args: grad.ravel()  # monkeypatch
 
-                _loss = loss.function(None, X, y)
-                self.backward(loss.delta)
                 if issubclass(optimizer, LineSearchOptimizer):
-                    optimizer(wrt=var.ravel(), f=loss, max_f_eval=1, batch_size=batch_size).minimize()
+
+                    # from climin import Lbfgs
+                    # next(iter(Lbfgs(wrt=var.ravel(), f=loss.function, fprime=loss.jacobian,
+                    #                 args=itertools.repeat(((X, y), {})))))
+
+                    optimizer(wrt=var.ravel(), f=loss, batch_size=batch_size, max_iter=1).minimize()
                 else:
-                    optimizer(wrt=var.ravel(), step_rate=l_rate, f=loss, max_iter=1, batch_size=batch_size).minimize()
+                    _loss = loss.function(var.ravel(), X, y)
+                    self.backward(loss.delta)
+                    optimizer(wrt=var.ravel(), f=loss, step_rate=l_rate, max_iter=1, batch_size=batch_size).minimize()
 
             if verbose:
                 print('Epoch: %i | loss: %.5f | %s: %.2f' %
@@ -106,7 +113,7 @@ if __name__ == "__main__":
                         Dense(4, 4, Sigmoid()),
                         Dense(4, 3, Softmax()))
 
-    net.fit(X, y, loss=MeanSquaredError, optimizer=SDG, epochs=100, batch_size=None, verbose=True)
+    net.fit(X, y, loss=MeanSquaredError, optimizer=Adam, epochs=100, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred, '\n', y)
 

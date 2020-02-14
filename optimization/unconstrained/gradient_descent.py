@@ -177,8 +177,8 @@ class SDG(LineSearchOptimizer):
     #   test.
     """
 
-    def __init__(self, f, wrt=RandomUniform, batch_size=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9,
-                 a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+    def __init__(self, f, wrt=RandomUniform, batch_size=None, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01,
+                 m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         """
 
         :param f:          the objective function.
@@ -241,7 +241,8 @@ class SDG(LineSearchOptimizer):
                               - 'error': the algorithm found a numerical error that prev_vents it from continuing
                            optimization (see min_a above).
         """
-        super().__init__(f, wrt, batch_size, eps, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        super().__init__(f, wrt, batch_size, eps, max_iter, max_f_eval, m1, m2,
+                         a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
 
     def minimize(self):
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
@@ -286,7 +287,7 @@ class SDG(LineSearchOptimizer):
                 status = 'optimal'
                 break
 
-            if f_eval > self.line_search.max_f_eval:
+            if self.iter > self.max_iter or f_eval > self.line_search.max_f_eval:
                 status = 'stopped'
                 break
 
@@ -317,7 +318,7 @@ class SDG(LineSearchOptimizer):
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
             # update new point
-            self.wrt = last_wrt
+            self.wrt[:] = last_wrt
 
             # update gradient
             g = last_g

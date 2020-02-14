@@ -98,8 +98,8 @@ class SGM(LineSearchOptimizer):
     #     necessarily the optimal one
 
     def __init__(self, f, wrt=RandomUniform, batch_size=None, eps=1e-6, a_start=1e-4, tau=0.95,
-                 max_f_eval=1000, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, wrt, batch_size, eps, max_f_eval, a_start=a_start, tau=tau,
+                 max_iter=1000, max_f_eval=1000, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_iter, max_f_eval, a_start=a_start, tau=tau,
                          m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
 
     def minimize(self):
@@ -155,7 +155,7 @@ class SGM(LineSearchOptimizer):
                 status = 'optimal'
                 break
 
-            if self.iter > self.line_search.max_f_eval:
+            if self.iter > self.max_iter or self.iter > self.line_search.max_f_eval:
                 status = 'stopped'
                 break
 

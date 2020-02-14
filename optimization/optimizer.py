@@ -58,8 +58,8 @@ class Optimizer:
 
 class LineSearchOptimizer(Optimizer):
 
-    def __init__(self, f, wrt=RandomUniform, batch_size=None, eps=1e-6, max_f_eval=1000, m1=0.01, m2=0.9,
-                 a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+    def __init__(self, f, wrt=RandomUniform, batch_size=None, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01,
+                 m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         """
 
         :param f:          the objective function.
@@ -104,7 +104,7 @@ class LineSearchOptimizer(Optimizer):
         :param plot:       (boolean, optional, default value False): plot the function's surface and its contours
                            if True and the function's dimension is 2, nothing otherwise.
         """
-        super().__init__(f, wrt, batch_size, eps, verbose=verbose, plot=plot)
+        super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(m_inf):
             raise ValueError('m_inf is not a real scalar')
         self.m_inf = m_inf
