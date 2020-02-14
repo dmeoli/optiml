@@ -4,15 +4,14 @@ from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
-from ml.losses import CrossEntropy
-from ml.neural_network.activations import Sigmoid, Softmax
+from ml.losses import MeanSquaredError
+from ml.neural_network.activations import Sigmoid, Softmax, Linear
 from ml.neural_network.layers import Dense, Layer, ParamLayer
 from optimization.optimizer import LineSearchOptimizer
-from optimization.unconstrained.adam import Adam
-from optimization.unconstrained.gradient_descent import GD, SDG
+from optimization.unconstrained.gradient_descent import SDG
 
 
-class Network(Layer, Learner):
+class NeuralNetwork(Layer, Learner):
 
     def __init__(self, *layers):
         super().__init__()
@@ -31,20 +30,16 @@ class Network(Layer, Learner):
 
     def backward(self, delta):
 
-        # find net order
-        layers = []
         for name, v in self.__dict__.items():
             if not isinstance(v, Layer):
                 continue
             layer = v
             layer.name = name
-            layers.append((layer.order, layer))
-        self._ordered_layers = [l[1] for l in sorted(layers, key=lambda x: x[0])]
 
         # back propagate through this order
-        last_layer = self._ordered_layers[-1]
+        last_layer = self.layers[-1]
         last_layer.data_vars['out'].set_error(delta)
-        for layer in self._ordered_layers[::-1]:
+        for layer in self.layers[::-1]:
             grads = layer.backward()
             if isinstance(layer, ParamLayer):
                 for k in layer.param_vars.keys():
@@ -61,13 +56,15 @@ class Network(Layer, Learner):
         return vars, grads
 
     def fit(self, X, y, loss, optimizer, l_rate=0.01, epochs=100, batch_size=None,
-            regularization_type='l1', lmbda=0.1, verbose=False, task='classification'):
+            regularization_type='l1', lmbda=0.1, verbose=False):
         if y.ndim == 1:
             y = y[:, np.newaxis]
-        assert task in ('classification', 'regression')
-        if task is 'classification':
+        if not isinstance(self.layers[-1]._a, Linear):
+            self.task = 'classification'
             lb = LabelBinarizer().fit(y)
             y = lb.transform(y)
+        else:
+            self.task = 'regression'
 
         loss = loss(X, y)
         loss.predict = lambda X, theta: self.forward(X)  # monkeypatch
@@ -85,16 +82,12 @@ class Network(Layer, Learner):
 
             if verbose:
                 print('Epoch: %i | loss: %.5f | %s: %.2f' %
-                      (epoch + 1, _loss, 'acc' if task is 'classification' else 'mse',
+                      (epoch + 1, _loss, 'acc' if self.task is 'classification' else 'mse',
                        accuracy_score(lb.inverse_transform(y), self.predict(X))
-                       if task is 'classification' else mean_squared_error(y, self.predict(X, task='regression'))))
+                       if self.task is 'classification' else mean_squared_error(y, self.predict(X))))
 
-    def predict(self, X, task='classification'):
-        assert task in ('classification', 'regression')
-        return np.argmax(self.forward(X), axis=1) if task is 'classification' else self.forward(X)
-
-    def __call__(self, *args):
-        return self.forward(*args)
+    def predict(self, X):
+        return np.argmax(self.forward(X), axis=1) if self.task is 'classification' else self.forward(X)
 
     def __setattr__(self, key, value):
         if isinstance(value, ParamLayer):
@@ -109,18 +102,18 @@ class Network(Layer, Learner):
 if __name__ == "__main__":
     X, y = load_iris(return_X_y=True)
 
-    net = Network(Dense(4, 4, Sigmoid()),
-                  Dense(4, 4, Sigmoid()),
-                  Dense(4, 3, Softmax()))
+    net = NeuralNetwork(Dense(4, 4, Sigmoid()),
+                        Dense(4, 4, Sigmoid()),
+                        Dense(4, 3, Softmax()))
 
-    net.fit(X, y, loss=CrossEntropy, optimizer=Adam, epochs=100, batch_size=None, verbose=True)
+    net.fit(X, y, loss=MeanSquaredError, optimizer=SDG, epochs=100, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred, '\n', y)
 
     # ml_cup = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
     # X, y = ml_cup[:, :-2], ml_cup[:, -2:]
     #
-    # net = Network(Dense(20, 20, Tanh()),
-    #               Dense(20, 20, Tanh()),
-    #               Dense(20, 2, Linear()))
-    # net.fit(X, y, loss=MeanSquaredError, optimizer=Adam, epochs=1000, task='regression', verbose=True)
+    # net = NeuralNetwork(Dense(20, 20, Tanh()),
+    #                     Dense(20, 20, Tanh()),
+    #                     Dense(20, 2, Linear()))
+    # net.fit(X, y, loss=MeanSquaredError, optimizer=Adam, epochs=1000, verbose=True)
