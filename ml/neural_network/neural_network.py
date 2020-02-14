@@ -68,7 +68,7 @@ class NeuralNetwork(Layer, Learner):
         else:
             self.task = 'regression'
 
-        loss = loss(X, y)
+        loss = loss(X, y, regularization_type, lmbda)
         loss.predict = lambda X, theta: self.forward(X)  # monkeypatch
 
         for epoch in range(epochs):
@@ -76,16 +76,11 @@ class NeuralNetwork(Layer, Learner):
                 loss.jacobian = lambda theta, *args: grad.ravel()  # monkeypatch
 
                 if issubclass(optimizer, LineSearchOptimizer):
-
-                    # from climin import Lbfgs
-                    # next(iter(Lbfgs(wrt=var.ravel(), f=loss.function, fprime=loss.jacobian,
-                    #                 args=itertools.repeat(((X, y), {})))))
-
                     optimizer(wrt=var.ravel(), f=loss, batch_size=batch_size, max_iter=1).minimize()
                 else:
                     _loss = loss.function(var.ravel(), X, y)
                     self.backward(loss.delta)
-                    optimizer(wrt=var.ravel(), f=loss, step_rate=l_rate, max_iter=1, batch_size=batch_size).minimize()
+                    optimizer(wrt=var.ravel(), f=loss, step_rate=l_rate, batch_size=batch_size, max_iter=1).minimize()
 
             if verbose:
                 print('Epoch: %i | loss: %.5f | %s: %.2f' %
