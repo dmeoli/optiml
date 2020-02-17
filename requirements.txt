@@ -1,6 +1,10 @@
-scikit-learn
-qpsolvers
-pytest
 autograd
-numpy
 matplotlib
+numpy
+pytest-cov
+qpsolvers
+scikit-learn
+scipy
+
+
+

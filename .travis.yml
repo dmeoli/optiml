@@ -12,6 +12,7 @@ install:
   - pip install pytest-cov
   - pip install qpsolvers
   - pip install scikit-learn
+  - pip install scipy
 
 script:
   - pytest --cov=./

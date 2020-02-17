@@ -224,6 +224,7 @@ class BFGS(LineSearchOptimizer):
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
             # update new point
+            np.copyto(self.wrt, last_wrt)
             self.wrt[:] = last_wrt
 
             # update gradient

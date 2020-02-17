@@ -28,8 +28,7 @@ class Optimizer:
             raise TypeError('f is not an optimization function')
         self.f = f
         if callable(wrt):
-            self.wrt = np.empty(f.n)
-            wrt().initialize(self.wrt)
+            self.wrt = wrt().initialize(f.n)
         elif not np.isrealobj(wrt):
             raise ValueError('x not a real vector')
         else:

@@ -43,8 +43,8 @@ def linear_annealing(start, stop, n_steps):
 
 def repeater(iter, n):
     """
-    Return an iterator that repeats each element of `iter` exactly
-    `n` times before moving on to the next element.
+    Return an iterator that repeats each element of iter exactly
+    n times before moving on to the next element.
     >>> s = repeater([1, 2, 3], 2)
     >>> [next(s) for i in range(6)]
     [1, 1, 2, 2, 3, 3]
