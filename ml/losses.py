@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.special import xlogy
 
 from ml.neural_network.activations import Sigmoid
 from optimization.optimization_function import OptimizationFunction
@@ -61,12 +60,14 @@ class MeanAbsoluteError(LossFunction):
 
 
 class CrossEntropy(LossFunction):
-    def __init__(self, X, y, regularization_type='l2', lmbda=0.0001):
+    def __init__(self, X, y, regularization_type='l2', lmbda=0.0001, eps=1e-6):
         super().__init__(X, y, regularization_type, lmbda)
+        self.eps = eps
 
     def predict(self, X, theta):
         return Sigmoid().function(np.dot(X, theta))
 
     def function(self, theta, X, y):
-        return -np.mean(xlogy(y, self.predict(X, theta)) +
-                        xlogy(1 - y, 1 - self.predict(X, theta))) + self.regularization(theta) / X.shape[0]
+        y_pred = self.predict(X, theta)
+        return -np.mean(y * np.log(y_pred + self.eps) +
+                        (1. - y) * np.log(1. - y_pred + self.eps)) + self.regularization(theta) / X.shape[0]

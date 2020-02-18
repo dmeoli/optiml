@@ -22,10 +22,6 @@ from ml.neural_network.activations import Sigmoid, SoftMax, Linear, ReLU, Activa
 _STOCHASTIC_SOLVERS = ['sgd', 'adam']
 
 
-def _pack(weights, bias):
-    return np.hstack([l.ravel() for l in weights + bias])
-
-
 class NeuralNetwork(Learner):
     _estimator_type = "classifier"
 
@@ -96,6 +92,9 @@ class NeuralNetwork(Learner):
         # if not isinstance(self.optimizer, Optimizer):
         #     raise ValueError("The solver %s is not supported. Expected one of Optimizer subclass" % self.optimizer)
 
+    def _pack(self, weights, bias):
+        return np.hstack([l.ravel() for l in weights + bias])
+
     def _unpack(self, packed_parameters):
         for i in range(self.n_layers_ - 1):
             start, end, shape = self._weights_indptr[i]
@@ -122,18 +121,8 @@ class NeuralNetwork(Learner):
         bias_grads[layer] = np.mean(deltas[layer], 0)
         return weights_grads, bias_grads
 
-    def _loss_grad_lbfgs(self, packed_weights_inter, X, y, activations, deltas, weights_grads, bias_grads):
-        self._unpack(packed_weights_inter)
-        loss, weights_grads, bias_grads = self.backward(X, y, activations, deltas, weights_grads, bias_grads)
-        grad = _pack(weights_grads, bias_grads)
-        return loss, grad
-
     def backward(self, X, y, activations, deltas, weights_grads, bias_grads):
         n_samples = X.shape[0]
-        # forward propagate
-        activations = self.forward(activations)
-        self.loss.predict = lambda *args: activations[-1]  # monkeypatch
-        loss = self.loss.function(self.weights, activations[-1], y)
         # backward propagate
         last = self.n_layers_ - 2
         # The calculation of delta[last] here works with following
@@ -150,14 +139,14 @@ class NeuralNetwork(Learner):
             deltas[i - 1] *= self.activation_funcs[i - 1].derivative(activations[i])
             weights_grads, bias_grads = self._compute_loss_grad(
                 i - 1, n_samples, activations, deltas, weights_grads, bias_grads)
-        return loss, weights_grads, bias_grads
+        return weights_grads, bias_grads
 
     def _initialize(self, y, layer_units):
         # set all attributes, allocate weights etc for first call
         # Initialize parameters
         self.n_iter_ = 0
         self.t_ = 0
-        self.n_outputs_ = y.shape[1]
+        self.n_outputs = y.shape[1]
 
         # Compute the number of layers
         self.n_layers_ = len(layer_units)
@@ -209,11 +198,11 @@ class NeuralNetwork(Learner):
         if y.ndim == 1:
             y = y.reshape((-1, 1))
 
-        self.n_outputs_ = y.shape[1]
+        self.n_outputs = y.shape[1]
 
         self.loss = self.loss(X, y, regularization_type=self.regularization_type, lmbda=self.lmbda)
 
-        layer_units = ([n_features] + list(self.hidden_layer_sizes) + [self.n_outputs_])
+        layer_units = ([n_features] + list(self.hidden_layer_sizes) + [self.n_outputs])
 
         self._initialize(y, layer_units)
 
@@ -224,7 +213,7 @@ class NeuralNetwork(Learner):
         weights_grads = [np.empty((n_fan_in_, n_fan_out_))
                          for n_fan_in_, n_fan_out_ in zip(layer_units[:-1], layer_units[1:])]
 
-        bias_grads = [np.empty(n_fan_out_) for n_fan_out_ in layer_units[1:]]
+        bias_grads = [np.empty(n_fan_out) for n_fan_out in layer_units[1:]]
 
         # Run the Stochastic optimization solver
         if self.optimizer in _STOCHASTIC_SOLVERS:
@@ -235,41 +224,50 @@ class NeuralNetwork(Learner):
             self._fit_lbfgs(X, y, activations, deltas, weights_grads, bias_grads, layer_units)
         return self
 
+    def _loss_lbfgs(self, packed_weights_inter, X, y, activations, deltas, weights_grads, bias_grads):
+        self._unpack(packed_weights_inter)
+        self.loss.predict = lambda *args: self.forward(activations)[-1]  # monkeypatch
+        return self.loss.function(self.weights, X, y)
+
+    def _grad_lbfgs(self, packed_weights_inter, X, y, activations, deltas, weights_grads, bias_grads):
+        return self._pack(*self.backward(X, y, self.forward(activations), deltas, weights_grads, bias_grads))
+
     def _fit_lbfgs(self, X, y, activations, deltas, weights_grads, bias_grads, layer_units):
         # Store meta information for the parameters
         self._weights_indptr = []
         self._bias_indptr = []
         start = 0
 
-        # Save sizes and indices of coefficients for faster unpacking
+        # save sizes and indices of coefficients for faster unpacking
         for i in range(self.n_layers_ - 1):
             n_fan_in, n_fan_out = layer_units[i], layer_units[i + 1]
-
             end = start + (n_fan_in * n_fan_out)
             self._weights_indptr.append((start, end, (n_fan_in, n_fan_out)))
             start = end
 
-        # Save sizes and indices of intercepts for faster unpacking
+        # save sizes and indices of intercepts for faster unpacking
         for i in range(self.n_layers_ - 1):
             end = start + layer_units[i + 1]
             self._bias_indptr.append((start, end))
             start = end
 
         # Run LBFGS
-        packed_weights_bias = _pack(self.weights, self.bias)
+        packed_weights_bias = self._pack(self.weights, self.bias)
 
-        if self.verbose is True or self.verbose >= 1:
-            iprint = 1
-        else:
-            iprint = -1
+        # from climin import Lbfgs
+        # import itertools
+        #
+        # opt = Lbfgs(wrt=packed_weights_bias, f=self._loss_lbfgs, fprime=self._grad_lbfgs,
+        #             args=itertools.repeat(((X, y, activations, deltas, weights_grads, bias_grads), {})))
+        # next(iter(opt))
+        # print(opt.wrt)
 
         opt_res = scipy.optimize.minimize(
-            self._loss_grad_lbfgs, packed_weights_bias,
-            method="L-BFGS-B", jac=True,
+            fun=self._loss_lbfgs, x0=packed_weights_bias,
+            method="L-BFGS-B", jac=self._grad_lbfgs,
             options={
                 "maxfun": self.max_fun,
                 "maxiter": self.max_iter,
-                "iprint": iprint,
                 "gtol": self.tol
             },
             args=(X, y, activations, deltas, weights_grads, bias_grads))
@@ -293,7 +291,7 @@ class NeuralNetwork(Learner):
         early_stopping = self.early_stopping
         if early_stopping:
             # don't stratify in multilabel classification
-            should_stratify = is_classifier(self) and self.n_outputs_ == 1
+            should_stratify = is_classifier(self) and self.n_outputs == 1
             stratify = y if should_stratify else None
             X, X_val, y, y_val = train_test_split(X, y, test_size=self.validation_fraction, stratify=stratify)
             if is_classifier(self):
@@ -327,7 +325,12 @@ class NeuralNetwork(Learner):
                     y_batch = y[batch_slice]
 
                 activations[0] = X_batch
-                batch_loss, weights_grads, bias_grads = self.backward(
+
+                # forward propagate
+                activations = self.forward(activations)
+                self.loss.predict = lambda *args: activations[-1]  # monkeypatch
+                batch_loss = self.loss.function(self.weights, activations[-1], y_batch)
+                weights_grads, bias_grads = self.backward(
                     X_batch, y_batch, activations, deltas, weights_grads, bias_grads)
                 accumulated_loss += batch_loss * (batch_slice.stop - batch_slice.start)
 
@@ -417,7 +420,7 @@ class NeuralNetwork(Learner):
             hidden_layer_sizes = [hidden_layer_sizes]
         hidden_layer_sizes = list(hidden_layer_sizes)
 
-        layer_units = [X.shape[1]] + hidden_layer_sizes + [self.n_outputs_]
+        layer_units = [X.shape[1]] + hidden_layer_sizes + [self.n_outputs]
 
         # Initialize layers
         activations = [X]
@@ -441,7 +444,7 @@ class NeuralNetwork(Learner):
 
     def predict(self, X):
         y_pred = self._predict(X)
-        if self.n_outputs_ == 1:
+        if self.n_outputs == 1:
             y_pred = y_pred.ravel()
         return self._label_binarizer.inverse_transform(y_pred)
 
