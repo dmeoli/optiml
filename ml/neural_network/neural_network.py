@@ -15,6 +15,7 @@ from sklearn.utils import shuffle
 from sklearn.utils.optimize import _check_optimize_result
 
 from ml.initializers import glorot_uniform, he_uniform, zeros
+from ml.learning import Learner
 from ml.losses import CrossEntropy, MeanSquaredError
 from ml.neural_network.activations import Sigmoid, SoftMax, Linear, ReLU, Activation
 
@@ -25,7 +26,7 @@ def _pack(weights, bias):
     return np.hstack([l.ravel() for l in weights + bias])
 
 
-class MLPClassifier:
+class NeuralNetwork(Learner):
     _estimator_type = "classifier"
 
     def __init__(self, hidden_layer_sizes, activations, loss=CrossEntropy,
@@ -484,7 +485,7 @@ class MLPClassifier:
         return accuracy_score(y, self.predict(X))
 
 
-class MLPRegressor(MLPClassifier):
+class MLPRegressor(NeuralNetwork):
     _estimator_type = "regressor"
 
     def __init__(self, hidden_layer_sizes, activations, loss=MeanSquaredError,
@@ -542,7 +543,7 @@ if __name__ == '__main__':
     from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
 
     X, y = load_iris(return_X_y=True)
-    nn = MLPClassifier(hidden_layer_sizes=(4, 4),
+    nn = NeuralNetwork(hidden_layer_sizes=(4, 4),
                        activations=(Sigmoid(), Sigmoid()),
                        optimizer='lbfgs', max_iter=1000).fit(X, y)
     pred = nn.predict(X)

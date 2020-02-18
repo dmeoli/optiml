@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.initializers import RandomUniform
+from ml.initializers import random_uniform
 from optimization.optimizer import LineSearchOptimizer
 
 
@@ -113,7 +113,7 @@ class HBG(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, wrt=RandomUniform, batch_size=None, beta=0.9, eps=1e-6,
+    def __init__(self, f, wrt=random_uniform, batch_size=None, beta=0.9, eps=1e-6,
                  max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
                  sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, max_f_eval, m1, m2,

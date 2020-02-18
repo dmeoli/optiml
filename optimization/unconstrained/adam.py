@@ -1,13 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.initializers import RandomUniform
+from ml.initializers import random_uniform
 from optimization.optimizer import Optimizer
 
 
 class Adam(Optimizer):
 
-    def __init__(self, f, wrt=RandomUniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.001,
+    def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.001,
                  momentum_type='none', momentum=0.9, beta1=0.9, beta2=0.999, offset=1e-8, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):

@@ -22,7 +22,7 @@ class Linear(Activation):
 class ReLU(Activation):
 
     def function(self, x):
-        return np.maximum(0, x)
+        return np.maximum(0., x)
 
     def derivative(self, z):
         return np.where(z > 0, 1., 0.)

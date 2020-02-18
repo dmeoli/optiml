@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.initializers import RandomUniform
+from ml.initializers import random_uniform
 from optimization.optimizer import Optimizer
 
 
@@ -81,7 +81,7 @@ class PBM(Optimizer):
     #   = 'error': the solver of the master QP problem solver reported
     #     some error, which requires to stop optimization
 
-    def __init__(self, f, wrt=RandomUniform, batch_size=None, mu=1, m1=0.01, eps=1e-6,
+    def __init__(self, f, wrt=random_uniform, batch_size=None, mu=1, m1=0.01, eps=1e-6,
                  max_iter=1000, m_inf=-np.inf, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(mu):
