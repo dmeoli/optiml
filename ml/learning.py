@@ -17,8 +17,9 @@ class Learner:
 
 class LinearRegressionLearner(Learner):
 
-    def __init__(self, l_rate=0.01, epochs=1000, batch_size=None, optimizer=GD, regularization_type='l1', lmbda=0.0001):
-        self.l_rate = l_rate
+    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
+                 regularization_type='l1', lmbda=0.0001):
+        self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
@@ -30,7 +31,7 @@ class LinearRegressionLearner(Learner):
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(self.loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
         else:
-            self.w = self.optimizer(self.loss, batch_size=self.batch_size, step_rate=self.l_rate,
+            self.w = self.optimizer(self.loss, batch_size=self.batch_size, step_rate=self.learning_rate,
                                     max_iter=self.epochs).minimize()[0]
         return self
 
@@ -40,8 +41,9 @@ class LinearRegressionLearner(Learner):
 
 class BinaryLogisticRegressionLearner(Learner):
 
-    def __init__(self, l_rate=0.01, epochs=1000, batch_size=None, optimizer=GD, regularization_type='l2', lmbda=0.0001):
-        self.l_rate = l_rate
+    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
+                 regularization_type='l2', lmbda=0.0001):
+        self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
@@ -55,7 +57,7 @@ class BinaryLogisticRegressionLearner(Learner):
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(self.loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
         else:
-            self.w = self.optimizer(self.loss, batch_size=self.batch_size, step_rate=self.l_rate,
+            self.w = self.optimizer(self.loss, batch_size=self.batch_size, step_rate=self.learning_rate,
                                     max_iter=self.epochs).minimize()[0]
         return self
 
@@ -67,9 +69,9 @@ class BinaryLogisticRegressionLearner(Learner):
 
 
 class MultiLogisticRegressionLearner(Learner):
-    def __init__(self, l_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
+    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
                  regularization_type='l2', lmbda=0.0001, decision_function='ovr'):
-        self.l_rate = l_rate
+        self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
@@ -95,7 +97,7 @@ class MultiLogisticRegressionLearner(Learner):
                 y1 = np.array(y)
                 y1[y1 != label] = -1.0
                 y1[y1 == label] = 1.0
-                clf = BinaryLogisticRegressionLearner(self.l_rate, self.epochs, self.batch_size, self.optimizer,
+                clf = BinaryLogisticRegressionLearner(self.learning_rate, self.epochs, self.batch_size, self.optimizer,
                                                       self.regularization_type, self.lmbda)
                 clf.fit(X, y1)
                 self.classifiers.append(copy.deepcopy(clf))
@@ -107,7 +109,8 @@ class MultiLogisticRegressionLearner(Learner):
                     x1, y1 = np.r_[X[neg_id], X[pos_id]], np.r_[y[neg_id], y[pos_id]]
                     y1[y1 == labels[i]] = -1.0
                     y1[y1 == labels[j]] = 1.0
-                    clf = BinaryLogisticRegressionLearner(self.l_rate, self.epochs, self.batch_size, self.optimizer,
+                    clf = BinaryLogisticRegressionLearner(self.learning_rate, self.epochs, self.batch_size,
+                                                          self.optimizer,
                                                           self.regularization_type, self.lmbda)
                     clf.fit(x1, y1)
                     self.classifiers.append(copy.deepcopy(clf))

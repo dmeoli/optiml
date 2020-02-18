@@ -30,13 +30,12 @@ class NeuralNetwork(Learner):
     _estimator_type = "classifier"
 
     def __init__(self, hidden_layer_sizes, activations, loss=CrossEntropy,
-                 regularization_type='l2', optimizer='adam', lmbda=0.0001,
-                 batch_size='auto', learning_rate='constant',
-                 learning_rate_init=0.001, power_t=0.5, max_iter=200,
+                 optimizer='adam', regularization_type='l2', lmbda=0.0001,
+                 batch_size='auto', learning_rate_type='constant',
+                 learning_rate=0.001, power_t=0.5, max_iter=200,
                  shuffle=True, tol=1e-4, verbose=False, momentum=0.9,
                  nesterov_momentum=True, early_stopping=True,
-                 validation_fraction=0.1, beta_1=0.9, beta_2=0.999,
-                 eps=1e-8, n_iter_no_change=10, max_fun=15000):
+                 validation_fraction=0.1, n_iter_no_change=10, max_fun=15000):
         self.activations = activations
         # if a single activation function is given, use it for each hidden layer
         if isinstance(self.activations, Activation):
@@ -46,8 +45,8 @@ class NeuralNetwork(Learner):
         self.optimizer = optimizer
         self.lmbda = lmbda
         self.batch_size = batch_size
+        self.learning_rate_type = learning_rate_type
         self.learning_rate = learning_rate
-        self.learning_rate_init = learning_rate_init
         self.power_t = power_t
         self.max_iter = max_iter
         self.loss = loss
@@ -60,11 +59,42 @@ class NeuralNetwork(Learner):
         self.nesterov_momentum = nesterov_momentum
         self.early_stopping = early_stopping
         self.validation_fraction = validation_fraction
-        self.beta_1 = beta_1
-        self.beta_2 = beta_2
-        self.eps = eps
         self.n_iter_no_change = n_iter_no_change
         self.max_fun = max_fun
+        if not isinstance(self.shuffle, bool):
+            raise ValueError("shuffle must be either True or False, got %s." % self.shuffle)
+        if self.max_iter <= 0:
+            raise ValueError("max_iter must be > 0, got %s." % self.max_iter)
+        if self.max_fun <= 0:
+            raise ValueError("max_fun must be > 0, got %s." % self.max_fun)
+        if self.lmbda < 0.0:
+            raise ValueError("alpha must be >= 0, got %s." % self.lmbda)
+        if self.learning_rate <= 0.0:
+            raise ValueError("learning_rate must be > 0, got %s." % self.learning_rate)
+        if self.momentum > 1 or self.momentum < 0:
+            raise ValueError("momentum must be >= 0 and <= 1, got %s" % self.momentum)
+        if not isinstance(self.nesterov_momentum, bool):
+            raise ValueError("nesterov_momentum must be either True or False, got %s." % self.nesterov_momentum)
+        if not isinstance(self.early_stopping, bool):
+            raise ValueError("early_stopping must be either True or False, got %s." % self.early_stopping)
+        if self.validation_fraction < 0 or self.validation_fraction >= 1:
+            raise ValueError("validation_fraction must be >= 0 and < 1, got %s" % self.validation_fraction)
+        if np.any(np.array(self.hidden_layer_sizes) <= 0):
+            raise ValueError("hidden_layer_sizes must be > 0, got %s." % self.hidden_layer_sizes)
+        if len(self.activation_funcs) != len(self.hidden_layer_sizes):
+            raise ValueError("Number of activation functions cannot be different than the number of hidden layers")
+        # if self.beta_1 < 0 or self.beta_1 >= 1:
+        #     raise ValueError("beta_1 must be >= 0 and < 1, got %s" % self.beta_1)
+        # if self.beta_2 < 0 or self.beta_2 >= 1:
+        #     raise ValueError("beta_2 must be >= 0 and < 1, got %s" % self.beta_2)
+        # if self.eps <= 0.0:
+        #     raise ValueError("epsilon must be > 0, got %s." % self.eps)
+        if self.n_iter_no_change <= 0:
+            raise ValueError("n_iter_no_change must be > 0, got %s." % self.n_iter_no_change)
+        if self.learning_rate_type not in ('constant', 'invscaling', 'adaptive'):
+            raise ValueError("learning rate %s is not supported. " % self.learning_rate)
+        # if not isinstance(self.optimizer, Optimizer):
+        #     raise ValueError("The solver %s is not supported. Expected one of Optimizer subclass" % self.optimizer)
 
     def _unpack(self, packed_parameters):
         for i in range(self.n_layers_ - 1):
@@ -77,12 +107,10 @@ class NeuralNetwork(Learner):
         for i in range(self.n_layers_ - 1):
             activations[i + 1] = np.dot(activations[i], self.weights[i])
             activations[i + 1] += self.bias[i]
-
-            # For the hidden layers
+            # for the hidden layers
             if (i + 1) != (self.n_layers_ - 1):
                 activations[i + 1] = self.activation_funcs[i].function(activations[i + 1])
-
-        # For the last layer
+        # for the last layer
         activations[i + 1] = self.out_activation_.function(activations[i + 1])
 
         return activations
@@ -101,37 +129,27 @@ class NeuralNetwork(Learner):
         return loss, grad
 
     def backward(self, X, y, activations, deltas, weights_grads, bias_grads):
-
         n_samples = X.shape[0]
-
-        # Forward propagate
+        # forward propagate
         activations = self.forward(activations)
-
         self.loss.predict = lambda *args: activations[-1]  # monkeypatch
-
         loss = self.loss.function(self.weights, activations[-1], y)
-
-        # Backward propagate
+        # backward propagate
         last = self.n_layers_ - 2
-
         # The calculation of delta[last] here works with following
         # combinations of output activation and loss function:
         # sigmoid and binary cross entropy, softmax and categorical cross
         # entropy, and identity with squared loss
         deltas[last] = activations[-1] - y
-
-        # Compute gradient for the last layer
+        # compute gradient for the last layer
         weights_grads, bias_grads = self._compute_loss_grad(
             last, n_samples, activations, deltas, weights_grads, bias_grads)
-
-        # Iterate over the hidden layers
+        # iterate over the hidden layers
         for i in range(self.n_layers_ - 2, 0, -1):
             deltas[i - 1] = np.dot(deltas[i], self.weights[i].T)
             deltas[i - 1] *= self.activation_funcs[i - 1].derivative(activations[i])
-
             weights_grads, bias_grads = self._compute_loss_grad(
                 i - 1, n_samples, activations, deltas, weights_grads, bias_grads)
-
         return loss, weights_grads, bias_grads
 
     def _initialize(self, y, layer_units):
@@ -184,23 +202,6 @@ class NeuralNetwork(Learner):
         return weights_init, bias_init
 
     def _fit(self, X, y):
-        # Make sure self.hidden_layer_sizes is a list
-        hidden_layer_sizes = self.hidden_layer_sizes
-        if not hasattr(hidden_layer_sizes, '__iter__'):
-            hidden_layer_sizes = [hidden_layer_sizes]
-        hidden_layer_sizes = list(hidden_layer_sizes)
-
-        # Validate input parameters
-        self._validate_hyperparameters()
-        if np.any(np.array(hidden_layer_sizes) <= 0):
-            raise ValueError("hidden_layer_sizes must be > 0, got %s." %
-                             hidden_layer_sizes)
-
-        if len(self.activation_funcs) != len(hidden_layer_sizes):
-            raise ValueError("Number of activation functions "
-                             "cannot be different than the number "
-                             "of hidden layers")
-
         X, y = self._validate_input(X, y)
         n_samples, n_features = X.shape
 
@@ -212,7 +213,7 @@ class NeuralNetwork(Learner):
 
         self.loss = self.loss(X, y, regularization_type=self.regularization_type, lmbda=self.lmbda)
 
-        layer_units = ([n_features] + hidden_layer_sizes + [self.n_outputs_])
+        layer_units = ([n_features] + list(self.hidden_layer_sizes) + [self.n_outputs_])
 
         self._initialize(y, layer_units)
 
@@ -233,42 +234,6 @@ class NeuralNetwork(Learner):
         elif self.optimizer == 'lbfgs':
             self._fit_lbfgs(X, y, activations, deltas, weights_grads, bias_grads, layer_units)
         return self
-
-    def _validate_hyperparameters(self):
-        if not isinstance(self.shuffle, bool):
-            raise ValueError("shuffle must be either True or False, got %s." % self.shuffle)
-        if self.max_iter <= 0:
-            raise ValueError("max_iter must be > 0, got %s." % self.max_iter)
-        if self.max_fun <= 0:
-            raise ValueError("max_fun must be > 0, got %s." % self.max_fun)
-        if self.lmbda < 0.0:
-            raise ValueError("alpha must be >= 0, got %s." % self.lmbda)
-        if self.learning_rate_init <= 0.0:
-            raise ValueError("learning_rate_init must be > 0, got %s." % self.learning_rate_init)
-        if self.momentum > 1 or self.momentum < 0:
-            raise ValueError("momentum must be >= 0 and <= 1, got %s" % self.momentum)
-        if not isinstance(self.nesterov_momentum, bool):
-            raise ValueError("nesterov_momentum must be either True or False, got %s." % self.nesterov_momentum)
-        if not isinstance(self.early_stopping, bool):
-            raise ValueError("early_stopping must be either True or False, got %s." % self.early_stopping)
-        if self.validation_fraction < 0 or self.validation_fraction >= 1:
-            raise ValueError("validation_fraction must be >= 0 and < 1, got %s" % self.validation_fraction)
-        if self.beta_1 < 0 or self.beta_1 >= 1:
-            raise ValueError("beta_1 must be >= 0 and < 1, got %s" % self.beta_1)
-        if self.beta_2 < 0 or self.beta_2 >= 1:
-            raise ValueError("beta_2 must be >= 0 and < 1, got %s" % self.beta_2)
-        if self.eps <= 0.0:
-            raise ValueError("epsilon must be > 0, got %s." % self.eps)
-        if self.n_iter_no_change <= 0:
-            raise ValueError("n_iter_no_change must be > 0, got %s." % self.n_iter_no_change)
-
-        # raise ValueError if not registered
-        if self.learning_rate not in ('constant', 'invscaling', 'adaptive'):
-            raise ValueError("learning rate %s is not supported. " % self.learning_rate)
-        supported_solvers = _STOCHASTIC_SOLVERS + ["lbfgs"]
-        if self.optimizer not in supported_solvers:
-            raise ValueError("The solver %s is not supported. Expected one of: %s" %
-                             (self.optimizer, ", ".join(supported_solvers)))
 
     def _fit_lbfgs(self, X, y, activations, deltas, weights_grads, bias_grads, layer_units):
         # Store meta information for the parameters
@@ -319,11 +284,10 @@ class NeuralNetwork(Learner):
             params = self.weights + self.bias
 
             if self.optimizer == 'sgd':
-                self._optimizer = SGDOptimizer(
-                    params, self.learning_rate_init, self.learning_rate,
-                    self.momentum, self.nesterov_momentum, self.power_t)
+                self._optimizer = SGDOptimizer(params, self.learning_rate, self.learning_rate_type,
+                                               self.momentum, self.nesterov_momentum, self.power_t)
             elif self.optimizer == 'adam':
-                self._optimizer = AdamOptimizer(params, self.learning_rate_init, self.beta_1, self.beta_2, self.eps)
+                self._optimizer = AdamOptimizer(params, self.learning_rate)
 
         # early_stopping in partial_fit doesn't make sense
         early_stopping = self.early_stopping
@@ -491,23 +455,20 @@ class MLPRegressor(NeuralNetwork):
     def __init__(self, hidden_layer_sizes, activations, loss=MeanSquaredError,
                  regularization_type='l2', optimizer='adam', lmbda=0.0001,
                  batch_size='auto', learning_rate_type='constant',
-                 learning_rate_init=0.001,
-                 power_t=0.5, max_iter=200, shuffle=True, tol=1e-4,
+                 learning_rate=0.001, power_t=0.5, max_iter=200, shuffle=True, tol=1e-4,
                  verbose=False, momentum=0.9,
                  nesterov_momentum=True, early_stopping=False,
-                 validation_fraction=0.1, beta_1=0.9, beta_2=0.999,
-                 eps=1e-8, n_iter_no_change=10, max_fun=15000):
+                 validation_fraction=0.1, n_iter_no_change=10, max_fun=15000):
         super().__init__(
             hidden_layer_sizes=hidden_layer_sizes,
             activations=activations, optimizer=optimizer, lmbda=lmbda,
-            batch_size=batch_size, learning_rate=learning_rate_type,
-            learning_rate_init=learning_rate_init, power_t=power_t,
+            batch_size=batch_size, learning_rate_type=learning_rate_type,
+            learning_rate=learning_rate, power_t=power_t,
             max_iter=max_iter, loss=loss, regularization_type=regularization_type,
             shuffle=shuffle, tol=tol, verbose=verbose, momentum=momentum,
             nesterov_momentum=nesterov_momentum,
             early_stopping=early_stopping,
             validation_fraction=validation_fraction,
-            beta_1=beta_1, beta_2=beta_2, eps=eps,
             n_iter_no_change=n_iter_no_change, max_fun=max_fun)
 
     def predict(self, X):
