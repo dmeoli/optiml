@@ -4,7 +4,7 @@ from ml.losses import LossFunction
 class NeuralNetworkLossFunction(LossFunction):
 
     def __init__(self, neural_net, loss):
-        super().__init__(loss.X, loss.y, loss.regularization_type)
+        super().__init__(loss.X, loss.y, loss.regularization_type, loss.lmbda)
         self.neural_net = neural_net
         self.loss = loss
 

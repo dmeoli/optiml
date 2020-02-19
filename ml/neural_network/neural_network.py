@@ -220,6 +220,7 @@ if __name__ == '__main__':
 
 
     def mean_euclidean_error(y_true, y_pred):
+        assert y_true.shape == y_pred.shape
         return np.sum([np.linalg.norm(t - p) for t, p in zip(y_true, y_pred)]) / y_true.shape[0]
 
 
