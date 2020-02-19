@@ -8,31 +8,29 @@ from optimization.optimizer import Optimizer
 class Adam(Optimizer):
 
     def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.001,
-                 momentum_type='none', momentum=0.9, beta1=0.9, beta2=0.999, offset=1e-8, verbose=False, plot=False):
+                 nesterov_momentum=False, momentum=0.9, beta1=0.9, beta2=0.999, offset=1e-8, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
         if not step_rate > 0:
             raise ValueError('step_rate must be > 0')
         self.step_rate = step_rate
-        if not 0 < beta1 <= 1:
-            raise ValueError('beta1 has to lie in (0, 1]')
+        if not 0 <= beta1 < 1:
+            raise ValueError('beta1 has to lie in [0, 1)')
         self.beta1 = beta1
         self.est_mom1 = 0
-        if not 0 < beta2 <= 1:
-            raise ValueError('beta2 has to lie in (0, 1]')
+        if not 0 <= beta2 < 1:
+            raise ValueError('beta2 has to lie in [0, 1)')
         self.beta2 = beta2
         self.est_mom2 = 0
-        if not (1 - beta1 * 2) / (1 - beta2) ** 0.5 < 1:
-            raise ValueError('constraint from convergence analysis for adam not satisfied')
         if not np.isscalar(momentum):
             raise ValueError('momentum is not a real scalar')
         if not momentum > 0:
             raise ValueError('momentum must be > 0')
         self.momentum = momentum
-        if momentum_type not in ('nesterov', 'standard', 'none'):
-            raise ValueError('unknown momentum type {}'.format(momentum_type))
-        self.momentum_type = momentum_type
+        if not isinstance(nesterov_momentum, bool):
+            raise ValueError('must be either True or False')
+        self.nesterov_momentum = nesterov_momentum
         if not np.isscalar(offset):
             raise ValueError('offset is not a real scalar')
         if not offset > 0:
@@ -76,26 +74,27 @@ class Adam(Optimizer):
 
             t = self.iter + 1
 
-            step_m1 = self.step
-            step1 = step_m1 * self.momentum
-            self.wrt -= step1
+            if self.nesterov_momentum:
+                step_m1 = self.step
+                step1 = self.momentum * step_m1
+                self.wrt -= step1
 
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
 
             g = self.f.jacobian(self.wrt, *args, **kwargs)
-            self.est_mom1 = self.beta1 * g + (1 - self.beta1) * est_mom1_m1
-            self.est_mom2 = self.beta2 * g ** 2 + (1 - self.beta2) * est_mom2_m1
+            self.est_mom1 = self.beta1 * g + self.beta1 * est_mom1_m1
+            self.est_mom2 = self.beta2 * g ** 2 + self.beta2 * est_mom2_m1
 
-            step_t = self.step_rate * (1 - (1 - self.beta2) ** t) ** 0.5 / (1 - (1 - self.beta1) ** t)
-            step2 = step_t * self.est_mom1 / (self.est_mom2 ** 0.5 + self.offset)
+            step_t = self.step_rate * np.sqrt(1 - self.beta2 ** t) / (1 - self.beta1 ** t)
+            step2 = step_t * self.est_mom1 / (np.sqrt(self.est_mom2) + self.offset)
 
             self.wrt -= step2
-            self.step = step1 + step2
+            self.step = step1 + step2 if self.nesterov_momentum else step2
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, self.wrt - step2)).T
+                p_xy = np.vstack((self.wrt + self.step, self.wrt)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
 

@@ -8,18 +8,18 @@ The main focus of this project is to provide a simple, intuitive and modular imp
 important optimization algorithms used as core solvers for many machine learning models.
 
 ## Contents
-- Optimization Algorithms:
-    - Constrained Optimization:
+- Optimization Algorithms
+    - Constrained Optimization
         - [ ] Projected Gradient
         - [ ] Conditional Gradient or Frank-Wolfe
         - [ ] Active Set
         - [ ] Interior Point
         - [ ] Dual
-    - Unconstrained Optimization:
-        - Exact Line Search Methods:
+    - Unconstrained Optimization
+        - Exact Line Search Methods
             - [x] Quadratic Steepest Gradient Descent
             - [x] Quadratic Conjugate Gradient
-        - Inexact Line Search Methods:
+        - Inexact Line Search Methods
             - [x] Subgradient
             - [x] Steepest Gradient Descent
             - [x] Conjugate Gradient
@@ -29,23 +29,22 @@ important optimization algorithms used as core solvers for many machine learning
             - [x] Newton
             - [x] BFGS Quasi-Newton
             - [ ] L-BFGS
-        - Very Inexact Line Search or Fixed Step Size Methods:
+        - Very Inexact Line Search or Fixed Step Size Methods
             - [x] Gradient Descent
             - [x] Adam
-            - [ ] Nadam
-            - [ ] Adamax
-            - [ ] Adagrad
-            - [ ] Adadelta
+            - [ ] AdaMax
+            - [ ] AdaGrad
+            - [ ] AdaDelta
             - [ ] Rprop
             - [ ] RMSprop
-        - Trust Region Methods:
+        - Trust Region Methods
             
             
-- Machine Learning Models:
-    - Classification:
+- Machine Learning Models
+    - Classification
         - [x] Logistic Regression
         - [x] Support Vector Machine
-    - Regression:
+    - Regression
         - [x] Linear Regression
         - [ ] Support Vector Regression
     - [x] Neural Networks

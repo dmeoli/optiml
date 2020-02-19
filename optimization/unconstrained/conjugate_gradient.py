@@ -91,19 +91,18 @@ class CGQ(Optimizer):
 
             # assert np.isclose(d.T.dot(d), ng ** 2)
 
+            past_wrt = self.wrt
+
             # compute new point
-            last_wrt = self.wrt + a * d
+            self.wrt += a * d
 
             past_d = d  # previous search direction
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, last_wrt)).T
+                p_xy = np.vstack((past_wrt, self.wrt)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
-
-            # update new point
-            self.wrt = last_wrt
 
             self.iter += 1
 

@@ -18,7 +18,7 @@ def test_Adam_quadratic():
 
 def test_Adam_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = Adam(obj).minimize()
+    x, _ = Adam(obj, nesterov_momentum=True).minimize()
     assert np.allclose(x, obj.x_star(), rtol=0.1)
 
 

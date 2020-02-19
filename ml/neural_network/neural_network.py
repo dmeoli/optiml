@@ -509,7 +509,8 @@ if __name__ == '__main__':
     X, y = load_iris(return_X_y=True)
     nn = NeuralNetwork(hidden_layer_sizes=(4, 4),
                        activations=(Sigmoid(), Sigmoid()),
-                       optimizer='lbfgs', max_iter=1000).fit(X, y)
+                       optimizer='lbfgs', max_iter=1000,
+                       early_stopping=True, verbose=True).fit(X, y)
     pred = nn.predict(X)
     print(pred)
     print(accuracy_score(y, pred))

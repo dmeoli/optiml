@@ -318,7 +318,7 @@ class SDG(LineSearchOptimizer):
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
             # update new point
-            self.wrt[:] = last_wrt
+            self.wrt = last_wrt
 
             # update gradient
             g = last_g
@@ -348,7 +348,7 @@ class GD(Optimizer):
         if not momentum > 0:
             raise ValueError('momentum must be > 0')
         self.momentum = momentum
-        if momentum_type not in ('nesterov', 'standard', 'none'):
+        if momentum_type not in ('standard', 'nesterov', 'none'):
             raise ValueError('unknown momentum type {}'.format(momentum_type))
         self.momentum_type = momentum_type
         if momentum_type in ('nesterov', 'standard'):
@@ -391,24 +391,22 @@ class GD(Optimizer):
             if self.momentum_type == 'standard':
                 step_m1 = self.step
                 self.step = self.step_rate * -g + self.momentum * step_m1
-                past_wrt = self.wrt
                 self.wrt += self.step
             elif self.momentum_type == 'nesterov':
                 step_m1 = self.step
                 big_jump = self.momentum * step_m1
-                self.wrt -= big_jump
+                self.wrt += big_jump
                 g = self.f.jacobian(self.wrt, *args, **kwargs)
                 correction = self.step_rate * -g
-                past_wrt = self.wrt
                 self.wrt += correction
-                self.step = big_jump - correction
+                self.step = big_jump + correction
             elif self.momentum_type == 'none':
-                past_wrt = self.wrt
-                self.wrt += self.step_rate * -g
+                self.step = self.step_rate * -g
+                self.wrt += self.step
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((past_wrt, self.wrt)).T
+                p_xy = np.vstack((self.wrt - self.step, self.wrt)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
 

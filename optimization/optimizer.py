@@ -32,7 +32,7 @@ class Optimizer:
         elif not np.isrealobj(wrt):
             raise ValueError('x not a real vector')
         else:
-            self.wrt = np.asarray(wrt)
+            self.wrt = np.asarray(wrt, dtype=float)
         self.n = self.wrt.size
         self.batch_size = batch_size
         if not np.isscalar(eps):
