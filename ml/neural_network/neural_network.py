@@ -1,7 +1,6 @@
 import warnings
 
 import numpy as np
-import scipy.optimize
 from sklearn.base import is_classifier
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics._regression import _check_reg_targets
@@ -12,12 +11,12 @@ from sklearn.utils import _safe_indexing
 from sklearn.utils import column_or_1d
 from sklearn.utils import gen_batches
 from sklearn.utils import shuffle
-from sklearn.utils.optimize import _check_optimize_result
 
 from ml.initializers import glorot_uniform, he_uniform, zeros
 from ml.learning import Learner
-from ml.losses import CrossEntropy, MeanSquaredError
-from ml.neural_network.activations import Sigmoid, SoftMax, Linear, ReLU, Activation, Tanh
+from ml.losses import CrossEntropy, MeanSquaredError, LossFunction
+from ml.neural_network.activations import Sigmoid, SoftMax, Linear, ReLU, Activation
+from ml.neural_network.losses import NeuralNetworkLossFunction
 from optimization.unconstrained.quasi_newton import BFGS
 
 
@@ -189,15 +188,6 @@ class NeuralNetwork(Learner):
         bias_init = zeros(fan_out)
         return weights_init, bias_init
 
-    def _loss_lbfgs(self, packed_weights_bias, X, y):
-        self._unpack(packed_weights_bias)
-        self.loss.predict = lambda *args: self.forward(self.activations)[-1]  # monkeypatch
-        return self.loss.function(self.weights, X, y)
-
-    def _grad_lbfgs(self, packed_weights_bias, X, y):
-        return self._pack(
-            *self.backward(X, y, self.forward(self.activations), self.deltas, self.weights_grads, self.bias_grads))
-
     def _fit_lbfgs(self, X, y):
         # store meta information for the parameters
         self.weights_idx = []
@@ -218,35 +208,11 @@ class NeuralNetwork(Learner):
         # run LBFGS
         packed_weights_bias = self._pack(self.weights, self.bias)
 
-        from climin import Lbfgs
-        import itertools
-
-        opt = Lbfgs(wrt=packed_weights_bias, f=self._loss_lbfgs, fprime=self._grad_lbfgs,
-                    args=itertools.repeat(((X, y), {})))
-        for info in opt:
-            if info['n_iter'] > self.max_iter:
-                self.loss_ = self._loss_lbfgs(opt.wrt, X, y)
-                self._unpack(opt.wrt)
-                break
-
-        # self.loss.jacobian = lambda theta, X, y: self._grad_lbfgs(theta, X, y)  # monkeypatch
-        #
-        # my_opt = BFGS(f=self._loss_lbfgs, wrt=packed_weights_bias, batch_size=self.batch_size,
-        #               max_iter=self.max_iter, max_f_eval=self.max_fun).minimize()[0]
-
-        # opt_res = scipy.optimize.minimize(
-        #     fun=self._loss_lbfgs, x0=packed_weights_bias,
-        #     method="L-BFGS-B", jac=self._grad_lbfgs,
-        #     options={
-        #         "maxfun": self.max_fun,
-        #         "maxiter": self.max_iter,
-        #         "gtol": self.tol
-        #     },
-        #     args=(X, y, activations, deltas, weights_grads, bias_grads))
-
-        # self.n_iter_ = _check_optimize_result("lbfgs", opt_res, self.max_iter)
-        # self.loss_ = opt_res.fun
-        # self._unpack(opt_res.x)
+        nn_loss = NeuralNetworkLossFunction(self, self.loss)
+        wrt, status = BFGS(f=nn_loss, wrt=packed_weights_bias, batch_size=None,
+                           max_iter=self.max_iter, max_f_eval=self.max_fun).minimize()
+        self.loss_ = nn_loss.function(wrt, X, y)
+        self._unpack(wrt)
 
     def _fit_stochastic(self, X, y):
 
