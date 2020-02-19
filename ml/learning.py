@@ -110,8 +110,7 @@ class MultiLogisticRegressionLearner(Learner):
                     y1[y1 == labels[i]] = -1.0
                     y1[y1 == labels[j]] = 1.0
                     clf = BinaryLogisticRegressionLearner(self.learning_rate, self.epochs, self.batch_size,
-                                                          self.optimizer,
-                                                          self.regularization_type, self.lmbda)
+                                                          self.optimizer, self.regularization_type, self.lmbda)
                     clf.fit(x1, y1)
                     self.classifiers.append(copy.deepcopy(clf))
         return self
