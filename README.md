@@ -28,7 +28,7 @@ important optimization algorithms used as core solvers for many machine learning
             - [x] Accelerated Gradient
             - [x] Newton
             - [x] BFGS Quasi-Newton
-            - [ ] L-BFGS
+            - [ ] L-BFGS Quasi-Newton
         - Very Inexact Line Search or Fixed Step Size Methods
             - [x] Gradient Descent
             - [x] Adam
