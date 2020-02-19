@@ -8,9 +8,6 @@ class NeuralNetworkLossFunction(LossFunction):
         self.neural_net = neural_net
         self.loss = loss
 
-    def predict(self, X, theta):
-        return self.neural_net.forward(self.neural_net.activations)[-1]
-
     def function(self, packed_weights_bias, X, y):
         self.neural_net._unpack(packed_weights_bias)
         self.loss.predict = lambda *args: self.neural_net.forward(self.neural_net.activations)[-1]  # monkeypatch

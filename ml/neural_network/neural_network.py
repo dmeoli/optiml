@@ -14,7 +14,7 @@ from sklearn.utils import shuffle
 
 from ml.initializers import glorot_uniform, he_uniform, zeros
 from ml.learning import Learner
-from ml.losses import CrossEntropy, MeanSquaredError, LossFunction
+from ml.losses import CrossEntropy, MeanSquaredError
 from ml.neural_network.activations import Sigmoid, SoftMax, Linear, ReLU, Activation
 from ml.neural_network.losses import NeuralNetworkLossFunction
 from optimization.unconstrained.quasi_newton import BFGS
@@ -77,10 +77,6 @@ class NeuralNetwork(Learner):
             raise ValueError("hidden_layer_sizes must be > 0, got %s." % self.hidden_layer_sizes)
         if len(self.activation_funcs) != len(self.hidden_layer_sizes):
             raise ValueError("Number of activation functions cannot be different than the number of hidden layers")
-        # if self.beta_1 < 0 or self.beta_1 >= 1:
-        #     raise ValueError("beta_1 must be >= 0 and < 1, got %s" % self.beta_1)
-        # if self.beta_2 < 0 or self.beta_2 >= 1:
-        #     raise ValueError("beta_2 must be >= 0 and < 1, got %s" % self.beta_2)
         # if self.eps <= 0.0:
         #     raise ValueError("epsilon must be > 0, got %s." % self.eps)
         if self.n_iter_no_change <= 0:
@@ -125,8 +121,9 @@ class NeuralNetwork(Learner):
         last = self.n_layers - 2
         # The calculation of delta[last] here works with following
         # combinations of output activation and loss function:
-        # sigmoid and binary cross entropy, softmax and categorical cross
-        # entropy, and identity with squared loss
+        # sigmoid and binary cross entropy,
+        # softmax and categorical cross entropy, and
+        # identity with squared loss
         deltas[last] = activations[-1] - y
         # compute gradient for the last layer
         weights_grads, bias_grads = self._compute_loss_grad(
@@ -484,6 +481,7 @@ if __name__ == '__main__':
     print(pred)
     print(accuracy_score(y, pred))
 
+
     # from sklearn.datasets import load_boston
     # from sklearn.metrics import mean_squared_error
     #
@@ -500,10 +498,16 @@ if __name__ == '__main__':
     #                    solver='lbfgs', max_iter=1000).fit(X, y)
     # print(mean_squared_error(y, nn.predict(X)))
 
+    def mean_euclidean_error(y_true, y_pred):
+        return np.sum(np.linalg.norm(t - o) for t, o in zip(y_true, y_pred)) / y_true.shape[0]
+
+
     ml_cup = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
     X, y = ml_cup[:, :-2], ml_cup[:, -2:]
 
     nn = NeuralNetworkReg(hidden_layer_sizes=(20, 20),
                           activations=(Sigmoid(), Sigmoid()),
-                          optimizer='adam', max_iter=5000).fit(X, y)
-    print(mean_squared_error(y, nn.predict(X)))
+                          optimizer='lbfgs', max_iter=15000).fit(X, y)
+    pred = nn.predict(X)
+    print(mean_squared_error(y, pred))
+    print(mean_euclidean_error(y, pred))
