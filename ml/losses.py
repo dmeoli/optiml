@@ -12,6 +12,8 @@ class LossFunction(OptimizationFunction):
         if regularization_type not in ('l1', 'l2', 'none'):
             raise ValueError('unknown regularization type {}'.format(regularization_type))
         self.regularization_type = regularization_type
+        if not lmbda >= 0:
+            raise ValueError('lmbda must be >= 0')
         self.lmbda = lmbda
 
     def args(self):

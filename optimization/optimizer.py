@@ -42,6 +42,8 @@ class Optimizer:
         self.eps = eps
         if not np.isscalar(max_iter):
             raise ValueError('max_iter is not an integer scalar')
+        if not max_iter > 0:
+            raise ValueError('max_iter must be > 0')
         self.max_iter = max_iter
         self.iter = 1
         self.verbose = verbose

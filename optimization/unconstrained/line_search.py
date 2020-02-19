@@ -30,6 +30,8 @@ class LineSearch:
         self.f = f
         if not np.isscalar(max_f_eval):
             raise ValueError('max_f_eval is not an integer scalar')
+        if not max_f_eval > 0:
+            raise ValueError('max_f_eval must be > 0')
         self.max_f_eval = max_f_eval
         if not np.isscalar(m1):
             raise ValueError('m1 is not a real scalar')
