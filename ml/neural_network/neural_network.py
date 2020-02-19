@@ -1,41 +1,22 @@
 import numpy as np
-from sklearn.datasets import load_iris
-from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.preprocessing import LabelBinarizer
-from sklearn.utils import column_or_1d
 
 from ml.initializers import glorot_uniform, he_uniform, zeros
 from ml.learning import Learner
-from ml.losses import CrossEntropy, MeanSquaredError
 from ml.neural_network.activations import Sigmoid, SoftMax, Linear, ReLU
 from ml.neural_network.losses import NeuralNetworkLossFunction
 from optimization.optimizer import LineSearchOptimizer
-from optimization.unconstrained.quasi_newton import BFGS
 
 
 class NeuralNetwork(Learner):
 
-    def __init__(self, hidden_layer_sizes, activations, loss=CrossEntropy, optimizer=BFGS, regularization_type='l2',
-                 lmbda=0.0001, batch_size=None, shuffle=True, early_stopping=True, verbose=False, plot=False):
+    def __init__(self, hidden_layer_sizes, activations):
         if np.any(np.array(hidden_layer_sizes) <= 0):
             raise ValueError('hidden_layer_sizes must be > 0')
         if len(activations) != len(hidden_layer_sizes):
             raise ValueError('the number of activation functions cannot be different than the number of hidden layers')
         self.hidden_layer_sizes = list(hidden_layer_sizes)
         self.activation_funcs = list(activation() for activation in activations)
-        self.loss = loss
-        self.optimizer = optimizer
-        self.regularization_type = regularization_type
-        self.lmbda = lmbda
-        self.batch_size = batch_size
-        if not isinstance(shuffle, bool):
-            raise ValueError('shuffle must be either True or False')
-        self.shuffle = shuffle
-        if not isinstance(early_stopping, bool):
-            raise ValueError('early_stopping must be either True or False')
-        self.early_stopping = early_stopping
-        self.verbose = verbose
-        self.plot = plot
 
     def _pack(self, weights, bias):
         return np.hstack([l.ravel() for l in weights + bias])
@@ -100,7 +81,7 @@ class NeuralNetwork(Learner):
 
     def _compute_loss_grad(self, layer, n_samples, activations, deltas, weights_grads, bias_grads):
         weights_grads[layer] = np.dot(activations[layer].T, deltas[layer])
-        weights_grads[layer] += (self.lmbda * self.weights[layer])
+        weights_grads[layer] += (self.loss.lmbda * self.weights[layer])
         weights_grads[layer] /= n_samples
         bias_grads[layer] = np.mean(deltas[layer], 0)
         return weights_grads, bias_grads
@@ -126,9 +107,8 @@ class NeuralNetwork(Learner):
                 i - 1, n_samples, activations, deltas, weights_grads, bias_grads)
         return weights_grads, bias_grads
 
-    def fit(self, X, y):
-        if y.ndim == 2 and y.shape[1] == 1:
-            y = column_or_1d(y, warn=True)
+    def fit(self, X, y, loss, optimizer, regularization_type='l2', lmbda=0.0001,
+            batch_size=None, verbose=False, plot=False):
 
         try:
             self._label_binarizer = LabelBinarizer()
@@ -147,7 +127,7 @@ class NeuralNetwork(Learner):
 
         self.n_outputs = y.shape[1]
 
-        self.loss = self.loss(X, y, regularization_type=self.regularization_type, lmbda=self.lmbda)
+        loss = loss(X, y, regularization_type=regularization_type, lmbda=lmbda)
 
         self.layer_units = ([n_features] + list(self.hidden_layer_sizes) + [self.n_outputs])
 
@@ -157,8 +137,8 @@ class NeuralNetwork(Learner):
         self.activations = [X] + [None] * (len(self.layer_units) - 1)
         self.deltas = [None] * (len(self.activations) - 1)
 
-        self.weights_grads = [np.empty((n_fan_in_, n_fan_out_))
-                              for n_fan_in_, n_fan_out_ in zip(self.layer_units[:-1], self.layer_units[1:])]
+        self.weights_grads = [np.empty((n_fan_in, n_fan_out))
+                              for n_fan_in, n_fan_out in zip(self.layer_units[:-1], self.layer_units[1:])]
 
         self.bias_grads = [np.empty(n_fan_out) for n_fan_out in self.layer_units[1:]]
 
@@ -180,14 +160,14 @@ class NeuralNetwork(Learner):
 
         packed_weights_bias = self._pack(self.weights, self.bias)
 
-        nn_loss = NeuralNetworkLossFunction(self, self.loss)
-        if issubclass(self.optimizer, LineSearchOptimizer):
-            wrt = self.optimizer(f=nn_loss, wrt=packed_weights_bias, batch_size=self.batch_size,
-                                 max_iter=1000, max_f_eval=15000).minimize()[0]
+        self.loss = NeuralNetworkLossFunction(self, loss)
+        if issubclass(optimizer, LineSearchOptimizer):
+            wrt = optimizer(f=self.loss, wrt=packed_weights_bias, batch_size=batch_size,
+                            max_iter=1000, max_f_eval=15000).minimize()[0]
         else:
-            wrt = self.optimizer(f=nn_loss, wrt=packed_weights_bias, batch_size=self.batch_size,
-                                 max_iter=1000).minimize()[0]
-        self.loss_ = nn_loss.function(wrt, X, y)  # TODO and if we use batch (?)
+            wrt = optimizer(f=self.loss, wrt=packed_weights_bias, batch_size=batch_size,
+                            max_iter=1000).minimize()[0]
+        self.loss_ = self.loss.function(wrt, X, y)  # TODO and if we use batch (?)
         self._unpack(wrt)
         return self
 
@@ -208,29 +188,3 @@ class NeuralNetwork(Learner):
             if y_pred.shape[1] == 1:
                 return y_pred.ravel()
             return y_pred
-
-
-if __name__ == '__main__':
-    X, y = load_iris(return_X_y=True)
-    nn = NeuralNetwork(hidden_layer_sizes=(4, 4), activations=(Sigmoid, Sigmoid),
-                       loss=CrossEntropy, optimizer=BFGS).fit(X, y)
-    pred = nn.predict(X)
-    print(pred)
-    print(accuracy_score(y, pred))
-
-
-    def mean_euclidean_error(y_true, y_pred):
-        assert y_true.shape == y_pred.shape
-        return np.sum([np.linalg.norm(t - p) for t, p in zip(y_true, y_pred)]) / y_true.shape[0]
-
-
-    ml_cup_train = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
-    X_train, y_train = ml_cup_train[:, :-2], ml_cup_train[:, -2:]
-
-    X_exam = np.delete(np.genfromtxt('../data/ML-CUP19/ML-CUP19-TS.csv', delimiter=','), 0, 1)
-
-    nn = NeuralNetwork(hidden_layer_sizes=(20, 20), activations=(Sigmoid, Sigmoid),
-                       loss=MeanSquaredError, optimizer=BFGS).fit(X_train, y_train)
-    pred = nn.predict(X_train)
-    print(mean_squared_error(y_train, pred))
-    print(mean_euclidean_error(y_train, pred))

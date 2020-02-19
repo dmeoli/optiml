@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
 from sklearn.datasets import load_iris, load_boston
-from sklearn.metrics import accuracy_score, mean_squared_error
 
 from ml.learning import MultiLogisticRegressionLearner, LinearRegressionLearner
 from ml.losses import MeanSquaredError
+from ml.metrics import mean_squared_error, accuracy_score
 from optimization.unconstrained.quasi_newton import BFGS
 
 

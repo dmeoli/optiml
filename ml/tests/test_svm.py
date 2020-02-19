@@ -1,7 +1,7 @@
 import pytest
 from sklearn.datasets import load_iris
-from sklearn.metrics import accuracy_score
 
+from ml.metrics import accuracy_score
 from ml.svm import MultiSVM
 
 
