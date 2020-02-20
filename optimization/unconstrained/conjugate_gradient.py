@@ -162,7 +162,7 @@ class NCG(LineSearchOptimizer):
     # - wf (integer scalar, optional, default value 0): which of the Nonlinear
     #   Conjugated Gradient formulae to use. Possible values are:
     #   = 0: Fletcher-Reeves
-    #   = 1: Polak-Ribiere
+    #   = 1: Polak-Ribière
     #   = 2: Hestenes-Stiefel
     #   = 3: Dai-Yuan
     #
@@ -313,7 +313,7 @@ class NCG(LineSearchOptimizer):
                 else:
                     if self.wf == 0:  # Fletcher-Reeves
                         beta = (ng / np.linalg.norm(past_g)) ** 2
-                    elif self.wf == 1:  # Polak-Ribiere
+                    elif self.wf == 1:  # Polak-Ribière
                         beta = g.T.dot(g - past_g) / np.linalg.norm(past_g) ** 2
                         beta = max(beta, 0)
                     elif self.wf == 2:  # Hestenes-Stiefel

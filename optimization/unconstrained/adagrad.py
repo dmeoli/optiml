@@ -1,5 +1,3 @@
-import warnings
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -7,26 +5,16 @@ from ml.initializers import random_uniform
 from optimization.optimizer import Optimizer
 
 
-class Adam(Optimizer):
+class AdaGrad(Optimizer):
 
-    def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.001,
-                 nesterov_momentum=False, momentum=0.9, beta1=0.9, beta2=0.999, offset=1e-8, verbose=False, plot=False):
+    def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.01,
+                 nesterov_momentum=False, momentum=0.9, offset=1e-4, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
         if not step_rate > 0:
             raise ValueError('step_rate must be > 0')
         self.step_rate = step_rate
-        if not 0 <= beta1 < 1:
-            raise ValueError('beta1 has to lie in [0, 1)')
-        self.beta1 = beta1
-        self.est_mom1 = 0
-        if not 0 <= beta2 < 1:
-            raise ValueError('beta2 has to lie in [0, 1)')
-        self.beta2 = beta2
-        self.est_mom2 = 0
-        if not self.beta1 < np.sqrt(self.beta2):
-            warnings.warn('constraint from convergence analysis for adam not satisfied')
         if not np.isscalar(momentum):
             raise ValueError('momentum is not a real scalar')
         if not momentum > 0:
@@ -40,6 +28,7 @@ class Adam(Optimizer):
         if not offset > 0:
             raise ValueError('offset must be > 0')
         self.offset = offset
+        self.gms = 0
         self.step = 0
 
     def minimize(self):
@@ -76,22 +65,14 @@ class Adam(Optimizer):
                 status = 'stopped'
                 break
 
-            t = self.iter + 1
-
             if self.nesterov_momentum:
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
                 self.wrt -= step1
 
-            est_mom1_m1 = self.est_mom1
-            est_mom2_m1 = self.est_mom2
-
             g = self.f.jacobian(self.wrt, *args, **kwargs)
-            self.est_mom1 = self.beta1 * g + self.beta1 * est_mom1_m1
-            self.est_mom2 = self.beta2 * g ** 2 + self.beta2 * est_mom2_m1
-
-            step_t = self.step_rate * np.sqrt(1. - self.beta2 ** t) / (1. - self.beta1 ** t)
-            step2 = step_t * self.est_mom1 / (np.sqrt(self.est_mom2) + self.offset)
+            self.gms += g ** 2
+            step2 = self.step_rate * g / np.sqrt(self.gms + self.offset)
 
             self.wrt -= step2
             self.step = step1 + step2 if self.nesterov_momentum else step2

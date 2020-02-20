@@ -1,5 +1,3 @@
-import warnings
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -7,26 +5,23 @@ from ml.initializers import random_uniform
 from optimization.optimizer import Optimizer
 
 
-class Adam(Optimizer):
+class RmsProp(Optimizer):
 
     def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.001,
-                 nesterov_momentum=False, momentum=0.9, beta1=0.9, beta2=0.999, offset=1e-8, verbose=False, plot=False):
+                 min_step_rate=0., max_step_rate=np.inf, step_adapt=False, nesterov_momentum=False,
+                 momentum=0.9, decay=0.9, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
         if not step_rate > 0:
             raise ValueError('step_rate must be > 0')
+        self.min_step_rate = min_step_rate
+        self.max_step_rate = max_step_rate
+        self.step_adapt = step_adapt
         self.step_rate = step_rate
-        if not 0 <= beta1 < 1:
-            raise ValueError('beta1 has to lie in [0, 1)')
-        self.beta1 = beta1
-        self.est_mom1 = 0
-        if not 0 <= beta2 < 1:
-            raise ValueError('beta2 has to lie in [0, 1)')
-        self.beta2 = beta2
-        self.est_mom2 = 0
-        if not self.beta1 < np.sqrt(self.beta2):
-            warnings.warn('constraint from convergence analysis for adam not satisfied')
+        if not 0 <= decay < 1:
+            raise ValueError('decay has to lie in [0, 1)')
+        self.decay = decay
         if not np.isscalar(momentum):
             raise ValueError('momentum is not a real scalar')
         if not momentum > 0:
@@ -35,12 +30,18 @@ class Adam(Optimizer):
         if not isinstance(nesterov_momentum, bool):
             raise ValueError('must be either True or False')
         self.nesterov_momentum = nesterov_momentum
-        if not np.isscalar(offset):
-            raise ValueError('offset is not a real scalar')
-        if not offset > 0:
-            raise ValueError('offset must be > 0')
-        self.offset = offset
+        self.moving_mean_squared = 1
         self.step = 0
+
+    @property
+    def step_rate(self):
+        return self._step_rate
+
+    @step_rate.setter
+    def step_rate(self, value):
+        self._step_rate = value
+        if self.step_adapt:
+            self._step_rate *= np.ones_like(self.wrt)
 
     def minimize(self):
         if self.verbose:
@@ -76,25 +77,29 @@ class Adam(Optimizer):
                 status = 'stopped'
                 break
 
-            t = self.iter + 1
+            step_m1 = self.step
 
             if self.nesterov_momentum:
-                step_m1 = self.step
                 step1 = self.momentum * step_m1
                 self.wrt -= step1
 
-            est_mom1_m1 = self.est_mom1
-            est_mom2_m1 = self.est_mom2
-
             g = self.f.jacobian(self.wrt, *args, **kwargs)
-            self.est_mom1 = self.beta1 * g + self.beta1 * est_mom1_m1
-            self.est_mom2 = self.beta2 * g ** 2 + self.beta2 * est_mom2_m1
 
-            step_t = self.step_rate * np.sqrt(1. - self.beta2 ** t) / (1. - self.beta1 ** t)
-            step2 = step_t * self.est_mom1 / (np.sqrt(self.est_mom2) + self.offset)
+            self.moving_mean_squared = self.decay * self.moving_mean_squared + (1. - self.decay) * g ** 2
+            step2 = (self.step_rate * g) / np.sqrt(self.moving_mean_squared)
 
             self.wrt -= step2
-            self.step = step1 + step2 if self.nesterov_momentum else step2
+            step = step1 + step2 if self.nesterov_momentum else step2
+
+            if self.step_adapt:
+                step_non_negative = step > 0
+                step_m1_non_negative = step_m1 > 0
+                agree = step_non_negative == step_m1_non_negative
+                adapt = 1 + agree * self.step_adapt * 2 - self.step_adapt
+                self.step_rate *= adapt
+                self.step_rate = np.clip(self.step_rate, self.min_step_rate, self.max_step_rate)
+
+            self.step = step
 
             # plot the trajectory
             if self.plot and self.n == 2:

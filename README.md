@@ -14,7 +14,7 @@ important optimization algorithms used as core solvers for many machine learning
         - [ ] Conditional Gradient or Frank-Wolfe
         - [ ] Active Set
         - [ ] Interior Point
-        - [ ] Dual
+        - [ ] Dual formulation
     - Unconstrained Optimization
         - Exact Line Search Methods
             - [x] Quadratic Steepest Gradient Descent
@@ -24,6 +24,10 @@ important optimization algorithms used as core solvers for many machine learning
             - [x] Steepest Gradient Descent
             - [x] Conjugate Gradient
             - [x] NonLinear Conjugate Gradient
+                - [x] Fletcher–Reeves formula
+                - [x] Polak–Ribière formula
+                - [x] Hestenes-Stiefel formula
+                - [x] Dai-Yuan formula
             - [x] Heavy Ball Gradient
             - [x] Accelerated Gradient
             - [x] Newton
@@ -31,12 +35,19 @@ important optimization algorithms used as core solvers for many machine learning
             - [ ] L-BFGS Quasi-Newton
         - Very Inexact Line Search or Fixed Step Size Methods
             - [x] Gradient Descent
+                - [x] standard momentum
+                - [x] Nesterov momentum
+                - [ ] learning rate and momentum schedules
             - [x] Adam
+                - [x] Nesterov momentum
             - [ ] AdaMax
             - [ ] AdaGrad
-            - [ ] AdaDelta
-            - [ ] Rprop
-            - [ ] RMSprop
+                - [x] Nesterov momentum
+            - [x] AdaDelta
+                - [x] Nesterov momentum
+            - [X] RProp
+            - [x] RmsProp
+                - [x] Nesterov momentum
         - Trust Region Methods
             
             
@@ -44,10 +55,18 @@ important optimization algorithms used as core solvers for many machine learning
     - Classification
         - [x] Logistic Regression
         - [x] Support Vector Machine
+            - [x] linear kernel
+            - [x] polynomial kernel
+            - [x] rbf kernel
     - Regression
         - [x] Linear Regression
         - [ ] Support Vector Regression
+            - [x] linear kernel
+            - [x] polynomial kernel
+            - [x] rbf kernel
     - [x] Neural Networks
+        - [x] Xavier or Glorot normal and uniform initializer
+        - [x] He normal and uniform initializer
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
