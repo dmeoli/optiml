@@ -76,11 +76,14 @@ class AdaDelta(Optimizer):
 
             g = self.f.jacobian(self.wrt, *args, **kwargs)
             self.gms = self.decay * self.gms + (1. - self.decay) * g ** 2
-            delta = np.sqrt(self.sms + self.offset) / np.sqrt(self.gms + self.offset) * g * self.step_rate
+            delta = np.sqrt(self.sms + self.offset) / np.sqrt(self.gms + self.offset) * g
 
-            self.wrt -= delta
-            self.step = step1 + delta if self.nesterov_momentum else delta
-            self.sms = (self.decay * self.sms) + (1. - self.decay) * self.step ** 2
+            step2 = self.step_rate * delta
+
+            self.wrt -= step2
+            self.step = step1 + step2 if self.nesterov_momentum else step2
+
+            self.sms = self.decay * self.sms + (1. - self.decay) * self.step ** 2
 
             # plot the trajectory
             if self.plot and self.n == 2:
