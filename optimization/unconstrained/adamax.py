@@ -20,11 +20,11 @@ class AdaMax(Optimizer):
         if not 0 <= beta1 < 1:
             raise ValueError('beta1 has to lie in [0, 1)')
         self.beta1 = beta1
-        self.est_mom1 = 0
+        self.est_mom1 = 0  # initialize 1st moment vector
         if not 0 <= beta2 < 1:
             raise ValueError('beta2 has to lie in [0, 1)')
         self.beta2 = beta2
-        self.est_mom2 = 0
+        self.est_mom2 = 0  # initialize the exponentially weighted infinity norm
         if not self.beta1 < np.sqrt(self.beta2):
             warnings.warn('constraint from convergence analysis for adam not satisfied')
         if not np.isscalar(momentum):
@@ -76,7 +76,7 @@ class AdaMax(Optimizer):
                 status = 'stopped'
                 break
 
-            t = self.iter + 1
+            t = self.iter
 
             if self.nesterov_momentum:
                 step_m1 = self.step
@@ -87,11 +87,11 @@ class AdaMax(Optimizer):
             est_mom2_m1 = self.est_mom2
 
             g = self.f.jacobian(self.wrt, *args, **kwargs)
-            self.est_mom1 = self.beta1 * g + self.beta1 * est_mom1_m1
-            self.est_mom2 = self.beta2 * g ** 2 + self.beta2 * est_mom2_m1
+            self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * g  # update biased 1st moment estimate
+            # update the exponentially weighted infinity norm
+            self.est_mom2 = np.maximum(self.beta2 * est_mom2_m1, np.abs(g))
 
-            step_t = self.step_rate * np.sqrt(1 - self.beta2 ** t) / (1 - self.beta1 ** t)
-            step2 = step_t * self.est_mom1 / (np.sqrt(self.est_mom2) + self.offset)
+            step2 = (self.step_rate / (1. - self.beta1 ** t)) * self.est_mom1 / self.est_mom2
 
             self.wrt -= step2
             self.step = step1 + step2 if self.nesterov_momentum else step2

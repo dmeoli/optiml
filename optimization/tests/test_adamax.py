@@ -18,7 +18,7 @@ def test_AdaMax_quadratic():
 
 def test_AdaMax_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = AdaMax(obj, nesterov_momentum=True, momentum=0.95).minimize()
+    x, _ = AdaMax(obj, nesterov_momentum=True).minimize()
     assert np.allclose(x, obj.x_star(), rtol=0.1)
 
 
