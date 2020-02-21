@@ -16,4 +16,4 @@ class NeuralNetworkLossFunction(LossFunction):
     def jacobian(self, packed_weights_bias, X, y):
         return self.neural_net._pack(*self.neural_net.backward(
             X, y, self.neural_net.forward(self.neural_net.activations),
-            self.neural_net.deltas, self.neural_net.weights_grads, self.neural_net.bias_grads))
+            self.neural_net.deltas, self.neural_net.weight_grads, self.neural_net.bias_grads))

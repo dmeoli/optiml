@@ -18,15 +18,15 @@ class NeuralNetwork(Learner):
         self.hidden_layer_sizes = list(hidden_layer_sizes)
         self.activation_funcs = list(activation() for activation in activations)
 
-    def _pack(self, weights, bias):
-        return np.hstack([l.ravel() for l in weights + bias])
+    def _pack(self, weights, biases):
+        return np.hstack([l.ravel() for l in weights + biases])
 
     def _unpack(self, packed_weights_bias):
         for i in range(self.n_layers - 1):
-            start, end, shape = self.weights_idx[i]
+            start, end, shape = self.weight_idx[i]
             self.weights[i] = np.reshape(packed_weights_bias[start:end], shape)
             start, end = self.bias_idx[i]
-            self.bias[i] = packed_weights_bias[start:end]
+            self.biases[i] = packed_weights_bias[start:end]
 
     def _initialize(self, y, layer_units):
         # set all attributes, allocate weights etc for first call
@@ -49,29 +49,29 @@ class NeuralNetwork(Learner):
             self.out_activation = Sigmoid()
 
         # initialize weights and bias layers
-        self.weights, self.bias = map(list, zip(
+        self.weights, self.biases = map(list, zip(
             *[self._init_weights(layer_units[i], layer_units[i + 1], self.activation_funcs[i])
               for i in range(self.n_layers - 2)]))
 
         # for output layer, use the rule according to the
         # activation function in the previous layer
-        weights_init, bias_init = self._init_weights(
+        weight_init, bias_init = self._init_weights(
             layer_units[self.n_layers - 2], layer_units[self.n_layers - 1], self.activation_funcs[self.n_layers - 3])
-        self.weights.append(weights_init)
-        self.bias.append(bias_init)
+        self.weights.append(weight_init)
+        self.biases.append(bias_init)
 
     def _init_weights(self, fan_in, fan_out, activation):
         if isinstance(activation, ReLU):
-            weights_init = he_uniform(fan_in, fan_out)[0]
+            weight_init = he_uniform(fan_in, fan_out)[0]
         else:
-            weights_init = glorot_uniform(fan_in, fan_out)[0]
+            weight_init = glorot_uniform(fan_in, fan_out)[0]
         bias_init = zeros(fan_out)
-        return weights_init, bias_init
+        return weight_init, bias_init
 
     def forward(self, activations):
         for i in range(self.n_layers - 1):
             activations[i + 1] = np.dot(activations[i], self.weights[i])
-            activations[i + 1] += self.bias[i]
+            activations[i + 1] += self.biases[i]
             # for the hidden layers
             if (i + 1) != (self.n_layers - 1):
                 activations[i + 1] = self.activation_funcs[i].function(activations[i + 1])
@@ -79,14 +79,14 @@ class NeuralNetwork(Learner):
         activations[i + 1] = self.out_activation.function(activations[i + 1])
         return activations
 
-    def _compute_loss_grad(self, layer, n_samples, activations, deltas, weights_grads, bias_grads):
-        weights_grads[layer] = np.dot(activations[layer].T, deltas[layer])
-        weights_grads[layer] += (self.loss.lmbda * self.weights[layer])
-        weights_grads[layer] /= n_samples
+    def _compute_loss_grad(self, layer, n_samples, activations, deltas, weight_grads, bias_grads):
+        weight_grads[layer] = np.dot(activations[layer].T, deltas[layer])
+        weight_grads[layer] += (self.loss.lmbda * self.weights[layer])
+        weight_grads[layer] /= n_samples
         bias_grads[layer] = np.mean(deltas[layer], 0)
-        return weights_grads, bias_grads
+        return weight_grads, bias_grads
 
-    def backward(self, X, y, activations, deltas, weights_grads, bias_grads):
+    def backward(self, X, y, activations, deltas, weight_grads, bias_grads):
         n_samples = X.shape[0]
         # backward propagate
         last = self.n_layers - 2
@@ -97,15 +97,15 @@ class NeuralNetwork(Learner):
         # identity with squared loss
         deltas[last] = activations[-1] - y
         # compute gradient for the last layer
-        weights_grads, bias_grads = self._compute_loss_grad(
-            last, n_samples, activations, deltas, weights_grads, bias_grads)
+        weight_grads, bias_grads = self._compute_loss_grad(
+            last, n_samples, activations, deltas, weight_grads, bias_grads)
         # iterate over the hidden layers
         for i in range(self.n_layers - 2, 0, -1):
             deltas[i - 1] = np.dot(deltas[i], self.weights[i].T)
             deltas[i - 1] *= self.activation_funcs[i - 1].derivative(activations[i])
-            weights_grads, bias_grads = self._compute_loss_grad(
-                i - 1, n_samples, activations, deltas, weights_grads, bias_grads)
-        return weights_grads, bias_grads
+            weight_grads, bias_grads = self._compute_loss_grad(
+                i - 1, n_samples, activations, deltas, weight_grads, bias_grads)
+        return weight_grads, bias_grads
 
     def fit(self, X, y, loss, optimizer, regularization_type='l2', lmbda=0.0001,
             batch_size=None, verbose=False, plot=False):
@@ -137,20 +137,20 @@ class NeuralNetwork(Learner):
         self.activations = [X] + [None] * (len(self.layer_units) - 1)
         self.deltas = [None] * (len(self.activations) - 1)
 
-        self.weights_grads = [np.empty((n_fan_in, n_fan_out))
-                              for n_fan_in, n_fan_out in zip(self.layer_units[:-1], self.layer_units[1:])]
+        self.weight_grads = [np.empty((n_fan_in, n_fan_out))
+                             for n_fan_in, n_fan_out in zip(self.layer_units[:-1], self.layer_units[1:])]
 
         self.bias_grads = [np.empty(n_fan_out) for n_fan_out in self.layer_units[1:]]
 
         # store meta information for the parameters
-        self.weights_idx = []
+        self.weight_idx = []
         self.bias_idx = []
         start = 0
         # save sizes and indices of weights for faster unpacking
         for i in range(self.n_layers - 1):
             n_fan_in, n_fan_out = self.layer_units[i], self.layer_units[i + 1]
             end = start + (n_fan_in * n_fan_out)
-            self.weights_idx.append((start, end, (n_fan_in, n_fan_out)))
+            self.weight_idx.append((start, end, (n_fan_in, n_fan_out)))
             start = end
         # save sizes and indices of intercepts for faster unpacking
         for i in range(self.n_layers - 1):
@@ -158,15 +158,14 @@ class NeuralNetwork(Learner):
             self.bias_idx.append((start, end))
             start = end
 
-        packed_weights_bias = self._pack(self.weights, self.bias)
+        packed_weights_bias = self._pack(self.weights, self.biases)
 
         self.loss = NeuralNetworkLossFunction(self, loss)
         if issubclass(optimizer, LineSearchOptimizer):
             wrt = optimizer(f=self.loss, wrt=packed_weights_bias, batch_size=batch_size,
                             max_iter=1000, max_f_eval=15000).minimize()[0]
         else:
-            wrt = optimizer(f=self.loss, wrt=packed_weights_bias, batch_size=batch_size,
-                            max_iter=1000).minimize()[0]
+            wrt = optimizer(f=self.loss, wrt=packed_weights_bias, batch_size=batch_size, max_iter=1000).minimize()[0]
         self.loss_ = self.loss.function(wrt, X, y)  # TODO and if we use batch (?)
         self._unpack(wrt)
         return self
