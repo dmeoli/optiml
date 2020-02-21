@@ -22,7 +22,7 @@ important optimization algorithms used as core solver for many machine learning 
         - Inexact Line Search Methods
             - [x] Subgradient
             - [x] Steepest Gradient Descent
-            - [x] Conjugate Gradient
+            - [ ] Conjugate Gradient
             - [x] NonLinear Conjugate Gradient
                 - [x] Fletcher–Reeves formula
                 - [x] Polak–Ribière formula
