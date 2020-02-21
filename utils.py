@@ -1,7 +1,5 @@
 import random
 
-import numpy as np
-
 
 def not_test(func):
     """Decorator to mark a function or method as not a test"""
