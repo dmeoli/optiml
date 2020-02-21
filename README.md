@@ -71,6 +71,10 @@ important optimization algorithms used as core solvers for many machine learning
     - [x] Neural Networks
         - [x] Xavier or Glorot normal and uniform initializer
         - [x] He normal and uniform initializer
+        - [ ] Dense Layer
+        - [ ] Convolutional Layer
+        - [ ] MaxPooling Layer
+        - [ ] Dropout
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
