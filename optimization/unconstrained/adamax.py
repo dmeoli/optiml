@@ -91,7 +91,9 @@ class AdaMax(Optimizer):
             # update the exponentially weighted infinity norm
             self.est_mom2 = np.maximum(self.beta2 * est_mom2_m1, np.abs(g))
 
-            step2 = (self.step_rate / (1. - self.beta1 ** t)) * self.est_mom1 / self.est_mom2
+            est_mom1_crt = self.est_mom1 / (1. - self.beta1 ** t)  # compute bias-corrected 1st moment estimate
+
+            step2 = self.step_rate * est_mom1_crt / (self.est_mom2 + self.offset)
 
             self.wrt -= step2
             self.step = step1 + step2 if self.nesterov_momentum else step2

@@ -91,10 +91,10 @@ class Adam(Optimizer):
             # update biased 2nd raw moment estimate
             self.est_mom2 = self.beta2 * est_mom2_m1 + (1. - self.beta2) * g ** 2
 
-            b1_crt = self.est_mom1 / (1. - self.beta1 ** t)  # compute bias-corrected 1st moment estimate
-            b2_crt = self.est_mom2 / (1. - self.beta2 ** t)  # compute bias-corrected 2nd raw moment estimate
+            est_mom1_crt = self.est_mom1 / (1. - self.beta1 ** t)  # compute bias-corrected 1st moment estimate
+            est_mom2_crt = self.est_mom2 / (1. - self.beta2 ** t)  # compute bias-corrected 2nd raw moment estimate
 
-            step2 = self.step_rate * b1_crt / (np.sqrt(b2_crt) + self.offset)
+            step2 = self.step_rate * est_mom1_crt / (np.sqrt(est_mom2_crt) + self.offset)
 
             self.wrt -= step2
             self.step = step1 + step2 if self.nesterov_momentum else step2
