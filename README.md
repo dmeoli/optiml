@@ -40,6 +40,8 @@ important optimization algorithms used as core solvers for many machine learning
                 - [ ] learning rate and momentum schedules
             - [x] Adam
                 - [x] Nesterov momentum
+            - [x] AMSGrad
+                - [x] Nesterov momentum
             - [x] AdaMax
                 - [x] Nesterov momentum
             - [x] AdaGrad
