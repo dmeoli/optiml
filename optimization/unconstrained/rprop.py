@@ -7,8 +7,8 @@ from optimization.optimizer import Optimizer
 
 class RProp(Optimizer):
 
-    def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, min_step=1e-6,
-                 step_shrink=0.5, step_grow=1.2, max_step=1, verbose=False, plot=False):
+    def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, min_step=1e-6, step_shrink=0.5,
+                     step_grow=1.2, max_step=1, nesterov_momentum=False, momentum=0.9, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         self.min_step = min_step
         self.step_shrink = step_shrink
@@ -16,6 +16,9 @@ class RProp(Optimizer):
         self.max_step = max_step
         self.jacobian = np.zeros_like(self.wrt)
         self.changes = np.zeros_like(self.wrt)
+        self.momentum = momentum
+        self.nesterov_momentum = nesterov_momentum
+        self.step = 0
 
     def minimize(self):
         if self.verbose:
@@ -51,6 +54,11 @@ class RProp(Optimizer):
                 status = 'stopped'
                 break
 
+            if self.nesterov_momentum:
+                step_m1 = self.step
+                step1 = self.momentum * step_m1
+                self.wrt -= step1
+
             g_m1 = self.jacobian
 
             self.jacobian = self.f.jacobian(self.wrt, *args, **kwargs)
@@ -60,12 +68,14 @@ class RProp(Optimizer):
             self.changes[grad_prod < 0] *= self.step_shrink
             self.changes = np.clip(self.changes, self.min_step, self.max_step)
 
-            step = self.changes * np.sign(self.jacobian)
-            self.wrt -= step
+            step2 = self.changes * np.sign(self.jacobian)
+
+            self.wrt -= step2
+            self.step = step1 + step2 if self.nesterov_momentum else step2
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt + step, self.wrt)).T
+                p_xy = np.vstack((self.wrt + self.step, self.wrt)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
 

@@ -41,12 +41,14 @@ important optimization algorithms used as core solvers for many machine learning
             - [x] Adam
                 - [x] Nesterov momentum
             - [x] AdaMax
+                - [x] Nesterov momentum
             - [x] AdaGrad
                 - [x] Nesterov momentum
             - [x] AdaDelta
                 - [x] Nesterov momentum
             - [X] RProp
-            - [x] RmsProp
+                - [x] Nesterov momentum
+            - [x] RMSProp
                 - [x] Nesterov momentum
         - Trust Region Methods
             
