@@ -28,11 +28,12 @@ important optimization algorithms used as core solver for many machine learning 
                 - [x] Polak–Ribière formula
                 - [x] Hestenes-Stiefel formula
                 - [x] Dai-Yuan formula
+            - [ ] Newton Conjugate Gradient
             - [x] Heavy Ball Gradient
             - [x] Accelerated Gradient
             - [x] Newton
-            - [x] BFGS Quasi-Newton
-            - [ ] L-BFGS Quasi-Newton
+            - [x] BFGS quasi-Newton
+            - [ ] L-BFGS quasi-Newton
         - Very Inexact Line Search or Fixed Step Size Methods
             - [x] Gradient Descent
                 - [x] standard momentum
@@ -53,9 +54,7 @@ important optimization algorithms used as core solver for many machine learning 
                 - [x] Nesterov momentum
             - [x] RMSProp
                 - [x] Nesterov momentum
-        - Trust Region Methods
-            
-            
+                
 - Machine Learning Models
     - Classification
         - [x] Logistic Regression
