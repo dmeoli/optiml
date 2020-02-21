@@ -5,7 +5,7 @@ Machine Learning & Numerical Methods and Optimization courses @ [Department of C
 @ [University of Pisa](https://www.unipi.it/index.php/english).
 
 The main focus of this project is to provide a simple, intuitive and modular implementation of some of the most 
-important optimization algorithms used as core solvers for many machine learning models.
+important optimization algorithms used as core solver for many machine learning models.
 
 ## Contents
 - Optimization Algorithms
@@ -37,7 +37,8 @@ important optimization algorithms used as core solvers for many machine learning
             - [x] Gradient Descent
                 - [x] standard momentum
                 - [x] Nesterov momentum
-                - [ ] learning rate and momentum schedules
+                - [ ] learning rate decay
+                - [ ] momentum decay
             - [x] Adam
                 - [x] Nesterov momentum
             - [x] AMSGrad
@@ -69,12 +70,12 @@ important optimization algorithms used as core solvers for many machine learning
             - [x] polynomial kernel
             - [x] rbf kernel
     - [x] Neural Networks
-        - [x] Xavier or Glorot normal and uniform initializer
-        - [x] He normal and uniform initializer
         - [ ] Dense Layer
         - [ ] Convolutional Layer
-        - [ ] MaxPooling Layer
+        - [ ] Max Pooling Layer
         - [ ] Dropout
+        - [x] Xavier or Glorot normal and uniform initializer
+        - [x] He normal and uniform initializer
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
