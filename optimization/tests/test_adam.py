@@ -5,7 +5,7 @@ from optimization.optimization_function import quad1, quad2, Rosenbrock
 from optimization.unconstrained.adam import Adam
 
 
-def test_NAdam_quadratic():
+def test_Nadam_quadratic():
     x, _ = Adam(quad1, nesterov_momentum=True).minimize()
     assert np.allclose(x, quad1.x_star(), rtol=0.1)
 
@@ -13,7 +13,7 @@ def test_NAdam_quadratic():
     assert np.allclose(x, quad2.x_star(), rtol=0.01)
 
 
-def test_NAdam_Rosenbrock():
+def test_Nadam_Rosenbrock():
     obj = Rosenbrock()
     x, _ = Adam(obj, nesterov_momentum=True).minimize()
     assert np.allclose(x, obj.x_star(), rtol=0.1)
