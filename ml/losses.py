@@ -5,7 +5,7 @@ from optimization.optimization_function import OptimizationFunction
 
 
 class LossFunction(OptimizationFunction):
-    def __init__(self, X, y, regularization_type, lmbda=0.0001):
+    def __init__(self, X, y, regularization_type, lmbda=0.001):
         super().__init__(X.shape[1])
         self.X = X
         self.y = y
@@ -39,7 +39,7 @@ class LossFunction(OptimizationFunction):
 
 
 class MeanSquaredError(LossFunction):
-    def __init__(self, X, y, regularization_type='l1', lmbda=0.0001):
+    def __init__(self, X, y, regularization_type='l1', lmbda=0.001):
         super().__init__(X, y, regularization_type, lmbda)
 
     def x_star(self):
@@ -54,7 +54,7 @@ class MeanSquaredError(LossFunction):
 
 
 class MeanAbsoluteError(LossFunction):
-    def __init__(self, X, y, regularization_type='l2', lmbda=0.0001):
+    def __init__(self, X, y, regularization_type='l2', lmbda=0.001):
         super().__init__(X, y, regularization_type, lmbda)
 
     def function(self, theta, X, y):
@@ -62,7 +62,7 @@ class MeanAbsoluteError(LossFunction):
 
 
 class CrossEntropy(LossFunction):
-    def __init__(self, X, y, regularization_type='l2', lmbda=0.0001, eps=1e-6):
+    def __init__(self, X, y, regularization_type='l2', lmbda=0.001, eps=1e-6):
         super().__init__(X, y, regularization_type, lmbda)
         self.eps = eps
 

@@ -69,12 +69,34 @@ important optimization algorithms used as core solver for many machine learning 
             - [x] polynomial kernel
             - [x] rbf kernel
     - [x] Neural Networks
-        - [ ] Dense Layer
-        - [ ] Convolutional Layer
-        - [ ] Max Pooling Layer
-        - [ ] Dropout
-        - [x] Xavier or Glorot normal and uniform initializer
-        - [x] He normal and uniform initializer
+        - [x] Losses
+            - [x] Mean Squared Error
+            - [x] Mean Absolute Error
+            - [x] Cross Entropy
+        - [x] Regularizers
+            - [x] L1
+            - [x] L2
+        - [x] Activations
+            - [x] Sigmoid
+            - [x] Tanh
+            - [x] ReLU
+            - [x] LeakyReLU
+            - [x] ELU
+            - [x] SoftMax
+            - [x] SoftPlus
+        - [ ] Layers
+            - [ ] Dense
+            - [ ] Convolutional
+            - [ ] Max Pooling
+            - [ ] Avg Pooling
+            - [ ] Dropout
+            - [ ] Batch Normalization
+            - [ ] Recurrent
+            - [ ] Long Short-Term Memory (LSTM)
+            - [ ] Gated Recurrent Units (GRU)
+        - [x] Initializers
+            - [x] Xavier or Glorot normal and uniform
+            - [x] He normal and uniform
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

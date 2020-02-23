@@ -16,14 +16,22 @@ if __name__ == '__main__':
     print(pred)
     print(accuracy_score(y, pred))
 
-    ml_cup_train = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
-    X_train, y_train = ml_cup_train[:, :-2], ml_cup_train[:, -2:]
+    ml_cup = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
+    X, y = ml_cup[:, :-2], ml_cup[:, -2:]
 
-    X_exam = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TS.csv', delimiter=','), 0, 1)
+    from sklearn.model_selection import train_test_split
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
+
+    # from sklearn.preprocessing import StandardScaler
+
+    # feature_scaler = StandardScaler()
+    # X_train = feature_scaler.fit_transform(X_train)
+    # X_test = feature_scaler.transform(X_test)
 
     nn = NeuralNetwork(hidden_layer_sizes=(20, 20),
                        activations=(Sigmoid, Sigmoid))
     nn.fit(X_train, y_train, loss=MeanSquaredError, optimizer=BFGS)
-    pred = nn.predict(X_train)
-    print(mean_squared_error(y_train, pred))
-    print(mean_euclidean_error(y_train, pred))
+    pred = nn.predict(X_test)
+    print(mean_squared_error(y_test, pred))
+    print(mean_euclidean_error(y_test, pred))

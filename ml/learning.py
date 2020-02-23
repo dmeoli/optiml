@@ -18,7 +18,7 @@ class Learner:
 class LinearRegressionLearner(Learner):
 
     def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
-                 regularization_type='l1', lmbda=0.0001):
+                 regularization_type='l1', lmbda=0.001):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
@@ -42,7 +42,7 @@ class LinearRegressionLearner(Learner):
 class BinaryLogisticRegressionLearner(Learner):
 
     def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
-                 regularization_type='l2', lmbda=0.0001):
+                 regularization_type='l2', lmbda=0.001):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
@@ -70,7 +70,7 @@ class BinaryLogisticRegressionLearner(Learner):
 
 class MultiLogisticRegressionLearner(Learner):
     def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
-                 regularization_type='l2', lmbda=0.0001, decision_function='ovr'):
+                 regularization_type='l2', lmbda=0.001, decision_function='ovr'):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size

@@ -107,7 +107,7 @@ class NeuralNetwork(Learner):
                 i - 1, n_samples, activations, deltas, weight_grads, bias_grads)
         return weight_grads, bias_grads
 
-    def fit(self, X, y, loss, optimizer, regularization_type='l2', lmbda=0.0001,
+    def fit(self, X, y, loss, optimizer, regularization_type='l2', lmbda=0.001,
             batch_size=None, verbose=False, plot=False):
 
         try:
