@@ -8,16 +8,12 @@ from optimization.optimizer import Optimizer
 class RMSProp(Optimizer):
 
     def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.001,
-                 min_step_rate=0., max_step_rate=np.inf, step_adapt=False, nesterov_momentum=False,
-                 momentum=0.9, decay=0.9, verbose=False, plot=False):
+                 nesterov_momentum=False, momentum=0.9, decay=0.9, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
         if not step_rate > 0:
             raise ValueError('step_rate must be > 0')
-        self.min_step_rate = min_step_rate
-        self.max_step_rate = max_step_rate
-        self.step_adapt = step_adapt
         self.step_rate = step_rate
         if not 0 <= decay < 1:
             raise ValueError('decay has to lie in [0, 1)')
@@ -32,16 +28,6 @@ class RMSProp(Optimizer):
         self.nesterov_momentum = nesterov_momentum
         self.moving_mean_squared = 1
         self.step = 0
-
-    @property
-    def step_rate(self):
-        return self._step_rate
-
-    @step_rate.setter
-    def step_rate(self, value):
-        self._step_rate = value
-        if self.step_adapt:
-            self._step_rate *= np.ones_like(self.wrt)
 
     def minimize(self):
         if self.verbose:
@@ -90,14 +76,6 @@ class RMSProp(Optimizer):
 
             self.wrt -= step2
             self.step = step1 + step2 if self.nesterov_momentum else step2
-
-            if self.step_adapt:
-                sign_step = self.step > 0
-                sign_step_m1 = step_m1 > 0
-                agree = sign_step == sign_step_m1
-                adapt = 1 + agree * self.step_adapt * 2 - self.step_adapt
-                self.step_rate *= adapt
-                self.step_rate = np.clip(self.step_rate, self.min_step_rate, self.max_step_rate)
 
             # plot the trajectory
             if self.plot and self.n == 2:
