@@ -23,12 +23,6 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
-    # from sklearn.preprocessing import StandardScaler
-
-    # feature_scaler = StandardScaler()
-    # X_train = feature_scaler.fit_transform(X_train)
-    # X_test = feature_scaler.transform(X_test)
-
     nn = NeuralNetwork(hidden_layer_sizes=(20, 20),
                        activations=(Sigmoid, Sigmoid))
     nn.fit(X_train, y_train, loss=MeanSquaredError, optimizer=BFGS)
