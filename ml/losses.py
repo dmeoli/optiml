@@ -27,11 +27,9 @@ class LossFunction(OptimizationFunction):
 
     def regularization(self, theta):
         if self.regularization_type is 'l1':
-            return self.lmbda * (np.sum(np.abs(theta)) if not isinstance(theta, list) else
-                                 np.sum(np.sum(np.abs(t)) for t in theta))
+            return self.lmbda * np.sum(np.abs(theta))
         elif self.regularization_type is 'l2':
-            return self.lmbda * (np.sum(np.square(theta)) if not isinstance(theta, list) else
-                                 np.sum(np.sum(np.square(t)) for t in theta))
+            return self.lmbda * np.sum(np.square(theta))
         return 0
 
     def jacobian(self, theta, X, y):
@@ -50,7 +48,9 @@ class MeanSquaredError(LossFunction):
             return self.x_opt
 
     def function(self, theta, X, y):
-        return np.mean(np.square(self.predict(X, theta) - y)) + self.regularization(theta) / X.shape[0]
+        self.pred = self.predict(X, theta)
+        self.target = y
+        return np.mean(np.square(self.pred - y)) + self.regularization(theta) / X.shape[0]
 
 
 class MeanAbsoluteError(LossFunction):
@@ -58,18 +58,20 @@ class MeanAbsoluteError(LossFunction):
         super().__init__(X, y, regularization_type, lmbda)
 
     def function(self, theta, X, y):
-        return np.mean(np.abs(self.predict(X, theta) - y)) + self.regularization(theta) / X.shape[0]
+        self.pred = self.predict(X, theta)
+        self.target = y
+        return np.mean(np.abs(self.pred - y)) + self.regularization(theta) / X.shape[0]
 
 
 class CrossEntropy(LossFunction):
-    def __init__(self, X, y, regularization_type='l2', lmbda=0.001, eps=1e-6):
+    def __init__(self, X, y, regularization_type='l2', lmbda=0.001):
         super().__init__(X, y, regularization_type, lmbda)
-        self.eps = eps
 
     def predict(self, X, theta):
         return Sigmoid().function(np.dot(X, theta))
 
     def function(self, theta, X, y):
-        y_pred = self.predict(X, theta)
-        return -np.mean(y * np.log(y_pred + self.eps) +
-                        (1. - y) * np.log(1. - y_pred + self.eps)) + self.regularization(theta) / X.shape[0]
+        self.pred = self.predict(X, theta)
+        self.target = y
+        return -np.mean(np.nan_to_num(y * np.log(self.pred) +
+                                      (1. - y) * np.log(1. - self.pred))) + self.regularization(theta) / X.shape[0]
