@@ -68,7 +68,7 @@ class NeuralNetwork(Layer, Learner):
             start = end
 
     def fit(self, X, y, loss, optimizer, learning_rate=0.01, epochs=100, batch_size=None,
-            regularization_type='l1', lmbda=0.001, verbose=True):
+            regularization_type='l1', lmbda=0.001, verbose=False):
         if y.ndim == 1:
             y = y.reshape((-1, 1))
         if isinstance(self.layers[-1]._a, Linear):
