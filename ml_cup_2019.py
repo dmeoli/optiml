@@ -15,7 +15,8 @@ if __name__ == '__main__':
                         Dense(4, 4, sigmoid),
                         Dense(4, 3, softmax))
 
-    net.fit(X, y, loss=CrossEntropy, optimizer=BFGS, epochs=100, batch_size=None, verbose=True)
+    net.fit(X, y, loss=CrossEntropy, optimizer=BFGS, regularization_type='l2',
+            epochs=100, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred)
     print(accuracy_score(y, pred))

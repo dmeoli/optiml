@@ -72,6 +72,7 @@ class CrossEntropy(LossFunction):
         return Sigmoid().function(np.dot(X, theta))
 
     def function(self, theta, X, y):
-        y_pred = self.predict(X, theta)
-        return -np.mean(y * np.log(y_pred + self.eps) +
-                        (1. - y) * np.log(1. - y_pred + self.eps)) + self.regularization(theta) / X.shape[0]
+        self.pred = self.predict(X, theta)
+        self.target = y
+        return -np.mean(y * np.log(self.pred + self.eps) +
+                        (1. - y) * np.log(1. - self.pred + self.eps)) + self.regularization(theta) / X.shape[0]
