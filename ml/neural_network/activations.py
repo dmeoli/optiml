@@ -59,7 +59,7 @@ class Tanh(Activation):
         return np.tanh(x)
 
     def derivative(self, x):
-        return 1. - np.square(np.tanh(x))
+        return 1. - np.square(self.function(x))
 
 
 class Sigmoid(Activation):

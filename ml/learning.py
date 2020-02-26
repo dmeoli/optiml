@@ -2,9 +2,10 @@ import copy
 
 import numpy as np
 
-from ml.losses import MeanSquaredError, CrossEntropy
+from ml.losses import mean_squared_error, cross_entropy
 from ml.neural_network.activations import Sigmoid
 from ml.regularizers import l1, l2
+from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GD
 
@@ -15,6 +16,27 @@ class Learner:
 
     def predict(self, X):
         raise NotImplementedError
+
+
+class LinearModelLossFunction(OptimizationFunction):
+
+    def __init__(self, X, y, linear_model, loss, regularizer=l2, lmbda=0.01):
+        super().__init__(X.shape[1])
+        self.X = X
+        self.y = y
+        self.linear_model = linear_model
+        self.loss = loss
+        self.regularizer = regularizer
+        self.lmbda = lmbda
+
+    def args(self):
+        return self.X, self.y
+
+    def function(self, theta, X, y):
+        return self.loss(self.linear_model._predict(X, theta), y) + self.regularizer(theta, self.lmbda) / X.shape[0]
+
+    def jacobian(self, theta, X, y):
+        return np.dot(X.T, self.linear_model._predict(X, theta) - y) / X.shape[0]
 
 
 class LinearRegressionLearner(Learner):
@@ -28,16 +50,19 @@ class LinearRegressionLearner(Learner):
         self.lmbda = lmbda
 
     def fit(self, X, y):
-        self.loss = MeanSquaredError(X, y, self.regularizer, self.lmbda)
+        loss = LinearModelLossFunction(X, y, self, mean_squared_error)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(f=self.loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
+            self.w = self.optimizer(f=loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
         else:
-            self.w = self.optimizer(f=self.loss, batch_size=self.batch_size, step_rate=self.learning_rate,
+            self.w = self.optimizer(f=loss, batch_size=self.batch_size, step_rate=self.learning_rate,
                                     max_iter=self.epochs).minimize()[0]
         return self
 
+    def _predict(self, X, theta):
+        return np.dot(X, theta)
+
     def predict(self, X):
-        return np.dot(X, self.w)
+        return self._predict(X, self.w)
 
 
 class BinaryLogisticRegressionLearner(Learner):
@@ -53,16 +78,19 @@ class BinaryLogisticRegressionLearner(Learner):
     def fit(self, X, y):
         self.labels = np.unique(y)
         y = np.where(y == self.labels[0], 0, 1)
-        self.loss = CrossEntropy(X, y, self.regularizer, self.lmbda)
+        loss = LinearModelLossFunction(X, y, self, cross_entropy)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(f=self.loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
+            self.w = self.optimizer(f=loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
         else:
-            self.w = self.optimizer(f=self.loss, batch_size=self.batch_size, step_rate=self.learning_rate,
+            self.w = self.optimizer(f=loss, batch_size=self.batch_size, step_rate=self.learning_rate,
                                     max_iter=self.epochs).minimize()[0]
         return self
 
+    def _predict(self, X, theta):
+        return Sigmoid().function(np.dot(X, theta))
+
     def predict_score(self, X):
-        return Sigmoid().function(np.dot(X, self.w))
+        return self._predict(X, self.w)
 
     def predict(self, X):
         return np.where(self.predict_score(X) >= 0.5, self.labels[1], self.labels[0]).astype(int)

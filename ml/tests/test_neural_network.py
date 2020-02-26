@@ -1,7 +1,7 @@
 import pytest
 from sklearn.datasets import load_iris
 
-from ml.losses import CrossEntropy
+from ml.losses import cross_entropy
 from ml.metrics import accuracy_score
 from ml.neural_network.activations import sigmoid, softmax
 from ml.neural_network.layers import Dense
@@ -14,7 +14,7 @@ def test_neural_network_classification():
     net = NeuralNetwork(Dense(4, 4, sigmoid),
                         Dense(4, 4, sigmoid),
                         Dense(4, 3, softmax))
-    net.fit(X, y, loss=CrossEntropy, optimizer=BFGS)
+    net.fit(X, y, loss=cross_entropy, optimizer=BFGS)
     assert accuracy_score(y, net.predict(X)) >= 0.9
 
 
