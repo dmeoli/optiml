@@ -18,7 +18,7 @@ if __name__ == '__main__':
     net.fit(X, y, loss=cross_entropy, optimizer=BFGS, regularization=l2, epochs=100, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred)
-    print(accuracy_score(y, pred))
+    print(accuracy_score(pred, y))
 
     # ml_cup = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
     # X, y = ml_cup[:, :-2], ml_cup[:, -2:]
@@ -34,5 +34,5 @@ if __name__ == '__main__':
     # net.fit(X_train, y_train, loss=mean_squared_error, optimizer=BFGS, learning_rate=0.01,
     #         epochs=1000, batch_size=None, verbose=True)
     # pred = net.predict(X_test)
-    # print(mean_squared_error(y_test, pred))
-    # print(mean_euclidean_error(y_test, pred))
+    # print(mean_squared_error(pred, y_test))
+    # print(mean_euclidean_error(pred, y_test))
