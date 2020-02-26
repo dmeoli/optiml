@@ -5,6 +5,7 @@ from ml.learning import Learner
 from ml.neural_network.activations import Linear
 from ml.neural_network.layers import Layer
 from ml.neural_network.losses import NeuralNetworkLossFunction
+from ml.regularizers import l2
 from optimization.optimizer import LineSearchOptimizer
 
 
@@ -67,8 +68,8 @@ class NeuralNetwork(Layer, Learner):
             self.biases_idx.append((start, end))
             start = end
 
-    def fit(self, X, y, loss, optimizer, learning_rate=0.01, epochs=100, batch_size=None,
-            regularization_type='l1', lmbda=0.001, verbose=False):
+    def fit(self, X, y, loss, optimizer, learning_rate=0.01, epochs=100,
+            batch_size=None, regularization=l2, lmbda=0.01, verbose=False):
         if y.ndim == 1:
             y = y.reshape((-1, 1))
         if isinstance(self.layers[-1]._a, Linear):
@@ -82,7 +83,7 @@ class NeuralNetwork(Layer, Learner):
 
         packed_weights_biases = self._pack(*self.params)
 
-        loss = NeuralNetworkLossFunction(self, loss(X, y, regularization_type, lmbda), verbose)
+        loss = NeuralNetworkLossFunction(self, loss(X, y), regularization, lmbda, verbose)
         if issubclass(optimizer, LineSearchOptimizer):
             wrt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size, max_iter=epochs).minimize()[0]
         else:

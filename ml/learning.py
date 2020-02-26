@@ -3,6 +3,8 @@ import copy
 import numpy as np
 
 from ml.losses import MeanSquaredError, CrossEntropy
+from ml.neural_network.activations import Sigmoid
+from ml.regularizers import l1, l2
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GD
 
@@ -17,43 +19,41 @@ class Learner:
 
 class LinearRegressionLearner(Learner):
 
-    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
-                 regularization_type='l1', lmbda=0.001):
+    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD, regularizer=l1, lmbda=0.01):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
-        self.regularization_type = regularization_type
+        self.regularizer = regularizer
         self.lmbda = lmbda
 
     def fit(self, X, y):
-        self.loss = MeanSquaredError(X, y, self.regularization_type, self.lmbda)
+        self.loss = MeanSquaredError(X, y, self.regularizer, self.lmbda)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(self.loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
+            self.w = self.optimizer(f=self.loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
         else:
-            self.w = self.optimizer(self.loss, batch_size=self.batch_size, step_rate=self.learning_rate,
+            self.w = self.optimizer(f=self.loss, batch_size=self.batch_size, step_rate=self.learning_rate,
                                     max_iter=self.epochs).minimize()[0]
         return self
 
     def predict(self, X):
-        return self.loss.predict(X, self.w)
+        return np.dot(X, self.w)
 
 
 class BinaryLogisticRegressionLearner(Learner):
 
-    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
-                 regularization_type='l2', lmbda=0.001):
+    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD, regularizer=l2, lmbda=0.01):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
-        self.regularization_type = regularization_type
+        self.regularizer = regularizer
         self.lmbda = lmbda
 
     def fit(self, X, y):
         self.labels = np.unique(y)
         y = np.where(y == self.labels[0], 0, 1)
-        self.loss = CrossEntropy(X, y, self.regularization_type, self.lmbda)
+        self.loss = CrossEntropy(X, y, self.regularizer, self.lmbda)
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(f=self.loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
         else:
@@ -62,7 +62,7 @@ class BinaryLogisticRegressionLearner(Learner):
         return self
 
     def predict_score(self, X):
-        return self.loss.predict(X, self.w)
+        return Sigmoid().function(np.dot(X, self.w))
 
     def predict(self, X):
         return np.where(self.predict_score(X) >= 0.5, self.labels[1], self.labels[0]).astype(int)
@@ -70,12 +70,12 @@ class BinaryLogisticRegressionLearner(Learner):
 
 class MultiLogisticRegressionLearner(Learner):
     def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
-                 regularization_type='l2', lmbda=0.001, decision_function='ovr'):
+                 regularizer=l2, lmbda=0.01, decision_function='ovr'):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
-        self.regularization_type = regularization_type
+        self.regularizer = regularizer
         self.lmbda = lmbda
         if decision_function not in ('ovr', 'ovo'):
             raise ValueError("decision function must be either 'ovr' or 'ovo'")
@@ -97,8 +97,8 @@ class MultiLogisticRegressionLearner(Learner):
                 y1 = np.array(y)
                 y1[y1 != label] = -1.0
                 y1[y1 == label] = 1.0
-                clf = BinaryLogisticRegressionLearner(self.learning_rate, self.epochs, self.batch_size, self.optimizer,
-                                                      self.regularization_type, self.lmbda)
+                clf = BinaryLogisticRegressionLearner(self.learning_rate, self.epochs, self.batch_size,
+                                                      self.optimizer, self.regularizer, self.lmbda)
                 clf.fit(X, y1)
                 self.classifiers.append(copy.deepcopy(clf))
         elif self.decision_function == 'ovo':  # use one-vs-one method
@@ -110,7 +110,7 @@ class MultiLogisticRegressionLearner(Learner):
                     y1[y1 == labels[i]] = -1.0
                     y1[y1 == labels[j]] = 1.0
                     clf = BinaryLogisticRegressionLearner(self.learning_rate, self.epochs, self.batch_size,
-                                                          self.optimizer, self.regularization_type, self.lmbda)
+                                                          self.optimizer, self.regularizer, self.lmbda)
                     clf.fit(x1, y1)
                     self.classifiers.append(copy.deepcopy(clf))
         return self
