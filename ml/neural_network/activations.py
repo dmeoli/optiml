@@ -1,4 +1,5 @@
 import numpy as np
+from jax.scipy.special import expit
 
 
 class Activation:
@@ -64,7 +65,7 @@ class Tanh(Activation):
 class Sigmoid(Activation):
 
     def function(self, x):
-        return 1. / (1. + np.exp(-x))
+        return expit(x)
 
     def derivative(self, x):
         x = self.function(x)

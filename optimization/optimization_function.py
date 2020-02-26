@@ -1,5 +1,5 @@
-import autograd.numpy as np
-from autograd import jacobian, hessian
+import numpy as np
+from jax import jacobian, hessian
 from matplotlib import cm
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
@@ -32,7 +32,7 @@ class OptimizationFunction:
         :param x: 1D array of points at which the Jacobian is to be computed.
         :return:  the Jacobian of the function at x.
         """
-        return self.jac(np.asarray(x, dtype=float))
+        return self.jac(np.asarray(x))
 
     def hessian(self, x):
         """
@@ -40,7 +40,7 @@ class OptimizationFunction:
         :param x: 1D array of points at which the Hessian is to be computed.
         :return:  the Hessian matrix of the function at x.
         """
-        return self.hes(np.asarray(x, dtype=float)).reshape((x.size, x.size))
+        return self.hes(np.asarray(x)).reshape((x.size, x.size))
 
     def plot(self, x_min, x_max, y_min, y_max):
         raise NotImplementedError

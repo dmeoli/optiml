@@ -1,4 +1,4 @@
-autograd
+jax
 matplotlib
 numpy
 pytest-cov

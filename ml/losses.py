@@ -1,4 +1,5 @@
 import numpy as np
+from jax.scipy.special import xlogy
 
 from ml.neural_network.activations import Sigmoid
 from optimization.optimization_function import OptimizationFunction
@@ -64,9 +65,8 @@ class MeanAbsoluteError(LossFunction):
 
 
 class CrossEntropy(LossFunction):
-    def __init__(self, X, y, regularization_type='l2', lmbda=0.001, eps=1e-6):
+    def __init__(self, X, y, regularization_type='l2', lmbda=0.001):
         super().__init__(X, y, regularization_type, lmbda)
-        self.eps = eps
 
     def predict(self, X, theta):
         return Sigmoid().function(np.dot(X, theta))
@@ -74,5 +74,4 @@ class CrossEntropy(LossFunction):
     def function(self, theta, X, y):
         self.pred = self.predict(X, theta)
         self.target = y
-        return -np.mean(y * np.log(self.pred + self.eps) +
-                        (1. - y) * np.log(1. - self.pred + self.eps)) + self.regularization(theta) / X.shape[0]
+        return -np.mean(xlogy(y, self.pred) + xlogy(1. - y, 1. - self.pred)) + self.regularization(theta) / X.shape[0]

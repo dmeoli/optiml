@@ -6,7 +6,7 @@ python:
   - 3.7
 
 install:
-  - pip install autograd
+  - pip install jax
   - pip install matplotlib
   - pip install numpy
   - pip install pytest-cov
