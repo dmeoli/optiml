@@ -1,5 +1,5 @@
 import numpy as np
-from jax.scipy.special import xlogy
+from scipy.special import xlogy
 
 
 def mean_squared_error(y_pred, y_true):

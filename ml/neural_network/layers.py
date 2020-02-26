@@ -7,13 +7,11 @@ from ml.neural_network.variable import Variable
 
 class Layer:
 
-    def __init__(self, w_shape, activation, w_init, b_init, use_bias):
+    def __init__(self, n_in, n_out, activation, w_init, b_init):
         self.order = None
         self.name = None
         self._x = None
         self.data_vars = {}
-
-        self.use_bias = use_bias
 
         if isinstance(activation, Activation):
             self._a = activation
@@ -21,17 +19,14 @@ class Layer:
             raise TypeError
 
         if w_init is None:
-            self.w = glorot_uniform(*w_shape)
+            self.w = glorot_uniform(n_in, n_out)
         else:
-            self.w = w_init(*w_shape)
+            self.w = w_init(n_in, n_out)
 
-        if use_bias:
-            shape = [1] * len(w_shape)
-            shape[-1] = w_shape[-1]
-            if b_init is None:
-                self.b = zeros(shape)
-            else:
-                self.b = b_init(shape)
+        if b_init is None:
+            self.b = zeros((1, n_out))
+        else:
+            self.b = b_init((1, n_out))
 
         self._wx_b = None
         self._activated = None
@@ -62,16 +57,14 @@ class Layer:
 
 
 class Dense(Layer):
-    def __init__(self, n_in, n_out, activation, w_init=glorot_uniform, b_init=zeros, use_bias=True):
-        super().__init__((n_in, n_out), activation, w_init, b_init, use_bias)
+    def __init__(self, n_in, n_out, activation, w_init=glorot_uniform, b_init=zeros):
+        super().__init__(n_in, n_out, activation, w_init, b_init)
         self.fan_in = n_in
         self.fan_out = n_out
 
     def forward(self, X):
         self._x = self._process_input(X)
-        self._wx_b = self._x.dot(self.w)
-        if self.use_bias:
-            self._wx_b += self.b
+        self._wx_b = self._x.dot(self.w) + self.b
         self._activated = self._a.function(self._wx_b)
         wrapped_out = self._wrap_out(self._activated)
         return wrapped_out
@@ -81,8 +74,7 @@ class Dense(Layer):
         dz = self.data_vars['out'].error
         dz *= self._a.derivative(self._wx_b)
         grads = {'w': self._x.T.dot(dz)}
-        if self.use_bias:
-            grads['b'] = np.sum(dz, axis=0, keepdims=True)
+        grads['b'] = np.sum(dz, axis=0, keepdims=True)
         # dx
         self.data_vars['in'].set_error(dz.dot(self.w.T))  # pass error to the layer before
         return grads

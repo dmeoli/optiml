@@ -49,13 +49,14 @@ class LinearRegressionLearner(Learner):
         self.regularizer = regularizer
         self.lmbda = lmbda
 
-    def fit(self, X, y):
+    def fit(self, X, y, verbose=False):
         loss = LinearModelLossFunction(X, y, self, mean_squared_error)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(f=loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
+            self.w = self.optimizer(f=loss, batch_size=self.batch_size, max_iter=self.epochs,
+                                    verbose=verbose).minimize()[0]
         else:
             self.w = self.optimizer(f=loss, batch_size=self.batch_size, step_rate=self.learning_rate,
-                                    max_iter=self.epochs).minimize()[0]
+                                    max_iter=self.epochs, verbose=verbose).minimize()[0]
         return self
 
     def _predict(self, X, theta):

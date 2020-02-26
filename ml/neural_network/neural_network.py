@@ -2,8 +2,6 @@ import numpy as np
 from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
-from ml.losses import mean_squared_error
-from ml.metrics import accuracy_score
 from ml.neural_network.activations import Linear
 from ml.neural_network.layers import Layer
 from ml.regularizers import l2
@@ -14,7 +12,7 @@ from optimization.unconstrained.gradient_descent import GD
 
 class NeuralNetworkLossFunction(OptimizationFunction):
 
-    def __init__(self, X, y, neural_net, loss, regularizer=l2, lmbda=0.01, verbose=True):
+    def __init__(self, X, y, neural_net, loss, regularizer=l2, lmbda=0.01):
         super().__init__(X.shape[1])
         self.X = X
         self.y = y
@@ -22,7 +20,6 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         self.loss = loss
         self.regularizer = regularizer
         self.lmbda = lmbda
-        self.verbose = verbose
 
     def args(self):
         return self.X, self.y
@@ -30,19 +27,15 @@ class NeuralNetworkLossFunction(OptimizationFunction):
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
         self.y_pred = self.neural_net.forward(X)
-        loss = self.loss(self.y_pred, y) + self.regularizer(packed_weights_biases, self.lmbda) / X.shape[0]
-        if self.verbose:
-            print('Epoch: %i | loss: %.5f | %s: %.2f' %
-                  (0, loss, 'acc' if self.neural_net.task is 'classification' else 'mse',
-                   accuracy_score(self.neural_net.lb.inverse_transform(y), self.neural_net.predict(X))
-                   if self.neural_net.task is 'classification' else mean_squared_error(y, self.neural_net.predict(X))))
-        return loss
+        return self.loss(self.y_pred, y) + self.regularizer(packed_weights_biases, self.lmbda) / X.shape[0]
 
     def jacobian(self, packed_weights_biases, X, y):
-        return self.neural_net._pack(*self.neural_net.backward(self.delta(y)))
+        return self.neural_net._pack(*self.neural_net.backward(self.delta(X, y)))
 
-    def delta(self, y_true):
-        return self.y_pred - y_true
+    def delta(self, X, y):
+        if hasattr(self, 'y_pred'):
+            return self.y_pred - y
+        return self.neural_net.forward(X) - y
 
 
 class NeuralNetwork(Layer, Learner):
@@ -105,7 +98,7 @@ class NeuralNetwork(Layer, Learner):
             start = end
 
     def fit(self, X, y, loss, optimizer=GD, learning_rate=0.01, epochs=100,
-            batch_size=None, regularization=l2, lmbda=0.01, verbose=False):
+            batch_size=None, regularizer=l2, lmbda=0.01, verbose=False):
         if y.ndim == 1:
             y = y.reshape((-1, 1))
         if isinstance(self.layers[-1]._a, Linear):
@@ -119,12 +112,13 @@ class NeuralNetwork(Layer, Learner):
 
         packed_weights_biases = self._pack(*self.params)
 
-        loss = NeuralNetworkLossFunction(X, y, self, loss, regularization, lmbda, verbose)
+        loss = NeuralNetworkLossFunction(X, y, self, loss, regularizer, lmbda)
         if issubclass(optimizer, LineSearchOptimizer):
-            wrt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size, max_iter=epochs).minimize()[0]
+            wrt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size,
+                            max_iter=epochs, verbose=verbose).minimize()[0]
         else:
             wrt = optimizer(f=loss, wrt=packed_weights_biases, step_rate=learning_rate,
-                            batch_size=batch_size, max_iter=epochs).minimize()[0]
+                            batch_size=batch_size, max_iter=epochs, verbose=verbose).minimize()[0]
         self._unpack(wrt)
 
         return self

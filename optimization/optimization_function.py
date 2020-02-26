@@ -1,5 +1,5 @@
-import numpy as np
-from jax import jacobian, hessian
+import autograd.numpy as np
+from autograd import jacobian, hessian
 from matplotlib import cm
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm

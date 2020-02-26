@@ -1,10 +1,10 @@
-jax
-jaxlib
+autograd
 matplotlib
 numpy
 pytest-cov
 qpsolvers
 scikit-learn
+scipy
 
 
 

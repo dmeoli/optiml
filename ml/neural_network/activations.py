@@ -1,5 +1,5 @@
 import numpy as np
-from jax.scipy.special import expit
+from scipy.special import expit
 
 
 class Activation:
