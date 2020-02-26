@@ -6,6 +6,7 @@ from ml.neural_network.activations import sigmoid, softmax
 from ml.neural_network.layers import Dense
 from ml.neural_network.neural_network import NeuralNetwork
 from ml.regularizers import l2
+from optimization.unconstrained.adam import Adam
 from optimization.unconstrained.quasi_newton import BFGS
 
 if __name__ == '__main__':
@@ -15,7 +16,7 @@ if __name__ == '__main__':
                         Dense(4, 4, sigmoid),
                         Dense(4, 3, softmax))
 
-    net.fit(X, y, loss=cross_entropy, optimizer=BFGS, regularization=l2, epochs=100, batch_size=None, verbose=True)
+    net.fit(X, y, loss=cross_entropy, optimizer=Adam, regularization=l2, epochs=100, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred)
     print(accuracy_score(pred, y))

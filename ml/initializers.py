@@ -33,8 +33,7 @@ def glorot_normal(fan_in, fan_out):
     where fan_in is the number of input units in the weight tensor
     and fan_out is the number of output units in the weight tensor."""
     std = np.sqrt(2. / (fan_in + fan_out))
-    return (truncated_normal(shape=(fan_in, fan_out), mean=0., std=std),
-            truncated_normal(shape=fan_out, mean=0., std=std))
+    return truncated_normal(shape=(fan_in, fan_out), mean=0., std=std)
 
 
 def glorot_uniform(fan_in, fan_out):
@@ -44,8 +43,7 @@ def glorot_uniform(fan_in, fan_out):
     where fan_in is the number of input units in the weight tensor
     and fan_out is the number of output units in the weight tensor."""
     limit = np.sqrt(6. / (fan_in + fan_out))
-    return (random_uniform(shape=(fan_in, fan_out), low=-limit, high=limit),
-            random_uniform(shape=fan_out, low=-limit, high=limit))
+    return random_uniform(shape=(fan_in, fan_out), low=-limit, high=limit)
 
 
 def he_normal(fan_in, fan_out):
@@ -53,8 +51,7 @@ def he_normal(fan_in, fan_out):
     distribution centered on 0 with std = sqrt(2 / fan_in) where
     fan_in is the number of input units in the weight tensor."""
     std = np.sqrt(2. / fan_in)
-    return (truncated_normal(shape=(fan_in, fan_out), mean=0., std=std),
-            truncated_normal(shape=fan_out, mean=0., std=std))
+    return truncated_normal(shape=(fan_in, fan_out), mean=0., std=std)
 
 
 def he_uniform(fan_in, fan_out):
@@ -63,5 +60,4 @@ def he_uniform(fan_in, fan_out):
     sqrt(6 / fan_in) where fan_in is the number of input units in
     the weight tensor."""
     limit = np.sqrt(6. / fan_in)
-    return (random_uniform(shape=(fan_in, fan_out), low=-limit, high=limit),
-            random_uniform(shape=fan_out, low=-limit, high=limit))
+    return random_uniform(shape=(fan_in, fan_out), low=-limit, high=limit)

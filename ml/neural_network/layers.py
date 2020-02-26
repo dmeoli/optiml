@@ -21,9 +21,9 @@ class Layer:
             raise TypeError
 
         if w_init is None:
-            self.w = glorot_uniform(*w_shape)[0]
+            self.w = glorot_uniform(*w_shape)
         else:
-            self.w = w_init(*w_shape)[0]
+            self.w = w_init(*w_shape)
 
         if use_bias:
             shape = [1] * len(w_shape)
