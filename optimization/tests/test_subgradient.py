@@ -16,7 +16,7 @@ def test_quadratic():
 def test_Rosenbrock():
     obj = Rosenbrock()
     x, _ = Subgradient(obj).minimize()
-    assert np.allclose(x, obj.x_star())
+    assert np.allclose(x, obj.x_star(), rtol=1e-4)
 
 
 if __name__ == "__main__":
