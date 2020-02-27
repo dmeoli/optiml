@@ -109,9 +109,9 @@ class Subgradient(LineSearchOptimizer):
 
         if self.verbose:
             if self.f.f_star() < np.inf:
-                print('iter\tf(x) - f*\t\t||g(x)||\ta*')
+                print('iter\t\tf(x) - f*\t\t||g(x)||\ta*')
             else:
-                print('iter\tf(x)\t\t||g(x)||\ta*')
+                print('iter\t\tf(x)\t\t||g(x)||\ta*')
 
         x_ref = self.wrt
         f_ref = np.inf  # best f-value found so far

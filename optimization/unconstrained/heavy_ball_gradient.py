@@ -128,11 +128,11 @@ class HeavyBallGradient(LineSearchOptimizer):
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
+            print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
-                print('it\t\tf eval\tf(x) - f*', end='')
-            else:
-                print('it\t\tf eval\tf(x)', end='')
-            print('\t||g(x)||\tls\tit\ta*')
+                print('\tf(x) - f*\trate', end='')
+                prev_v = np.inf
+            print('\t\tls\tit\ta*')
 
         past_d = np.zeros((self.n,))
 
@@ -149,11 +149,14 @@ class HeavyBallGradient(LineSearchOptimizer):
                     ng0 = 1  # un-scaled stopping criterion
 
             if self.verbose:
+                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, (v - self.f.f_star()) /
-                                                                  max(abs(self.f.f_star()), 1), ng), end='')
-                else:
-                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
+                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
+                    if prev_v < np.inf:
+                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                    else:
+                        print('\t\t\t', end='')
+                    prev_v = v
 
             # stopping criteria
             if ng <= self.eps * ng0:

@@ -134,9 +134,9 @@ class AcceleratedGradient(LineSearchOptimizer):
 
         if self.verbose:
             if self.f.f_star() < np.inf:
-                print('it\t\tf eval\tf(x) - f*', end='')
+                print('iter\t\tf eval\tf(x) - f*', end='')
             else:
-                print('it\t\tf eval\tf(x)', end='')
+                print('iter\t\tf eval\tf(x)', end='')
             print('\t\t||g(x)||\tgamma\tls\tit\ta*')
 
         gamma = 1

@@ -263,13 +263,12 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
-        # initializations
         if self.verbose:
+            print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
-                print('it\t\tf eval\tf(x) - f*', end='')
-            else:
-                print('it\t\tf eval\tf(x)', end='')
-            print('\t||g(x)||\tbeta\tls\tit\ta*')
+                print('\tf(x) - f*\trate', end='')
+                prev_v = np.inf
+            print('\t\tbeta\tls\tit\ta*')
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
@@ -279,16 +278,19 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 v, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
                 ng = np.linalg.norm(g)
                 if self.eps < 0:
-                    ng0 = -ng  # np.linalg.norm of first subgradient
+                    ng0 = -ng  # norm of first subgradient
                 else:
                     ng0 = 1  # un-scaled stopping criterion
 
             if self.verbose:
+                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, (v - self.f.f_star()) /
-                                                                  max(abs(self.f.f_star()), 1), ng), end='')
-                else:
-                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
+                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
+                    if prev_v < np.inf:
+                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                    else:
+                        print('\t\t\t', end='')
+                    prev_v = v
 
             # stopping criteria
             if ng <= self.eps * ng0:

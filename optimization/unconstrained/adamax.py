@@ -44,7 +44,7 @@ class AdaMax(Optimizer):
 
     def minimize(self):
         if self.verbose:
-            print('iter\tf(x)\t\t||g(x)||', end='')
+            print('iter\t\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
