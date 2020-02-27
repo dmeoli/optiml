@@ -1,42 +1,40 @@
-import numpy as np
 from sklearn.datasets import load_iris
 
-from ml.losses import cross_entropy, mean_squared_error
-from ml.metrics import accuracy_score, mean_euclidean_error
-from ml.neural_network.activations import sigmoid, softmax, linear
+from ml.losses import cross_entropy
+from ml.metrics import accuracy_score
+from ml.neural_network.activations import sigmoid, softmax
 from ml.neural_network.layers import Dense
 from ml.neural_network.neural_network import NeuralNetwork
 from ml.regularizers import l2
 from optimization.unconstrained.adam import Adam
-from optimization.unconstrained.gradient_descent import GD
 from optimization.unconstrained.quasi_newton import BFGS
 
 if __name__ == '__main__':
-    # X, y = load_iris(return_X_y=True)
+    X, y = load_iris(return_X_y=True)
+
+    net = NeuralNetwork(Dense(4, 4, sigmoid),
+                        Dense(4, 4, sigmoid),
+                        Dense(4, 3, softmax))
+
+    net.fit(X, y, loss=cross_entropy, optimizer=Adam, regularizer=l2, lmbda=0.01,
+            epochs=100, batch_size=None, verbose=True)
+    pred = net.predict(X)
+    print(pred)
+    print(accuracy_score(pred, y))
+
+    # ml_cup = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
+    # X, y = ml_cup[:, :-2], ml_cup[:, -2:]
     #
-    # net = NeuralNetwork(Dense(4, 4, sigmoid),
-    #                     Dense(4, 4, sigmoid),
-    #                     Dense(4, 3, softmax))
+    # from sklearn.model_selection import train_test_split
     #
-    # net.fit(X, y, loss=cross_entropy, optimizer=BFGS, regularizer=l2, lmbda=0.01,
-    #         epochs=100, batch_size=None, verbose=False)
-    # pred = net.predict(X)
-    # print(pred)
-    # print(accuracy_score(pred, y))
-
-    ml_cup = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
-    X, y = ml_cup[:, :-2], ml_cup[:, -2:]
-
-    from sklearn.model_selection import train_test_split
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
-
-    net = NeuralNetwork(Dense(20, 20, sigmoid),
-                        Dense(20, 20, sigmoid),
-                        Dense(20, 2, linear))
-
-    net.fit(X_train, y_train, loss=mean_squared_error, optimizer=BFGS, learning_rate=0.01,
-            epochs=1000, batch_size=None, verbose=True)
-    pred = net.predict(X_test)
-    print(mean_squared_error(pred, y_test))
-    print(mean_euclidean_error(pred, y_test))
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
+    #
+    # net = NeuralNetwork(Dense(20, 20, sigmoid),
+    #                     Dense(20, 20, sigmoid),
+    #                     Dense(20, 2, linear))
+    #
+    # net.fit(X_train, y_train, loss=mean_squared_error, optimizer=Adam, learning_rate=0.01,
+    #         epochs=1000, batch_size=None, verbose=True)
+    # pred = net.predict(X_test)
+    # print(mean_squared_error(pred, y_test))
+    # print(mean_euclidean_error(pred, y_test))

@@ -125,10 +125,10 @@ class NWTN(LineSearchOptimizer):
         # initializations
         if self.verbose:
             if self.f.f_star() < np.inf:
-                print('f eval\trel gap\t\t||g(x)||\trate\t\tdelta\t', end='')
+                print('it\t\tf eval\tf(x) - f*\t\t||g(x)||\trate\t\tdelta\t', end='')
                 prev_v = np.inf
             else:
-                print('f eval\tf(x)\t\t||g(x)||\tdelta\t', end='')
+                print('it\t\tf eval\tf(x)\t\t||g(x)||\tdelta\t', end='')
             print('\tls\tit\ta*')
 
         if self.plot and self.n == 2:
@@ -148,15 +148,15 @@ class NWTN(LineSearchOptimizer):
             if self.verbose:
                 # output statistics
                 if self.f.f_star() < np.inf:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - self.f.f_star()) /
-                                                           max(abs(self.f.f_star()), 1), ng), end='')
+                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, (v - self.f.f_star()) /
+                                                                  max(abs(self.f.f_star()), 1), ng), end='')
                     if prev_v < np.inf:
                         print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
                         print('\t\t\t', end='')
                     prev_v = v
                 else:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, v, ng), end='')
+                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
 
             # stopping criteria
             if ng <= self.eps * ng0:

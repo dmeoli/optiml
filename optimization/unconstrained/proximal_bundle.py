@@ -101,7 +101,7 @@ class PBM(Optimizer):
     def minimize(self):
         if self.verbose:
             if self.f.f_star() < np.inf:
-                print('iter\trel gap\t\t|| d ||\t\tstep')
+                print('iter\tf(x) - f*\t\t|| d ||\t\tstep')
             else:
                 print('iter\tf(x)\t\t|| d ||\t\tstep')
 

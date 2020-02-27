@@ -129,9 +129,9 @@ class HBG(LineSearchOptimizer):
 
         if self.verbose:
             if self.f.f_star() < np.inf:
-                print('f eval\trel gap', end='')
+                print('it\t\tf eval\tf(x) - f*', end='')
             else:
-                print('f eval\tf(x)', end='')
+                print('it\t\tf eval\tf(x)', end='')
             print('\t\t||g(x)||\tls\tit\ta*')
 
         past_d = np.zeros((self.n,))
@@ -150,10 +150,10 @@ class HBG(LineSearchOptimizer):
 
             if self.verbose:
                 if self.f.f_star() < np.inf:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - self.f.f_star()) /
-                                                           max(abs(self.f.f_star()), 1), ng), end='')
+                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, (v - self.f.f_star()) /
+                                                                  max(abs(self.f.f_star()), 1), ng), end='')
                 else:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, v, ng), end='')
+                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
 
             # stopping criteria
             if ng <= self.eps * ng0:

@@ -1,8 +1,9 @@
+import warnings
+
 import numpy as np
 from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
-from ml.losses import mean_squared_error
 from ml.neural_network.activations import Linear
 from ml.neural_network.layers import Layer
 from ml.regularizers import l2
@@ -33,8 +34,8 @@ class NeuralNetworkLossFunction(OptimizationFunction):
     def jacobian(self, packed_weights_biases, X, y):
         return self.neural_net._pack(*self.neural_net.backward(self.delta(self.neural_net.forward(X), y)))
 
-    def delta(self, y_true, y_pred):
-        return y_true - y_pred
+    def delta(self, y_pred, y_true):
+        return y_pred - y_true
 
 
 class NeuralNetwork(Layer, Learner):
@@ -91,8 +92,8 @@ class NeuralNetwork(Layer, Learner):
             self.biases_idx.append((start, end))
             start = end
 
-    def fit(self, X, y, loss, optimizer=GD, learning_rate=0.01, epochs=100,
-            batch_size=None, regularizer=l2, lmbda=0.01, verbose=False):
+    def fit(self, X, y, loss, optimizer=GD, learning_rate=0.01, epochs=100, batch_size=None,
+            regularizer=l2, lmbda=0.01, max_f_eval=15000, verbose=False):
         if y.ndim == 1:
             y = y.reshape((-1, 1))
         if isinstance(self.layers[-1]._a, Linear):
@@ -108,12 +109,16 @@ class NeuralNetwork(Layer, Learner):
 
         loss = NeuralNetworkLossFunction(X, y, self, loss, regularizer, lmbda)
         if issubclass(optimizer, LineSearchOptimizer):
-            wrt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size,
-                            max_iter=epochs, verbose=verbose).minimize()[0]
+            opt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size,
+                            max_iter=epochs, max_f_eval=max_f_eval, verbose=verbose).minimize()
+            if opt[1] is not 'optimal':
+                warnings.warn("number of epochs or max_f_eval reached and the optimization hasn't converged yet.")
         else:
-            wrt = optimizer(f=loss, wrt=packed_weights_biases, step_rate=learning_rate,
-                            batch_size=batch_size, max_iter=epochs, verbose=verbose).minimize()[0]
-        self._unpack(wrt)
+            opt = optimizer(f=loss, wrt=packed_weights_biases, step_rate=learning_rate,
+                            batch_size=batch_size, max_iter=epochs, verbose=verbose).minimize()
+            if opt[1] is not 'optimal':
+                warnings.warn("number of epochs reached and the optimization hasn't converged yet.")
+        self._unpack(opt[0])
 
         return self
 

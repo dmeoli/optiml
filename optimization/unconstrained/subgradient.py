@@ -109,7 +109,7 @@ class SGM(LineSearchOptimizer):
 
         if self.verbose:
             if self.f.f_star() < np.inf:
-                print('iter\trel gap\t\t||g(x)||\ta*')
+                print('iter\tf(x) - f*\t\t||g(x)||\ta*')
             else:
                 print('iter\tf(x)\t\t||g(x)||\ta*')
 
