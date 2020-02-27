@@ -33,7 +33,7 @@ if __name__ == '__main__':
                         Dense(4, 4, sigmoid),
                         Dense(4, 3, softmax))
 
-    net.fit(X, y, loss=cross_entropy, optimizer=Subgradient, regularizer=l2, lmbda=0.01,
+    net.fit(X, y, loss=cross_entropy, optimizer=BFGS, regularizer=l2, lmbda=0.01,
             epochs=1000, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred)

@@ -252,9 +252,9 @@ class SteepestGradientDescent(LineSearchOptimizer):
         if self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
-                print('\tf(x) - f*\trate', end='')
+                print('\tf(x) - f*\trate\t', end='')
                 prev_v = np.inf
-            print('\t\tls\tit\ta*')
+            print('\tls\tit\ta*')
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
