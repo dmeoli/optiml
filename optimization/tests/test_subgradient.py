@@ -7,7 +7,7 @@ from optimization.unconstrained.subgradient import Subgradient
 
 def test_quadratic():
     x, _ = Subgradient(quad1).minimize()
-    assert np.allclose(x, quad1.x_star())
+    assert np.allclose(x, quad1.x_star(), rtol=1e-4)
 
     x, _ = Subgradient(quad2).minimize()
     assert np.allclose(x, quad2.x_star())
