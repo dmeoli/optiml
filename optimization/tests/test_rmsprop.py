@@ -10,7 +10,7 @@ def test_RMSProp_quadratic():
     assert np.allclose(x, quad1.x_star(), rtol=0.1)
 
     x, _ = RMSProp(quad2, max_iter=4000).minimize()
-    assert np.allclose(x, quad2.x_star(), rtol=1e-3)
+    assert np.allclose(x, quad2.x_star(), rtol=0.1)
 
 
 def test_RMSProp_Rosenbrock():
