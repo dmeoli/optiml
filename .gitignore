@@ -2,9 +2,3 @@
 __pycache__
 
 .coverage
-
-*.aux
-*.bbl
-*.blg
-*.dvi
-*.log
