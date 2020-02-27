@@ -1,6 +1,6 @@
 from sklearn.datasets import load_iris
 
-from ml.losses import cross_entropy
+from ml.losses import cross_entropy, mean_squared_error
 from ml.metrics import accuracy_score
 from ml.neural_network.activations import sigmoid, softmax
 from ml.neural_network.layers import Dense
@@ -17,7 +17,6 @@ from optimization.unconstrained.newton import Newton
 from optimization.unconstrained.quasi_newton import BFGS
 from optimization.unconstrained.rmsprop import RMSProp
 from optimization.unconstrained.rprop import RProp
-from optimization.unconstrained.subgradient import Subgradient
 
 optimizers = [Adam, AMSGrad, AdaGrad, AdaDelta, NonlinearConjugateGradient, GradientDescent,
               SteepestGradientDescent, HeavyBallGradient, BFGS, RMSProp, RProp]
@@ -29,7 +28,7 @@ if __name__ == '__main__':
                         Dense(4, 4, sigmoid),
                         Dense(4, 3, softmax))
 
-    net.fit(X, y, loss=cross_entropy, optimizer=Newton, regularizer=l2, lmbda=0.01,
+    net.fit(X, y, loss=mean_squared_error, optimizer=SteepestGradientDescent, regularizer=l2, lmbda=0.01,
             epochs=1000, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred)

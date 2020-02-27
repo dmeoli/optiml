@@ -251,10 +251,10 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
         if self.verbose:
             if self.f.f_star() < np.inf:
-                print('it\t\tf eval\tf(x) - f*\t\t||g(x)||\trate\t', end='')
+                print('it\t\tf eval\tf(x) - f*\t||g(x)||\trate\t', end='')
                 prev_v = np.inf
             else:
-                print('it\t\tf eval\tf(x)\t\t||g(x)||', end='')
+                print('it\t\tf eval\tf(x)\t||g(x)||', end='')
             print('\tls\tit\ta*')
 
         if self.plot and self.n == 2:

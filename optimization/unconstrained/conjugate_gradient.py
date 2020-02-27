@@ -269,7 +269,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 print('it\t\tf eval\tf(x) - f*', end='')
             else:
                 print('it\t\tf eval\tf(x)', end='')
-            print('\t\t||g(x)||\tbeta\tls\tit\ta*')
+            print('\t||g(x)||\tbeta\tls\tit\ta*')
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()

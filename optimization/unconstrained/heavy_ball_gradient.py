@@ -132,7 +132,7 @@ class HeavyBallGradient(LineSearchOptimizer):
                 print('it\t\tf eval\tf(x) - f*', end='')
             else:
                 print('it\t\tf eval\tf(x)', end='')
-            print('\t\t||g(x)||\tls\tit\ta*')
+            print('\t||g(x)||\tls\tit\ta*')
 
         past_d = np.zeros((self.n,))
 

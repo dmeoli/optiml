@@ -128,7 +128,7 @@ class BFGS(LineSearchOptimizer):
                 print('it\t\tf eval\tf(x) - f*', end='')
             else:
                 print('it\t\tf eval\tf(x)', end='')
-            print('\t\t||g(x)||\tls\tit\ta*\t\t\trho')
+            print('\t||g(x)||\tls\tit\ta*\t\t\trho')
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
