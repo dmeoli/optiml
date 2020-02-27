@@ -5,7 +5,7 @@ from ml.initializers import random_uniform
 from optimization.optimizer import LineSearchOptimizer
 
 
-class ACCG(LineSearchOptimizer):
+class AcceleratedGradient(LineSearchOptimizer):
     # Apply a Accelerated Gradient approach for the minimization of the
     # provided function f.
     #

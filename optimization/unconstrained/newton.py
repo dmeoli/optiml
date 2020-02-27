@@ -5,7 +5,7 @@ from ml.initializers import random_uniform
 from optimization.optimizer import LineSearchOptimizer
 
 
-class NWTN(LineSearchOptimizer):
+class Newton(LineSearchOptimizer):
     # Apply a classical Newton's method for the minimization of the provided
     # function f.
     #

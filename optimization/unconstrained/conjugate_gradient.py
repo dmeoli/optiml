@@ -6,7 +6,7 @@ from optimization.optimization_function import Quadratic
 from optimization.optimizer import LineSearchOptimizer, Optimizer
 
 
-class CGQ(Optimizer):
+class ConjugateGradientQuadratic(Optimizer):
     def __init__(self, f, wrt=random_uniform, r_start=0, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, wrt, eps=eps, max_iter=max_iter, verbose=verbose, plot=plot)
         if not isinstance(f, Quadratic):
@@ -113,7 +113,7 @@ class CGQ(Optimizer):
         return self.wrt, status
 
 
-class CGA(LineSearchOptimizer):
+class ConjugateGradient(LineSearchOptimizer):
     def __init__(self, f, wrt=random_uniform, batch_size=None, wf=0, r_start=0, eps=1e-6,
                  max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
                  sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
@@ -132,7 +132,7 @@ class CGA(LineSearchOptimizer):
         raise NotImplementedError
 
 
-class NCG(LineSearchOptimizer):
+class NonlinearConjugateGradient(LineSearchOptimizer):
     # Apply a Nonlinear Conjugated Gradient algorithm for the minimization of
     # the provided function f.
     #

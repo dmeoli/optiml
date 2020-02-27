@@ -3,22 +3,22 @@ import pytest
 
 import utils
 from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.proximal_bundle import PBM
+from optimization.unconstrained.proximal_bundle import ProximalBundle
 
 
 @utils.not_test
 def test_quadratic():
-    x, _ = PBM(quad1).minimize()
+    x, _ = ProximalBundle(quad1).minimize()
     assert np.allclose(x, quad1.x_star())
 
-    x, _ = PBM(quad2).minimize()
+    x, _ = ProximalBundle(quad2).minimize()
     assert np.allclose(x, quad2.x_star())
 
 
 @utils.not_test
 def test_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = PBM(obj).minimize()
+    x, _ = ProximalBundle(obj).minimize()
     assert np.allclose(x, obj.x_star())
 
 

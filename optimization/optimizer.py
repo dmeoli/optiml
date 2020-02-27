@@ -4,7 +4,7 @@ import numpy as np
 
 from ml.initializers import random_uniform
 from optimization.optimization_function import OptimizationFunction
-from optimization.unconstrained.line_search import AWLS, BLS
+from optimization.unconstrained.line_search import ArmijoWolfeLineSearch, BacktrackingLineSearch
 from utils import iter_mini_batches
 
 
@@ -110,6 +110,6 @@ class LineSearchOptimizer(Optimizer):
             raise ValueError('m_inf is not a real scalar')
         self.m_inf = m_inf
         if 0 < m2 < 1:
-            self.line_search = AWLS(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a, verbose)
+            self.line_search = ArmijoWolfeLineSearch(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a, verbose)
         else:
-            self.line_search = BLS(f, max_f_eval, m1, a_start, min_a, tau, verbose)
+            self.line_search = BacktrackingLineSearch(f, max_f_eval, m1, a_start, min_a, tau, verbose)

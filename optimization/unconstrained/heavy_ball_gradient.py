@@ -5,7 +5,7 @@ from ml.initializers import random_uniform
 from optimization.optimizer import LineSearchOptimizer
 
 
-class HBG(LineSearchOptimizer):
+class HeavyBallGradient(LineSearchOptimizer):
     # Apply a Heavy Ball Gradient approach for the minimization of the
     # provided function f.
     #

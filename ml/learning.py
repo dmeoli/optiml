@@ -7,7 +7,7 @@ from ml.neural_network.activations import Sigmoid
 from ml.regularizers import l1, l2
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
-from optimization.unconstrained.gradient_descent import GD
+from optimization.unconstrained.gradient_descent import GradientDescent
 
 
 class Learner:
@@ -41,19 +41,21 @@ class LinearModelLossFunction(OptimizationFunction):
 
 class LinearRegressionLearner(Learner):
 
-    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD, regularizer=l1, lmbda=0.01):
+    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GradientDescent,
+                 regularizer=l1, lmbda=0.01, max_f_eval=15000):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
         self.regularizer = regularizer
         self.lmbda = lmbda
+        self.max_f_eval = max_f_eval
 
     def fit(self, X, y, verbose=False):
         loss = LinearModelLossFunction(X, y, self, mean_squared_error)
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(f=loss, batch_size=self.batch_size, max_iter=self.epochs,
-                                    verbose=verbose).minimize()[0]
+                                    max_f_eval=self.max_f_eval, verbose=verbose).minimize()[0]
         else:
             self.w = self.optimizer(f=loss, batch_size=self.batch_size, step_rate=self.learning_rate,
                                     max_iter=self.epochs, verbose=verbose).minimize()[0]
@@ -68,7 +70,7 @@ class LinearRegressionLearner(Learner):
 
 class BinaryLogisticRegressionLearner(Learner):
 
-    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD, regularizer=l2, lmbda=0.01):
+    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GradientDescent, regularizer=l2, lmbda=0.01):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
@@ -98,7 +100,7 @@ class BinaryLogisticRegressionLearner(Learner):
 
 
 class MultiLogisticRegressionLearner(Learner):
-    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GD,
+    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GradientDescent,
                  regularizer=l2, lmbda=0.01, decision_function='ovr'):
         self.learning_rate = learning_rate
         self.epochs = epochs

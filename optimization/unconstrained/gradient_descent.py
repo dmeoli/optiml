@@ -6,7 +6,7 @@ from optimization.optimization_function import Quadratic
 from optimization.optimizer import Optimizer, LineSearchOptimizer
 
 
-class SDQ(Optimizer):
+class SteepestGradientDescentQuadratic(Optimizer):
     """
     Apply the Steepest Gradient Descent algorithm with exact line search to the quadratic function.
 
@@ -113,7 +113,7 @@ class SDQ(Optimizer):
         return self.wrt, status
 
 
-class SDG(LineSearchOptimizer):
+class SteepestGradientDescent(LineSearchOptimizer):
     """
     Apply the classical Steepest Descent algorithm for the minimization of
     the provided function f.
@@ -333,7 +333,7 @@ class SDG(LineSearchOptimizer):
         return self.wrt, status
 
 
-class GD(Optimizer):
+class GradientDescent(Optimizer):
 
     def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.01,
                  momentum_type='none', momentum=0.9, verbose=False, plot=False):

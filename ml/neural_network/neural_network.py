@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 from sklearn.preprocessing import LabelBinarizer
 
@@ -9,7 +7,7 @@ from ml.neural_network.layers import Layer
 from ml.regularizers import l2
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
-from optimization.unconstrained.gradient_descent import GD
+from optimization.unconstrained.gradient_descent import GradientDescent
 
 
 class NeuralNetworkLossFunction(OptimizationFunction):
@@ -92,7 +90,7 @@ class NeuralNetwork(Layer, Learner):
             self.biases_idx.append((start, end))
             start = end
 
-    def fit(self, X, y, loss, optimizer=GD, learning_rate=0.01, epochs=100, batch_size=None,
+    def fit(self, X, y, loss, optimizer=GradientDescent, learning_rate=0.01, epochs=100, batch_size=None,
             regularizer=l2, lmbda=0.01, max_f_eval=15000, verbose=False):
         if y.ndim == 1:
             y = y.reshape((-1, 1))
@@ -109,16 +107,12 @@ class NeuralNetwork(Layer, Learner):
 
         loss = NeuralNetworkLossFunction(X, y, self, loss, regularizer, lmbda)
         if issubclass(optimizer, LineSearchOptimizer):
-            opt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size,
-                            max_iter=epochs, max_f_eval=max_f_eval, verbose=verbose).minimize()
-            if opt[1] is not 'optimal':
-                warnings.warn("number of epochs or max_f_eval reached and the optimization hasn't converged yet.")
+            wrt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size,
+                            max_iter=epochs, max_f_eval=max_f_eval, verbose=verbose).minimize()[0]
         else:
-            opt = optimizer(f=loss, wrt=packed_weights_biases, step_rate=learning_rate,
-                            batch_size=batch_size, max_iter=epochs, verbose=verbose).minimize()
-            if opt[1] is not 'optimal':
-                warnings.warn("number of epochs reached and the optimization hasn't converged yet.")
-        self._unpack(opt[0])
+            wrt = optimizer(f=loss, wrt=packed_weights_biases, step_rate=learning_rate,
+                            batch_size=batch_size, max_iter=epochs, verbose=verbose).minimize()[0]
+        self._unpack(wrt)
 
         return self
 

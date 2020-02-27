@@ -5,7 +5,7 @@ from ml.initializers import random_uniform
 from optimization.optimizer import Optimizer
 
 
-class PBM(Optimizer):
+class ProximalBundle(Optimizer):
     # Apply the Proximal Bundle Method for the minimization of the provided
     # function f.
     #

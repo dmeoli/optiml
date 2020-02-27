@@ -5,66 +5,66 @@ from optimization.unconstrained.gradient_descent import *
 
 
 def test_SDQ():
-    x, _ = SDQ(quad1).minimize()
+    x, _ = SteepestGradientDescentQuadratic(quad1).minimize()
     assert np.allclose(x, quad1.x_star())
 
-    x, _ = SDQ(quad2).minimize()
+    x, _ = SteepestGradientDescentQuadratic(quad2).minimize()
     assert np.allclose(x, quad2.x_star())
 
 
 def test_SDG_quadratic():
-    x, _ = SDG(quad1).minimize()
+    x, _ = SteepestGradientDescent(quad1).minimize()
     assert np.allclose(x, quad1.x_star())
 
-    x, _ = SDG(quad2).minimize()
+    x, _ = SteepestGradientDescent(quad2).minimize()
     assert np.allclose(x, quad2.x_star())
 
 
 def test_SDG_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = SDG(obj).minimize()
+    x, _ = SteepestGradientDescent(obj).minimize()
     assert np.allclose(x, obj.x_star())
 
 
 def test_GD_quadratic():
-    x, _ = GD(quad1).minimize()
+    x, _ = GradientDescent(quad1).minimize()
     assert np.allclose(x, quad1.x_star())
 
-    x, _ = GD(quad2).minimize()
+    x, _ = GradientDescent(quad2).minimize()
     assert np.allclose(x, quad2.x_star())
 
 
 def test_GD_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = GD(obj).minimize()
+    x, _ = GradientDescent(obj).minimize()
     assert np.allclose(x, obj.x_star(), rtol=0.1)
 
 
 def test_GD_standard_momentum_quadratic():
-    x, _ = GD(quad1, momentum_type='standard').minimize()
+    x, _ = GradientDescent(quad1, momentum_type='standard').minimize()
     assert np.allclose(x, quad1.x_star())
 
-    x, _ = GD(quad2, momentum_type='standard').minimize()
+    x, _ = GradientDescent(quad2, momentum_type='standard').minimize()
     assert np.allclose(x, quad2.x_star())
 
 
 def test_GD_standard_momentum_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = GD(obj, momentum_type='standard').minimize()
+    x, _ = GradientDescent(obj, momentum_type='standard').minimize()
     assert np.allclose(x, obj.x_star())
 
 
 def test_GD_Nesterov_momentum_quadratic():
-    x, _ = GD(quad1, momentum_type='nesterov').minimize()
+    x, _ = GradientDescent(quad1, momentum_type='nesterov').minimize()
     assert np.allclose(x, quad1.x_star())
 
-    x, _ = GD(quad2, momentum_type='nesterov').minimize()
+    x, _ = GradientDescent(quad2, momentum_type='nesterov').minimize()
     assert np.allclose(x, quad2.x_star())
 
 
 def test_GD_Nesterov_momentum_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = GD(obj, momentum_type='nesterov').minimize()
+    x, _ = GradientDescent(obj, momentum_type='nesterov').minimize()
     assert np.allclose(x, obj.x_star())
 
 

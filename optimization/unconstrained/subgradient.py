@@ -5,7 +5,7 @@ from ml.initializers import random_uniform
 from optimization.optimizer import LineSearchOptimizer
 
 
-class SGM(LineSearchOptimizer):
+class Subgradient(LineSearchOptimizer):
     # Apply the classical Subgradient Method for the minimization of the
     # provided function f.
     #

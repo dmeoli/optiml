@@ -7,9 +7,15 @@ from optimization.optimizer import Optimizer
 
 class RProp(Optimizer):
 
-    def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, min_step=1e-6, step_shrink=0.5,
-                     step_grow=1.2, max_step=1, nesterov_momentum=False, momentum=0.9, verbose=False, plot=False):
+    def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000,
+                 step_rate=0.001, min_step=1e-6, step_shrink=0.5, step_grow=1.2, max_step=1,
+                 nesterov_momentum=False, momentum=0.9, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
+        if not np.isscalar(step_rate):
+            raise ValueError('step_rate is not a real scalar')
+        if not step_rate > 0:
+            raise ValueError('step_rate must be > 0')
+        self.step_rate = step_rate
         self.min_step = min_step
         self.step_shrink = step_shrink
         self.step_grow = step_grow

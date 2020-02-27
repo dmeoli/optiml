@@ -59,7 +59,7 @@ class LineSearch:
         raise NotImplementedError
 
 
-class BLS(LineSearch):
+class BacktrackingLineSearch(LineSearch):
     """
     Performs a Backtracking Line Search.
 
@@ -125,7 +125,7 @@ class BLS(LineSearch):
         return _as, phi_a, last_wrt, last_g, f_eval
 
 
-class AWLS(LineSearch):
+class ArmijoWolfeLineSearch(LineSearch):
     """
     Performs an Armijo-Wolfe Line Search.
 
