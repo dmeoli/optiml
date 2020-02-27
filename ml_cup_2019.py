@@ -6,8 +6,21 @@ from ml.neural_network.activations import sigmoid, softmax
 from ml.neural_network.layers import Dense
 from ml.neural_network.neural_network import NeuralNetwork
 from ml.regularizers import l2
+from optimization.unconstrained.adadelta import AdaDelta
+from optimization.unconstrained.adagrad import AdaGrad
 from optimization.unconstrained.adam import Adam
+from optimization.unconstrained.amsgrad import AMSGrad
+from optimization.unconstrained.conjugate_gradient import NonlinearConjugateGradient
+from optimization.unconstrained.gradient_descent import GradientDescent, SteepestGradientDescent
+from optimization.unconstrained.heavy_ball_gradient import HeavyBallGradient
+from optimization.unconstrained.newton import Newton
 from optimization.unconstrained.quasi_newton import BFGS
+from optimization.unconstrained.rmsprop import RMSProp
+from optimization.unconstrained.rprop import RProp
+from optimization.unconstrained.subgradient import Subgradient
+
+optimizers = [Adam, AMSGrad, AdaGrad, AdaDelta, NonlinearConjugateGradient, GradientDescent,
+              SteepestGradientDescent, HeavyBallGradient, BFGS, RMSProp, RProp]
 
 if __name__ == '__main__':
     X, y = load_iris(return_X_y=True)
@@ -16,8 +29,8 @@ if __name__ == '__main__':
                         Dense(4, 4, sigmoid),
                         Dense(4, 3, softmax))
 
-    net.fit(X, y, loss=cross_entropy, optimizer=Adam, regularizer=l2, lmbda=0.01,
-            epochs=100, batch_size=None, verbose=True)
+    net.fit(X, y, loss=cross_entropy, optimizer=Newton, regularizer=l2, lmbda=0.01,
+            epochs=1000, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred)
     print(accuracy_score(pred, y))
