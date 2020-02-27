@@ -41,25 +41,25 @@ important optimization algorithms used as core solver for many machine learning 
                 - [ ] learning rate decay
                 - [ ] momentum decay
             - [x] Adam
-                - [ ] standard momentum (Nadam)
-                - [x] Nesterov momentum
+                - [x] standard momentum
+                - [x] Nadam (Nesterov momentum)
             - [x] AMSGrad
-                - [ ] standard momentum
+                - [x] standard momentum
                 - [x] Nesterov momentum
             - [x] AdaMax
-                - [ ] standard momentum
+                - [x] standard momentum
                 - [x] Nesterov momentum
             - [x] AdaGrad
-                - [ ] standard momentum
+                - [x] standard momentum
                 - [x] Nesterov momentum
             - [x] AdaDelta
-                - [ ] standard momentum
+                - [x] standard momentum
                 - [x] Nesterov momentum
             - [X] RProp
-                - [ ] standard momentum
+                - [x] standard momentum
                 - [x] Nesterov momentum
             - [x] RMSProp
-                - [ ] standard momentum
+                - [x] standard momentum
                 - [x] Nesterov momentum
                 
 - Machine Learning Models

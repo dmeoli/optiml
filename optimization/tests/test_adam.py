@@ -6,16 +6,16 @@ from optimization.unconstrained.adam import Adam
 
 
 def test_Nadam_quadratic():
-    x, _ = Adam(quad1, nesterov_momentum=True).minimize()
+    x, _ = Adam(quad1, momentum_type='nesterov').minimize()
     assert np.allclose(x, quad1.x_star(), rtol=0.1)
 
-    x, _ = Adam(quad2, nesterov_momentum=True).minimize()
+    x, _ = Adam(quad2, momentum_type='nesterov').minimize()
     assert np.allclose(x, quad2.x_star(), rtol=0.01)
 
 
 def test_Nadam_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = Adam(obj, nesterov_momentum=True).minimize()
+    x, _ = Adam(obj, momentum_type='nesterov').minimize()
     assert np.allclose(x, obj.x_star(), rtol=0.15)
 
 

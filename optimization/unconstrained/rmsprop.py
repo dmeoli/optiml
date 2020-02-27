@@ -8,7 +8,7 @@ from optimization.optimizer import Optimizer
 class RMSProp(Optimizer):
 
     def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.001,
-                 nesterov_momentum=False, momentum=0.9, decay=0.9, verbose=False, plot=False):
+                 momentum_type='none', momentum=0.9, decay=0.9, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
@@ -23,9 +23,9 @@ class RMSProp(Optimizer):
         if not momentum > 0:
             raise ValueError('momentum must be > 0')
         self.momentum = momentum
-        if not isinstance(nesterov_momentum, bool):
-            raise ValueError('must be either True or False')
-        self.nesterov_momentum = nesterov_momentum
+        if momentum_type not in ('standard', 'nesterov', 'none'):
+            raise ValueError('unknown momentum type {}'.format(momentum_type))
+        self.momentum_type = momentum_type
         self.moving_mean_squared = 1
         self.step = 0
 
@@ -63,9 +63,11 @@ class RMSProp(Optimizer):
                 status = 'stopped'
                 break
 
-            step_m1 = self.step
-
-            if self.nesterov_momentum:
+            if self.momentum_type is 'standard':
+                step_m1 = self.step
+                step1 = self.momentum * step_m1
+            elif self.momentum_type is 'nesterov':
+                step_m1 = self.step
                 step1 = self.momentum * step_m1
                 self.wrt -= step1
 
@@ -74,8 +76,8 @@ class RMSProp(Optimizer):
             self.moving_mean_squared = self.decay * self.moving_mean_squared + (1. - self.decay) * g ** 2
             step2 = self.step_rate * g / np.sqrt(self.moving_mean_squared)
 
-            self.wrt -= step2
-            self.step = step1 + step2 if self.nesterov_momentum else step2
+            self.wrt -= step1 + step2 if self.momentum_type is 'standard' else step2
+            self.step = step2 if self.momentum_type is 'none' else step1 + step2
 
             # plot the trajectory
             if self.plot and self.n == 2:

@@ -10,7 +10,7 @@ from optimization.optimizer import Optimizer
 class AdaMax(Optimizer):
 
     def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.002,
-                 nesterov_momentum=False, momentum=0.9, beta1=0.9, beta2=0.999, offset=1e-8, verbose=False, plot=False):
+                 momentum_type='none', momentum=0.9, beta1=0.9, beta2=0.999, offset=1e-8, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
@@ -32,9 +32,9 @@ class AdaMax(Optimizer):
         if not momentum > 0:
             raise ValueError('momentum must be > 0')
         self.momentum = momentum
-        if not isinstance(nesterov_momentum, bool):
-            raise ValueError('must be either True or False')
-        self.nesterov_momentum = nesterov_momentum
+        if momentum_type not in ('standard', 'nesterov', 'none'):
+            raise ValueError('unknown momentum type {}'.format(momentum_type))
+        self.momentum_type = momentum_type
         if not np.isscalar(offset):
             raise ValueError('offset is not a real scalar')
         if not offset > 0:
@@ -78,7 +78,10 @@ class AdaMax(Optimizer):
 
             t = self.iter
 
-            if self.nesterov_momentum:
+            if self.momentum_type is 'standard':
+                step_m1 = self.step
+                step1 = self.momentum * step_m1
+            elif self.momentum_type is 'nesterov':
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
                 self.wrt -= step1
@@ -95,8 +98,8 @@ class AdaMax(Optimizer):
 
             step2 = self.step_rate * est_mom1_crt / (self.est_mom2 + self.offset)
 
-            self.wrt -= step2
-            self.step = step1 + step2 if self.nesterov_momentum else step2
+            self.wrt -= step1 + step2 if self.momentum_type is 'standard' else step2
+            self.step = step2 if self.momentum_type is 'none' else step1 + step2
 
             # plot the trajectory
             if self.plot and self.n == 2:

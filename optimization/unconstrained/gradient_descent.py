@@ -385,11 +385,11 @@ class GradientDescent(Optimizer):
                 status = 'stopped'
                 break
 
-            if self.momentum_type == 'standard':
+            if self.momentum_type is 'standard':
                 step_m1 = self.step
                 self.step = self.step_rate * -g + self.momentum * step_m1
                 self.wrt += self.step
-            elif self.momentum_type == 'nesterov':
+            elif self.momentum_type is 'nesterov':
                 step_m1 = self.step
                 big_jump = self.momentum * step_m1
                 self.wrt += big_jump
@@ -397,7 +397,7 @@ class GradientDescent(Optimizer):
                 correction = self.step_rate * -g
                 self.wrt += correction
                 self.step = big_jump + correction
-            elif self.momentum_type == 'none':
+            elif self.momentum_type is 'none':
                 self.step = self.step_rate * -g
                 self.wrt += self.step
 

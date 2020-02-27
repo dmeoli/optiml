@@ -6,16 +6,16 @@ from optimization.unconstrained.amsgrad import AMSGrad
 
 
 def test_AMSGrad_quadratic():
-    x, _ = AMSGrad(quad1, nesterov_momentum=True).minimize()
+    x, _ = AMSGrad(quad1, momentum_type='nesterov').minimize()
     assert np.allclose(x, quad1.x_star(), rtol=1e-3)
 
-    x, _ = AMSGrad(quad2, nesterov_momentum=True).minimize()
+    x, _ = AMSGrad(quad2, momentum_type='nesterov').minimize()
     assert np.allclose(x, quad2.x_star(), rtol=1e-3)
 
 
 def test_AMSGrad_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = AMSGrad(obj, nesterov_momentum=True).minimize()
+    x, _ = AMSGrad(obj, momentum_type='nesterov').minimize()
     assert np.allclose(x, obj.x_star(), rtol=0.1)
 
 
