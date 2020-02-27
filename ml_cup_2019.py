@@ -10,6 +10,7 @@ from optimization.unconstrained.accelerated_gradient import AcceleratedGradient
 from optimization.unconstrained.adadelta import AdaDelta
 from optimization.unconstrained.adagrad import AdaGrad
 from optimization.unconstrained.adam import Adam
+from optimization.unconstrained.adamax import AdaMax
 from optimization.unconstrained.amsgrad import AMSGrad
 from optimization.unconstrained.conjugate_gradient import NonlinearConjugateGradient
 from optimization.unconstrained.gradient_descent import GradientDescent, SteepestGradientDescent
@@ -18,8 +19,9 @@ from optimization.unconstrained.newton import Newton
 from optimization.unconstrained.quasi_newton import BFGS
 from optimization.unconstrained.rmsprop import RMSProp
 from optimization.unconstrained.rprop import RProp
+from optimization.unconstrained.subgradient import Subgradient
 
-stochastic_optimizers = [Adam, AMSGrad, AdaGrad, AdaDelta, GradientDescent, RMSProp, RProp]
+stochastic_optimizers = [Adam, AMSGrad, AdaGrad, AdaDelta, AdaMax, GradientDescent, RMSProp, RProp]
 
 line_search_optimizers = [NonlinearConjugateGradient, AcceleratedGradient, Newton,
                           SteepestGradientDescent, HeavyBallGradient, BFGS]
@@ -31,7 +33,7 @@ if __name__ == '__main__':
                         Dense(4, 4, sigmoid),
                         Dense(4, 3, softmax))
 
-    net.fit(X, y, loss=cross_entropy, optimizer=AcceleratedGradient, regularizer=l2, lmbda=0.01,
+    net.fit(X, y, loss=cross_entropy, optimizer=Subgradient, regularizer=l2, lmbda=0.01,
             epochs=1000, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred)

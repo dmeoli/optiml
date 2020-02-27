@@ -108,10 +108,11 @@ class Subgradient(LineSearchOptimizer):
             self.eps = -self.eps  # revert to ordinary target level step size
 
         if self.verbose:
+            print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
-                print('iter\t\tf(x) - f*\t\t||g(x)||\ta*')
-            else:
-                print('iter\t\tf(x)\t\t||g(x)||\ta*')
+                print('\tf(x) - f*\trate\t', end='')
+                prev_v = np.inf
+            print('\ta*')
 
         x_ref = self.wrt
         f_ref = np.inf  # best f-value found so far
@@ -138,11 +139,14 @@ class Subgradient(LineSearchOptimizer):
 
             # output statistics
             if self.verbose:
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, (v - self.f.f_star()) /
-                                                           max(abs(self.f.f_star()), 1), ng), end='')
-                else:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
+                    if prev_v < np.inf:
+                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                    else:
+                        print('\t\t\t', end='')
+                    prev_v = v
 
             # stopping criteria
             if self.eps < 0 and f_ref - self.f.f_star() <= -self.eps * max(abs(self.f.f_star()), 1):
