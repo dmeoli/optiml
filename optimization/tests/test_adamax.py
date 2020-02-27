@@ -5,7 +5,21 @@ from optimization.optimization_function import quad1, quad2, Rosenbrock
 from optimization.unconstrained.adamax import AdaMax
 
 
-def test_AdaMax_quadratic():
+def test_AdaMax_standard_momentum_quadratic():
+    x, _ = AdaMax(quad1, momentum_type='standard').minimize()
+    assert np.allclose(x, quad1.x_star(), rtol=0.1)
+
+    x, _ = AdaMax(quad2, momentum_type='standard').minimize()
+    assert np.allclose(x, quad2.x_star(), rtol=0.1)
+
+
+def test_AdaMax_standard_momentum_Rosenbrock():
+    obj = Rosenbrock()
+    x, _ = AdaMax(obj, momentum_type='standard').minimize()
+    assert np.allclose(x, obj.x_star(), rtol=0.2)
+
+
+def test_AdaMax_nesterov_momentum_quadratic():
     x, _ = AdaMax(quad1, momentum_type='nesterov').minimize()
     assert np.allclose(x, quad1.x_star(), rtol=0.1)
 
@@ -13,7 +27,7 @@ def test_AdaMax_quadratic():
     assert np.allclose(x, quad2.x_star(), rtol=0.1)
 
 
-def test_AdaMax_Rosenbrock():
+def test_AdaMax_nesterov_momentum_Rosenbrock():
     obj = Rosenbrock()
     x, _ = AdaMax(obj, momentum_type='nesterov').minimize()
     assert np.allclose(x, obj.x_star(), rtol=0.2)
