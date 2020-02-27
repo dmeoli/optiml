@@ -133,11 +133,11 @@ class AcceleratedGradient(LineSearchOptimizer):
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
+            print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
-                print('iter\t\tf eval\tf(x) - f*', end='')
-            else:
-                print('iter\t\tf eval\tf(x)', end='')
-            print('\t\t||g(x)||\tgamma\tls\tit\ta*')
+                print('\tf(x) - f*\trate\t', end='')
+                prev_v = np.inf
+            print('\tls\tit\ta*\t\t\tgamma')
 
         gamma = 1
         if self.wf == 3:
@@ -170,11 +170,14 @@ class AcceleratedGradient(LineSearchOptimizer):
 
             # output statistics
             if self.verbose:
+                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4f}'.format(
-                        self.iter, f_eval, (v - self.f.f_star()) / max(abs(self.f.f_star()), 1), ng, gamma), end='')
-                else:
-                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4f}'.format(self.iter, f_eval, v, ng, gamma), end='')
+                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
+                    if prev_v < np.inf:
+                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                    else:
+                        print('\t\t\t', end='')
+                    prev_v = v
 
             # stopping criteria
             if ng <= self.eps * ng0:
@@ -200,7 +203,7 @@ class AcceleratedGradient(LineSearchOptimizer):
 
             # output statistics
             if self.verbose:
-                print('\t{:1.2e}'.format(a))
+                print('\t{:1.2e}\t{:1.4e}'.format(a, gamma))
 
             if a <= self.line_search.min_a:
                 status = 'error'

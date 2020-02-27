@@ -6,6 +6,7 @@ from ml.neural_network.activations import sigmoid, softmax
 from ml.neural_network.layers import Dense
 from ml.neural_network.neural_network import NeuralNetwork
 from ml.regularizers import l2
+from optimization.unconstrained.accelerated_gradient import AcceleratedGradient
 from optimization.unconstrained.adadelta import AdaDelta
 from optimization.unconstrained.adagrad import AdaGrad
 from optimization.unconstrained.adam import Adam
@@ -18,8 +19,10 @@ from optimization.unconstrained.quasi_newton import BFGS
 from optimization.unconstrained.rmsprop import RMSProp
 from optimization.unconstrained.rprop import RProp
 
-optimizers = [Adam, AMSGrad, AdaGrad, AdaDelta, NonlinearConjugateGradient, GradientDescent,
-              SteepestGradientDescent, HeavyBallGradient, BFGS, RMSProp, RProp]
+stochastic_optimizers = [Adam, AMSGrad, AdaGrad, AdaDelta, GradientDescent, RMSProp, RProp]
+
+line_search_optimizers = [NonlinearConjugateGradient, AcceleratedGradient, Newton,
+                          SteepestGradientDescent, HeavyBallGradient, BFGS]
 
 if __name__ == '__main__':
     X, y = load_iris(return_X_y=True)
@@ -28,7 +31,7 @@ if __name__ == '__main__':
                         Dense(4, 4, sigmoid),
                         Dense(4, 3, softmax))
 
-    net.fit(X, y, loss=mean_squared_error, optimizer=Newton, regularizer=l2, lmbda=0.01,
+    net.fit(X, y, loss=cross_entropy, optimizer=AcceleratedGradient, regularizer=l2, lmbda=0.01,
             epochs=1000, batch_size=None, verbose=True)
     pred = net.predict(X)
     print(pred)
