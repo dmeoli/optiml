@@ -20,7 +20,7 @@ class OptimizationFunction:
         return np.inf
 
     def args(self):
-        raise NotImplementedError
+        return ()
 
     def function(self, x):
         raise NotImplementedError

@@ -35,7 +35,7 @@ if __name__ == '__main__':
                         Dense(20, 20, sigmoid),
                         Dense(20, 2, linear))
 
-    net.fit(X_train, y_train, loss=mean_squared_error, optimizer=Adam, learning_rate=0.01,
+    net.fit(X_train, y_train, loss=mean_squared_error, optimizer=BFGS, learning_rate=0.01,
             epochs=1000, batch_size=None, verbose=True)
     pred = net.predict(X_test)
     print(mean_squared_error(pred, y_test))
