@@ -122,14 +122,12 @@ class Newton(LineSearchOptimizer):
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
-        # initializations
         if self.verbose:
+            print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
-                print('iter\t\tf eval\tf(x) - f*\t||g(x)||\trate\t\tdelta\t', end='')
+                print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
-            else:
-                print('iter\t\tf eval\tf(x)\t||g(x)||\tdelta\t', end='')
-            print('\tls\tit\ta*')
+            print('\t\tls\tit\ta*\t\t\tdelta')
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
@@ -146,17 +144,14 @@ class Newton(LineSearchOptimizer):
                     ng0 = 1  # un-scaled stopping criterion
 
             if self.verbose:
-                # output statistics
+                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, (v - self.f.f_star()) /
-                                                                  max(abs(self.f.f_star()), 1), ng), end='')
+                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
                         print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
                         print('\t\t\t', end='')
                     prev_v = v
-                else:
-                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
 
             # stopping criteria
             if ng <= self.eps * ng0:

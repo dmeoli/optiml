@@ -23,7 +23,7 @@ important optimization algorithms used as core solver for many machine learning 
             - [x] Subgradient
             - [x] Steepest Gradient Descent
             - [ ] Conjugate Gradient
-            - [x] NonLinear Conjugate Gradient
+            - [x] Nonlinear Conjugate Gradient
                 - [x] Fletcher–Reeves formula
                 - [x] Polak–Ribière formula
                 - [x] Hestenes-Stiefel formula
@@ -41,18 +41,25 @@ important optimization algorithms used as core solver for many machine learning 
                 - [ ] learning rate decay
                 - [ ] momentum decay
             - [x] Adam
+                - [ ] standard momentum (Nadam)
                 - [x] Nesterov momentum
             - [x] AMSGrad
+                - [ ] standard momentum
                 - [x] Nesterov momentum
             - [x] AdaMax
+                - [ ] standard momentum
                 - [x] Nesterov momentum
             - [x] AdaGrad
+                - [ ] standard momentum
                 - [x] Nesterov momentum
             - [x] AdaDelta
+                - [ ] standard momentum
                 - [x] Nesterov momentum
             - [X] RProp
+                - [ ] standard momentum
                 - [x] Nesterov momentum
             - [x] RMSProp
+                - [ ] standard momentum
                 - [x] Nesterov momentum
                 
 - Machine Learning Models
