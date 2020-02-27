@@ -16,7 +16,7 @@ def test_Nadam_quadratic():
 def test_Nadam_Rosenbrock():
     obj = Rosenbrock()
     x, _ = Adam(obj, nesterov_momentum=True).minimize()
-    assert np.allclose(x, obj.x_star(), rtol=0.1)
+    assert np.allclose(x, obj.x_star(), rtol=0.15)
 
 
 if __name__ == "__main__":

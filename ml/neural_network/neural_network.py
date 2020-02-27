@@ -1,4 +1,4 @@
-import numpy as np
+import autograd.numpy as np
 from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
@@ -26,11 +26,14 @@ class NeuralNetworkLossFunction(OptimizationFunction):
 
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
-        return self.loss(self.neural_net.forward(X), y) + self.regularizer(packed_weights_biases,
-                                                                           self.lmbda) / X.shape[0]
+        return (self.loss(self.neural_net.forward(X), y) +
+                self.regularizer(packed_weights_biases, self.lmbda) / X.shape[0])
 
     def jacobian(self, packed_weights_biases, X, y):
         return self.neural_net._pack(*self.neural_net.backward(self.delta(self.neural_net.forward(X), y)))
+
+    def hessian(self, packed_weights_biases, X, y):
+        return super().hessian(packed_weights_biases)
 
     def delta(self, y_pred, y_true):
         return y_pred - y_true

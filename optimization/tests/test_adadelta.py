@@ -7,7 +7,7 @@ from optimization.unconstrained.adadelta import AdaDelta
 
 def test_AdaDelta_quadratic():
     x, _ = AdaDelta(quad1, nesterov_momentum=True).minimize()
-    assert np.allclose(x, quad1.x_star())
+    assert np.allclose(x, quad1.x_star(), rtol=0.01)
 
     x, _ = AdaDelta(quad2, nesterov_momentum=True).minimize()
     assert np.allclose(x, quad2.x_star())
