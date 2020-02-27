@@ -15,8 +15,8 @@ def test_Adam_standard_momentum_quadratic():
 
 def test_Adam_standard_momentum_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = Adam(obj, momentum_type='standard').minimize()
-    assert np.allclose(x, obj.x_star(), rtol=0.15)
+    x, _ = Adam(obj, momentum_type='standard', max_iter=1500).minimize()
+    assert np.allclose(x, obj.x_star(), rtol=0.1)
 
 
 def test_Nadam_quadratic():
