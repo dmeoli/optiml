@@ -265,7 +265,7 @@ class NCG(LineSearchOptimizer):
 
         # initializations
         if self.verbose:
-            if self.f.f_star() > -np.inf:
+            if self.f.f_star() < np.inf:
                 print('f eval\trel gap', end='')
             else:
                 print('f eval\tf(x)', end='')
@@ -284,7 +284,7 @@ class NCG(LineSearchOptimizer):
                     ng0 = 1  # un-scaled stopping criterion
 
             if self.verbose:
-                if self.f.f_star() > -np.inf:
+                if self.f.f_star() < np.inf:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - self.f.f_star()) /
                                                            max(abs(self.f.f_star()), 1), ng), end='')
                 else:

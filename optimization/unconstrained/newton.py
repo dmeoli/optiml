@@ -124,7 +124,7 @@ class NWTN(LineSearchOptimizer):
 
         # initializations
         if self.verbose:
-            if self.f.f_star() > -np.inf:
+            if self.f.f_star() < np.inf:
                 print('f eval\trel gap\t\t||g(x)||\trate\t\tdelta\t', end='')
                 prev_v = np.inf
             else:
@@ -147,7 +147,7 @@ class NWTN(LineSearchOptimizer):
 
             if self.verbose:
                 # output statistics
-                if self.f.f_star() > -np.inf:
+                if self.f.f_star() < np.inf:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(f_eval, (v - self.f.f_star()) /
                                                            max(abs(self.f.f_star()), 1), ng), end='')
                     if prev_v < np.inf:

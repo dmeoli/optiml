@@ -100,7 +100,7 @@ class PBM(Optimizer):
 
     def minimize(self):
         if self.verbose:
-            if self.f.f_star() > -np.inf:
+            if self.f.f_star() < np.inf:
                 print('iter\trel gap\t\t|| d ||\t\tstep')
             else:
                 print('iter\tf(x)\t\t|| d ||\t\tstep')
@@ -133,7 +133,7 @@ class PBM(Optimizer):
 
             M = v * np.ones(np.size(G, 1), 1) >= F + G * (d + self.wrt)
 
-            if self.f.f_star() > -np.inf:
+            if self.f.f_star() < np.inf:
                 # this is cheating: use information about x_star in the model
                 M = M + [v >= self.f.f_star()]
 
@@ -153,7 +153,7 @@ class PBM(Optimizer):
             nd = np.linalg.norm(d)
 
             # output statistics
-            if self.f.f_star() > -np.inf:
+            if self.f.f_star() < np.inf:
                 print('%4d\t%1.4e\t%1.4e'.format(self.iter, (fx - self.f.f_star()) / max(abs(self.f.f_star()), 1), nd))
             else:
                 print('%4d\t%1.4e\t%1.4e'.format(self.iter, fx, nd))

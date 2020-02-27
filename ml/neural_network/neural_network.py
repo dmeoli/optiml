@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
+from ml.losses import mean_squared_error
 from ml.neural_network.activations import Linear
 from ml.neural_network.layers import Layer
 from ml.regularizers import l2
@@ -26,16 +27,14 @@ class NeuralNetworkLossFunction(OptimizationFunction):
 
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
-        self.y_pred = self.neural_net.forward(X)
-        return self.loss(self.y_pred, y) + self.regularizer(packed_weights_biases, self.lmbda) / X.shape[0]
+        return self.loss(self.neural_net.forward(X), y) + self.regularizer(packed_weights_biases,
+                                                                           self.lmbda) / X.shape[0]
 
     def jacobian(self, packed_weights_biases, X, y):
-        return self.neural_net._pack(*self.neural_net.backward(self.delta(X, y)))
+        return self.neural_net._pack(*self.neural_net.backward(self.delta(self.neural_net.forward(X), y)))
 
-    def delta(self, X, y):
-        if hasattr(self, 'y_pred'):
-            return self.y_pred - y
-        return self.neural_net.forward(X) - y
+    def delta(self, y_true, y_pred):
+        return y_true - y_pred
 
 
 class NeuralNetwork(Layer, Learner):
@@ -63,12 +62,7 @@ class NeuralNetwork(Layer, Learner):
 
     @property
     def params(self):
-        weights = []
-        biases = []
-        for layer in self.layers:
-            weights.append(layer.w)
-            biases.append(layer.b)
-        return weights, biases
+        return [layer.w for layer in self.layers], [layer.b for layer in self.layers]
 
     def _pack(self, weights, biases):
         return np.hstack([w.ravel() for w in weights + biases])

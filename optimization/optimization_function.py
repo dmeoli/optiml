@@ -11,17 +11,16 @@ class OptimizationFunction:
     def __init__(self, n=2):
         self.jac = jacobian(self.function)
         self.hes = hessian(self.function)
-        self.x_opt = None
         self.n = n
 
     def x_star(self):
-        return self.x_opt
+        raise NotImplementedError
 
     def f_star(self):
-        return self.function(self.x_star(), *self.args())
+        return np.inf
 
     def args(self):
-        return ()
+        raise NotImplementedError
 
     def function(self, x):
         raise NotImplementedError
@@ -78,14 +77,10 @@ class Quadratic(OptimizationFunction):
         self.q = q
 
     def x_star(self):
-        if self.x_opt is not None:
-            return self.x_opt
-        else:
-            try:
-                self.x_opt = np.linalg.inv(self.Q).dot(self.q)  # or np.linalg.solve(self.Q, self.q)
-            except np.linalg.LinAlgError:
-                self.x_opt = np.full((self.n,), np.nan)
-            return self.x_opt
+        return np.linalg.inv(self.Q).dot(self.q)  # or np.linalg.solve(self.Q, self.q)
+
+    def f_star(self):
+        return self.function(self.x_star(), *self.args())
 
     def args(self):
         return self.Q, self.q
@@ -161,12 +156,10 @@ class Rosenbrock(OptimizationFunction):
         self.b = b
 
     def x_star(self):
-        if self.x_opt is not None:
-            return self.x_opt
-        else:
-            # only in the trivial case where a = 0 the function is symmetric and the minimum is at the origin
-            self.x_opt = np.zeros(self.n) if self.a is 0 else np.ones(self.n)
-            return self.x_opt
+        return np.zeros(self.n) if self.a is 0 else np.ones(self.n)
+
+    def f_star(self):
+        return self.function(self.x_star())
 
     def function(self, x):
         """
