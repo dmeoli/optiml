@@ -10,7 +10,7 @@ def test_AdaMax_quadratic():
     assert np.allclose(x, quad1.x_star(), rtol=0.1)
 
     x, _ = AdaMax(quad2, nesterov_momentum=True).minimize()
-    assert np.allclose(x, quad2.x_star(), rtol=0.01)
+    assert np.allclose(x, quad2.x_star(), rtol=0.1)
 
 
 def test_AdaMax_Rosenbrock():
