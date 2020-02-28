@@ -6,17 +6,13 @@ from optimization.unconstrained.quasi_newton import BFGS
 
 
 def test_quadratic():
-    x, _ = BFGS(quad1).minimize()
-    assert np.allclose(x, quad1.x_star())
-
-    x, _ = BFGS(quad2).minimize()
-    assert np.allclose(x, quad2.x_star())
+    assert np.allclose(BFGS(quad1).minimize()[0], quad1.x_star())
+    assert np.allclose(BFGS(quad2).minimize()[0], quad2.x_star())
 
 
 def test_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = BFGS(obj).minimize()
-    assert np.allclose(x, obj.x_star())
+    assert np.allclose(BFGS(obj).minimize()[0], obj.x_star())
 
 
 if __name__ == "__main__":

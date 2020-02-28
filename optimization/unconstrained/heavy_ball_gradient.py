@@ -126,6 +126,7 @@ class HeavyBallGradient(LineSearchOptimizer):
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
+        cost_history = np.full(self.max_iter, np.nan)
 
         if self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
@@ -140,8 +141,9 @@ class HeavyBallGradient(LineSearchOptimizer):
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args in self.args:
-            if self.iter == 1:
+            if self.iter is 1:
                 v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+                cost_history[self.iter - 1] = v
                 ng = np.linalg.norm(g)
                 if self.eps < 0:
                     ng0 = -ng  # norm of first subgradient
@@ -182,6 +184,7 @@ class HeavyBallGradient(LineSearchOptimizer):
             # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
                 d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
+            cost_history[self.iter - 1] = v
 
             # output statistics
             if self.verbose:
@@ -213,4 +216,4 @@ class HeavyBallGradient(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status
+        return self.wrt, cost_history, status

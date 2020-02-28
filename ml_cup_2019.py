@@ -1,8 +1,8 @@
 from sklearn.datasets import load_iris
 
-from ml.losses import cross_entropy
+from ml.losses import cross_entropy, mean_squared_error
 from ml.metrics import accuracy_score
-from ml.neural_network.activations import sigmoid, softmax
+from ml.neural_network.activations import sigmoid, softmax, tanh, relu
 from ml.neural_network.layers import Dense
 from ml.neural_network.neural_network import NeuralNetwork
 from ml.regularizers import l2
@@ -25,15 +25,30 @@ stochastic_optimizers = [Adam, AMSGrad, AdaGrad, AdaDelta, AdaMax, GradientDesce
 line_search_optimizers = [NonlinearConjugateGradient, AcceleratedGradient, Newton,
                           SteepestGradientDescent, HeavyBallGradient, BFGS]
 
+activations = [sigmoid, tanh, relu]
+
+losses = [mean_squared_error]
+
 if __name__ == '__main__':
     X, y = load_iris(return_X_y=True)
+
+    # grid = []
+    # for e in itertools.product(*args):
+    #     grid.append({'learning_rate': e[0],
+    #                  'epochs': e[1],
+    #                  'momentum': e[2],
+    #                  'lmbda': e[3],
+    #                  'n_hidden': e[4],
+    #                  'batch_size': e[5],
+    #                  'n_folds': e[6],
+    #                  'activation': e[7]})
 
     net = NeuralNetwork(Dense(4, 4, sigmoid),
                         Dense(4, 4, sigmoid),
                         Dense(4, 3, softmax))
 
-    net.fit(X, y, loss=cross_entropy, optimizer=BFGS, regularizer=l2, lmbda=0.01,
-            epochs=100, batch_size=None, verbose=True)
+    net.fit(X, y, loss=cross_entropy, optimizer=SteepestGradientDescent, learning_rate=0.01, momentum_type='nesterov', momentum=0.9,
+            regularizer=l2, lmbda=0.01, epochs=300, batch_size=None, verbose=True, plot=True)
     pred = net.predict(X)
     print(pred)
     print(accuracy_score(pred, y))
@@ -49,8 +64,8 @@ if __name__ == '__main__':
     #                     Dense(20, 20, sigmoid),
     #                     Dense(20, 2, linear))
     #
-    # net.fit(X_train, y_train, loss=mean_squared_error, optimizer=Adam, learning_rate=0.01,
-    #         epochs=1000, batch_size=None, verbose=True)
+    # net.fit(X_train, y_train, loss=mean_squared_error, optimizer=Adam, learning_rate=0.01, momentum_type='none',
+    #         momentum=0.9, regularizer=l1, lmbda=0., epochs=1000, batch_size=None, verbose=True)
     # pred = net.predict(X_test)
     # print(mean_squared_error(pred, y_test))
     # print(mean_euclidean_error(pred, y_test))

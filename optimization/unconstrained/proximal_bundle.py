@@ -99,6 +99,8 @@ class ProximalBundle(Optimizer):
         self.m_inf = m_inf
 
     def minimize(self):
+        cost_history = np.full(self.max_iter, np.nan)
+
         if self.verbose:
             if self.f.f_star() < np.inf:
                 print('iter\tf(x) - f*\t\t|| d ||\t\tstep')
@@ -112,6 +114,7 @@ class ProximalBundle(Optimizer):
             if self.iter == 1:
                 # compute first function and subgradient
                 fx, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+                cost_history[self.iter - 1] = fx
 
                 G = g.T  # matrix of subgradients
                 F = fx - g.T * self.wrt  # vector of translated function values
@@ -170,7 +173,8 @@ class ProximalBundle(Optimizer):
 
             # compute function and subgradient
 
-            fd, g = self.f.function(self.wrt + d, *args)
+            fd, g = self.f.function(self.wrt + d, *args), self.f.jacobian(self.wrt + d, *args)
+            cost_history[self.iter - 1] = fd
 
             if fd <= self.m_inf:
                 status = 'unbounded'
@@ -205,4 +209,4 @@ class ProximalBundle(Optimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status
+        return self.wrt, cost_history, status

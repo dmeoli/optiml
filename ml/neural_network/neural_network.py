@@ -1,4 +1,5 @@
 import autograd.numpy as np
+from matplotlib import pyplot as plt
 from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
@@ -37,6 +38,15 @@ class NeuralNetworkLossFunction(OptimizationFunction):
 
     def delta(self, y_pred, y_true):
         return y_pred - y_true
+
+    def plot(self, epochs, cost_history):
+        fig, ax = plt.subplots()
+        ax.plot(range(epochs), cost_history)
+        ax.set_title('Learning curve')
+        ax.set_xlabel('Epochs')
+        ax.set_ylabel('Error')
+        ax.legend(['train'])
+        plt.show()
 
 
 class NeuralNetwork(Layer, Learner):
@@ -93,8 +103,8 @@ class NeuralNetwork(Layer, Learner):
             self.biases_idx.append((start, end))
             start = end
 
-    def fit(self, X, y, loss, optimizer=GradientDescent, learning_rate=0.01, epochs=100, batch_size=None,
-            regularizer=l2, lmbda=0.01, max_f_eval=15000, verbose=False):
+    def fit(self, X, y, loss, optimizer=GradientDescent, learning_rate=0.01, momentum_type='none', momentum=0.9,
+            epochs=100, batch_size=None, regularizer=l2, lmbda=0.01, max_f_eval=1000, verbose=False, plot=False):
         if y.ndim == 1:
             y = y.reshape((-1, 1))
         if isinstance(self.layers[-1]._a, Linear):
@@ -110,12 +120,15 @@ class NeuralNetwork(Layer, Learner):
 
         loss = NeuralNetworkLossFunction(X, y, self, loss, regularizer, lmbda)
         if issubclass(optimizer, LineSearchOptimizer):
-            wrt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size,
-                            max_iter=epochs, max_f_eval=max_f_eval, verbose=verbose).minimize()[0]
+            opt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size,
+                            max_iter=epochs, max_f_eval=max_f_eval, verbose=verbose).minimize()
         else:
-            wrt = optimizer(f=loss, wrt=packed_weights_biases, step_rate=learning_rate,
-                            batch_size=batch_size, max_iter=epochs, verbose=verbose).minimize()[0]
-        self._unpack(wrt)
+            opt = optimizer(f=loss, wrt=packed_weights_biases, step_rate=learning_rate, momentum_type=momentum_type,
+                            momentum=momentum, batch_size=batch_size, max_iter=epochs, verbose=verbose).minimize()
+        self._unpack(opt[0])
+
+        if plot:
+            loss.plot(epochs, opt[1])
 
         return self
 

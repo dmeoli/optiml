@@ -6,17 +6,13 @@ from optimization.unconstrained.newton import Newton
 
 
 def test_quadratic():
-    x, _ = Newton(quad1).minimize()
-    assert np.allclose(x, quad1.x_star())
-
-    x, _ = Newton(quad2).minimize()
-    assert np.allclose(x, quad2.x_star())
+    assert np.allclose(Newton(quad1).minimize()[0], quad1.x_star())
+    assert np.allclose(Newton(quad2).minimize()[0], quad2.x_star())
 
 
 def test_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = Newton(obj).minimize()
-    assert np.allclose(x, obj.x_star())
+    assert np.allclose(Newton(obj).minimize()[0], obj.x_star())
 
 
 if __name__ == "__main__":

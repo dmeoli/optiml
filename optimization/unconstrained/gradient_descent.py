@@ -35,6 +35,8 @@ class SteepestGradientDescentQuadratic(Optimizer):
             raise ValueError('wrt size does not match with Q')
 
     def minimize(self):
+        cost_history = np.full(self.max_iter, np.nan)
+
         if self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
@@ -46,11 +48,11 @@ class SteepestGradientDescentQuadratic(Optimizer):
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args in self.args:
-            g = self.f.jacobian(self.wrt, *args)
+            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+            cost_history[self.iter - 1] = v
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt, *args)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -109,7 +111,7 @@ class SteepestGradientDescentQuadratic(Optimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status
+        return self.wrt, cost_history, status
 
 
 class SteepestGradientDescent(LineSearchOptimizer):
@@ -247,6 +249,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
+        cost_history = np.full(self.max_iter, np.nan)
 
         if self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
@@ -261,6 +264,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
         for args in self.args:
             if self.iter == 1:
                 v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+                cost_history[self.iter - 1] = v
                 ng = np.linalg.norm(g)
 
                 if self.eps < 0:
@@ -294,6 +298,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
             # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
                 d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
+            cost_history[self.iter - 1] = v
 
             # output statistics
             if self.verbose:
@@ -326,7 +331,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status
+        return self.wrt, cost_history, status
 
 
 class GradientDescent(Optimizer):
@@ -351,6 +356,8 @@ class GradientDescent(Optimizer):
             self.step = 0
 
     def minimize(self):
+        cost_history = np.full(self.max_iter, np.nan)
+
         if self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
@@ -362,11 +369,11 @@ class GradientDescent(Optimizer):
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args in self.args:
-            g = self.f.jacobian(self.wrt, *args)
+            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+            cost_history[self.iter - 1] = v
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt, *args)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -380,7 +387,7 @@ class GradientDescent(Optimizer):
                 status = 'optimal'
                 break
 
-            if self.iter > self.max_iter:
+            if self.iter >= self.max_iter:
                 status = 'stopped'
                 break
 
@@ -412,4 +419,4 @@ class GradientDescent(Optimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status
+        return self.wrt, cost_history, status

@@ -33,6 +33,8 @@ class RProp(Optimizer):
         self.step = 0
 
     def minimize(self):
+        cost_history = np.full(self.max_iter, np.nan)
+
         if self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
@@ -44,11 +46,10 @@ class RProp(Optimizer):
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args in self.args:
-            g = self.f.jacobian(self.wrt, *args)
+            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt, *args)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -100,4 +101,4 @@ class RProp(Optimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status
+        return self.wrt, cost_history, status

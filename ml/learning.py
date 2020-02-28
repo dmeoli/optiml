@@ -53,7 +53,7 @@ class LinearModelLossFunction(OptimizationFunction):
 class LinearRegressionLearner(Learner):
 
     def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None,
-                 regularizer=l1, lmbda=0.01, max_f_eval=15000):
+                 regularizer=l1, lmbda=0.01, max_f_eval=1000):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size

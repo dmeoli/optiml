@@ -6,31 +6,23 @@ from optimization.unconstrained.amsgrad import AMSGrad
 
 
 def test_AMSGrad_standard_momentum_quadratic():
-    x, _ = AMSGrad(quad1, momentum_type='standard').minimize()
-    assert np.allclose(x, quad1.x_star(), rtol=1e-3)
-
-    x, _ = AMSGrad(quad2, momentum_type='standard').minimize()
-    assert np.allclose(x, quad2.x_star(), rtol=1e-3)
+    assert np.allclose(AMSGrad(quad1, momentum_type='standard').minimize()[0], quad1.x_star(), rtol=1e-3)
+    assert np.allclose(AMSGrad(quad2, momentum_type='standard').minimize()[0], quad2.x_star(), rtol=1e-3)
 
 
 def test_AMSGrad_standard_momentum_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = AMSGrad(obj, momentum_type='standard').minimize()
-    assert np.allclose(x, obj.x_star(), rtol=0.1)
+    assert np.allclose(AMSGrad(obj, momentum_type='standard').minimize()[0], obj.x_star(), rtol=0.1)
 
 
 def test_AMSGrad_nesterov_momentum_quadratic():
-    x, _ = AMSGrad(quad1, momentum_type='nesterov').minimize()
-    assert np.allclose(x, quad1.x_star(), rtol=1e-3)
-
-    x, _ = AMSGrad(quad2, momentum_type='nesterov').minimize()
-    assert np.allclose(x, quad2.x_star(), rtol=1e-3)
+    assert np.allclose(AMSGrad(quad1, momentum_type='nesterov').minimize()[0], quad1.x_star(), rtol=1e-3)
+    assert np.allclose(AMSGrad(quad2, momentum_type='nesterov').minimize()[0], quad2.x_star(), rtol=1e-3)
 
 
 def test_AMSGrad_nesterov_momentum_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = AMSGrad(obj, momentum_type='nesterov').minimize()
-    assert np.allclose(x, obj.x_star(), rtol=0.1)
+    assert np.allclose(AMSGrad(obj, momentum_type='nesterov').minimize()[0], obj.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":

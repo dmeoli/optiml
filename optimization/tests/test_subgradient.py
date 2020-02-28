@@ -6,17 +6,14 @@ from optimization.unconstrained.subgradient import Subgradient
 
 
 def test_quadratic():
-    x, _ = Subgradient(quad1).minimize()
-    assert np.allclose(x, quad1.x_star(), rtol=1e-4)
+    assert np.allclose(Subgradient(quad1).minimize()[0], quad1.x_star(), rtol=1e-4)
 
-    x, _ = Subgradient(quad2).minimize()
-    assert np.allclose(x, quad2.x_star())
+    assert np.allclose(Subgradient(quad2).minimize()[0], quad2.x_star())
 
 
 def test_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = Subgradient(obj).minimize()
-    assert np.allclose(x, obj.x_star(), rtol=1e-4)
+    assert np.allclose(Subgradient(obj).minimize()[0], obj.x_star(), rtol=1e-4)
 
 
 if __name__ == "__main__":

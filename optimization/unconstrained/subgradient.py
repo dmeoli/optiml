@@ -103,6 +103,8 @@ class Subgradient(LineSearchOptimizer):
                          m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
 
     def minimize(self):
+        cost_history = np.full(self.max_iter, np.nan)
+
         if self.eps < 0 and self.f.f_star() == np.inf:
             # no way of cheating since the true optimal value is unknown
             self.eps = -self.eps  # revert to ordinary target level step size
@@ -123,8 +125,8 @@ class Subgradient(LineSearchOptimizer):
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args in self.args:
-            # compute function and subgradient
             v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+            cost_history[self.iter - 1] = v
             ng = np.linalg.norm(g)
 
             if self.eps > 0:  # target-level step size
@@ -159,7 +161,7 @@ class Subgradient(LineSearchOptimizer):
                 status = 'optimal'
                 break
 
-            if self.iter > self.max_iter or self.iter > self.line_search.max_f_eval:
+            if self.iter >= self.max_iter or self.iter > self.line_search.max_f_eval:
                 status = 'stopped'
                 break
 
@@ -201,4 +203,4 @@ class Subgradient(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return x, status
+        return x, cost_history, status

@@ -8,18 +8,14 @@ from optimization.unconstrained.proximal_bundle import ProximalBundle
 
 @utils.not_test
 def test_quadratic():
-    x, _ = ProximalBundle(quad1).minimize()
-    assert np.allclose(x, quad1.x_star())
-
-    x, _ = ProximalBundle(quad2).minimize()
-    assert np.allclose(x, quad2.x_star())
+    assert np.allclose(ProximalBundle(quad1).minimize()[0], quad1.x_star())
+    assert np.allclose(ProximalBundle(quad2).minimize()[0], quad2.x_star())
 
 
 @utils.not_test
 def test_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = ProximalBundle(obj).minimize()
-    assert np.allclose(x, obj.x_star())
+    assert np.allclose(ProximalBundle(obj).minimize()[0], obj.x_star())
 
 
 if __name__ == "__main__":
