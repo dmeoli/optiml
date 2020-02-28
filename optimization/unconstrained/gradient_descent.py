@@ -89,19 +89,19 @@ class SteepestGradientDescentQuadratic(Optimizer):
 
             # assert np.isclose(d.T.dot(d), ng ** 2)
 
-            past_wrt = self.wrt
+            step = a * d
 
             # compute new point
-            self.wrt += a * d
+            self.wrt += step
 
             # plot the trajectory
             if self.plot and self.n == 2:
-                p_xy = np.vstack((past_wrt, self.wrt)).T
+                p_xy = np.vstack((self.wrt - step, self.wrt)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
             # <\nabla f(x_i), \nabla f(x_i+1)> = 0
-            # assert np.isclose(self.f.jacobian(past_wrt, *args).T.dot(self.f.jacobian(self.wrt, *args)), 0)
+            assert np.isclose(self.f.jacobian(self.wrt - step, *args).T.dot(self.f.jacobian(self.wrt, *args)), 0)
 
             self.iter += 1
 
