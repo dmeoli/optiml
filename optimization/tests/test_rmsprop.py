@@ -15,7 +15,7 @@ def test_RMSProp_quadratic():
 
 def test_RMSProp_Rosenbrock():
     obj = Rosenbrock()
-    x, _ = RMSProp(obj).minimize()
+    x, _ = RMSProp(obj, max_iter=1500).minimize()
     assert np.allclose(x, obj.x_star(), rtol=0.1)
 
 
