@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ml.initializers import random_uniform
-from optimization.optimizer import LineSearchOptimizer
+from optimization.optimizer import LineSearchOptimizer, Optimizer
 
 
-class AcceleratedGradient(LineSearchOptimizer):
+class SteepestDescentAcceleratedGradient(LineSearchOptimizer):
     # Apply a Accelerated Gradient approach for the minimization of the
     # provided function f.
     #
@@ -190,18 +190,11 @@ class AcceleratedGradient(LineSearchOptimizer):
                 break
 
             # compute step size
-            if self.m1 > 0:
-                a, xv, last_wrt, last_g, f_eval = self.line_search.search(
-                    -g, self.wrt, last_wrt, last_g, f_eval, v, -ng, args)
-                cost_history[self.iter - 1] = xv
-                if self.line_search.a_start < 0:
-                    self.line_search.a_start = abs(-a)
-            else:  # fixed step size
-                a = abs(self.line_search.a_start)
-                last_wrt = y + a * -g
-
-                if self.mon:  # in the monotone version
-                    xv = self.f.function(last_wrt, *args)
+            a, xv, last_wrt, last_g, f_eval = self.line_search.search(
+                -g, self.wrt, last_wrt, last_g, f_eval, v, -ng, args)
+            cost_history[self.iter - 1] = xv
+            if self.line_search.a_start < 0:
+                self.line_search.a_start = abs(-a)
 
             # output statistics
             if self.verbose:
@@ -244,6 +237,201 @@ class AcceleratedGradient(LineSearchOptimizer):
             else:
                 d = (2 / (self.iter + 2)) * g + (self.iter / (self.iter + 2)) * d
                 z = -((self.iter + 1) * (self.iter + 2) * a / 4) * d
+                y = (2 / (self.iter + 3)) * z + ((self.iter + 1) / (self.iter + 3)) * last_wrt
+
+            self.wrt = last_wrt
+
+            # possibly plot the trajectory
+            if self.plot and self.n == 2:
+                p_xy = np.vstack((y, past_y)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='b')
+                past_y = y
+
+            self.iter += 1
+
+        if self.verbose:
+            print()
+        if self.plot and self.n == 2:
+            plt.show()
+        return self.wrt, cost_history, status
+
+
+class AcceleratedGradient(Optimizer):
+    # Apply a Accelerated Gradient approach for the minimization of the
+    # provided function f.
+    #
+    # Input:
+    #
+    # - x is either a [n x 1] real (column) vector denoting the input of
+    #   f(), or [] (empty).
+    #
+    # Output:
+    #
+    # - v (real, scalar): if x == [] this is the best known lower bound on
+    #   the unconstrained global optimum of f(); it can be -inf if either f()
+    #   is not bounded below, or no such information is available. If x ~= []
+    #   then v = f(x).
+    #
+    # - g (real, [n x 1] real vector): this also depends on x. if x == []
+    #   this is the standard starting point from which the algorithm should
+    #   start, otherwise it is the gradient of f() at x (or a subgradient if
+    #   f() is not differentiable at x, which it should not be if you are
+    #   applying the gradient method to it).
+    #
+    # The other [optional] input parameters are:
+    #
+    # - x (either [n x 1] real vector or [], default []): starting point.
+    #   If x == [], the default starting point provided by f() is used.
+    #
+    # - mon (integer scalar, optional, default value 0): if ~= 0 imposes the
+    #   use of the monotone version of the method, which costs a further
+    #   function evaluation per each iteration
+    #
+    # - wf (integer scalar, optional, default value 0): which fast gradient
+    #   formula to use; there are four available (0, 1, 2, 3)
+    #
+    # - eps (real scalar, optional, default value 1e-6): the accuracy in the
+    #   stopping criterion: the algorithm is stopped when the norm of the
+    #   gradient is less than or equal to eps. If a negative value is provided,
+    #   this is used in a *relative* stopping criterion: the algorithm is
+    #   stopped when the norm of the gradient is less than or equal to
+    #   (- eps) * || norm of the first gradient ||.
+    #
+    # Output:
+    #
+    # - x ([n x 1] real column vector): the best solution found so far.
+    #
+    # - status (string): a string describing the status of the algorithm at
+    #   termination
+    #
+    #   = 'optimal': the algorithm terminated having proven that x is a(n
+    #     approximately) optimal solution, i.e., the norm of the gradient at x
+    #     is less than the required threshold
+    #
+    #   = 'unbounded': the algorithm has determined an extremely large negative
+    #     value for f() that is taken as an indication that the problem is
+    #     unbounded below (a "finite -inf", see m_inf above)
+    #
+    #   = 'stopped': the algorithm terminated having exhausted the maximum
+    #     number of iterations: x is the bast solution found so far, but not
+    #     necessarily the optimal one
+    #
+    #   = 'error': the algorithm found a numerical error that prevents it from
+    #     continuing optimization (see min_a above)
+
+    def __init__(self, f, wrt=random_uniform, batch_size=None, wf=0, eps=1e-6,
+                 max_iter=1000, step_rate=0.01, mon=1e-6, verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
+        if not np.isscalar(step_rate):
+            raise ValueError('step_rate is not a real scalar')
+        if not step_rate > 0:
+            raise ValueError('step_rate must be > 0')
+        self.step_rate = step_rate
+        if not np.isscalar(mon):
+            raise ValueError('mon is not a real scalar')
+        self.mon = mon
+        if not np.isscalar(wf):
+            raise ValueError('wf is not a real scalar')
+        if not 0 <= wf <= 3:
+            raise ValueError('unknown fast gradient formula {}'.format(wf))
+        self.wf = wf
+
+    def minimize(self):
+        cost_history = np.full(self.max_iter, np.nan)
+
+        if self.verbose:
+            print('iter\tf(x)\t\t||g(x)||', end='')
+            if self.f.f_star() < np.inf:
+                print('\tf(x) - f*\trate\t', end='')
+                prev_v = np.inf
+            print('\tgamma')
+
+        gamma = 1
+        if self.wf == 3:
+            d = np.zeros((self.n,))
+
+        y = self.wrt
+        past_y = self.wrt
+        if self.mon:
+            past_x = self.wrt
+            past_xv = np.inf
+
+        if self.plot and self.n == 2:
+            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
+
+        for args in self.args:
+            v, g = self.f.function(y, *args), self.f.jacobian(y, *args)
+            cost_history[self.iter - 1] = v
+            ng = np.linalg.norm(g)
+            if self.eps < 0:
+                ng0 = -ng  # norm of first subgradient
+            else:
+                ng0 = 1  # un-scaled stopping criterion
+
+            if self.mon:  # in the monotone version
+                if v < past_xv:  # if y is better than x
+                    self.wrt = y  # then x = y
+                    past_xv = v
+
+            # output statistics
+            if self.verbose:
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                if self.f.f_star() < np.inf:
+                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
+                    if prev_v < np.inf:
+                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                    else:
+                        print('\t\t\t', end='')
+                    prev_v = v
+
+            # stopping criteria
+            if ng <= self.eps * ng0:
+                status = 'optimal'
+                break
+
+            if self.iter > self.max_iter:
+                status = 'stopped'
+                break
+
+            last_wrt = y + self.step_rate * -g
+
+            if self.mon:  # in the monotone version
+                xv = self.f.function(last_wrt, *args)
+
+            # output statistics
+            if self.verbose:
+                print('\t{:1.4e}'.format(gamma))
+
+            # possibly plot the trajectory
+            if self.plot and self.n == 2:
+                p_xy = np.vstack((self.wrt, last_wrt)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
+
+            if self.mon:  # in the monotone version
+                if xv > past_xv:  # if the new x is worse than the last x
+                    last_wrt = past_x  # then new x = last x
+                else:
+                    past_x = last_wrt
+                    past_xv = xv
+
+            if self.wf == 0:
+                past_gamma = gamma
+                gamma = (np.sqrt(4 * gamma ** 2 + gamma ** 4) - gamma ** 2) / 2
+                beta = gamma * (1 / past_gamma - 1)
+            elif self.wf == 1:
+                past_gamma = gamma
+                gamma = (1 + np.sqrt(1 + 4 * past_gamma)) / 2
+                beta = (past_gamma - 1) / gamma
+            elif self.wf == 2:
+                beta = self.iter / (self.iter + 3)
+
+            if self.wf < 3:
+                y = last_wrt + beta * (last_wrt - self.wrt)
+            else:
+                d = (2 / (self.iter + 2)) * g + (self.iter / (self.iter + 2)) * d
+                z = -((self.iter + 1) * (self.iter + 2) * self.step_rate / 4) * d
                 y = (2 / (self.iter + 3)) * z + ((self.iter + 1) / (self.iter + 3)) * last_wrt
 
             self.wrt = last_wrt
