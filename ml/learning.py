@@ -7,7 +7,6 @@ from ml.neural_network.activations import Sigmoid
 from ml.regularizers import l1, l2
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
-from optimization.unconstrained.gradient_descent import GradientDescent
 
 
 class Learner:
@@ -29,6 +28,18 @@ class LinearModelLossFunction(OptimizationFunction):
         self.regularizer = regularizer
         self.lmbda = lmbda
 
+    def x_star(self):
+        if self.loss is mean_squared_error:
+            if not hasattr(self, 'x_opt'):
+                # or np.linalg.lstsq(self.X, self.y)[0]
+                self.x_opt = np.linalg.inv(self.X.T.dot(self.X)).dot(self.X.T).dot(self.y)
+            return self.x_opt
+
+    def f_star(self):
+        if self.x_star() is not None:
+            return self.loss(self.linear_model._predict(self.X, self.x_star()), self.y)
+        return super().f_star()
+
     def args(self):
         return self.X, self.y
 
@@ -41,7 +52,7 @@ class LinearModelLossFunction(OptimizationFunction):
 
 class LinearRegressionLearner(Learner):
 
-    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GradientDescent,
+    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None,
                  regularizer=l1, lmbda=0.01, max_f_eval=15000):
         self.learning_rate = learning_rate
         self.epochs = epochs
@@ -70,7 +81,7 @@ class LinearRegressionLearner(Learner):
 
 class BinaryLogisticRegressionLearner(Learner):
 
-    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GradientDescent, regularizer=l2, lmbda=0.01):
+    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None, regularizer=l2, lmbda=0.01):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
@@ -100,7 +111,7 @@ class BinaryLogisticRegressionLearner(Learner):
 
 
 class MultiLogisticRegressionLearner(Learner):
-    def __init__(self, learning_rate=0.01, epochs=1000, batch_size=None, optimizer=GradientDescent,
+    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None,
                  regularizer=l2, lmbda=0.01, decision_function='ovr'):
         self.learning_rate = learning_rate
         self.epochs = epochs
@@ -128,8 +139,8 @@ class MultiLogisticRegressionLearner(Learner):
                 y1 = np.array(y)
                 y1[y1 != label] = -1.0
                 y1[y1 == label] = 1.0
-                clf = BinaryLogisticRegressionLearner(self.learning_rate, self.epochs, self.batch_size,
-                                                      self.optimizer, self.regularizer, self.lmbda)
+                clf = BinaryLogisticRegressionLearner(self.optimizer, self.learning_rate, self.epochs,
+                                                      self.batch_size, self.regularizer, self.lmbda)
                 clf.fit(X, y1)
                 self.classifiers.append(copy.deepcopy(clf))
         elif self.decision_function == 'ovo':  # use one-vs-one method
@@ -140,8 +151,8 @@ class MultiLogisticRegressionLearner(Learner):
                     x1, y1 = np.r_[X[neg_id], X[pos_id]], np.r_[y[neg_id], y[pos_id]]
                     y1[y1 == labels[i]] = -1.0
                     y1[y1 == labels[j]] = 1.0
-                    clf = BinaryLogisticRegressionLearner(self.learning_rate, self.epochs, self.batch_size,
-                                                          self.optimizer, self.regularizer, self.lmbda)
+                    clf = BinaryLogisticRegressionLearner(self.optimizer, self.learning_rate, self.epochs,
+                                                          self.batch_size, self.regularizer, self.lmbda)
                     clf.fit(x1, y1)
                     self.classifiers.append(copy.deepcopy(clf))
         return self

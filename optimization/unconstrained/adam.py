@@ -53,12 +53,12 @@ class Adam(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
-            g = self.f.jacobian(self.wrt, *args, **kwargs)
+        for args in self.args:
+            g = self.f.jacobian(self.wrt, *args)
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt, *args, **kwargs)
+                v = self.f.function(self.wrt, *args)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -89,7 +89,7 @@ class Adam(Optimizer):
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
 
-            g = self.f.jacobian(self.wrt, *args, **kwargs)
+            g = self.f.jacobian(self.wrt, *args)
             self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * g  # update biased 1st moment estimate
             # update biased 2nd raw moment estimate
             self.est_mom2 = self.beta2 * est_mom2_m1 + (1. - self.beta2) * g ** 2

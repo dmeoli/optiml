@@ -2,7 +2,6 @@ import autograd.numpy as np
 from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
-from ml.losses import mean_squared_error
 from ml.neural_network.activations import Linear
 from ml.neural_network.layers import Layer
 from ml.regularizers import l2
@@ -21,15 +20,6 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         self.loss = loss
         self.regularizer = regularizer
         self.lmbda = lmbda
-
-    def x_star(self):
-        if self.loss is mean_squared_error:
-            return np.linalg.inv(self.X.T.dot(self.X)).dot(self.X.T).dot(self.y)  # or np.linalg.lstsq(X, y)[0]
-
-    def f_star(self):
-        if self.x_star() is not None:
-            return self.loss(self.neural_net.forward(self.X), self.y)
-        return super().f_star()
 
     def args(self):
         return self.X, self.y

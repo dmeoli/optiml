@@ -42,12 +42,12 @@ class AdaGrad(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
-            g = self.f.jacobian(self.wrt, *args, **kwargs)
+        for args in self.args:
+            g = self.f.jacobian(self.wrt, *args)
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt, *args, **kwargs)
+                v = self.f.function(self.wrt, *args)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -73,7 +73,7 @@ class AdaGrad(Optimizer):
                 step1 = self.momentum * step_m1
                 self.wrt -= step1
 
-            g = self.f.jacobian(self.wrt, *args, **kwargs)
+            g = self.f.jacobian(self.wrt, *args)
             self.gms += g ** 2
             step2 = self.step_rate * g / np.sqrt(self.gms + self.offset)
 

@@ -139,9 +139,9 @@ class HeavyBallGradient(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
+        for args in self.args:
             if self.iter == 1:
-                v, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
+                v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
                 ng = np.linalg.norm(g)
                 if self.eps < 0:
                     ng0 = -ng  # norm of first subgradient
@@ -181,7 +181,7 @@ class HeavyBallGradient(LineSearchOptimizer):
 
             # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args, kwargs)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
 
             # output statistics
             if self.verbose:

@@ -132,9 +132,9 @@ class BFGS(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
+        for args in self.args:
             if self.iter == 1:
-                v, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
+                v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
                 ng = np.linalg.norm(g)
                 if self.eps < 0:
                     ng0 = -ng  # norm of first subgradient
@@ -152,7 +152,7 @@ class BFGS(LineSearchOptimizer):
                     for i in range(self.n):
                         xp = self.wrt
                         xp[i] = xp[i] + small_step
-                        gp = self.f.jacobian(xp, *args, **kwargs)
+                        gp = self.f.jacobian(xp, *args)
                         B[i] = ((gp - g) / small_step).T
                     B = (B + B.T) / 2  # ensure it is symmetric
                     lambda_n = min(np.linalg.eigvalsh(B))  # smallest eigenvalue
@@ -186,7 +186,7 @@ class BFGS(LineSearchOptimizer):
 
             # compute step size: as in Newton's method, the default initial step size is 1
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args, kwargs)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
 
             # output statistics
             if self.verbose:

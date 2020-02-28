@@ -152,9 +152,9 @@ class AcceleratedGradient(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
+        for args in self.args:
             # compute f(y)
-            v, g = self.f.function(y, *args, **kwargs), self.f.jacobian(y, *args, **kwargs)
+            v, g = self.f.function(y, *args), self.f.jacobian(y, *args)
             ng = np.linalg.norm(g)
             if f_eval == 1 and self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
@@ -191,7 +191,7 @@ class AcceleratedGradient(LineSearchOptimizer):
             # compute step size
             if self.m1 > 0:
                 a, xv, last_wrt, last_g, f_eval = self.line_search.search(
-                    -g, self.wrt, last_wrt, last_g, f_eval, v, -ng, args, kwargs)
+                    -g, self.wrt, last_wrt, last_g, f_eval, v, -ng, args)
                 if self.line_search.a_start < 0:
                     self.line_search.a_start = abs(-a)
             else:  # fixed step size
@@ -199,7 +199,7 @@ class AcceleratedGradient(LineSearchOptimizer):
                 last_wrt = y + a * -g
 
                 if self.mon:  # in the monotone version
-                    xv = self.f.function(last_wrt, *args, **kwargs)
+                    xv = self.f.function(last_wrt, *args)
 
             # output statistics
             if self.verbose:

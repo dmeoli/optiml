@@ -122,9 +122,9 @@ class Subgradient(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
+        for args in self.args:
             # compute function and subgradient
-            v, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
+            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
             ng = np.linalg.norm(g)
 
             if self.eps > 0:  # target-level step size

@@ -45,12 +45,12 @@ class SteepestGradientDescentQuadratic(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
-            g = self.f.jacobian(self.wrt, *args, **kwargs)
+        for args in self.args:
+            g = self.f.jacobian(self.wrt, *args)
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt, *args, **kwargs)
+                v = self.f.function(self.wrt, *args)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -71,7 +71,7 @@ class SteepestGradientDescentQuadratic(Optimizer):
             d = -g
 
             # check if f is unbounded below
-            den = d.T.dot(self.f.hessian(self.wrt, *args, **kwargs)).dot(d)
+            den = d.T.dot(self.f.hessian(self.wrt, *args)).dot(d)
 
             if den <= 1e-12:
                 # this is actually two different cases:
@@ -101,8 +101,7 @@ class SteepestGradientDescentQuadratic(Optimizer):
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
             # <\nabla f(x_i), \nabla f(x_i+1)> = 0
-            # assert np.isclose(
-            #     self.f.jacobian(past_wrt, *args, **kwargs).T.dot(self.f.jacobian(self.wrt, *args, **kwargs)), 0)
+            # assert np.isclose(self.f.jacobian(past_wrt, *args).T.dot(self.f.jacobian(self.wrt, *args)), 0)
 
             self.iter += 1
 
@@ -259,9 +258,9 @@ class SteepestGradientDescent(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
+        for args in self.args:
             if self.iter == 1:
-                v, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
+                v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
                 ng = np.linalg.norm(g)
 
                 if self.eps < 0:
@@ -294,7 +293,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
             # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args, kwargs)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
 
             # output statistics
             if self.verbose:
@@ -362,12 +361,12 @@ class GradientDescent(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
-            g = self.f.jacobian(self.wrt, *args, **kwargs)
+        for args in self.args:
+            g = self.f.jacobian(self.wrt, *args)
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt, *args, **kwargs)
+                v = self.f.function(self.wrt, *args)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -393,7 +392,7 @@ class GradientDescent(Optimizer):
                 step_m1 = self.step
                 big_jump = self.momentum * step_m1
                 self.wrt += big_jump
-                g = self.f.jacobian(self.wrt, *args, **kwargs)
+                g = self.f.jacobian(self.wrt, *args)
                 correction = self.step_rate * -g
                 self.wrt += correction
                 self.step = big_jump + correction

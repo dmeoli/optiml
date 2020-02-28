@@ -28,12 +28,12 @@ class ConjugateGradientQuadratic(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
-            g = self.f.jacobian(self.wrt, *args, **kwargs)
+        for args in self.args:
+            g = self.f.jacobian(self.wrt, *args)
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt, *args, **kwargs)
+                v = self.f.function(self.wrt, *args)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -62,8 +62,8 @@ class ConjugateGradientQuadratic(Optimizer):
                     if self.verbose:
                         print('\t(res)', end='')
                 else:
-                    beta = g.T.dot(self.f.hessian(self.wrt, *args, **kwargs)).dot(past_d) / \
-                           past_d.T.dot(self.f.hessian(self.wrt, *args, **kwargs)).dot(past_d)
+                    beta = g.T.dot(self.f.hessian(self.wrt, *args)).dot(past_d) / \
+                           past_d.T.dot(self.f.hessian(self.wrt, *args)).dot(past_d)
                     if self.verbose:
                         print('\t{:1.4f}'.format(beta))
 
@@ -73,7 +73,7 @@ class ConjugateGradientQuadratic(Optimizer):
                     d = -g
 
             # check if f is unbounded below
-            den = d.T.dot(self.f.hessian(self.wrt, *args, **kwargs)).dot(d)
+            den = d.T.dot(self.f.hessian(self.wrt, *args)).dot(d)
 
             if den <= 1e-12:
                 # this is actually two different cases:
@@ -273,9 +273,9 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
+        for args in self.args:
             if self.iter == 1:
-                v, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
+                v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
                 ng = np.linalg.norm(g)
                 if self.eps < 0:
                     ng0 = -ng  # norm of first subgradient
@@ -338,7 +338,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
             # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args, kwargs)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
 
             # output statistics
             if self.verbose:

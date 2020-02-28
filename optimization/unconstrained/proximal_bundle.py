@@ -108,10 +108,10 @@ class ProximalBundle(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
+        for args in self.args:
             if self.iter == 1:
                 # compute first function and subgradient
-                fx, g = self.f.function(self.wrt, *args, **kwargs), self.f.jacobian(self.wrt, *args, **kwargs)
+                fx, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
 
                 G = g.T  # matrix of subgradients
                 F = fx - g.T * self.wrt  # vector of translated function values
@@ -170,7 +170,7 @@ class ProximalBundle(Optimizer):
 
             # compute function and subgradient
 
-            fd, g = self.f.function(self.wrt + d, *args, **kwargs)
+            fd, g = self.f.function(self.wrt + d, *args)
 
             if fd <= self.m_inf:
                 status = 'unbounded'

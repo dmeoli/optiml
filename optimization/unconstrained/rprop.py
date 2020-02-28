@@ -43,12 +43,12 @@ class RProp(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args, kwargs in self.args:
-            g = self.f.jacobian(self.wrt, *args, **kwargs)
+        for args in self.args:
+            g = self.f.jacobian(self.wrt, *args)
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                v = self.f.function(self.wrt, *args, **kwargs)
+                v = self.f.function(self.wrt, *args)
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -76,7 +76,7 @@ class RProp(Optimizer):
 
             g_m1 = self.jacobian
 
-            self.jacobian = self.f.jacobian(self.wrt, *args, **kwargs)
+            self.jacobian = self.f.jacobian(self.wrt, *args)
             grad_prod = g_m1 * self.jacobian
 
             self.changes[grad_prod > 0] *= self.step_grow
