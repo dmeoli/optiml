@@ -27,17 +27,18 @@ class NeuralNetworkLossFunction(OptimizationFunction):
 
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
-        return (self.loss(self.neural_net.forward(X), y) +
+        self.y_pred = self.neural_net.forward(X)
+        return (self.loss(self.y_pred, y) +
                 self.regularizer(packed_weights_biases, self.lmbda) / X.shape[0])
 
     def jacobian(self, packed_weights_biases, X, y):
-        return self.neural_net._pack(*self.neural_net.backward(self.delta(self.neural_net.forward(X), y)))
+        return self.neural_net._pack(*self.neural_net.backward(self.delta(y)))
 
     def hessian(self, packed_weights_biases, X, y):
         return super().hessian(packed_weights_biases)
 
-    def delta(self, y_pred, y_true):
-        return y_pred - y_true
+    def delta(self, y_true):
+        return self.y_pred - y_true
 
     def plot(self, epochs, cost_history):
         fig, ax = plt.subplots()
