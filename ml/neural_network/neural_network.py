@@ -47,9 +47,9 @@ class NeuralNetworkLossFunction(OptimizationFunction):
     def plot(self, epochs, loss_history):
         fig, ax = plt.subplots()
         ax.plot(range(epochs), loss_history, 'b.', alpha=0.2)
-        ax.set_title('Learning curve')
-        ax.set_xlabel('Epochs')
-        ax.set_ylabel('Error')
+        ax.set_title('learning curves')
+        ax.set_xlabel('epoch')
+        ax.set_ylabel('loss')
         ax.legend(['train'])
         plt.show()
 

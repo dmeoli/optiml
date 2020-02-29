@@ -6,7 +6,7 @@ from ml.metrics import mean_euclidean_error
 from ml.neural_network.activations import sigmoid, tanh, relu, linear
 from ml.neural_network.layers import Dense
 from ml.neural_network.neural_network import NeuralNetwork
-from ml.regularizers import l1
+from ml.regularizers import l1, l2
 from optimization.unconstrained.accelerated_gradient import AcceleratedGradient, SteepestDescentAcceleratedGradient
 from optimization.unconstrained.adadelta import AdaDelta
 from optimization.unconstrained.adagrad import AdaGrad
@@ -69,9 +69,9 @@ if __name__ == '__main__':
                         Dense(20, 20, sigmoid, w_init=glorot_uniform),
                         Dense(20, 2, linear, w_init=glorot_uniform))
 
-    net.fit(X_train, y_train, loss=mean_squared_error, optimizer=RMSProp, learning_rate=0.003,
-            momentum_type='standard', momentum=0.9, regularizer=l1, lmbda=0.01, epochs=1000,
-            batch_size=None, verbose=True, plot=True)
+    net.fit(X_train, y_train, loss=mean_squared_error, optimizer=BFGS, learning_rate=0.003,
+            momentum_type='nesterov', momentum=0.9, regularizer=l1, lmbda=0.01, epochs=1000,
+            batch_size=441, verbose=True, plot=True)
     pred = net.predict(X_test)
     print(mean_squared_error(pred, y_test))
     print(mean_euclidean_error(pred, y_test))
