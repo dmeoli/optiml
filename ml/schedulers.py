@@ -12,6 +12,10 @@ import itertools
 import numpy as np
 
 
+def constant(start):
+    return itertools.repeat(start)
+
+
 def decaying(start, decay):
     """
     Return an iterator of exponentially decaying values.

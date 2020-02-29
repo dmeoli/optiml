@@ -26,16 +26,18 @@ line_search_optimizers = [NonlinearConjugateGradient, SteepestDescentAccelerated
 
 max_f_eval = [1000, 1500, 2000, 2500, 3000]
 
-stochastic_optimizers = [Adam, AMSGrad, AdaGrad, AdaDelta, AdaMax, GradientDescent, RMSProp, RProp, AcceleratedGradient]
+stochastic_adaptive_optimizers = [Adam, AdaMax, AMSGrad, AdaGrad, AdaDelta, RProp, RMSProp]
+
+stochastic_optimizers = [GradientDescent, AcceleratedGradient]
 
 activations = [sigmoid, tanh, relu]
 
-losses = [mean_squared_error]
-
-learning_rate_epochs = {1765: 0.001,
+learning_rate_epochs = {1000: 0.001,
                         500: 0.01,
                         200: 0.05,
                         100: 0.1}
+
+momentum = [0.5, 0.6, 0.7, 0.8, 0.9]
 
 initializers = [glorot_normal, glorot_uniform]
 
