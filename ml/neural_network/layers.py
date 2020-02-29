@@ -2,12 +2,38 @@ import numpy as np
 
 from ml.initializers import glorot_uniform, zeros
 from ml.neural_network.activations import Activation
-from ml.neural_network.variable import Variable
+from ml.regularizers import L2
+
+
+class Variable:
+    def __init__(self, v):
+        self.data = v
+        self._error = np.empty_like(v)  # for backpropagation of the last layer
+        self.info = {}
+
+    def __repr__(self):
+        return str(self.data)
+
+    def set_error(self, error):
+        assert self._error.shape == error.shape
+        self._error[:] = error
+
+    @property
+    def error(self):
+        return self._error
+
+    @property
+    def shape(self):
+        return self.data.shape
+
+    @property
+    def ndim(self):
+        return self.data.ndim
 
 
 class Layer:
 
-    def __init__(self, n_in, n_out, activation, w_init, b_init):
+    def __init__(self, n_in, n_out, activation, w_init, b_init, w_reg, b_reg):
         self.order = None
         self.name = None
         self._x = None
@@ -27,6 +53,16 @@ class Layer:
             self.b = zeros((1, n_out))
         else:
             self.b = b_init((1, n_out))
+
+        if w_reg is None:
+            self.w_reg = L2()
+        else:
+            self.w_reg = w_reg
+
+        if b_reg is None:
+            self.b_reg = L2()
+        else:
+            self.b_reg = b_reg
 
         self._wx_b = None
         self._activated = None
@@ -57,8 +93,8 @@ class Layer:
 
 
 class Dense(Layer):
-    def __init__(self, n_in, n_out, activation, w_init=glorot_uniform, b_init=zeros):
-        super().__init__(n_in, n_out, activation, w_init, b_init)
+    def __init__(self, n_in, n_out, activation, w_init=glorot_uniform, b_init=zeros, w_reg=L2(0.01), b_reg=L2(0.01)):
+        super().__init__(n_in, n_out, activation, w_init, b_init, w_reg, b_reg)
         self.fan_in = n_in
         self.fan_out = n_out
 
@@ -73,8 +109,8 @@ class Dense(Layer):
         # dw, db
         dz = self.data_vars['out'].error
         dz *= self._a.derivative(self._wx_b)
-        grads = {'w': self._x.T.dot(dz)}
-        grads['b'] = np.sum(dz, axis=0, keepdims=True)
+        grads = {'w': self._x.T.dot(dz) + self.w_reg.lmbda * self.w,
+                 'b': np.sum(dz, axis=0, keepdims=True) + self.b_reg.lmbda * self.b}
         # dx
         self.data_vars['in'].set_error(dz.dot(self.w.T))  # pass error to the layer before
         return grads

@@ -4,7 +4,6 @@ import numpy as np
 
 from ml.losses import mean_squared_error, cross_entropy
 from ml.neural_network.activations import Sigmoid
-from ml.regularizers import l1, l2
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
 
@@ -19,14 +18,12 @@ class Learner:
 
 class LinearModelLossFunction(OptimizationFunction):
 
-    def __init__(self, X, y, linear_model, loss, regularizer=l2, lmbda=0.01):
+    def __init__(self, X, y, linear_model, loss):
         super().__init__(X.shape[1])
         self.X = X
         self.y = y
         self.linear_model = linear_model
         self.loss = loss
-        self.regularizer = regularizer
-        self.lmbda = lmbda
 
     def x_star(self):
         if self.loss is mean_squared_error:
@@ -44,7 +41,7 @@ class LinearModelLossFunction(OptimizationFunction):
         return self.X, self.y
 
     def function(self, theta, X, y):
-        return self.loss(self.linear_model._predict(X, theta), y) + self.regularizer(theta, self.lmbda) / X.shape[0]
+        return self.loss(self.linear_model._predict(X, theta), y)
 
     def jacobian(self, theta, X, y):
         return np.dot(X.T, self.linear_model._predict(X, theta) - y) / X.shape[0]
@@ -52,14 +49,11 @@ class LinearModelLossFunction(OptimizationFunction):
 
 class LinearRegressionLearner(Learner):
 
-    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None,
-                 regularizer=l1, lmbda=0.01, max_f_eval=1000):
+    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None, max_f_eval=1000):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
-        self.regularizer = regularizer
-        self.lmbda = lmbda
         self.max_f_eval = max_f_eval
 
     def fit(self, X, y, verbose=False):
@@ -81,13 +75,11 @@ class LinearRegressionLearner(Learner):
 
 class BinaryLogisticRegressionLearner(Learner):
 
-    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None, regularizer=l2, lmbda=0.01):
+    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
-        self.regularizer = regularizer
-        self.lmbda = lmbda
 
     def fit(self, X, y):
         self.labels = np.unique(y)
@@ -111,14 +103,11 @@ class BinaryLogisticRegressionLearner(Learner):
 
 
 class MultiLogisticRegressionLearner(Learner):
-    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None,
-                 regularizer=l2, lmbda=0.01, decision_function='ovr'):
+    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None, decision_function='ovr'):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
-        self.regularizer = regularizer
-        self.lmbda = lmbda
         if decision_function not in ('ovr', 'ovo'):
             raise ValueError("decision function must be either 'ovr' or 'ovo'")
         self.decision_function = decision_function
@@ -139,8 +128,7 @@ class MultiLogisticRegressionLearner(Learner):
                 y1 = np.array(y)
                 y1[y1 != label] = -1.0
                 y1[y1 == label] = 1.0
-                clf = BinaryLogisticRegressionLearner(self.optimizer, self.learning_rate, self.epochs,
-                                                      self.batch_size, self.regularizer, self.lmbda)
+                clf = BinaryLogisticRegressionLearner(self.optimizer, self.learning_rate, self.epochs, self.batch_size)
                 clf.fit(X, y1)
                 self.classifiers.append(copy.deepcopy(clf))
         elif self.decision_function == 'ovo':  # use one-vs-one method
@@ -151,8 +139,8 @@ class MultiLogisticRegressionLearner(Learner):
                     x1, y1 = np.r_[X[neg_id], X[pos_id]], np.r_[y[neg_id], y[pos_id]]
                     y1[y1 == labels[i]] = -1.0
                     y1[y1 == labels[j]] = 1.0
-                    clf = BinaryLogisticRegressionLearner(self.optimizer, self.learning_rate, self.epochs,
-                                                          self.batch_size, self.regularizer, self.lmbda)
+                    clf = BinaryLogisticRegressionLearner(self.optimizer, self.learning_rate,
+                                                          self.epochs, self.batch_size)
                     clf.fit(x1, y1)
                     self.classifiers.append(copy.deepcopy(clf))
         return self

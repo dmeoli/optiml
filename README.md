@@ -30,7 +30,7 @@ important optimization algorithms used as core solver for many machine learning 
                 - [x] Dai-Yuan formula
             - [ ] Newton Conjugate Gradient
             - [x] Heavy Ball Gradient
-            - [x] Accelerated Gradient
+            - [x] Steepest Accelerated Gradient
             - [x] Newton
             - [x] BFGS quasi-Newton
             - [ ] L-BFGS quasi-Newton
@@ -38,6 +38,11 @@ important optimization algorithms used as core solver for many machine learning 
             - [x] Gradient Descent
                 - [x] standard momentum
                 - [x] Nesterov momentum
+                - [ ] learning rate decay
+                - [ ] momentum decay
+            - [x] Accelerated Gradient
+                - [ ] standard momentum
+                - [ ] Nesterov momentum
                 - [ ] learning rate decay
                 - [ ] momentum decay
             - [x] Adam
