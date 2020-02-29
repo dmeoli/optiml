@@ -7,7 +7,6 @@ from sklearn.preprocessing import LabelBinarizer
 from ml.learning import Learner
 from ml.neural_network.activations import Linear
 from ml.neural_network.layers import Layer
-from ml.regularizers import L2
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GradientDescent
@@ -17,13 +16,12 @@ plt.style.use('ggplot')
 
 class NeuralNetworkLossFunction(OptimizationFunction):
 
-    def __init__(self, X, y, neural_net, loss, regularizer=L2(0.01)):
+    def __init__(self, X, y, neural_net, loss):
         super().__init__(X.shape[1])
         self.X = X
         self.y = y
         self.neural_net = neural_net
         self.loss = loss
-        self.regularizer = regularizer
 
     def args(self):
         return self.X, self.y
@@ -31,13 +29,11 @@ class NeuralNetworkLossFunction(OptimizationFunction):
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
         self.y_pred = self.neural_net.forward(X)
-        return self.loss(self.y_pred, y) + self.regularizer(packed_weights_biases) / X.shape[0]
+        return self.loss(self.y_pred, y) + np.sum(layer.w_reg(layer.w) + layer.b_reg(layer.b)
+                                                  for layer in self.neural_net.layers) / X.shape[0]
 
     def jacobian(self, packed_weights_biases, X, y):
         return self.neural_net._pack(*self.neural_net.backward(self.delta(y)))
-
-    def hessian(self, packed_weights_biases, X, y):
-        return super().hessian(packed_weights_biases)
 
     def delta(self, y_true):
         return self.y_pred - y_true
@@ -106,9 +102,8 @@ class NeuralNetwork(Layer, Learner):
             self.biases_idx.append((start, end))
             start = end
 
-    def fit(self, X, y, loss, optimizer=GradientDescent, learning_rate=0.01, momentum_type='none',
-            momentum=0.9, epochs=100, batch_size=None, k_folds=0, regularizer=L2(0.01),
-            max_f_eval=1000, early_stopping=True, verbose=False, plot=False):
+    def fit(self, X, y, loss, optimizer=GradientDescent, learning_rate=0.01, momentum_type='none', momentum=0.9,
+            epochs=100, batch_size=None, k_folds=0, max_f_eval=1000, early_stopping=True, verbose=False, plot=False):
         if y.ndim == 1:
             y = y.reshape((-1, 1))
         if isinstance(self.layers[-1]._a, Linear):
@@ -122,7 +117,7 @@ class NeuralNetwork(Layer, Learner):
 
         packed_weights_biases = self._pack(*self.params)
 
-        loss = NeuralNetworkLossFunction(X, y, self, loss, regularizer)
+        loss = NeuralNetworkLossFunction(X, y, self, loss)
         if issubclass(optimizer, LineSearchOptimizer):
             opt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size,
                             max_iter=epochs, max_f_eval=max_f_eval, verbose=verbose).minimize()
