@@ -1,3 +1,5 @@
+import warnings
+
 import autograd.numpy as np
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import LabelBinarizer
@@ -9,6 +11,8 @@ from ml.regularizers import l2
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GradientDescent
+
+plt.style.use('ggplot')
 
 
 class NeuralNetworkLossFunction(OptimizationFunction):
@@ -40,9 +44,9 @@ class NeuralNetworkLossFunction(OptimizationFunction):
     def delta(self, y_true):
         return self.y_pred - y_true
 
-    def plot(self, epochs, cost_history):
+    def plot(self, epochs, loss_history):
         fig, ax = plt.subplots()
-        ax.plot(range(epochs), cost_history)
+        ax.plot(range(epochs), loss_history, 'b.', alpha=0.2)
         ax.set_title('Learning curve')
         ax.set_xlabel('Epochs')
         ax.set_ylabel('Error')
@@ -123,9 +127,13 @@ class NeuralNetwork(Layer, Learner):
         if issubclass(optimizer, LineSearchOptimizer):
             opt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size,
                             max_iter=epochs, max_f_eval=max_f_eval, verbose=verbose).minimize()
+            if opt[2] is not 'optimal':
+                warnings.warn("max_iter or max_f_eval reached and the optimization hasn't converged yet")
         else:
             opt = optimizer(f=loss, wrt=packed_weights_biases, step_rate=learning_rate, momentum_type=momentum_type,
                             momentum=momentum, batch_size=batch_size, max_iter=epochs, verbose=verbose).minimize()
+            if opt[2] is not 'optimal':
+                warnings.warn("max_iter reached and the optimization hasn't converged yet")
         self._unpack(opt[0])
 
         if plot:

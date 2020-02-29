@@ -47,6 +47,7 @@ class RProp(Optimizer):
 
         for args in self.args:
             v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+            cost_history[self.iter - 1] = v
             ng = np.linalg.norm(g)
 
             if self.verbose:
@@ -63,7 +64,7 @@ class RProp(Optimizer):
                 status = 'optimal'
                 break
 
-            if self.iter > self.max_iter:
+            if self.iter >= self.max_iter:
                 status = 'stopped'
                 break
 

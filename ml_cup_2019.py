@@ -1,5 +1,6 @@
 import numpy as np
 
+from ml.initializers import glorot_normal, glorot_uniform
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error
 from ml.neural_network.activations import sigmoid, tanh, relu, linear
@@ -20,40 +21,33 @@ from optimization.unconstrained.quasi_newton import BFGS
 from optimization.unconstrained.rmsprop import RMSProp
 from optimization.unconstrained.rprop import RProp
 
-stochastic_optimizers = [Adam, AMSGrad, AdaGrad, AdaDelta, AdaMax, GradientDescent, RMSProp, RProp, AcceleratedGradient]
-
 line_search_optimizers = [NonlinearConjugateGradient, SteepestDescentAcceleratedGradient, Newton,
                           SteepestGradientDescent, HeavyBallGradient, BFGS]
+
+max_f_eval = [1000, 1500, 2000, 2500, 3000]
+
+stochastic_optimizers = [Adam, AMSGrad, AdaGrad, AdaDelta, AdaMax, GradientDescent, RMSProp, RProp, AcceleratedGradient]
 
 activations = [sigmoid, tanh, relu]
 
 losses = [mean_squared_error]
 
-learning_rate_epochs = {2000: 0.001,
+learning_rate_epochs = {1765: 0.001,
                         500: 0.01,
                         200: 0.05,
                         100: 0.1}
 
+initializers = [glorot_normal, glorot_uniform]
+
 if __name__ == '__main__':
     # X, y = load_iris(return_X_y=True)
-
-    # grid = []
-    # for e in itertools.product(*args):
-    #     grid.append({'learning_rate': e[0],
-    #                  'epochs': e[1],
-    #                  'momentum': e[2],
-    #                  'lmbda': e[3],
-    #                  'n_hidden': e[4],
-    #                  'batch_size': e[5],
-    #                  'n_folds': e[6],
-    #                  'activation': e[7]})
 
     # net = NeuralNetwork(Dense(4, 4, sigmoid),
     #                     Dense(4, 4, sigmoid),
     #                     Dense(4, 3, softmax))
     #
     # net.fit(X, y, loss=cross_entropy, optimizer=GradientDescent, learning_rate=0.01, momentum_type='none',
-    #         momentum=0.9, regularizer=l2, lmbda=0., epochs=300, batch_size=None, verbose=True, plot=True)
+    #         momentum=0.9, regularizer=l2, lmbda=0.01, epochs=300, batch_size=None, verbose=True, plot=True)
     # pred = net.predict(X)
     # print(pred)
     # print(accuracy_score(pred, y))
@@ -65,13 +59,19 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
-    net = NeuralNetwork(Dense(20, 20, sigmoid),
-                        Dense(20, 20, sigmoid),
-                        Dense(20, 2, linear))
+    # from sklearn.preprocessing import StandardScaler
+    #
+    # feature_scaler = StandardScaler()
+    # X_train = feature_scaler.fit_transform(X_train)
+    # X_test = feature_scaler.transform(X_test)
 
-    net.fit(X_train, y_train, loss=mean_squared_error, optimizer=SteepestGradientDescent, learning_rate=0.01,
-            momentum_type='none', momentum=0.7, regularizer=l1, lmbda=0.01, epochs=1000, batch_size=None,
-            verbose=True, plot=True)
+    net = NeuralNetwork(Dense(20, 20, sigmoid, w_init=glorot_uniform),
+                        Dense(20, 20, sigmoid, w_init=glorot_uniform),
+                        Dense(20, 2, linear, w_init=glorot_uniform))
+
+    net.fit(X_train, y_train, loss=mean_squared_error, optimizer=RMSProp, learning_rate=0.003,
+            momentum_type='standard', momentum=0.9, regularizer=l1, lmbda=0.01, epochs=1000,
+            batch_size=None, verbose=True, plot=True)
     pred = net.predict(X_test)
     print(mean_squared_error(pred, y_test))
     print(mean_euclidean_error(pred, y_test))
