@@ -1,5 +1,5 @@
 """
-This module holds various schedulers for parameters such as the step
+This module holds various schedules for parameters such as the step
 rate or momentum for gradient descent.
 
 A schedule is implemented as an iterator. This allows it to have iterators
