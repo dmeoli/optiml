@@ -30,14 +30,14 @@ stochastic_adaptive_optimizers = [Adam, AdaMax, AMSGrad, AdaGrad, AdaDelta, RPro
 
 stochastic_optimizers = [GradientDescent, AcceleratedGradient]
 
+momentum = [0.5, 0.6, 0.7, 0.8, 0.9]
+
 activations = [sigmoid, tanh, relu]
 
 learning_rate_epochs = {1000: 0.001,
                         500: 0.01,
                         200: 0.05,
                         100: 0.1}
-
-momentum = [0.5, 0.6, 0.7, 0.8, 0.9]
 
 k_folds = [3, 5]
 

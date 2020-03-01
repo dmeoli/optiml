@@ -67,8 +67,8 @@ class NeuralNetwork(Layer, Learner):
         last_layer.data_vars['out'].set_error(delta)
         for layer in self.layers[::-1]:
             grads = layer.backward()
-            weights_grads.append(grads['w'])
-            biases_grads.append(grads['b'])
+            weights_grads.append(grads[0] + layer.w_reg.lmbda * layer.w)
+            biases_grads.append(grads[1] + layer.b_reg.lmbda * layer.b)
         return weights_grads[::-1], biases_grads[::-1]
 
     @property

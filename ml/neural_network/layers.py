@@ -109,8 +109,8 @@ class Dense(Layer):
         # dw, db
         dz = self.data_vars['out'].error
         dz *= self._a.derivative(self._wx_b)
-        grads = {'w': self._x.T.dot(dz) + self.w_reg.lmbda * self.w,
-                 'b': np.sum(dz, axis=0, keepdims=True) + self.b_reg.lmbda * self.b}
+        dw = self._x.T.dot(dz)
+        db = np.sum(dz, axis=0, keepdims=True)
         # dx
         self.data_vars['in'].set_error(dz.dot(self.w.T))  # pass error to the layer before
-        return grads
+        return dw, db
