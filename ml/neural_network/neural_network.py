@@ -30,7 +30,7 @@ class NeuralNetworkLossFunction(OptimizationFunction):
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
         self.y_pred = self.neural_net.forward(X)
-        return self.loss(self.y_pred, y) + np.sum(np.sum(layer.w_reg(layer.w) for layer in self.neural_net.layers
+        return self.loss(self.y_pred, y) + np.sum(np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
                                                          if isinstance(layer, ParamLayer)) +
                                                   np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
                                                          if isinstance(layer, ParamLayer) and layer.use_bias)) / len(X)
@@ -60,25 +60,25 @@ class NeuralNetwork(Layer, Learner):
     def forward(self, X):
         for layer in self.layers:
             X = layer.forward(X)
-        return X.data
+        return X
 
     def backward(self, delta):
         weights_grads = []
         biases_grads = []
         # back propagate
-        last_layer = self.layers[-1]
-        last_layer.data_vars['out'].set_error(delta)
         for layer in self.layers[::-1]:
-            grads = layer.backward()
             if isinstance(layer, ParamLayer):
-                weights_grads.append(grads['dw'] + layer.w_reg.lmbda * layer.w)
+                delta, grads = layer.backward(delta)
+                weights_grads.append(grads['dW'] + layer.w_reg.lmbda * layer.W)
                 if layer.use_bias:
                     biases_grads.append(grads['db'] + layer.b_reg.lmbda * layer.b)
+            else:
+                delta = layer.backward(delta)
         return weights_grads[::-1], biases_grads[::-1]
 
     @property
     def params(self):
-        return ([layer.w for layer in self.layers if isinstance(layer, ParamLayer)],
+        return ([layer.W for layer in self.layers if isinstance(layer, ParamLayer)],
                 [layer.b for layer in self.layers if isinstance(layer, ParamLayer) and layer.use_bias])
 
     def _pack(self, weights, biases):
@@ -90,7 +90,7 @@ class NeuralNetwork(Layer, Learner):
         for layer in self.layers:
             if isinstance(layer, ParamLayer):
                 start, end, shape = self.weights_idx[weight_idx]
-                layer.w = np.reshape(packed_weights_biases[start:end], shape)
+                layer.W = np.reshape(packed_weights_biases[start:end], shape)
                 if layer.use_bias:
                     start, end = self.biases_idx[bias_idx]
                     layer.b = packed_weights_biases[start:end]
@@ -105,8 +105,8 @@ class NeuralNetwork(Layer, Learner):
         # save sizes and indices of weights for faster unpacking
         for layer in self.layers:
             if isinstance(layer, ParamLayer):
-                end = start + (np.prod(layer.w.shape))
-                self.weights_idx.append((start, end, layer.w.shape))
+                end = start + (np.prod(layer.W.shape))
+                self.weights_idx.append((start, end, layer.W.shape))
                 start = end
         # save sizes and indices of biases for faster unpacking
         for layer in self.layers:

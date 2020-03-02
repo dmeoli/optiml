@@ -28,7 +28,6 @@ important optimization algorithms used as core solver for many machine learning 
                 - [x] Polak–Ribière formula
                 - [x] Hestenes-Stiefel formula
                 - [x] Dai-Yuan formula
-            - [ ] Newton Conjugate Gradient
             - [x] Heavy Ball Gradient
             - [x] Steepest Accelerated Gradient
             - [x] Newton

@@ -59,7 +59,7 @@ if __name__ == '__main__':
         Dense(20, 2, linear, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True))
 
     net.fit(X_train, y_train, loss=mean_squared_error, optimizer=BFGS, learning_rate=0.001, momentum_type='nesterov',
-            momentum=0.9, epochs=500, batch_size=None, max_f_eval=2000, verbose=True, plot=True)
+            momentum=0.9, epochs=1000, batch_size=None, max_f_eval=10000, verbose=True, plot=True)
     pred = net.predict(X_test)
     print(mean_squared_error(pred, y_test))
     print(mean_euclidean_error(pred, y_test))
@@ -71,12 +71,14 @@ if __name__ == '__main__':
     # X_test, y_test = mnist['x_test'][:, :, :, None], mnist['y_test']
     #
     # cnn = NeuralNetwork(
-    #     Conv2D(1, 6, (5, 5), (1, 1), 'same', channels_last=True, activation=relu),  # => [n,28,28,6]
-    #     MaxPool2D(2, 2),  # => [n, 14, 14, 6]
-    #     Conv2D(6, 16, 5, 1, 'same', channels_last=True, activation=relu),  # => [n,14,14,16]
-    #     MaxPool2D(2, 2),  # => [n,7,7,16]
+    #     Conv2D(in_channels=1, out_channels=6, kernel_size=(5, 5), strides=(1, 1),
+    #            padding='same', channels_last=True, activation=relu),  # => [n,28,28,6]
+    #     MaxPool2D(pool_size=(2, 2), strides=(2, 2)),  # => [n, 14, 14, 6]
+    #     Conv2D(in_channels=6, out_channels=16, kernel_size=(5, 5), strides=(1, 1),
+    #            padding='same', channels_last=True, activation=relu),  # => [n,14,14,16]
+    #     MaxPool2D(pool_size=(2, 2), strides=(2, 2)),  # => [n,7,7,16]
     #     Flatten(),  # => [n,7*7*16]
-    #     Dense(7 * 7 * 16, 10, softmax))
+    #     Dense(n_in=7 * 7 * 16, n_out=10, activation=softmax))
     # cnn.fit(X_train, y_train, loss=cross_entropy, optimizer=Adam, learning_rate=0.001, momentum_type='nesterov',
     #         momentum=0.9, epochs=300, batch_size=64, max_f_eval=10000, verbose=True, plot=True)
     # pred = cnn.predict(X_test)
