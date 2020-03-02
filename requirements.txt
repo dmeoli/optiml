@@ -5,6 +5,3 @@ pytest-cov
 qpsolvers
 scikit-learn
 scipy
-
-
-
