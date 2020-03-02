@@ -34,7 +34,7 @@ class LinearModelLossFunction(OptimizationFunction):
 
     def f_star(self):
         if self.x_star() is not None:
-            return self.loss(self.linear_model._predict(self.X, self.x_star()), self.y)
+            return self.function(self.x_star(), self.X, self.y)
         return super().f_star()
 
     def args(self):

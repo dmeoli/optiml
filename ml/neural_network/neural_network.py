@@ -6,7 +6,7 @@ from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
 from ml.neural_network.activations import Linear
-from ml.neural_network.layers import Layer
+from ml.neural_network.layers import Layer, ParamLayer
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GradientDescent
@@ -67,13 +67,15 @@ class NeuralNetwork(Layer, Learner):
         last_layer.data_vars['out'].set_error(delta)
         for layer in self.layers[::-1]:
             grads = layer.backward()
-            weights_grads.append(grads[0] + layer.w_reg.lmbda * layer.w)
-            biases_grads.append(grads[1] + layer.b_reg.lmbda * layer.b)
+            if isinstance(layer, ParamLayer):
+                weights_grads.append(grads['dw'] + layer.w_reg.lmbda * layer.w)
+                if layer.use_bias:
+                    biases_grads.append(grads['db'] + layer.b_reg.lmbda * layer.b)
         return weights_grads[::-1], biases_grads[::-1]
 
     @property
     def params(self):
-        return [layer.w for layer in self.layers], [layer.b for layer in self.layers]
+        return [layer.w for layer in self.layers], [layer.b for layer in self.layers if layer.use_bias]
 
     def _pack(self, weights, biases):
         return np.hstack([w.ravel() for w in weights + biases])
