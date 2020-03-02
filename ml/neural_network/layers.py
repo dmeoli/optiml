@@ -2,13 +2,10 @@ import numpy as np
 
 from ml.initializers import glorot_uniform, zeros
 from ml.neural_network.activations import Activation
-from ml.regularizers import L2
+from ml.regularizers import l2
 
 
 class Layer:
-
-    def __init__(self):
-        self._X = None
 
     def forward(self, X):
         raise NotImplementedError
@@ -20,7 +17,6 @@ class Layer:
 class ParamLayer(Layer):
 
     def __init__(self, w_shape, activation, w_init, b_init, w_reg, b_reg, use_bias):
-        super().__init__()
 
         if isinstance(activation, Activation):
             self._a = activation
@@ -42,21 +38,18 @@ class ParamLayer(Layer):
                 self.b = b_init(shape)
 
         if w_reg is None:
-            self.w_reg = L2()
+            self.w_reg = l2
         else:
             self.w_reg = w_reg
 
         if b_reg is None:
-            self.b_reg = L2()
+            self.b_reg = l2
         else:
             self.b_reg = b_reg
 
-        self._WX_b = None
-
 
 class Dense(ParamLayer):
-    def __init__(self, n_in, n_out, activation, w_init=glorot_uniform, b_init=zeros,
-                 w_reg=L2(0.01), b_reg=L2(0.01), use_bias=True):
+    def __init__(self, n_in, n_out, activation, w_init=glorot_uniform, b_init=zeros, w_reg=l2, b_reg=l2, use_bias=True):
         super().__init__((n_in, n_out), activation, w_init, b_init, w_reg, b_reg, use_bias)
         self.fan_in = n_in
         self.fan_out = n_out
@@ -82,7 +75,7 @@ class Dense(ParamLayer):
 class Conv2D(ParamLayer):
     def __init__(self, in_channels, out_channels, kernel_size=(3, 3), strides=(1, 1), padding='valid',
                  channels_last=True, activation=None, w_init=glorot_uniform, b_init=zeros,
-                 w_reg=L2(0.01), b_reg=L2(0.01), use_bias=True):
+                 w_reg=l2, b_reg=l2, use_bias=True):
         super().__init__((in_channels,) + kernel_size + (out_channels,),
                          activation, w_init, b_init, w_reg, b_reg, use_bias)
         self.in_channels = in_channels
@@ -93,14 +86,13 @@ class Conv2D(ParamLayer):
         if padding not in ('valid', 'same'):
             raise ValueError('unknown padding type {}'.format(padding))
         self.channels_last = channels_last
-        self._padded = None
-        self._p_tblr = None  # padded dim from top, bottom, left, right
 
     def forward(self, X):
         self._X = X
         if not self.channels_last:  # channels_first
             # [batch, channel, height, width] => [batch, height, width, channel]
             self._X = np.transpose(self._X, (0, 2, 3, 1))
+        # padded dim from top, bottom, left, right
         self._padded, tmp_conved, self._p_tblr = get_padded_and_tmp_out(
             self._X, self.kernel_size, self.strides, self.out_channels, self.padding)
 
@@ -207,15 +199,12 @@ class Conv2D(ParamLayer):
 
 class Pool(Layer):
     def __init__(self, kernel_size=(3, 3), strides=(1, 1), padding='valid', channels_last=True):
-        super().__init__()
         self.kernel_size = kernel_size
         self.strides = strides
         self.padding = padding.lower()
         if padding not in ('valid', 'same'):
             ValueError('unknown padding type {}'.format(padding))
         self.channels_last = channels_last
-        self._padded = None
-        self._p_tblr = None
 
     def agg_func(self, x):
         raise NotImplementedError
@@ -225,6 +214,7 @@ class Pool(Layer):
         if not self.channels_last:  # channels_first
             # [batch, channel, height, width] => [batch, height, width, channel]
             self._X = np.transpose(self._X, (0, 2, 3, 1))
+        # padded dim from top, bottom, left, right
         self._padded, out, self._p_tblr = get_padded_and_tmp_out(
             self._X, self.kernel_size, self.strides, self._X.shape[-1], self.padding)
         s0, s1, k0, k1 = self.strides + self.kernel_size
@@ -305,12 +295,10 @@ def get_padded_and_tmp_out(img, kernel_size, strides, out_channels, padding):
         pw = int(np.max([0, (out_w - 1) * sw + fw - w]))
         pt, pl = int(np.floor(ph / 2)), int(np.floor(pw / 2))
         pb, pr = ph - pt, pw - pl
-    elif padding == 'valid':
+    else:  # valid
         out_h = int(np.ceil((h - fh + 1) / sh))
         out_w = int(np.ceil((w - fw + 1) / sw))
         pt, pb, pl, pr = 0, 0, 0, 0
-    else:
-        raise ValueError('unknown padding type {}'.format(padding))
     padded_img = np.pad(img, ((0, 0), (pt, pb), (pl, pr), (0, 0)), 'constant', constant_values=0.).astype(np.float32)
     tmp_out = np.zeros((batch, out_h, out_w, out_channels), dtype=np.float32)
     return padded_img, tmp_out, (pt, pb, pl, pr)

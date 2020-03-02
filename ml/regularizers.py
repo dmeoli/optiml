@@ -20,3 +20,7 @@ class L2(Regularizer):
 
     def __call__(self, theta):
         return self.lmbda * np.sum(np.square(theta))
+
+
+l1 = L1()
+l2 = L2()
