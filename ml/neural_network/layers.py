@@ -71,10 +71,11 @@ class ParamLayer(Layer):
         else:
             raise TypeError
 
+        self.w_shape = w_shape
         if w_init is None:
-            self.w = glorot_uniform(*w_shape)
+            self.w = glorot_uniform(w_shape)
         else:
-            self.w = w_init(*w_shape)
+            self.w = w_init(w_shape)
 
         self.use_bias = use_bias
         if self.use_bias:

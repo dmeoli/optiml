@@ -1,7 +1,7 @@
 import numpy as np
 
 from ml.initializers import glorot_normal, glorot_uniform
-from ml.losses import mean_squared_error
+from ml.losses import mean_squared_error, cross_entropy
 from ml.metrics import mean_euclidean_error
 from ml.neural_network.activations import sigmoid, tanh, relu, linear, softmax
 from ml.neural_network.layers import Dense, Conv2D, MaxPool2D, Flatten

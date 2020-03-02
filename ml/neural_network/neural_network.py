@@ -3,6 +3,7 @@ import warnings
 import autograd.numpy as np
 from matplotlib import pyplot as plt
 
+from ml.initializers import compute_fans
 from ml.learning import Learner
 from ml.neural_network.activations import Linear
 from ml.neural_network.layers import Layer, ParamLayer
@@ -75,17 +76,19 @@ class NeuralNetwork(Layer, Learner):
 
     @property
     def params(self):
-        return [layer.w for layer in self.layers], [layer.b for layer in self.layers if layer.use_bias]
+        return ([layer.w for layer in self.layers if isinstance(layer, ParamLayer)],
+                [layer.b for layer in self.layers if isinstance(layer, ParamLayer) and layer.use_bias])
 
     def _pack(self, weights, biases):
         return np.hstack([w.ravel() for w in weights + biases])
 
     def _unpack(self, packed_weights_biases):
         for i, layer in enumerate(self.layers):
-            start, end, shape = self.weights_idx[i]
-            layer.w = np.reshape(packed_weights_biases[start:end], shape)
-            start, end = self.biases_idx[i]
-            layer.b = packed_weights_biases[start:end]
+            if isinstance(layer, ParamLayer):
+                start, end, shape = self.weights_idx[i]
+                layer.w = np.reshape(packed_weights_biases[start:end], shape)
+                start, end = self.biases_idx[i]
+                layer.b = packed_weights_biases[start:end]
 
     def _store_meta_info(self):
         # store meta information for the parameters
@@ -94,15 +97,18 @@ class NeuralNetwork(Layer, Learner):
         start = 0
         # save sizes and indices of weights for faster unpacking
         for layer in self.layers:
-            fan_in, fan_out = layer.fan_in, layer.fan_out
-            end = start + (fan_in * fan_out)
-            self.weights_idx.append((start, end, (fan_in, fan_out)))
-            start = end
+            if isinstance(layer, ParamLayer):
+                fan_in, fan_out = compute_fans(layer.w_shape)
+                end = start + (fan_in * fan_out)
+                self.weights_idx.append((start, end, (fan_in, fan_out)))
+                start = end
         # save sizes and indices of biases for faster unpacking
         for layer in self.layers:
-            end = start + layer.fan_out
-            self.biases_idx.append((start, end))
-            start = end
+            if isinstance(layer, ParamLayer):
+                fan_in, fan_out = compute_fans(layer.w_shape)
+                end = start + fan_out
+                self.biases_idx.append((start, end))
+                start = end
 
     def fit(self, X, y, loss, optimizer=GradientDescent, learning_rate=0.01, momentum_type='none', momentum=0.9,
             epochs=100, batch_size=None, k_folds=0, max_f_eval=1000, early_stopping=True, verbose=False, plot=False):
