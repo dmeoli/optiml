@@ -30,8 +30,10 @@ class NeuralNetworkLossFunction(OptimizationFunction):
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
         self.y_pred = self.neural_net.forward(X)
-        return self.loss(self.y_pred, y) + np.sum(layer.w_reg(layer.w) + layer.b_reg(layer.b)
-                                                  for layer in self.neural_net.layers) / X.shape[0]
+        return self.loss(self.y_pred, y) + np.sum(np.sum(layer.w_reg(layer.w) for layer in self.neural_net.layers
+                                                         if isinstance(layer, ParamLayer)) +
+                                                  np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
+                                                         if isinstance(layer, ParamLayer) and layer.use_bias)) / len(X)
 
     def jacobian(self, packed_weights_biases, X, y):
         return self.neural_net._pack(*self.neural_net.backward(self.delta(y)))
@@ -83,12 +85,17 @@ class NeuralNetwork(Layer, Learner):
         return np.hstack([w.ravel() for w in weights + biases])
 
     def _unpack(self, packed_weights_biases):
-        for i, layer in enumerate(self.layers):
+        weight_idx = 0
+        bias_idx = 0
+        for layer in self.layers:
             if isinstance(layer, ParamLayer):
-                start, end, shape = self.weights_idx[i]
+                start, end, shape = self.weights_idx[weight_idx]
                 layer.w = np.reshape(packed_weights_biases[start:end], shape)
-                start, end = self.biases_idx[i]
-                layer.b = packed_weights_biases[start:end]
+                if layer.use_bias:
+                    start, end = self.biases_idx[bias_idx]
+                    layer.b = packed_weights_biases[start:end]
+                    bias_idx += 1
+                weight_idx += 1
 
     def _store_meta_info(self):
         # store meta information for the parameters
@@ -98,14 +105,13 @@ class NeuralNetwork(Layer, Learner):
         # save sizes and indices of weights for faster unpacking
         for layer in self.layers:
             if isinstance(layer, ParamLayer):
-                fan_in, fan_out = compute_fans(layer.w_shape)
-                end = start + (fan_in * fan_out)
-                self.weights_idx.append((start, end, (fan_in, fan_out)))
+                end = start + (np.prod(layer.w.shape))
+                self.weights_idx.append((start, end, layer.w.shape))
                 start = end
         # save sizes and indices of biases for faster unpacking
         for layer in self.layers:
-            if isinstance(layer, ParamLayer):
-                fan_in, fan_out = compute_fans(layer.w_shape)
+            if isinstance(layer, ParamLayer) and layer.use_bias:
+                fan_in, fan_out = compute_fans(layer.b.shape)
                 end = start + fan_out
                 self.biases_idx.append((start, end))
                 start = end

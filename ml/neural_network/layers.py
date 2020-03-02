@@ -71,7 +71,6 @@ class ParamLayer(Layer):
         else:
             raise TypeError
 
-        self.w_shape = w_shape
         if w_init is None:
             self.w = glorot_uniform(w_shape)
         else:
@@ -237,6 +236,7 @@ class Conv2D(ParamLayer):
         # self._padded_col.T~[fh*fw*c, n*oh*ow] dot [n*oh*ow, oc] => [fh*fw*c, oc]
         dw = self._padded_col.T.dot(dz_reshape).reshape(self.kernel_size[0], self.kernel_size[1], -1, self.out_channels)
         dw = dw.transpose(2, 0, 1, 3)  # => [c, fh, fw, oc]
+
         grads = {'dw': dw}
         if self.use_bias:  # tied biases
             grads['db'] = np.sum(dz, axis=(0, 1, 2), keepdims=True)

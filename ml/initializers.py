@@ -45,7 +45,7 @@ def glorot_uniform(shape):
     and fan_out is the number of output units in the weight tensor."""
     fan_in, fan_out = compute_fans(shape)
     limit = np.sqrt(6. / (fan_in + fan_out))
-    return random_uniform(shape=(fan_in, fan_out), low=-limit, high=limit)
+    return random_uniform(shape=shape, low=-limit, high=limit)
 
 
 def he_normal(shape):
@@ -54,7 +54,7 @@ def he_normal(shape):
     fan_in is the number of input units in the weight tensor."""
     fan_in, fan_out = compute_fans(shape)
     std = np.sqrt(2. / fan_in)
-    return truncated_normal(shape=(fan_in, fan_out), mean=0., std=std)
+    return truncated_normal(shape=shape, mean=0., std=std)
 
 
 def he_uniform(shape):
@@ -64,15 +64,20 @@ def he_uniform(shape):
     the weight tensor."""
     fan_in, fan_out = compute_fans(shape)
     limit = np.sqrt(6. / fan_in)
-    return random_uniform(shape=(fan_in, fan_out), low=-limit, high=limit)
+    return random_uniform(shape=shape, low=-limit, high=limit)
 
 
-def compute_fans(shape):
+def compute_fans(shape, channels_last=True):
     if len(shape) is 2:
         fan_in = shape[0]
         fan_out = shape[1]
-    else:
-        receptive_field_size = np.prod(shape[:-2])
-        fan_in = shape[-2] * receptive_field_size
-        fan_out = shape[-1] * receptive_field_size
+    else:  # Conv2D
+        if channels_last:
+            receptive_field_size = np.prod(shape[:-2])
+            fan_in = shape[-2] * receptive_field_size
+            fan_out = shape[-1] * receptive_field_size
+        else:  # channels first
+            receptive_field_size = np.prod(shape[2:])
+            fan_in = shape[1] * receptive_field_size
+            fan_out = shape[0] * receptive_field_size
     return fan_in, fan_out

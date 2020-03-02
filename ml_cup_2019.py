@@ -2,7 +2,7 @@ import numpy as np
 
 from ml.initializers import glorot_normal, glorot_uniform
 from ml.losses import mean_squared_error, cross_entropy
-from ml.metrics import mean_euclidean_error
+from ml.metrics import mean_euclidean_error, accuracy_score
 from ml.neural_network.activations import sigmoid, tanh, relu, linear, softmax
 from ml.neural_network.layers import Dense, Conv2D, MaxPool2D, Flatten
 from ml.neural_network.neural_network import NeuralNetwork
@@ -51,9 +51,10 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
-    net = NeuralNetwork(Dense(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True),
-                        Dense(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True),
-                        Dense(20, 2, linear, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True))
+    net = NeuralNetwork(
+        Dense(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True),
+        Dense(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True),
+        Dense(20, 2, linear, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True))
 
     net.fit(X_train, y_train, loss=mean_squared_error, optimizer=BFGS, learning_rate=0.001, momentum_type='nesterov',
             momentum=0.9, epochs=1500, batch_size=None, max_f_eval=2000, verbose=True, plot=True)
@@ -74,8 +75,7 @@ if __name__ == '__main__':
     #     MaxPool2D(2, 2),  # => [n,7,7,16]
     #     Flatten(),  # => [n,7*7*16]
     #     Dense(7 * 7 * 16, 10, softmax))
-    # cnn.fit(X_train, y_train, loss=cross_entropy, optimizer=BFGS, learning_rate=0.001, momentum_type='nesterov',
-    #         momentum=0.9, epochs=1500, batch_size=None, max_f_eval=2000, verbose=True, plot=True)
+    # cnn.fit(X_train, y_train, loss=cross_entropy, optimizer=Adam, learning_rate=0.001, momentum_type='nesterov',
+    #         momentum=0.9, epochs=300, batch_size=64, max_f_eval=2000, verbose=True, plot=True)
     # pred = cnn.predict(X_test)
-    # print(mean_squared_error(pred, y_test))
-    # print(mean_euclidean_error(pred, y_test))
+    # print(accuracy_score(pred, y_test))
