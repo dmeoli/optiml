@@ -2,7 +2,6 @@ import warnings
 
 import autograd.numpy as np
 from matplotlib import pyplot as plt
-from sklearn.preprocessing import LabelBinarizer
 
 from ml.learning import Learner
 from ml.neural_network.activations import Linear
@@ -10,6 +9,7 @@ from ml.neural_network.layers import Layer, ParamLayer
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GradientDescent
+from utils import to_categorical
 
 plt.style.use('ggplot')
 
@@ -41,7 +41,7 @@ class NeuralNetworkLossFunction(OptimizationFunction):
     def plot(self, epochs, loss_history):
         fig, ax = plt.subplots()
         ax.plot(range(epochs), loss_history, 'b.', alpha=0.2)
-        ax.set_title('learning curves')
+        ax.set_title('model loss')
         ax.set_xlabel('epoch')
         ax.set_ylabel('loss')
         ax.legend(['train'])
@@ -112,8 +112,7 @@ class NeuralNetwork(Layer, Learner):
             self.task = 'regression'
         else:
             self.task = 'classification'
-            self.lb = LabelBinarizer().fit(y)
-            y = self.lb.transform(y)
+            y = to_categorical(y)
 
         self._store_meta_info()
 

@@ -3,8 +3,8 @@ import numpy as np
 from ml.initializers import glorot_normal, glorot_uniform
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error
-from ml.neural_network.activations import sigmoid, tanh, relu, linear
-from ml.neural_network.layers import Dense
+from ml.neural_network.activations import sigmoid, tanh, relu, linear, softmax
+from ml.neural_network.layers import Dense, Conv2D, MaxPool2D, Flatten
 from ml.neural_network.neural_network import NeuralNetwork
 from ml.regularizers import L1
 from optimization.unconstrained.accelerated_gradient import AcceleratedGradient, SteepestDescentAcceleratedGradient
@@ -62,3 +62,20 @@ if __name__ == '__main__':
     print(mean_euclidean_error(pred, y_test))
 
     ml_cup_blind = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TS.csv', delimiter=','), 0, 1)
+
+    # mnist = np.load('./ml/data/mnist.npz')
+    # X_train, y_train = mnist['x_train'][:, :, :, None], mnist['y_train'][:, None]
+    # X_test, y_test = mnist['x_test'][:2000][:, :, :, None], mnist['y_test'][:2000]
+    #
+    # cnn = NeuralNetwork(
+    #     Conv2D(1, 6, (5, 5), (1, 1), 'same', channels_last=True, activation=relu),  # => [n,28,28,6]
+    #     MaxPool2D(2, 2),  # => [n, 14, 14, 6]
+    #     Conv2D(6, 16, 5, 1, 'same', channels_last=True, activation=relu),  # => [n,14,14,16]
+    #     MaxPool2D(2, 2),  # => [n,7,7,16]
+    #     Flatten(),  # => [n,7*7*16]
+    #     Dense(7 * 7 * 16, 10, softmax))
+    # cnn.fit(X_train, y_train, loss=cross_entropy, optimizer=BFGS, learning_rate=0.001, momentum_type='nesterov',
+    #         momentum=0.9, epochs=1500, batch_size=None, max_f_eval=2000, verbose=True, plot=True)
+    # pred = cnn.predict(X_test)
+    # print(mean_squared_error(pred, y_test))
+    # print(mean_euclidean_error(pred, y_test))
