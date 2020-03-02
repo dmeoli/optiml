@@ -96,7 +96,7 @@ important optimization algorithms used as core solver for many machine learning 
             - [x] SoftMax
             - [x] SoftPlus
         - [ ] Layers
-            - [x] Dense
+            - [x] Fully Connected
             - [x] Convolutional
             - [x] Max Pooling
             - [x] Avg Pooling

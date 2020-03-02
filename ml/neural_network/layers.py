@@ -48,7 +48,7 @@ class ParamLayer(Layer):
             self.b_reg = b_reg
 
 
-class Dense(ParamLayer):
+class FullyConnected(ParamLayer):
     def __init__(self, n_in, n_out, activation, w_init=glorot_uniform, b_init=zeros, w_reg=l2, b_reg=l2, use_bias=True):
         super().__init__((n_in, n_out), activation, w_init, b_init, w_reg, b_reg, use_bias)
         self.fan_in = n_in
