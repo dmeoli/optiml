@@ -31,7 +31,7 @@ class ReLU(Activation):
 
 class LeakyReLU(Activation):
 
-    def __init__(self, alpha=0.01):
+    def __init__(self, alpha=0.3):
         self.alpha = alpha
 
     def function(self, x):
@@ -43,7 +43,7 @@ class LeakyReLU(Activation):
 
 class ELU(Activation):
 
-    def __init__(self, alpha=0.01):
+    def __init__(self, alpha=1.):
         self.alpha = alpha
 
     def function(self, x):
@@ -84,8 +84,8 @@ class SoftPlus(Activation):
 class SoftMax(Activation):
 
     def function(self, x, axis=-1):
-        exp = np.exp(x - np.max(x, axis=axis, keepdims=True))
-        return exp / np.sum(exp, axis=axis, keepdims=True)
+        exps = np.exp(x - np.max(x, axis=axis, keepdims=True))
+        return exps / np.sum(exps, axis=axis, keepdims=True)
 
     def derivative(self, x):
         return np.ones_like(x)

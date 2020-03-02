@@ -269,6 +269,9 @@ class Pool(Layer):
         self._padded = None
         self._p_tblr = None
 
+    def agg_func(self, x):
+        raise NotImplementedError
+
     def forward(self, x):
         self._x = self._process_input(x)
         if not self.channels_last:  # "channels_first":
@@ -283,9 +286,6 @@ class Pool(Layer):
                 out[:, i, j, :] = self.agg_func(window)
         wrapped_out = self._wrap_out(out if self.channels_last else out.transpose((0, 3, 1, 2)))
         return wrapped_out
-
-    def agg_func(self, x):
-        raise NotImplementedError
 
 
 class MaxPool2D(Pool):

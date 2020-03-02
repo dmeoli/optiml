@@ -1,3 +1,5 @@
+import warnings
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -208,8 +210,7 @@ class BFGS(LineSearchOptimizer):
 
             rho = y.T.dot(s).item()
             if rho < 1e-16:
-                if self.verbose:
-                    print('\nError: y^i s^i = {:1.4e}'.format(rho))
+                warnings.warn('error: y^i s^i = {:1.4e}'.format(rho))
                 status = 'error'
                 break
 
