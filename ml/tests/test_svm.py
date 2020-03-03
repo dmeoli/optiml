@@ -1,13 +1,14 @@
 import pytest
 from sklearn.datasets import load_iris
 
+from ml.learning import MultiClassClassifier
 from ml.metrics import accuracy_score
-from ml.svm import MultiSVM
+from ml.svm import SVM
 
 
 def test_svm():
     X, y = load_iris(return_X_y=True)
-    svm = MultiSVM().fit(X, y)
+    svm = MultiClassClassifier(SVM).fit(X, y)
     assert accuracy_score(y, svm.predict(X)) >= 0.96
 
 

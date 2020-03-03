@@ -1,35 +1,12 @@
-import copy
-
+import numpy as np
 from qpsolvers import solve_qp
 
-import numpy as np
-
+from ml.kernels import rbf_kernel, linear_kernel, polynomial_kernel
 from ml.learning import Learner
 
 
-def linear_kernel(X, y=None):
-    if y is None:
-        y = X
-    return np.dot(X, y.T)
-
-
-def polynomial_kernel(X, y=None, degree=3.):
-    if y is None:
-        y = X
-    return (1. + np.dot(X, y.T)) ** degree
-
-
-def rbf_kernel(X, y=None, gamma='scale'):
-    """Radial-basis function kernel (aka squared-exponential kernel)."""
-    if y is None:
-        y = X
-    gamma = 1. / (X.shape[1] * X.var()) if gamma is 'scale' else 1. / X.shape[1]  # auto
-    return np.exp(-gamma * (-2. * np.dot(X, y.T) +
-                            np.sum(X * X, axis=1).reshape((-1, 1)) + np.sum(y * y, axis=1).reshape((1, -1))))
-
-
-class BinarySVM(Learner):
-    def __init__(self, kernel=linear_kernel, degree=3., gamma='scale', C=1.):
+class SVM(Learner):
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1.):
         self.kernel = kernel
         self.degree = degree
         if gamma not in ('scale', 'auto'):
@@ -108,72 +85,3 @@ class BinarySVM(Learner):
         Predicts the class of a given example.
         """
         return np.sign(self.predict_score(X))
-
-
-class MultiSVM(Learner):
-    def __init__(self, kernel=linear_kernel, degree=3., gamma='scale', C=1., decision_function='ovr'):
-        self.kernel = kernel
-        self.degree = degree
-        if gamma not in ('scale', 'auto'):
-            raise ValueError('unknown gamma type {}'.format(gamma))
-        self.gamma = gamma
-        self.C = C  # hyper-parameter
-        if decision_function not in ('ovr', 'ovo'):
-            raise ValueError('unknown decision function type {}'.format(decision_function))
-        self.decision_function = decision_function
-        self.n_class, self.classifiers = 0, []
-
-    def fit(self, X, y):
-        """
-        Trains n_class or n_class * (n_class - 1) / 2 classifiers
-        according to the training method, ovr or ovo respectively.
-        :param X: array of size [n_samples, n_features] holding the training samples
-        :param y: array of size [n_samples] holding the class labels
-        :return: array of classifiers
-        """
-        labels = np.unique(y)
-        self.n_class = len(labels)
-        if self.decision_function == 'ovr':  # one-vs-rest method
-            for label in labels:
-                y1 = np.array(y)
-                y1[y1 != label] = -1.
-                y1[y1 == label] = 1.
-                clf = BinarySVM(self.kernel, self.degree, self.gamma, self.C)
-                clf.fit(X, y1)
-                self.classifiers.append(copy.deepcopy(clf))
-        elif self.decision_function == 'ovo':  # use one-vs-one method
-            n_labels = len(labels)
-            for i in range(n_labels):
-                for j in range(i + 1, n_labels):
-                    neg_id, pos_id = y == labels[i], y == labels[j]
-                    x1, y1 = np.r_[X[neg_id], X[pos_id]], np.r_[y[neg_id], y[pos_id]]
-                    y1[y1 == labels[i]] = -1.
-                    y1[y1 == labels[j]] = 1.
-                    clf = BinarySVM(self.kernel, self.degree, self.gamma, self.C)
-                    clf.fit(x1, y1)
-                    self.classifiers.append(copy.deepcopy(clf))
-        return self
-
-    def predict(self, X):
-        """
-        Predicts the class of a given example according to the training method.
-        """
-        n_samples = len(X)
-        if self.decision_function == 'ovr':  # one-vs-rest method
-            assert len(self.classifiers) == self.n_class
-            score = np.zeros((n_samples, self.n_class))
-            for i in range(self.n_class):
-                clf = self.classifiers[i]
-                score[:, i] = clf.predict_score(X)
-            return np.argmax(score, axis=1)
-        elif self.decision_function == 'ovo':  # use one-vs-one method
-            assert len(self.classifiers) == self.n_class * (self.n_class - 1) / 2
-            vote = np.zeros((n_samples, self.n_class))
-            clf_id = 0
-            for i in range(self.n_class):
-                for j in range(i + 1, self.n_class):
-                    res = self.classifiers[clf_id].predict(X)
-                    vote[res < 0, i] += 1.  # negative sample: class i
-                    vote[res > 0, j] += 1.  # positive sample: class j
-                    clf_id += 1
-            return np.argmax(vote, axis=1)

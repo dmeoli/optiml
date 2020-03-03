@@ -36,10 +36,7 @@ class NeuralNetworkLossFunction(OptimizationFunction):
                                                          if isinstance(layer, ParamLayer) and layer.use_bias)) / len(X)
 
     def jacobian(self, packed_weights_biases, X, y):
-        return self.neural_net._pack(*self.neural_net.backward(self.delta(y)))
-
-    def delta(self, y_true):
-        return self.y_pred - y_true
+        return self.neural_net._pack(*self.neural_net.backward(self.loss.delta(self.y_pred, y)))
 
     def plot(self, epochs, loss_history):
         fig, ax = plt.subplots()

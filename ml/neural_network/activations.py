@@ -10,6 +10,9 @@ class Activation:
     def derivative(self, x):
         raise NotImplementedError
 
+    def __call__(self, x):
+        return self.function(x)
+
 
 class Linear(Activation):
 

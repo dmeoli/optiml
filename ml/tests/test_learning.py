@@ -2,7 +2,8 @@ import numpy as np
 import pytest
 from sklearn.datasets import load_iris, load_boston
 
-from ml.learning import MultiLogisticRegressionLearner, LinearRegressionLearner, LinearModelLossFunction
+from ml.learning import (LinearRegressionLearner, LinearModelLossFunction,
+                         MultiClassClassifier, LogisticRegressionLearner)
 from ml.losses import mean_squared_error
 from ml.metrics import accuracy_score
 from optimization.unconstrained.quasi_newton import BFGS
@@ -17,7 +18,7 @@ def test_linear_learner():
 
 def test_logistic_learner():
     X, y = load_iris(return_X_y=True)
-    ll = MultiLogisticRegressionLearner(optimizer=BFGS).fit(X, y)
+    ll = MultiClassClassifier(LogisticRegressionLearner).fit(X, y, optimizer=BFGS)
     assert accuracy_score(y, ll.predict(X)) >= 0.96
 
 

@@ -59,7 +59,7 @@ class FullyConnected(ParamLayer):
         self._WX_b = self._X.dot(self.W)
         if self.use_bias:
             self._WX_b += self.b
-        return self._a.function(self._WX_b)
+        return self._a(self._WX_b)
 
     def backward(self, delta):
         # dW, db
@@ -101,7 +101,7 @@ class Conv2D(ParamLayer):
         if self.use_bias:
             self._WX_b += self.b
 
-        self._activated = self._a.function(self._WX_b)
+        self._activated = self._a(self._WX_b)
         return self._activated if self.channels_last else self._activated.transpose((0, 3, 1, 2))
 
     def backward(self, delta):
@@ -233,14 +233,13 @@ class MaxPool2D(Pool):
         return x.max(axis=(1, 2))
 
     def backward(self, delta):
-        dZ = delta
         s0, s1, k0, k1 = self.strides + self.kernel_size
         padded_dX = np.zeros_like(self._padded)  # [n, h, w, c]
-        for i in range(dZ.shape[1]):
-            for j in range(dZ.shape[2]):
+        for i in range(delta.shape[1]):
+            for j in range(delta.shape[2]):
                 window = self._padded[:, i * s0:i * s0 + k0, j * s1:j * s1 + k1, :]  # [n,fh,fw,c]
                 window_mask = window == np.max(window, axis=(1, 2), keepdims=True)
-                window_dZ = dZ[:, i:i + 1, j:j + 1, :] * window_mask.astype(np.float32)
+                window_dZ = delta[:, i:i + 1, j:j + 1, :] * window_mask.astype(np.float32)
                 padded_dX[:, i * s0:i * s0 + k0, j * s1:j * s1 + k1, :] += window_dZ
         t, b, l, r = [self._p_tblr[0], padded_dX.shape[1] - self._p_tblr[1],
                       self._p_tblr[2], padded_dX.shape[2] - self._p_tblr[3]]
@@ -256,13 +255,12 @@ class AvgPool2D(Pool):
         return x.mean(axis=(1, 2))
 
     def backward(self, delta):
-        dZ = delta
         s0, s1, k0, k1 = self.strides + self.kernel_size
         padded_dX = np.zeros_like(self._padded)  # [n, h, w, c]
-        for i in range(dZ.shape[1]):
-            for j in range(dZ.shape[2]):
-                window_dZ = dZ[:, i:i + 1, j:j + 1, :] * np.full(
-                    (1, k0, k1, dZ.shape[-1]), 1. / (k0 * k1), dtype=np.float32)
+        for i in range(delta.shape[1]):
+            for j in range(delta.shape[2]):
+                window_dZ = delta[:, i:i + 1, j:j + 1, :] * np.full(
+                    (1, k0, k1, delta.shape[-1]), 1. / (k0 * k1), dtype=np.float32)
                 padded_dX[:, i * s0:i * s0 + k0, j * s1:j * s1 + k1, :] += window_dZ
         t, b, l, r = [self._p_tblr[0], padded_dX.shape[1] - self._p_tblr[1],
                       self._p_tblr[2], padded_dX.shape[2] - self._p_tblr[3]]
@@ -274,12 +272,65 @@ class Flatten(Layer):
 
     def forward(self, X):
         self._X = X
-        out = self._X.reshape((self._X.shape[0], -1))
-        return out
+        return self._X.reshape((self._X.shape[0], -1))
 
     def backward(self, delta):
-        dZ = delta
-        dX = dZ.reshape(self._X.shape)
+        dX = delta.reshape(self._X.shape)
+        return dX
+
+
+class BatchNorm(Layer):
+
+    def __init__(self, X_dim):
+        self.d_X, self.h_X, self.w_X = X_dim
+        self.gamma = np.ones((1, int(np.prod(X_dim))))
+        self.beta = np.zeros((1, int(np.prod(X_dim))))
+        self.params = [self.gamma, self.beta]
+
+    def forward(self, X):
+        self.n_X = X.shape[0]
+        self.X_shape = X.shape
+
+        self.X_flat = X.ravel().reshape(self.n_X, -1)
+        self.mu = np.mean(self.X_flat, axis=0)
+        self.var = np.var(self.X_flat, axis=0)
+        self.X_norm = (self.X_flat - self.mu) / np.sqrt(self.var + 1e-8)
+        out = self.gamma * self.X_norm + self.beta
+
+        return out.reshape(self.X_shape)
+
+    def backward(self, delta):
+        delta = delta.ravel().reshape(delta.shape[0], -1)
+        X_mu = self.X_flat - self.mu
+        var_inv = 1. / np.sqrt(self.var + 1e-8)
+
+        dbeta = np.sum(delta, axis=0)
+        dgamma = np.sum(delta * self.X_norm, axis=0)
+
+        grads = {'dW': dbeta,
+                 'db': dgamma}
+
+        dX_norm = delta * self.gamma
+        dvar = np.sum(dX_norm * X_mu, axis=0) * - 0.5 * (self.var + 1e-8) ** (-3 / 2)
+        dmu = np.sum(dX_norm * -var_inv, axis=0) + dvar * 1 / self.n_X * np.sum(-2. * X_mu, axis=0)
+        dX = (dX_norm * var_inv) + (dmu / self.n_X) + (dvar * 2 / self.n_X * X_mu)
+
+        dX = dX.reshape(self.X_shape)
+        return dX, grads
+
+
+class Dropout(Layer):
+
+    def __init__(self, p=0.5):
+        self.prob = p
+        self.params = []
+
+    def forward(self, X):
+        self.mask = np.random.binomial(1, self.prob, size=X.shape) / self.prob
+        return (X * self.mask).reshape(X.shape)
+
+    def backward(self, delta):
+        dX = delta * self.mask
         return dX
 
 

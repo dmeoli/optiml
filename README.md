@@ -83,7 +83,9 @@ important optimization algorithms used as core solver for many machine learning 
         - [x] Losses
             - [x] Mean Squared Error
             - [x] Mean Absolute Error
-            - [x] Cross Entropy
+            - [x] Binary Cross Entropy
+            - [x] Categorical Cross Entropy
+            - [x] Sparse Categorical Cross Entropy
         - [x] Regularizers
             - [x] L1
             - [x] L2
@@ -101,8 +103,8 @@ important optimization algorithms used as core solver for many machine learning 
             - [x] Max Pooling
             - [x] Avg Pooling
             - [x] Flatten
-            - [ ] Dropout
-            - [ ] Batch Normalization
+            - [x] Dropout
+            - [x] Batch Normalization
             - [ ] Recurrent
             - [ ] Long Short-Term Memory (LSTM)
             - [ ] Gated Recurrent Units (GRU)
