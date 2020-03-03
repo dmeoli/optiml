@@ -86,8 +86,8 @@ important optimization algorithms used as core solver for many machine learning 
             - [x] Categorical Cross Entropy
             - [x] Binary Cross Entropy
         - [x] Regularizers
-            - [x] L1
-            - [x] L2
+            - [x] L1 or Lasso
+            - [x] L2 or Ridge or Tikhonov
         - [x] Activations
             - [x] Sigmoid
             - [x] Tanh
