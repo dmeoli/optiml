@@ -14,7 +14,7 @@ important optimization algorithms used as core solver for many machine learning 
         - [ ] Conditional Gradient or Frank-Wolfe
         - [ ] Active Set
         - [ ] Interior Point
-        - [ ] Dual formulation
+        - [ ] Dual
     - Unconstrained Optimization
         - Exact Line Search Methods
             - [x] Quadratic Steepest Gradient Descent
