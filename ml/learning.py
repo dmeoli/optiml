@@ -109,7 +109,7 @@ class MultiLogisticRegressionLearner(Learner):
         self.batch_size = batch_size
         self.optimizer = optimizer
         if decision_function not in ('ovr', 'ovo'):
-            raise ValueError("decision function must be either 'ovr' or 'ovo'")
+            raise ValueError('unknown decision function type {}'.format(decision_function))
         self.decision_function = decision_function
         self.n_class, self.classifiers = 0, []
 
@@ -126,8 +126,8 @@ class MultiLogisticRegressionLearner(Learner):
         if self.decision_function == 'ovr':  # one-vs-rest method
             for label in labels:
                 y1 = np.array(y)
-                y1[y1 != label] = -1.0
-                y1[y1 == label] = 1.0
+                y1[y1 != label] = -1.
+                y1[y1 == label] = 1.
                 clf = BinaryLogisticRegressionLearner(self.optimizer, self.learning_rate, self.epochs, self.batch_size)
                 clf.fit(X, y1)
                 self.classifiers.append(copy.deepcopy(clf))
@@ -137,8 +137,8 @@ class MultiLogisticRegressionLearner(Learner):
                 for j in range(i + 1, n_labels):
                     neg_id, pos_id = y == labels[i], y == labels[j]
                     x1, y1 = np.r_[X[neg_id], X[pos_id]], np.r_[y[neg_id], y[pos_id]]
-                    y1[y1 == labels[i]] = -1.0
-                    y1[y1 == labels[j]] = 1.0
+                    y1[y1 == labels[i]] = -1.
+                    y1[y1 == labels[j]] = 1.
                     clf = BinaryLogisticRegressionLearner(self.optimizer, self.learning_rate,
                                                           self.epochs, self.batch_size)
                     clf.fit(x1, y1)
@@ -164,7 +164,7 @@ class MultiLogisticRegressionLearner(Learner):
             for i in range(self.n_class):
                 for j in range(i + 1, self.n_class):
                     res = self.classifiers[clf_id].predict(X)
-                    vote[res < 0, i] += 1.0  # negative sample: class i
-                    vote[res > 0, j] += 1.0  # positive sample: class j
+                    vote[res < 0, i] += 1.  # negative sample: class i
+                    vote[res > 0, j] += 1.  # positive sample: class j
                     clf_id += 1
             return np.argmax(vote, axis=1)

@@ -7,38 +7,41 @@ import numpy as np
 from ml.learning import Learner
 
 
-def linear_kernel(x, y=None):
+def linear_kernel(X, y=None):
     if y is None:
-        y = x
-    return np.dot(x, y.T)
+        y = X
+    return np.dot(X, y.T)
 
 
-def polynomial_kernel(x, y=None, degree=2.0):
+def polynomial_kernel(X, y=None, degree=3.):
     if y is None:
-        y = x
-    return (1.0 + np.dot(x, y.T)) ** degree
+        y = X
+    return (1. + np.dot(X, y.T)) ** degree
 
 
-def rbf_kernel(x, y=None, gamma=None):
+def rbf_kernel(X, y=None, gamma='scale'):
     """Radial-basis function kernel (aka squared-exponential kernel)."""
     if y is None:
-        y = x
-    if gamma is None:
-        gamma = 1.0 / x.shape[1]  # 1.0 / n_features
-    return np.exp(-gamma * (-2.0 * np.dot(x, y.T) +
-                            np.sum(x * x, axis=1).reshape((-1, 1)) + np.sum(y * y, axis=1).reshape((1, -1))))
+        y = X
+    gamma = 1. / (X.shape[1] * X.var()) if gamma is 'scale' else 1. / X.shape[1]  # auto
+    return np.exp(-gamma * (-2. * np.dot(X, y.T) +
+                            np.sum(X * X, axis=1).reshape((-1, 1)) + np.sum(y * y, axis=1).reshape((1, -1))))
 
 
 class BinarySVM(Learner):
-    def __init__(self, kernel=linear_kernel, C=1.0):
+    def __init__(self, kernel=linear_kernel, degree=3., gamma='scale', C=1.):
         self.kernel = kernel
+        self.degree = degree
+        if gamma not in ('scale', 'auto'):
+            raise ValueError('unknown gamma type {}'.format(gamma))
+        self.gamma = gamma
         self.C = C  # hyper-parameter
         self.eps = 1e-6
         self.n_sv = -1
         self.sv_x, self.sv_y, = np.zeros(0), np.zeros(0)
         self.alphas = np.zeros(0)
         self.w = None
-        self.b = 0.0  # intercept
+        self.b = 0.  # intercept
 
     def fit(self, X, y):
         """
@@ -56,6 +59,10 @@ class BinarySVM(Learner):
         # calculate b: average over all support vectors
         sv_boundary = self.alphas < self.C - self.eps
         self.b = np.mean(self.sv_y[sv_boundary] - np.dot(self.alphas * self.sv_y,
+                                                         self.kernel(self.sv_x, self.sv_x[sv_boundary], self.degree)
+                                                         if self.kernel is polynomial_kernel else
+                                                         self.kernel(self.sv_x, self.sv_x[sv_boundary], self.gamma)
+                                                         if self.kernel is rbf_kernel else  # linear kernel
                                                          self.kernel(self.sv_x, self.sv_x[sv_boundary])))
         return self
 
@@ -68,7 +75,11 @@ class BinarySVM(Learner):
         """
         #
         m = len(y)  # m = n_samples
-        K = self.kernel(X)  # gram matrix
+        K = (self.kernel(X, degree=self.degree)
+             if self.kernel is polynomial_kernel else
+             self.kernel(X, gamma=self.gamma)
+             if self.kernel is rbf_kernel else
+             self.kernel(X))  # linear kernel
         P = K * np.outer(y, y)
         q = -np.ones(m)
         G = np.vstack((-np.identity(m), np.identity(m)))
@@ -79,13 +90,18 @@ class BinarySVM(Learner):
         P += np.eye(P.shape[0]).__mul__(1e-3)
         self.alphas = solve_qp(P, q, G, h, A, b, sym_proj=True)
 
-    def predict_score(self, x):
+    def predict_score(self, X):
         """
         Predicts the score for a given example.
         """
         if self.w is None:
-            return np.dot(self.alphas * self.sv_y, self.kernel(self.sv_x, x)) + self.b
-        return np.dot(x, self.w) + self.b
+            return np.dot(self.alphas * self.sv_y,
+                          self.kernel(self.sv_x, X, self.degree)
+                          if self.kernel is polynomial_kernel else
+                          self.kernel(self.sv_x, X, self.gamma)
+                          if self.kernel is rbf_kernel else
+                          self.kernel(self.sv_x, X, self.degree)) + self.b  # linear kernel
+        return np.dot(X, self.w) + self.b
 
     def predict(self, X):
         """
@@ -95,12 +111,16 @@ class BinarySVM(Learner):
 
 
 class MultiSVM(Learner):
-    def __init__(self, kernel=linear_kernel, decision_function='ovr', C=1.0):
+    def __init__(self, kernel=linear_kernel, degree=3., gamma='scale', C=1., decision_function='ovr'):
         self.kernel = kernel
-        if decision_function not in ('ovr', 'ovo'):
-            raise ValueError("decision function must be either 'ovr' or 'ovo'")
-        self.decision_function = decision_function
+        self.degree = degree
+        if gamma not in ('scale', 'auto'):
+            raise ValueError('unknown gamma type {}'.format(gamma))
+        self.gamma = gamma
         self.C = C  # hyper-parameter
+        if decision_function not in ('ovr', 'ovo'):
+            raise ValueError('unknown decision function type {}'.format(decision_function))
+        self.decision_function = decision_function
         self.n_class, self.classifiers = 0, []
 
     def fit(self, X, y):
@@ -116,9 +136,9 @@ class MultiSVM(Learner):
         if self.decision_function == 'ovr':  # one-vs-rest method
             for label in labels:
                 y1 = np.array(y)
-                y1[y1 != label] = -1.0
-                y1[y1 == label] = 1.0
-                clf = BinarySVM(self.kernel, self.C)
+                y1[y1 != label] = -1.
+                y1[y1 == label] = 1.
+                clf = BinarySVM(self.kernel, self.degree, self.gamma, self.C)
                 clf.fit(X, y1)
                 self.classifiers.append(copy.deepcopy(clf))
         elif self.decision_function == 'ovo':  # use one-vs-one method
@@ -127,9 +147,9 @@ class MultiSVM(Learner):
                 for j in range(i + 1, n_labels):
                     neg_id, pos_id = y == labels[i], y == labels[j]
                     x1, y1 = np.r_[X[neg_id], X[pos_id]], np.r_[y[neg_id], y[pos_id]]
-                    y1[y1 == labels[i]] = -1.0
-                    y1[y1 == labels[j]] = 1.0
-                    clf = BinarySVM(self.kernel, self.C)
+                    y1[y1 == labels[i]] = -1.
+                    y1[y1 == labels[j]] = 1.
+                    clf = BinarySVM(self.kernel, self.degree, self.gamma, self.C)
                     clf.fit(x1, y1)
                     self.classifiers.append(copy.deepcopy(clf))
         return self
@@ -153,7 +173,7 @@ class MultiSVM(Learner):
             for i in range(self.n_class):
                 for j in range(i + 1, self.n_class):
                     res = self.classifiers[clf_id].predict(X)
-                    vote[res < 0, i] += 1.0  # negative sample: class i
-                    vote[res > 0, j] += 1.0  # positive sample: class j
+                    vote[res < 0, i] += 1.  # negative sample: class i
+                    vote[res > 0, j] += 1.  # positive sample: class j
                     clf_id += 1
             return np.argmax(vote, axis=1)
