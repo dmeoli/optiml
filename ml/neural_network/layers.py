@@ -87,6 +87,19 @@ class Conv2D(ParamLayer):
             raise ValueError('unknown padding type {}'.format(padding))
         self.channels_last = channels_last
 
+    def convolution(self, x, flt, conved):
+        batch_size = x.shape[0]
+        t_flt = flt.transpose((1, 2, 0, 3))  # [c,h,w,out] => [h,w,c,out]
+        s0, s1, k0, k1 = self.strides + tuple(flt.shape[1:3])
+        for i in range(0, conved.shape[1]):  # in each row of the convoluted feature map
+            for j in range(0, conved.shape[2]):  # in each column of the convoluted feature map
+                x_seg_matrix = x[:, i * s0:i * s0 + k0, j * s1:j * s1 + k1, :].reshape(
+                    (batch_size, -1))  # [n,h,w,c] => [n, h*w*c]
+                flt_matrix = t_flt.reshape((-1, flt.shape[-1]))  # [h,w,c, out] => [h*w*c, out]
+                filtered = x_seg_matrix.dot(flt_matrix)  # sum of filtered window [n, out]
+                conved[:, i, j, :] = filtered
+        return conved
+
     def forward(self, X):
         self._X = X
         if not self.channels_last:  # channels_first
@@ -128,70 +141,6 @@ class Conv2D(ParamLayer):
                     t_flt.reshape((self.out_channels, -1))).reshape((-1, k0, k1, padded_dX.shape[-1]))
         t, b, l, r = [self._p_tblr[0], padded_dX.shape[1] - self._p_tblr[1],
                       self._p_tblr[2], padded_dX.shape[2] - self._p_tblr[3]]
-        dX = padded_dX[:, t:b, l:r, :]
-
-        return dX, grads
-
-    def convolution(self, x, flt, conved):
-        batch_size = x.shape[0]
-        t_flt = flt.transpose((1, 2, 0, 3))  # [c,h,w,out] => [h,w,c,out]
-        s0, s1, k0, k1 = self.strides + tuple(flt.shape[1:3])
-        for i in range(0, conved.shape[1]):  # in each row of the convoluted feature map
-            for j in range(0, conved.shape[2]):  # in each column of the convoluted feature map
-                x_seg_matrix = x[:, i * s0:i * s0 + k0, j * s1:j * s1 + k1, :].reshape(
-                    (batch_size, -1))  # [n,h,w,c] => [n, h*w*c]
-                flt_matrix = t_flt.reshape((-1, flt.shape[-1]))  # [h,w,c, out] => [h*w*c, out]
-                filtered = x_seg_matrix.dot(flt_matrix)  # sum of filtered window [n, out]
-                conved[:, i, j, :] = filtered
-        return conved
-
-    def fast_convolution(self, x, flt, conved):
-        # according to:
-        # http://fanding.xyz/2017/09/07/CNN%E5%8D%B7%E7%A7%AF%E7%BD%91%E7%BB%9C%E7%9A%84Python%E5%AE%9E%E7%8E%B0III-CNN%E5%AE%9E%E7%8E%B0/
-
-        # create patch matrix
-        oh, ow, sh, sw, fh, fw = [conved.shape[1], conved.shape[2], self.strides[0],
-                                  self.strides[1], flt.shape[1], flt.shape[2]]
-        n, h, w, c = x.shape
-        shape = (n, oh, ow, fh, fw, c)
-        strides = (c * h * w, sh * w, sw, w, 1, h * w)
-        strides = x.itemsize * np.array(strides)
-        x_col = np.lib.stride_tricks.as_strided(x, shape=shape, strides=strides, writeable=False)
-        x_col = np.ascontiguousarray(x_col)
-        x_col.shape = (n * oh * ow, fh * fw * c)  # [n*oh*ow, fh*fw*c]
-        self._padded_col = x_col  # padded [n,h,w,c] => [n*oh*ow, h*w*c]
-        w_t = flt.transpose((1, 2, 0, 3)).reshape(-1, self.out_channels)  # => [hwc, oc]
-
-        # IMPORTANT! as_stride function has some wired behaviours
-        # which gives a not accurate result (precision issue) when performing matrix dot product.
-        # I have compared the fast convolution with normal convolution and cannot explain the precision issue.
-        wx = self._padded_col.dot(w_t)  # [n*oh*ow, fh*fw*c] dot [fh*fw*c, oc] => [n*oh*ow, oc]
-        return wx.reshape(conved.shape)
-
-    def fast_backward(self, delta):
-        dZ = delta * self._a.derivative(self._WX_b)
-
-        # dW, db
-        dZ_reshape = dZ.reshape(-1, self.out_channels)  # => [n*oh*ow, oc]
-        # self._padded_col.T~[fh*fw*c, n*oh*ow] dot [n*oh*ow, oc] => [fh*fw*c, oc]
-        dW = self._padded_col.T.dot(dZ_reshape).reshape(self.kernel_size[0], self.kernel_size[1], -1, self.out_channels)
-        dW = dW.transpose(2, 0, 1, 3)  # => [c, fh, fw, oc]
-
-        grads = {'dW': dW}
-        if self.use_bias:  # tied biases
-            grads['db'] = np.sum(dZ, axis=(0, 1, 2), keepdims=True)
-
-        # dX
-        padded_dX = np.zeros_like(self._padded)  # [n, h, w, c]
-        s0, s1, k0, k1 = self.strides + self.kernel_size
-        t_flt = self.W.transpose((3, 1, 2, 0))  # [c, fh, hw, out] => [out, fh, fw, c]
-        for i in range(dZ.shape[1]):
-            for j in range(dZ.shape[2]):
-                padded_dX[:, i * s0:i * s0 + k0, j * s1:j * s1 + k1, :] += dZ[:, i, j, :].reshape(
-                    (-1, self.out_channels)).dot(t_flt.reshape((self.out_channels, -1))).reshape(
-                    (-1, k0, k1, padded_dX.shape[-1]))
-        t, b, l, r = (self._p_tblr[0], padded_dX.shape[1] - self._p_tblr[1],
-                      self._p_tblr[2], padded_dX.shape[2] - self._p_tblr[3])
         dX = padded_dX[:, t:b, l:r, :]
 
         return dX, grads
@@ -279,46 +228,6 @@ class Flatten(Layer):
         return dX
 
 
-class BatchNorm(Layer):
-
-    def __init__(self, X_dim):
-        self.d_X, self.h_X, self.w_X = X_dim
-        self.gamma = np.ones((1, int(np.prod(X_dim))))
-        self.beta = np.zeros((1, int(np.prod(X_dim))))
-        self.params = [self.gamma, self.beta]
-
-    def forward(self, X):
-        self.n_X = X.shape[0]
-        self.X_shape = X.shape
-
-        self.X_flat = X.ravel().reshape(self.n_X, -1)
-        self.mu = np.mean(self.X_flat, axis=0)
-        self.var = np.var(self.X_flat, axis=0)
-        self.X_norm = (self.X_flat - self.mu) / np.sqrt(self.var + 1e-8)
-        out = self.gamma * self.X_norm + self.beta
-
-        return out.reshape(self.X_shape)
-
-    def backward(self, delta):
-        delta = delta.ravel().reshape(delta.shape[0], -1)
-        X_mu = self.X_flat - self.mu
-        var_inv = 1. / np.sqrt(self.var + 1e-8)
-
-        dbeta = np.sum(delta, axis=0)
-        dgamma = np.sum(delta * self.X_norm, axis=0)
-
-        grads = {'dW': dbeta,
-                 'db': dgamma}
-
-        dX_norm = delta * self.gamma
-        dvar = np.sum(dX_norm * X_mu, axis=0) * - 0.5 * (self.var + 1e-8) ** (-3 / 2)
-        dmu = np.sum(dX_norm * -var_inv, axis=0) + dvar * 1 / self.n_X * np.sum(-2. * X_mu, axis=0)
-        dX = (dX_norm * var_inv) + (dmu / self.n_X) + (dvar * 2 / self.n_X * X_mu)
-
-        dX = dX.reshape(self.X_shape)
-        return dX, grads
-
-
 class Dropout(Layer):
 
     def __init__(self, p=0.5):
@@ -326,7 +235,7 @@ class Dropout(Layer):
         self.params = []
 
     def forward(self, X):
-        self.mask = np.random.binomial(1, self.prob, size=X.shape) / self.prob
+        self.mask = np.random.binomial(n=1., p=1. - self.prob, size=X.shape)
         return (X * self.mask).reshape(X.shape)
 
     def backward(self, delta):
@@ -335,7 +244,6 @@ class Dropout(Layer):
 
 
 def get_padded_and_tmp_out(img, kernel_size, strides, out_channels, padding):
-    # according to: http://machinelearninguru.com/computer_vision/basics/convolution/convolution_layer.html
     batch, h, w = img.shape[:3]
     (fh, fw), (sh, sw) = kernel_size, strides
 

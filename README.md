@@ -103,7 +103,7 @@ important optimization algorithms used as core solver for many machine learning 
             - [x] Avg Pooling
             - [x] Flatten
             - [x] Dropout
-            - [x] Batch Normalization
+            - [ ] Batch Normalization
             - [ ] Recurrent
             - [ ] Long Short-Term Memory (LSTM)
             - [ ] Gated Recurrent Units (GRU)
