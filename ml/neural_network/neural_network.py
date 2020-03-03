@@ -29,14 +29,25 @@ class NeuralNetworkLossFunction(OptimizationFunction):
 
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
-        self.y_pred = self.neural_net.forward(X)
-        return self.loss(self.y_pred, y) + np.sum(np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
-                                                         if isinstance(layer, ParamLayer)) +
-                                                  np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
-                                                         if isinstance(layer, ParamLayer) and layer.use_bias)) / len(X)
+        return self.loss(self.neural_net.forward(X), y) + \
+               np.sum(np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
+                             if isinstance(layer, ParamLayer)) +
+                      np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
+                             if isinstance(layer, ParamLayer) and layer.use_bias)) / X.shape[0]
 
     def jacobian(self, packed_weights_biases, X, y):
-        return self.neural_net._pack(*self.neural_net.backward(self.loss.delta(self.y_pred, y)))
+        return self.neural_net._pack(*self.neural_net.backward(self.delta(self.neural_net.forward(X), y)))
+
+    def delta(self, y_pred, y_true):
+        """
+        The calculation of delta here works with following
+        combinations of loss function and output activation:
+        mean squared error + identity
+        categorical cross entropy + softmax
+        binary cross entropy + sigmoid
+        """
+        assert y_pred.shape == y_true.shape
+        return y_pred - y_true
 
     def plot(self, epochs, loss_history):
         fig, ax = plt.subplots()
@@ -115,12 +126,7 @@ class NeuralNetwork(Layer, Learner):
 
     def fit(self, X, y, loss, optimizer=GradientDescent, learning_rate=0.01, momentum_type='none', momentum=0.9,
             epochs=100, batch_size=None, k_folds=0, max_f_eval=1000, early_stopping=True, verbose=False, plot=False):
-        if y.ndim == 1:
-            y = y.reshape((-1, 1))
-        if isinstance(self.layers[-1]._a, Linear):
-            self.task = 'regression'
-        else:
-            self.task = 'classification'
+        if not isinstance(self.layers[-1]._a, Linear):  # classification
             y = to_categorical(y)
 
         self._store_meta_info()
@@ -146,4 +152,4 @@ class NeuralNetwork(Layer, Learner):
         return self
 
     def predict(self, X):
-        return np.argmax(self.forward(X), axis=1) if self.task is 'classification' else self.forward(X)
+        return self.forward(X) if isinstance(self.layers[-1]._a, Linear) else np.argmax(self.forward(X), axis=1)

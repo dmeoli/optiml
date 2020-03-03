@@ -15,7 +15,7 @@ def test_neural_network_classification():
                         FullyConnected(4, 4, sigmoid),
                         FullyConnected(4, 3, softmax))
     net.fit(X, y, loss=categorical_cross_entropy, optimizer=BFGS)
-    assert accuracy_score(y, net.predict(X)) >= 0.96
+    assert accuracy_score(y, net.predict(X)) >= 0.98
 
 
 if __name__ == "__main__":

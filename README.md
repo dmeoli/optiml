@@ -83,9 +83,8 @@ important optimization algorithms used as core solver for many machine learning 
         - [x] Losses
             - [x] Mean Squared Error
             - [x] Mean Absolute Error
-            - [x] Binary Cross Entropy
             - [x] Categorical Cross Entropy
-            - [x] Sparse Categorical Cross Entropy
+            - [x] Binary Cross Entropy
         - [x] Regularizers
             - [x] L1
             - [x] L2
