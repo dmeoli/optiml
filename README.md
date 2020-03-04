@@ -52,7 +52,7 @@ important optimization algorithms used as core solver for many machine learning 
                 - [x] Nesterov momentum
             - [x] AdaMax
                 - [x] standard momentum
-                - [x] Nesterov momentum
+                - [x] NadaMax (Nesterov momentum)
             - [x] AdaGrad
                 - [x] standard momentum
                 - [x] Nesterov momentum

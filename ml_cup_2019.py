@@ -36,6 +36,8 @@ momentum = [0.5, 0.6, 0.7, 0.8, 0.9]
 
 activations = [sigmoid, tanh, relu]
 
+learning_rate = [0.001, 0.003, 0.006, 0.009, 0.01, 0.03, 0.06, 0.09, 0.1, 0.3, 0.6, 0.9]
+
 learning_rate_epochs = {1000: 0.001,
                         500: 0.01,
                         200: 0.05,
@@ -59,7 +61,7 @@ if __name__ == '__main__':
         FullyConnected(20, 2, linear, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True))
 
     net.fit(X_train, y_train, loss=mean_squared_error, optimizer=BFGS, learning_rate=0.01, momentum_type='nesterov',
-            momentum=0.9, epochs=1000, batch_size=None, max_f_eval=25000, verbose=True, plot=True)
+            momentum=0.9, epochs=1000, batch_size=200, max_f_eval=25000, verbose=True, plot=True)
     pred = net.predict(X_test)
     print(mean_squared_error(pred, y_test))
     print(mean_euclidean_error(pred, y_test))
