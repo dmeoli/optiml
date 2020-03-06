@@ -4,7 +4,7 @@ import numpy as np
 
 from ml.initializers import random_uniform
 from optimization.optimization_function import OptimizationFunction
-from optimization.unconstrained.line_search import ArmijoWolfeLineSearch, BacktrackingLineSearch
+from optimization.line_search import ArmijoWolfeLineSearch, BacktrackingLineSearch
 from utils import iter_mini_batches
 
 

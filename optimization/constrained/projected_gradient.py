@@ -28,7 +28,7 @@ class ProjectedGradient(ConstrainedOptimizer):
     # Apply the Projected Gradient algorithm with exact line search to the
     # convex Box-Constrained Quadratic program
     #
-    #  (P) min { (1/2) x^T * Q * x + q * x : 0 <= x <= u }
+    #  (P) min { (1/2) x^T * Q * x + q * x : 0 <= x <= ub }
     #
     # encoded in the structure BCQP.
     #
@@ -40,7 +40,7 @@ class ProjectedGradient(ConstrainedOptimizer):
     #
     #   = BCQP.q: n \times 1 real vector
     #
-    #   = BCQP.u: n \times 1 real vector > 0
+    #   = BCQP.ub: n \times 1 real vector > 0
     #
     # - eps (real scalar, optional, default value 1e-6): the accuracy in the
     #   stopping criterion: the algorithm is stopped when the norm of the
@@ -76,7 +76,7 @@ class ProjectedGradient(ConstrainedOptimizer):
         if self.verbose:
             print('iter\tf(x)\t\t||g(x)||')
 
-        x = self.f.u / 2  # start from the middle of the box
+        x = self.f.ub / 2  # start from the middle of the box
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
@@ -86,7 +86,7 @@ class ProjectedGradient(ConstrainedOptimizer):
             d = -g
 
             # project the direction over the active constraints
-            d[self.f.u - x <= 1e-12 and d > 0] = 0
+            d[self.f.ub - x <= 1e-12 and d > 0] = 0
             d[x <= 1e-12 and d < 0] = 0
 
             # compute the norm of the (projected) gradient
@@ -105,10 +105,10 @@ class ProjectedGradient(ConstrainedOptimizer):
 
             # first, compute the maximum feasible step size maxt such that
             #
-            #   0 <= x[i] + maxt * d[i] <= u[i]   for all i
+            #   0 <= x[i] + maxt * d[i] <= ub[i]   for all i
 
             ind = d > 0  # positive gradient entries
-            maxt = min((self.f.u(ind) - x(ind)) / d[ind])
+            maxt = min((self.f.ub(ind) - x(ind)) / d[ind])
             ind = d < 0  # negative gradient entries
             maxt = min(maxt, min(-x(ind) / d[ind]))
 

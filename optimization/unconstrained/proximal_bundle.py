@@ -46,7 +46,7 @@ class ProximalBundle(Optimizer):
     #   equal to mu * eps. If a negative value is provided, this is used in a
     #   *relative* stopping criterion: the algorithm is stopped when the norm
     #   of the direction is less than or equal to
-    #      mu * (- eps) * || norm of the first gradient ||.
+    #      mu * (-eps) * || norm of the first gradient ||.
     #
     # - max_f_eval (integer scalar, optional, default value 1000): the maximum
     #   number of function evaluations (hence, iterations, since there is
