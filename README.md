@@ -75,7 +75,10 @@ important optimization algorithms used as core solver for many machine learning 
             - [x] rbf kernel
     - Regression
         - [x] Linear Regression
-        - [ ] Support Vector Regression
+            - [x] Regularizers
+                - [x] L1 or Lasso Regression
+                - [x] L2 or Ridge Regression
+        - [x] Support Vector Regression
             - [x] linear kernel
             - [x] polynomial kernel
             - [x] rbf kernel

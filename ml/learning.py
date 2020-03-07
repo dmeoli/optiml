@@ -4,6 +4,7 @@ import numpy as np
 
 from ml.losses import mean_squared_error, categorical_cross_entropy
 from ml.neural_network.activations import Sigmoid
+from ml.regularizers import l2, l1
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
 
@@ -80,6 +81,32 @@ class MultiClassClassifier(Learner):
             return np.argmax(vote, axis=1)
 
 
+class MultiOutputLearner(Learner):
+    def __init__(self, learner):
+        self.learner = learner
+        self.learners = []
+
+    def fit(self, X, y, **kwargs):
+        """
+        Trains n_output learner
+        :param X: array of size [n_samples, n_features] holding the training samples
+        :param y: array of size [n_samples, n_target] holding the class labels
+        :return: array of classifiers
+        """
+        self.n_output = y.shape[1]
+        for target in self.n_output:
+            clf = self.learner(**kwargs)
+            clf.fit(X, y[:, target].ravel())
+            self.learners.append(copy.deepcopy(clf))
+        return self
+
+    def predict(self, X):
+        y_pred = np.zeros(X.shape[0], self.n_output)
+        for target in self.n_output:
+            y_pred[:, target] = self.learners[target].predict(X)
+        return y_pred
+
+
 class LinearModelLossFunction(OptimizationFunction):
 
     def __init__(self, X, y, linear_model, loss):
@@ -105,20 +132,23 @@ class LinearModelLossFunction(OptimizationFunction):
         return self.X, self.y
 
     def function(self, theta, X, y):
-        return self.loss(self.linear_model._predict(X, theta), y)
+        return self.loss(self.linear_model._predict(X, theta), y) + self.linear_model.regularization(theta)
 
     def jacobian(self, theta, X, y):
-        return np.dot(X.T, self.linear_model._predict(X, theta) - y) / X.shape[0]
+        return np.dot(X.T, self.linear_model._predict(X, theta) - y) + self.linear_model.lmbda * theta / X.shape[0]
 
 
 class LinearRegressionLearner(Learner):
 
-    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None, max_f_eval=1000):
+    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None,
+                 max_f_eval=1000, regularization=l1, lmbda=0.01):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
         self.max_f_eval = max_f_eval
+        self.regularization = regularization
+        self.lmbda = lmbda
 
     def fit(self, X, y, verbose=False):
         loss = LinearModelLossFunction(X, y, self, mean_squared_error)
@@ -139,11 +169,13 @@ class LinearRegressionLearner(Learner):
 
 class LogisticRegressionLearner(Learner):
 
-    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None):
+    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None, regularization=l2, lmbda=0.01):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
+        self.regularization = regularization
+        self.lmbda = lmbda
 
     def fit(self, X, y):
         self.labels = np.unique(y)

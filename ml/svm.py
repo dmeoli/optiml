@@ -44,7 +44,7 @@ class SVM(Learner):
         b = np.zeros(1)
         # make sure P is positive definite
         P += np.eye(P.shape[0]).__mul__(1e-3)
-        self.alphas = solve_qp(P, q, G, h, A, b, sym_proj=True)
+        self.alphas = solve_qp(P, q, G, h, A, b, sym_proj=True)  # Lagrange multipliers
 
         sv_idx = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
         self.sv_x, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
@@ -117,8 +117,7 @@ class SVR(Learner):
         h = np.hstack((np.zeros(2 * m), np.zeros(2 * m) + self.C))
         A = np.hstack((np.ones(m), -np.ones(m)))
         b = np.zeros(1)
-        self.alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True)
-        self.w = self.alphas[:m]
+        self.alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
 
         sv_idx = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
         self.sv_x, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
