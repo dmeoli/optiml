@@ -48,7 +48,7 @@ class SVC(SVM):
         A = y.reshape((1, -1))  # Aeq
         b = np.zeros(1)  # beq
         # make sure P is positive definite
-        P += np.eye(P.shape[0]).__mul__(1e-3)
+        P += np.identity(P.shape[0]).__mul__(1e-3)
         self.alphas = solve_qp(P, q, G, h, A, b, sym_proj=True)  # Lagrange multipliers
 
         sv_idx = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
@@ -104,12 +104,13 @@ class SVR(SVM):
              self.kernel(X, X, self.gamma)
              if self.kernel is rbf_kernel else
              self.kernel(X, X))  # linear kernel
-        P = np.vstack((np.hstack((K, -K)),
-                       np.hstack((-K, K))))  # quadratic part
+        # quadratic part
+        P = np.vstack((np.hstack((K, -K)),  # a_p, a_n
+                       np.hstack((-K, K))))  # a_n, a_p
         q = np.hstack((-y, y)) + self.eps  # linear part
-        G = np.vstack((-np.eye(2 * m), np.eye(2 * m)))  # lower bounds
+        G = np.vstack((-np.identity(2 * m), np.identity(2 * m)))  # lower bounds
         h = np.hstack((np.zeros(2 * m), np.zeros(2 * m) + self.C))  # upper bounds
-        A = np.hstack((np.ones(m), -np.ones(m)))  # Aeq
+        A = np.hstack((np.ones(m), -np.ones(m))).reshape((1, -1))  # Aeq
         b = np.zeros(1)  # beq
         self.alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
 
@@ -120,12 +121,13 @@ class SVR(SVM):
         #     self.w = np.dot(self.alphas[:m] - self.alphas[m:], self.sv_X)
 
         # calculate b: average over all support vectors
+        sv_boundary = self.alphas[sv_idx] < self.C - self.eps
         self.b = np.mean(y - self.eps - np.dot(self.alphas[:m] - self.alphas[m:],
-                                               self.kernel(X, self.sv_X, self.degree)
+                                               self.kernel(self.sv_X, self.sv_X[sv_boundary], self.degree)
                                                if self.kernel is polynomial_kernel else
-                                               self.kernel(X, self.sv_X, self.gamma)
+                                               self.kernel(self.sv_X, self.sv_X[sv_boundary], self.gamma)
                                                if self.kernel is rbf_kernel else  # linear kernel
-                                               self.kernel(X, self.sv_X)))
+                                               self.kernel(self.sv_X, self.sv_X[sv_boundary])))
         return self
 
     def predict(self, X):
