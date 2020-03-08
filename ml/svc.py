@@ -2,7 +2,7 @@ import numpy as np
 from qpsolvers import solve_qp
 
 from ml.kernels import rbf_kernel, linear_kernel, polynomial_kernel
-from ml.learning import Learner
+from ml.learning import Learner, MultiOutputLearner
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error
 from optimization.constrained.projected_gradient import ProjectedGradient
@@ -15,17 +15,17 @@ class SVM(Learner):
         if gamma not in ('scale', 'auto'):
             raise ValueError('unknown gamma type {}'.format(gamma))
         self.gamma = gamma
-        self.C = C  # hyper-parameter
+        self.C = C
         self.eps = eps
         self.n_sv = -1
-        self.sv_X, self.sv_y, = np.zeros(0), np.zeros(0)
         self.w = None
-        self.b = 0.  # intercept
+        self.b = 0.
 
 
 class SVC(SVM):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.01):
         super().__init__(kernel, degree, gamma, C, eps)
+        self.sv_X, self.sv_y, = np.zeros(0), np.zeros(0)
         self.alphas = np.zeros(0)
 
     def fit(self, X, y):
@@ -43,7 +43,7 @@ class SVC(SVM):
         Q = H * np.outer(y, y)  # quadratic part
         q = -np.ones(m)  # linear part
         lb = np.vstack((-np.identity(m), np.identity(m)))  # lower bounds
-        ub = np.hstack((np.zeros(m), np.ones(m) * self.C))  # upper bounds
+        ub = np.hstack((np.zeros(m), np.zeros(m) + self.C))  # upper bounds
         Aeq = y.reshape((1, -1))
         beq = np.zeros(1)
         # make sure Q is positive definite
@@ -154,6 +154,21 @@ if __name__ == '__main__':
     from sklearn.svm import SVR
 
     svr_sk = SVR(kernel='rbf', degree=3., epsilon=0.01).fit(X, y)
+    pred = svr_sk.predict(X)
+    print(mean_squared_error(pred, y))
+    print(mean_euclidean_error(pred, y))
+
+    ml_cup_train = np.delete(np.genfromtxt('./data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
+    X, y = ml_cup_train[:, :-2], ml_cup_train[:, -2:]
+
+    svr = MultiOutputLearner(SVR).fit(X, y, kernel=rbf_kernel, degree=3., eps=0.01)
+    pred = svr.predict(X)
+    print(mean_squared_error(pred, y))
+    print(mean_euclidean_error(pred, y))
+
+    from sklearn.multioutput import MultiOutputRegressor
+
+    svr_sk = MultiOutputRegressor(SVR(kernel='rbf', degree=3., epsilon=0.01)).fit(X, y)
     pred = svr_sk.predict(X)
     print(mean_squared_error(pred, y))
     print(mean_euclidean_error(pred, y))
