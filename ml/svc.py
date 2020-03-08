@@ -113,19 +113,19 @@ class SVR(SVM):
         b = np.zeros(1)  # beq
         self.alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
 
-        sv_idx = list(filter(lambda i: self.alphas[i] > 1e-5, range(len(y))))
+        sv_idx = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
         self.sv_X, self.sv_y = X[sv_idx], y[sv_idx]
-        # self.n_sv = len(sv_idx)
-        if self.kernel == linear_kernel:
-            self.w = np.dot(self.alphas[:m] - self.alphas[m:], self.sv_X)
+        self.n_sv = len(sv_idx)
+        # if self.kernel == linear_kernel:
+        #     self.w = np.dot(self.alphas[:m] - self.alphas[m:], self.sv_X)
 
         # calculate b: average over all support vectors
         self.b = np.mean(y - self.eps - np.dot(self.alphas[:m] - self.alphas[m:],
-                                               self.kernel(self.sv_X, self.sv_X, self.degree)
+                                               self.kernel(X, self.sv_X, self.degree)
                                                if self.kernel is polynomial_kernel else
-                                               self.kernel(self.sv_X, self.sv_X, self.gamma)
+                                               self.kernel(X, self.sv_X, self.gamma)
                                                if self.kernel is rbf_kernel else  # linear kernel
-                                               self.kernel(self.sv_X, self.sv_X)))
+                                               self.kernel(X, self.sv_X)))
         return self
 
     def predict(self, X):
