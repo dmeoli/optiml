@@ -118,6 +118,7 @@ class SVR(SVM):
         self.n_sv = len(sv_idx)
         if self.kernel == linear_kernel:
             self.w = np.dot(self.alphas[:m] - self.alphas[m:], X)
+        self.X = X
 
         # calculate b: average over all support vectors
         sv_boundary = self.alphas[sv_idx] < self.C - self.eps
@@ -134,12 +135,12 @@ class SVR(SVM):
         Predicts the score of a given example.
         """
         if self.w is None:
-            return np.dot(self.alphas[:X.shape[1]] - self.alphas[X.shape[1]:],
-                          self.kernel(self.sv_X, X, self.degree)
+            return np.dot(self.alphas[:self.X.shape[0]] - self.alphas[self.X.shape[0]:],  # a_p, a_n
+                          self.kernel(self.X, X, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(self.sv_X, X, self.gamma)
+                          self.kernel(self.X, X, self.gamma)
                           if self.kernel is rbf_kernel else
-                          self.kernel(self.sv_X, X)) + self.b  # linear kernel
+                          self.kernel(self.X, X)) + self.b  # linear kernel
         return np.dot(X, self.w) + self.b
 
 
@@ -147,14 +148,14 @@ if __name__ == '__main__':
     ml_cup_train = np.delete(np.genfromtxt('./data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
     X, y = ml_cup_train[:, :-2], ml_cup_train[:, -1:].ravel()
 
-    svr = SVR(kernel=linear_kernel).fit(X, y)
+    svr = SVR(kernel=rbf_kernel, degree=3., eps=0.01).fit(X, y)
     pred = svr.predict(X)
     print(mean_squared_error(pred, y))
     print(mean_euclidean_error(pred, y))
 
     from sklearn.svm import SVR
 
-    svr_sk = SVR(epsilon=0.01, kernel='linear').fit(X, y)
+    svr_sk = SVR(kernel='rbf', degree=3., epsilon=0.01).fit(X, y)
     pred = svr_sk.predict(X)
     print(mean_squared_error(pred, y))
     print(mean_euclidean_error(pred, y))
