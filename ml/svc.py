@@ -115,19 +115,18 @@ class SVR(SVM):
         self.alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
 
         sv_idx = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
-        self.sv_X, self.sv_y = X[sv_idx], y[sv_idx]
         self.n_sv = len(sv_idx)
-        # if self.kernel == linear_kernel:
-        #     self.w = np.dot(self.alphas[:m] - self.alphas[m:], self.sv_X)
+        if self.kernel == linear_kernel:
+            self.w = np.dot(self.alphas[:m] - self.alphas[m:], X)
 
         # calculate b: average over all support vectors
         sv_boundary = self.alphas[sv_idx] < self.C - self.eps
         self.b = np.mean(y - self.eps - np.dot(self.alphas[:m] - self.alphas[m:],
-                                               self.kernel(self.sv_X, self.sv_X[sv_boundary], self.degree)
+                                               self.kernel(X, X, self.degree)
                                                if self.kernel is polynomial_kernel else
-                                               self.kernel(self.sv_X, self.sv_X[sv_boundary], self.gamma)
+                                               self.kernel(X, X, self.gamma)
                                                if self.kernel is rbf_kernel else  # linear kernel
-                                               self.kernel(self.sv_X, self.sv_X[sv_boundary])))
+                                               self.kernel(X, X)))
         return self
 
     def predict(self, X):
@@ -150,5 +149,12 @@ if __name__ == '__main__':
 
     svr = SVR(kernel=linear_kernel).fit(X, y)
     pred = svr.predict(X)
+    print(mean_squared_error(pred, y))
+    print(mean_euclidean_error(pred, y))
+
+    from sklearn.svm import SVR
+
+    svr_sk = SVR(epsilon=0.01, kernel='linear').fit(X, y)
+    pred = svr_sk.predict(X)
     print(mean_squared_error(pred, y))
     print(mean_euclidean_error(pred, y))
