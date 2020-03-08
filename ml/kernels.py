@@ -5,10 +5,10 @@ def linear_kernel(X, y):
     return np.dot(X, y.T)
 
 
-def polynomial_kernel(X, y, b=0., degree=3.):
+def polynomial_kernel(X, y, degree=3.):
     """A non-stationary kernel well suited for problems
     where all the training data is normalized"""
-    return (np.dot(X, y.T) + b) ** degree
+    return (np.dot(X, y.T)) ** degree
 
 
 def rbf_kernel(X, y, gamma='scale'):
@@ -19,5 +19,5 @@ def rbf_kernel(X, y, gamma='scale'):
                             np.dot(np.ones((X.shape[0], X.shape[1])), y.T ** 2) - 2. * np.dot(X, y.T)))
 
 
-def sigmoid_kernel(X, y, r=0.):
-    return np.tanh(np.dot(X, y.T) + r)
+def sigmoid_kernel(X, y):
+    return np.tanh(np.dot(X, y.T))

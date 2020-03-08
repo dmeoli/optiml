@@ -19,7 +19,6 @@ class SVM(Learner):
         self.eps = eps
         self.n_sv = -1
         self.sv_X, self.sv_y, = np.zeros(0), np.zeros(0)
-        self.alphas = np.zeros(0)
         self.w = None
         self.b = 0.  # intercept
 
@@ -27,6 +26,7 @@ class SVM(Learner):
 class SVC(SVM):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.01):
         super().__init__(kernel, degree, gamma, C, eps)
+        self.alphas = np.zeros(0)
 
     def fit(self, X, y):
         """
@@ -88,6 +88,8 @@ class SVC(SVM):
 class SVR(SVM):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.01):
         super().__init__(kernel, degree, gamma, C, eps)
+        self.alphas_p = np.zeros(0)
+        self.alphas_n = np.zeros(0)
 
     def fit(self, X, y, optimizer=ProjectedGradient, max_iter=1000):
         """
@@ -109,15 +111,16 @@ class SVR(SVM):
         ub = np.hstack((np.zeros(2 * m), np.zeros(2 * m) + self.C))  # upper bounds
         Aeq = np.hstack((np.ones(m), -np.ones(m))).reshape((1, -1))
         beq = np.zeros(1)
-        self.alphas = solve_qp(Q, q, lb, ub, Aeq, beq, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
+        alphas = solve_qp(Q, q, lb, ub, Aeq, beq, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
+        self.alphas_p = alphas[:m]
+        self.alphas_n = alphas[m:]
 
-        sv_idx = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
+        sv_idx = list(filter(lambda i: alphas[i] > self.eps, range(len(y))))
         self.n_sv = len(sv_idx)
         if self.kernel == linear_kernel:
-            self.w = np.dot(self.alphas[:m] - self.alphas[m:], X)
-        self.X = X
+            self.w = np.dot(self.alphas_p - self.alphas_n, X)
 
-        self.b = np.mean(y - self.eps - np.dot(self.alphas[:m] - self.alphas[m:],  # a_p, a_n
+        self.b = np.mean(y - self.eps - np.dot(self.alphas_p - self.alphas_n,
                                                self.kernel(X, X, self.degree)
                                                if self.kernel is polynomial_kernel else
                                                self.kernel(X, X, self.gamma)
@@ -130,12 +133,12 @@ class SVR(SVM):
         Predicts the score of a given example.
         """
         if self.w is None:
-            return np.dot(self.alphas[:self.X.shape[0]] - self.alphas[self.X.shape[0]:],  # a_p, a_n
-                          self.kernel(self.X, X, self.degree)
+            return np.dot(self.alphas_p - self.alphas_n,
+                          self.kernel(X, X, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(self.X, X, self.gamma)
+                          self.kernel(X, X, self.gamma)
                           if self.kernel is rbf_kernel else
-                          self.kernel(self.X, X)) + self.b  # linear kernel
+                          self.kernel(X, X)) + self.b  # linear kernel
         return np.dot(X, self.w) + self.b
 
 
