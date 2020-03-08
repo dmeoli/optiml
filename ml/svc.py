@@ -34,22 +34,21 @@ class SVC(SVM):
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
         """
-        # In QP formulation (dual): m variables, 2m+1 constraints (1 equation, 2m inequations)
         m = len(y)  # m = n_samples
-        K = (self.kernel(X, X, self.degree)
+        H = (self.kernel(X, X, self.degree)
              if self.kernel is polynomial_kernel else
              self.kernel(X, X, self.gamma)
              if self.kernel is rbf_kernel else
              self.kernel(X, X))  # linear kernel
-        P = K * np.outer(y, y)  # quadratic part
+        Q = H * np.outer(y, y)  # quadratic part
         q = -np.ones(m)  # linear part
-        G = np.vstack((-np.identity(m), np.identity(m)))  # lower bounds
-        h = np.hstack((np.zeros(m), np.ones(m) * self.C))  # upper bounds
-        A = y.reshape((1, -1))  # Aeq
-        b = np.zeros(1)  # beq
-        # make sure P is positive definite
-        P += np.identity(P.shape[0]).__mul__(1e-3)
-        self.alphas = solve_qp(P, q, G, h, A, b, sym_proj=True)  # Lagrange multipliers
+        lb = np.vstack((-np.identity(m), np.identity(m)))  # lower bounds
+        ub = np.hstack((np.zeros(m), np.ones(m) * self.C))  # upper bounds
+        Aeq = y.reshape((1, -1))
+        beq = np.zeros(1)
+        # make sure Q is positive definite
+        Q += np.identity(Q.shape[0]).__mul__(1e-3)
+        self.alphas = solve_qp(Q, q, lb, ub, Aeq, beq, sym_proj=True)  # Lagrange multipliers
 
         sv_idx = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
         self.sv_X, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
@@ -57,7 +56,6 @@ class SVC(SVM):
         if self.kernel == linear_kernel:
             self.w = np.dot(self.alphas * self.sv_y, self.sv_X)
 
-        # calculate b: average over all support vectors
         sv_boundary = self.alphas < self.C - self.eps
         self.b = np.mean(self.sv_y[sv_boundary] - np.dot(self.alphas * self.sv_y,
                                                          self.kernel(self.sv_X, self.sv_X[sv_boundary], self.degree)
@@ -97,22 +95,21 @@ class SVR(SVM):
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
         """
-        # In QP formulation (dual): m variables, 2m+1 constraints (1 equation, 2m inequations)
         m = len(y)  # m = n_samples
-        K = (self.kernel(X, X, self.degree)
+        H = (self.kernel(X, X, self.degree)
              if self.kernel is polynomial_kernel else
              self.kernel(X, X, self.gamma)
              if self.kernel is rbf_kernel else
              self.kernel(X, X))  # linear kernel
         # quadratic part
-        P = np.vstack((np.hstack((K, -K)),  # a_p, a_n
-                       np.hstack((-K, K))))  # a_n, a_p
+        Q = np.vstack((np.hstack((H, -H)),  # a_p, a_n
+                       np.hstack((-H, H))))  # a_n, a_p
         q = np.hstack((-y, y)) + self.eps  # linear part
-        G = np.vstack((-np.identity(2 * m), np.identity(2 * m)))  # lower bounds
-        h = np.hstack((np.zeros(2 * m), np.zeros(2 * m) + self.C))  # upper bounds
-        A = np.hstack((np.ones(m), -np.ones(m))).reshape((1, -1))  # Aeq
-        b = np.zeros(1)  # beq
-        self.alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
+        lb = np.vstack((-np.identity(2 * m), np.identity(2 * m)))  # lower bounds
+        ub = np.hstack((np.zeros(2 * m), np.zeros(2 * m) + self.C))  # upper bounds
+        Aeq = np.hstack((np.ones(m), -np.ones(m))).reshape((1, -1))
+        beq = np.zeros(1)
+        self.alphas = solve_qp(Q, q, lb, ub, Aeq, beq, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
 
         sv_idx = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
         self.n_sv = len(sv_idx)
@@ -120,9 +117,7 @@ class SVR(SVM):
             self.w = np.dot(self.alphas[:m] - self.alphas[m:], X)
         self.X = X
 
-        # calculate b: average over all support vectors
-        sv_boundary = self.alphas[sv_idx] < self.C - self.eps
-        self.b = np.mean(y - self.eps - np.dot(self.alphas[:m] - self.alphas[m:],
+        self.b = np.mean(y - self.eps - np.dot(self.alphas[:m] - self.alphas[m:],  # a_p, a_n
                                                self.kernel(X, X, self.degree)
                                                if self.kernel is polynomial_kernel else
                                                self.kernel(X, X, self.gamma)
