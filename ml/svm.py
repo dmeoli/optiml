@@ -18,7 +18,7 @@ class SVM(Learner):
         self.C = C  # hyper-parameter
         self.eps = eps
         self.n_sv = -1
-        self.sv_x, self.sv_y, = np.zeros(0), np.zeros(0)
+        self.sv_X, self.sv_y, = np.zeros(0), np.zeros(0)
         self.alphas = np.zeros(0)
         self.w = None
         self.b = 0.  # intercept
@@ -36,30 +36,30 @@ class SVM(Learner):
              self.kernel(X, X, self.gamma)
              if self.kernel is rbf_kernel else
              self.kernel(X, X))  # linear kernel
-        P = K * np.outer(y, y)
-        q = -np.ones(m)
-        G = np.vstack((-np.identity(m), np.identity(m)))
-        h = np.hstack((np.zeros(m), np.ones(m) * self.C))
-        A = y.reshape((1, -1))
-        b = np.zeros(1)
+        P = K * np.outer(y, y)  # quadratic part
+        q = -np.ones(m)  # linear part
+        G = np.vstack((-np.identity(m), np.identity(m)))  # lower bounds
+        h = np.hstack((np.zeros(m), np.ones(m) * self.C))  # upper bounds
+        A = y.reshape((1, -1))  # Aeq
+        b = np.zeros(1)  # beq
         # make sure P is positive definite
         P += np.eye(P.shape[0]).__mul__(1e-3)
         self.alphas = solve_qp(P, q, G, h, A, b, sym_proj=True)  # Lagrange multipliers
 
         sv_idx = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
-        self.sv_x, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
+        self.sv_X, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
         self.n_sv = len(sv_idx)
         if self.kernel == linear_kernel:
-            self.w = np.dot(self.alphas * self.sv_y, self.sv_x)
+            self.w = np.dot(self.alphas * self.sv_y, self.sv_X)
 
         # calculate b: average over all support vectors
         sv_boundary = self.alphas < self.C - self.eps
         self.b = np.mean(self.sv_y[sv_boundary] - np.dot(self.alphas * self.sv_y,
-                                                         self.kernel(self.sv_x, self.sv_x[sv_boundary], self.degree)
+                                                         self.kernel(self.sv_X, self.sv_X[sv_boundary], self.degree)
                                                          if self.kernel is polynomial_kernel else
-                                                         self.kernel(self.sv_x, self.sv_x[sv_boundary], self.gamma)
+                                                         self.kernel(self.sv_X, self.sv_X[sv_boundary], self.gamma)
                                                          if self.kernel is rbf_kernel else  # linear kernel
-                                                         self.kernel(self.sv_x, self.sv_x[sv_boundary])))
+                                                         self.kernel(self.sv_X, self.sv_X[sv_boundary])))
         return self
 
     def predict_score(self, X):
@@ -68,11 +68,11 @@ class SVM(Learner):
         """
         if self.w is None:
             return np.dot(self.alphas * self.sv_y,
-                          self.kernel(self.sv_x, X, self.degree)
+                          self.kernel(self.sv_X, X, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(self.sv_x, X, self.gamma)
+                          self.kernel(self.sv_X, X, self.gamma)
                           if self.kernel is rbf_kernel else
-                          self.kernel(self.sv_x, X, self.degree)) + self.b  # linear kernel
+                          self.kernel(self.sv_X, X)) + self.b  # linear kernel
         return np.dot(X, self.w) + self.b
 
     def predict(self, X):
@@ -92,7 +92,7 @@ class SVR(Learner):
         self.C = C  # hyper-parameter
         self.eps = eps
         self.n_sv = -1
-        self.sv_x, self.sv_y, = np.zeros(0), np.zeros(0)
+        self.sv_X, self.sv_y, = np.zeros(0), np.zeros(0)
         self.alphas = np.zeros(0)
         self.w = None
         self.b = 0.  # intercept
@@ -111,28 +111,26 @@ class SVR(Learner):
              if self.kernel is rbf_kernel else
              self.kernel(X, X))  # linear kernel
         P = np.vstack((np.hstack((K, -K)),
-                       np.hstack((-K, K))))
-        q = np.hstack((-y, y)) + self.eps
-        G = np.vstack((-np.eye(2 * m), np.eye(2 * m)))
-        h = np.hstack((np.zeros(2 * m), np.zeros(2 * m) + self.C))
-        A = np.hstack((np.ones(m), -np.ones(m)))
-        b = np.zeros(1)
+                       np.hstack((-K, K))))  # quadratic part
+        q = np.hstack((-y, y)) + self.eps  # linear part
+        G = np.vstack((-np.eye(2 * m), np.eye(2 * m)))  # lower bounds
+        h = np.hstack((np.zeros(2 * m), np.zeros(2 * m) + self.C))  # upper bounds
+        A = np.hstack((np.ones(m), -np.ones(m)))  # Aeq
+        b = np.zeros(1)  # beq
         self.alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
-
-        sv_idx = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
-        self.sv_x, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
-        self.n_sv = len(sv_idx)
+        sv_idx = list(filter(lambda i: self.alphas[i] > 1e-5, range(len(y))))
+        # self.sv_X, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
+        self.sv_X, self.sv_y = X[sv_idx], y[sv_idx]
+        # self.n_sv = len(sv_idx)
         if self.kernel == linear_kernel:
-            self.w = np.dot(self.alphas * self.sv_y, self.sv_x)
-
+            self.w = np.dot(self.alphas[:m] - self.alphas[m:], self.sv_X)
         # calculate b: average over all support vectors
-        sv_boundary = self.alphas < self.C - self.eps
-        self.b = np.mean(self.sv_y[sv_boundary] - np.dot(self.alphas * self.sv_y,
-                                                         self.kernel(self.sv_x, self.sv_x[sv_boundary], self.degree)
-                                                         if self.kernel is polynomial_kernel else
-                                                         self.kernel(self.sv_x, self.sv_x[sv_boundary], self.gamma)
-                                                         if self.kernel is rbf_kernel else  # linear kernel
-                                                         self.kernel(self.sv_x, self.sv_x[sv_boundary])))
+        self.b = np.mean(y - self.eps - np.dot(self.alphas[:m] - self.alphas[m:],
+                                               self.kernel(self.sv_X, self.sv_X, self.degree)
+                                               if self.kernel is polynomial_kernel else
+                                               self.kernel(self.sv_X, self.sv_X, self.gamma)
+                                               if self.kernel is rbf_kernel else  # linear kernel
+                                               self.kernel(self.sv_X, self.sv_X)))
         return self
 
     def predict(self, X):
@@ -140,12 +138,12 @@ class SVR(Learner):
         Predicts the score of a given example.
         """
         if self.w is None:
-            return np.dot(self.alphas * self.sv_y,
-                          self.kernel(self.sv_x, X, self.degree)
+            return np.dot(self.alphas[:X.shape[1]] - self.alphas[X.shape[1]:],
+                          self.kernel(self.sv_X, X, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(self.sv_x, X, self.gamma)
+                          self.kernel(self.sv_X, X, self.gamma)
                           if self.kernel is rbf_kernel else
-                          self.kernel(self.sv_x, X, self.degree)) + self.b  # linear kernel
+                          self.kernel(self.sv_X, X)) + self.b  # linear kernel
         return np.dot(X, self.w) + self.b
 
 
@@ -153,7 +151,7 @@ if __name__ == '__main__':
     ml_cup_train = np.delete(np.genfromtxt('./data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
     X, y = ml_cup_train[:, :-2], ml_cup_train[:, -1:].ravel()
 
-    svr = SVR(kernel=rbf_kernel).fit(X, y)
+    svr = SVR(kernel=linear_kernel).fit(X, y)
     pred = svr.predict(X)
     print(mean_squared_error(pred, y))
     print(mean_euclidean_error(pred, y))
