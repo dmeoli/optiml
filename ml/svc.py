@@ -23,6 +23,11 @@ class SVM(Learner):
         self.w = None
         self.b = 0.  # intercept
 
+
+class SVC(SVM):
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.01):
+        super().__init__(kernel, degree, gamma, C, eps)
+
     def fit(self, X, y):
         """
         Trains the model by solving a quadratic programming problem.
@@ -82,20 +87,9 @@ class SVM(Learner):
         return np.sign(self.predict_score(X))
 
 
-class SVR(Learner):
+class SVR(SVM):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.01):
-        self.kernel = kernel
-        self.degree = degree
-        if gamma not in ('scale', 'auto'):
-            raise ValueError('unknown gamma type {}'.format(gamma))
-        self.gamma = gamma
-        self.C = C  # hyper-parameter
-        self.eps = eps
-        self.n_sv = -1
-        self.sv_X, self.sv_y, = np.zeros(0), np.zeros(0)
-        self.alphas = np.zeros(0)
-        self.w = None
-        self.b = 0.  # intercept
+        super().__init__(kernel, degree, gamma, C, eps)
 
     def fit(self, X, y, optimizer=ProjectedGradient, max_iter=1000):
         """
@@ -118,12 +112,13 @@ class SVR(Learner):
         A = np.hstack((np.ones(m), -np.ones(m)))  # Aeq
         b = np.zeros(1)  # beq
         self.alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
+
         sv_idx = list(filter(lambda i: self.alphas[i] > 1e-5, range(len(y))))
-        # self.sv_X, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
         self.sv_X, self.sv_y = X[sv_idx], y[sv_idx]
         # self.n_sv = len(sv_idx)
         if self.kernel == linear_kernel:
             self.w = np.dot(self.alphas[:m] - self.alphas[m:], self.sv_X)
+
         # calculate b: average over all support vectors
         self.b = np.mean(y - self.eps - np.dot(self.alphas[:m] - self.alphas[m:],
                                                self.kernel(self.sv_X, self.sv_X, self.degree)
