@@ -1,13 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.constrained.box_constrained_quadratic import BoxConstrainedQuadratic
+from optimization.optimization_function import Quadratic
 
 
 class ConstrainedOptimizer:
     def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        if not isinstance(f, BoxConstrainedQuadratic):
-            raise TypeError('f is not a box constrained quadratic optimization function')
+        if not isinstance(f, Quadratic):
+            raise TypeError('f is not a quadratic function')
         self.f = f
         if not np.isscalar(eps):
             raise ValueError('eps is not a real scalar')
