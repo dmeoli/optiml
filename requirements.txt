@@ -1,4 +1,5 @@
 autograd
+cvxopt
 matplotlib
 numpy
 pytest-cov
