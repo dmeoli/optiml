@@ -100,8 +100,8 @@ class SVR(SVM):
              if self.kernel is rbf_kernel else
              self.kernel(X, X))  # linear kernel
         # quadratic part
-        Q = np.vstack((np.hstack((H, -H)),  # a_p, a_n
-                       np.hstack((-H, H))))  # a_n, a_p
+        Q = np.vstack((np.hstack((H, -H)),  # alphas_p, alphas_n
+                       np.hstack((-H, H))))  # alphas_n, alphas_p
         q = np.hstack((-y, y)) + self.eps  # linear part
         lb = np.vstack((-np.identity(2 * m), np.identity(2 * m)))  # lower bounds
         ub = np.hstack((np.zeros(2 * m), np.zeros(2 * m) + self.C))  # upper bounds
