@@ -8,7 +8,7 @@ from ml.metrics import mean_euclidean_error
 from ml.svm import SVR
 
 if __name__ == '__main__':
-    ml_cup_train = np.delete(np.genfromtxt('./data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
+    ml_cup_train = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
     X, y = ml_cup_train[:, :-2], ml_cup_train[:, -2:]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)

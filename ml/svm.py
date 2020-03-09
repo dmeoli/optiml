@@ -43,11 +43,9 @@ class SVC(SVM):
         q = -np.ones(m)  # linear part
         lb = np.vstack((-np.identity(m), np.identity(m)))  # lower bounds
         ub = np.hstack((np.zeros(m), np.zeros(m) + self.C))  # upper bounds
-        Aeq = y.reshape((1, -1))
+        Aeq = y.astype(np.float).reshape((1, -1))
         beq = np.zeros(1)
-        # make sure Q is positive definite
-        Q += np.identity(Q.shape[0]).__mul__(1e-3)
-        self.alphas = solve_qp(Q, q, lb, ub, Aeq, beq, sym_proj=True)  # Lagrange multipliers
+        self.alphas = solve_qp(Q, q, lb, ub, Aeq, beq, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
 
         sv_idx = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
         self.sv_X, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
