@@ -147,7 +147,7 @@ class LinearModelLossFunction(OptimizationFunction):
 class LinearRegressionLearner(Learner):
 
     def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None,
-                 max_f_eval=1000, regularization=l1, lmbda=0.01):
+                 max_f_eval=1000, regularization=l1, lmbda=0.01, verbose=False):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
@@ -155,15 +155,16 @@ class LinearRegressionLearner(Learner):
         self.max_f_eval = max_f_eval
         self.regularization = regularization
         self.lmbda = lmbda
+        self.verbose = verbose
 
-    def fit(self, X, y, verbose=False):
+    def fit(self, X, y):
         loss = LinearModelLossFunction(X, y, self, mean_squared_error)
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(f=loss, batch_size=self.batch_size, max_iter=self.epochs,
-                                    max_f_eval=self.max_f_eval, verbose=verbose).minimize()[0]
+                                    max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()[0]
         else:
             self.w = self.optimizer(f=loss, batch_size=self.batch_size, step_rate=self.learning_rate,
-                                    max_iter=self.epochs, verbose=verbose).minimize()[0]
+                                    max_iter=self.epochs, verbose=self.verbose).minimize()[0]
         return self
 
     def _predict(self, X, theta):
@@ -175,23 +176,27 @@ class LinearRegressionLearner(Learner):
 
 class LogisticRegressionLearner(Learner):
 
-    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None, regularization=l2, lmbda=0.01):
+    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None,
+                 max_f_eval=1000, regularization=l1, lmbda=0.01, verbose=False):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
+        self.max_f_eval = max_f_eval
         self.regularization = regularization
         self.lmbda = lmbda
+        self.verbose = verbose
 
     def fit(self, X, y):
         self.labels = np.unique(y)
         y = np.where(y == self.labels[0], 0, 1)
         loss = LinearModelLossFunction(X, y, self, cross_entropy)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(f=loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
+            self.w = self.optimizer(f=loss, batch_size=self.batch_size, max_iter=self.epochs,
+                                    max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()[0]
         else:
             self.w = self.optimizer(f=loss, batch_size=self.batch_size, step_rate=self.learning_rate,
-                                    max_iter=self.epochs).minimize()[0]
+                                    max_iter=self.epochs, verbose=self.verbose).minimize()[0]
         return self
 
     def _predict(self, X, theta):
@@ -201,4 +206,4 @@ class LogisticRegressionLearner(Learner):
         return self._predict(X, self.w)
 
     def predict(self, X):
-        return np.where(self.predict_score(X) >= 0.5, self.labels[1], self.labels[0]).astype(int)
+        return np.where(self.predict_score(X) >= 0.5, self.labels[1], self.labels[0]).astype(np.int)

@@ -1,10 +1,10 @@
 from sklearn.model_selection import train_test_split
 
-from ml.kernels import *
+from ml.svm.kernels import *
 from ml.learning import MultiOutputLearner
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error
-from ml.svm import SVR
+from ml.svm.svm import SVR
 
 if __name__ == '__main__':
     ml_cup_train = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)

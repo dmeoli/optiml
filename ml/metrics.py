@@ -12,5 +12,6 @@ def mean_euclidean_error(y_pred, y_true):
 
 
 def r2_score(y_pred, y_true):
+    assert y_pred.shape == y_true.shape
     return 1. - (np.sum(np.square(y_pred - y_true)) /  # sum of square of residuals
                  np.sum(np.square(y_true - np.mean(y_true))))  # total sum of squares

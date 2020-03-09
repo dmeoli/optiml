@@ -1,7 +1,7 @@
 import numpy as np
 from qpsolvers import solve_qp
 
-from ml.kernels import rbf_kernel, linear_kernel, polynomial_kernel
+from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel
 from ml.learning import Learner
 
 
@@ -15,7 +15,7 @@ class SVM(Learner):
         self.C = C
         self.eps = eps
         self.n_sv = -1
-        self.sv_X = np.zeros(0)
+        self.sv = np.zeros(0)
         self.w = None
         self.b = 0.
 
@@ -46,19 +46,18 @@ class SVC(SVM):
         beq = np.zeros(1)
         self.alphas = solve_qp(Q, q, lb, ub, Aeq, beq, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
 
-        sv_idx = list(filter(lambda i: self.alphas[i] > self.eps, range(len(y))))
-        self.sv_X, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
-        self.n_sv = len(sv_idx)
+        sv_idx = np.arange(len(self.alphas))[self.alphas > self.eps]
+        self.sv, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
+        self.n_sv = len(self.alphas)
         if self.kernel == linear_kernel:
-            self.w = np.dot(self.alphas * self.sv_y, self.sv_X)
+            self.w = np.dot(self.alphas * self.sv_y, self.sv)
 
-        sv_boundary = self.alphas < self.C - self.eps
-        self.b = np.mean(self.sv_y[sv_boundary] - np.dot(self.alphas * self.sv_y,
-                                                         self.kernel(self.sv_X, self.sv_X[sv_boundary], self.degree)
-                                                         if self.kernel is polynomial_kernel else
-                                                         self.kernel(self.sv_X, self.sv_X[sv_boundary], self.gamma)
-                                                         if self.kernel is rbf_kernel else  # linear kernel
-                                                         self.kernel(self.sv_X, self.sv_X[sv_boundary])))
+        self.b = np.mean(self.sv_y - np.dot(self.alphas * self.sv_y,
+                                            self.kernel(self.sv, self.sv, self.degree)
+                                            if self.kernel is polynomial_kernel else
+                                            self.kernel(self.sv, self.sv, self.gamma)
+                                            if self.kernel is rbf_kernel else  # linear kernel
+                                            self.kernel(self.sv, self.sv)))
         return self
 
     def predict_score(self, X):
@@ -67,11 +66,11 @@ class SVC(SVM):
         """
         if self.w is None:
             return np.dot(self.alphas * self.sv_y,
-                          self.kernel(self.sv_X, X, self.degree)
+                          self.kernel(self.sv, X, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(self.sv_X, X, self.gamma)
+                          self.kernel(self.sv, X, self.gamma)
                           if self.kernel is rbf_kernel else
-                          self.kernel(self.sv_X, X)) + self.b  # linear kernel
+                          self.kernel(self.sv, X)) + self.b  # linear kernel
         return np.dot(X, self.w) + self.b
 
     def predict(self, X):
@@ -111,9 +110,8 @@ class SVR(SVM):
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 
-        sv_idx = list(filter(lambda i: alphas[i] > self.eps, range(len(y))))
-        self.sv_X = X
-        self.n_sv = len(sv_idx)
+        self.sv = X
+        self.n_sv = len(alphas)
         if self.kernel == linear_kernel:
             self.w = np.dot(self.alphas_p - self.alphas_n, X)
 
@@ -131,9 +129,9 @@ class SVR(SVM):
         """
         if self.w is None:
             return np.dot(self.alphas_p - self.alphas_n,
-                          self.kernel(self.sv_X, X, self.degree)
+                          self.kernel(self.sv, X, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(self.sv_X, X, self.gamma)
+                          self.kernel(self.sv, X, self.gamma)
                           if self.kernel is rbf_kernel else
-                          self.kernel(self.sv_X, X)) + self.b  # linear kernel
+                          self.kernel(self.sv, X)) + self.b  # linear kernel
         return np.dot(X, self.w) + self.b

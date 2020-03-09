@@ -128,6 +128,9 @@ class NeuralNetwork(Layer, Learner):
             epochs=100, batch_size=None, k_folds=0, max_f_eval=1000, early_stopping=True, verbose=False, plot=False):
         if not isinstance(self.layers[-1]._a, Linear):  # classification
             y = to_categorical(y)
+        else:
+            if y.ndim is 1:
+                y = y.reshape((-1, 1))
 
         self._store_meta_info()
 
@@ -152,4 +155,4 @@ class NeuralNetwork(Layer, Learner):
         return self
 
     def predict(self, X):
-        return self.forward(X) if isinstance(self.layers[-1]._a, Linear) else np.argmax(self.forward(X), axis=1)
+        return self.forward(X).ravel() if isinstance(self.layers[-1]._a, Linear) else np.argmax(self.forward(X), axis=1)
