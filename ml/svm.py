@@ -6,7 +6,7 @@ from ml.learning import Learner
 
 
 class SVM(Learner):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.01):
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.1):
         self.kernel = kernel
         self.degree = degree
         if gamma not in ('scale', 'auto'):
@@ -21,7 +21,7 @@ class SVM(Learner):
 
 
 class SVC(SVM):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.01):
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.1):
         super().__init__(kernel, degree, gamma, C, eps)
         self.sv_y = np.zeros(0)
         self.alphas = np.zeros(0)
@@ -82,7 +82,7 @@ class SVC(SVM):
 
 
 class SVR(SVM):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.01):
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.1):
         super().__init__(kernel, degree, gamma, C, eps)
         self.alphas_p = np.zeros(0)
         self.alphas_n = np.zeros(0)
