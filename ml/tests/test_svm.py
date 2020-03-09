@@ -8,7 +8,7 @@ from ml.svm import SVC
 
 def test_svm():
     X, y = load_iris(return_X_y=True)
-    svm = MultiClassClassifier(SVC).fit(X, y)
+    svm = MultiClassClassifier(SVC()).fit(X, y)
     assert accuracy_score(y, svm.predict(X)) >= 0.96
 
 

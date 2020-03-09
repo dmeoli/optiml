@@ -25,7 +25,7 @@ class MultiClassClassifier(Learner):
         self.decision_function = decision_function
         self.n_class, self.classifiers = 0, []
 
-    def fit(self, X, y, **kwargs):
+    def fit(self, X, y):
         """
         Trains n_class or n_class * (n_class - 1) / 2 classifiers
         according to the training method, ovr or ovo respectively.
@@ -40,9 +40,9 @@ class MultiClassClassifier(Learner):
                 y1 = np.array(y)
                 y1[y1 != label] = -1.
                 y1[y1 == label] = 1.
-                clf = self.learner(**kwargs)
+                clf = copy.deepcopy(self.learner)
                 clf.fit(X, y1)
-                self.classifiers.append(copy.deepcopy(clf))
+                self.classifiers.append(clf)
         else:  # use one-vs-one method
             n_labels = len(labels)
             for i in range(n_labels):
@@ -51,9 +51,9 @@ class MultiClassClassifier(Learner):
                     x1, y1 = np.r_[X[neg_id], X[pos_id]], np.r_[y[neg_id], y[pos_id]]
                     y1[y1 == labels[i]] = -1.
                     y1[y1 == labels[j]] = 1.
-                    clf = self.learner(**kwargs)
+                    clf = copy.deepcopy(self.learner)
                     clf.fit(x1, y1)
-                    self.classifiers.append(copy.deepcopy(clf))
+                    self.classifiers.append(clf)
         return self
 
     def predict(self, X):
@@ -92,7 +92,7 @@ class MultiOutputLearner(Learner):
         self.learner = learner
         self.learners = []
 
-    def fit(self, X, y, **kwargs):
+    def fit(self, X, y):
         """
         Trains n_output learner
         :param X: array of size [n_samples, n_features] holding the training samples
@@ -101,9 +101,9 @@ class MultiOutputLearner(Learner):
         """
         self.n_output = y.shape[1]
         for target in range(self.n_output):
-            clf = self.learner(**kwargs)
+            clf = copy.deepcopy(self.learner)
             clf.fit(X, y[:, target].ravel())
-            self.learners.append(copy.deepcopy(clf))
+            self.learners.append(clf)
         return self
 
     def predict(self, X):

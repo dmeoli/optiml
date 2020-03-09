@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
-    svr = MultiOutputLearner(SVR).fit(X_train, y_train, kernel=rbf_kernel, degree=3., eps=0.1)
+    svr = MultiOutputLearner(SVR(kernel=rbf_kernel, degree=3., eps=0.1)).fit(X_train, y_train)
     pred = svr.predict(X_test)
     print(mean_squared_error(pred, y_test))
     print(mean_euclidean_error(pred, y_test))
