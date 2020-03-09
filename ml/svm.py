@@ -3,7 +3,6 @@ from qpsolvers import solve_qp
 
 from ml.kernels import rbf_kernel, linear_kernel, polynomial_kernel
 from ml.learning import Learner
-from optimization.constrained.projected_gradient import ProjectedGradient
 
 
 class SVM(Learner):
@@ -88,7 +87,7 @@ class SVR(SVM):
         self.alphas_p = np.zeros(0)
         self.alphas_n = np.zeros(0)
 
-    def fit(self, X, y, optimizer=ProjectedGradient, max_iter=1000):
+    def fit(self, X, y):
         """
         Trains the model by solving a quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
