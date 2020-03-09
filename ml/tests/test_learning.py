@@ -18,7 +18,7 @@ def test_linear_learner():
 
 def test_logistic_learner():
     X, y = load_iris(return_X_y=True)
-    ll = MultiClassClassifier(LogisticRegressionLearner).fit(X, y, optimizer=BFGS)
+    ll = MultiClassClassifier(LogisticRegressionLearner(optimizer=BFGS)).fit(X, y)
     assert accuracy_score(y, ll.predict(X)) >= 0.96
 
 
