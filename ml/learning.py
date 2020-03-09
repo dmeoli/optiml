@@ -2,7 +2,7 @@ import copy
 
 import numpy as np
 
-from ml.losses import mean_squared_error, categorical_cross_entropy
+from ml.losses import mean_squared_error, cross_entropy
 from ml.neural_network.activations import Sigmoid
 from ml.regularizers import l2, l1
 from optimization.optimization_function import OptimizationFunction
@@ -186,7 +186,7 @@ class LogisticRegressionLearner(Learner):
     def fit(self, X, y):
         self.labels = np.unique(y)
         y = np.where(y == self.labels[0], 0, 1)
-        loss = LinearModelLossFunction(X, y, self, categorical_cross_entropy)
+        loss = LinearModelLossFunction(X, y, self, cross_entropy)
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(f=loss, batch_size=self.batch_size, max_iter=self.epochs).minimize()[0]
         else:

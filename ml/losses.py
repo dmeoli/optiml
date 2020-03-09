@@ -12,7 +12,7 @@ def mean_absolute_error(y_pred, y_true):
     return np.mean(np.abs(y_pred - y_true))
 
 
-def categorical_cross_entropy(y_pred, y_true):
+def cross_entropy(y_pred, y_true):
     """Multi-class classification"""
     assert y_pred.shape == y_true.shape
     return -np.mean(xlogy(y_true, y_pred))

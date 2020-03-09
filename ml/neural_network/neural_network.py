@@ -43,7 +43,7 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         The calculation of delta here works with following
         combinations of loss function and output activation:
         mean squared error + identity
-        categorical cross entropy + softmax
+        cross entropy + softmax
         binary cross entropy + sigmoid
         """
         assert y_pred.shape == y_true.shape

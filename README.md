@@ -65,20 +65,20 @@ important optimization algorithms used as core solver for many machine learning 
             - [x] RMSProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
-                
+                   
 - Machine Learning Models
-    - Classification
-        - [x] Logistic Regression
-        - [x] Support Vector Machine
-            - [x] linear kernel
-            - [x] polynomial kernel
-            - [x] rbf kernel
-    - Regression
-        - [x] Linear Regression
-            - [x] Regularizers
-                - [x] L1 or Lasso Regression
-                - [x] L2 or Ridge Regression
+    - [x] Linear Regression
+        - [x] Regularizers
+            - [x] L1 or Lasso Regression
+            - [x] L2 or Ridge Regression
+    - [x] Logistic Regression
+        - [x] Regularizers
+            - [x] L1 or Lasso
+            - [x] L2 or Ridge or Tikhonov
+    - [x] Support Vector Machines
+        - [x] Support Vector Classifier
         - [x] Support Vector Regression
+        - [x] Kernels
             - [x] linear kernel
             - [x] polynomial kernel
             - [x] rbf kernel
@@ -86,8 +86,8 @@ important optimization algorithms used as core solver for many machine learning 
         - [x] Losses
             - [x] Mean Squared Error
             - [x] Mean Absolute Error
-            - [x] Categorical Cross Entropy
-            - [x] Binary Cross Entropy
+            - [x] Cross Entropy or Log Loss
+            - [x] Binary Cross Entropy or Binary Log Loss
         - [x] Regularizers
             - [x] L1 or Lasso
             - [x] L2 or Ridge or Tikhonov

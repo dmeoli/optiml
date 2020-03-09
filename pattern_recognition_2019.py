@@ -1,6 +1,6 @@
 import numpy as np
 
-from ml.losses import categorical_cross_entropy
+from ml.losses import cross_entropy
 from ml.metrics import accuracy_score
 from ml.neural_network.activations import softmax, relu
 from ml.neural_network.layers import FullyConnected, Conv2D, MaxPool2D, Flatten
@@ -21,7 +21,7 @@ if __name__ == '__main__':
         MaxPool2D(pool_size=(2, 2), strides=(2, 2)),  # => [n,7,7,16]
         Flatten(),  # => [n,7*7*16]
         FullyConnected(n_in=7 * 7 * 16, n_out=10, activation=softmax))
-    cnn.fit(X_train, y_train, loss=categorical_cross_entropy, optimizer=Adam, learning_rate=0.001,
+    cnn.fit(X_train, y_train, loss=cross_entropy, optimizer=Adam, learning_rate=0.001,
             momentum_type='none', momentum=0.9, epochs=300, batch_size=128, max_f_eval=10000, verbose=True, plot=True)
     pred = cnn.predict(X_test)
     print(accuracy_score(pred, y_test))
