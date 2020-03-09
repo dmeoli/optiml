@@ -1,7 +1,6 @@
-import numpy as np
 from sklearn.model_selection import train_test_split
 
-from ml.kernels import rbf_kernel
+from ml.kernels import *
 from ml.learning import MultiOutputLearner
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error

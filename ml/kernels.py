@@ -17,7 +17,3 @@ def rbf_kernel(X, y, gamma='scale'):
     # according to: https://stats.stackexchange.com/questions/239008/rbf-kernel-algorithm-python
     return np.exp(-gamma * (np.dot(X ** 2, np.ones((X.shape[1], y.shape[0]))) +
                             np.dot(np.ones((X.shape[0], X.shape[1])), y.T ** 2) - 2. * np.dot(X, y.T)))
-
-
-def sigmoid_kernel(X, y):
-    return np.tanh(np.dot(X, y.T))
