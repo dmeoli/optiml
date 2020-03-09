@@ -2,9 +2,7 @@ import numpy as np
 from qpsolvers import solve_qp
 
 from ml.kernels import rbf_kernel, linear_kernel, polynomial_kernel
-from ml.learning import Learner, MultiOutputLearner
-from ml.losses import mean_squared_error
-from ml.metrics import mean_euclidean_error
+from ml.learning import Learner
 from optimization.constrained.projected_gradient import ProjectedGradient
 
 
@@ -18,6 +16,7 @@ class SVM(Learner):
         self.C = C
         self.eps = eps
         self.n_sv = -1
+        self.sv_X = np.zeros(0)
         self.w = None
         self.b = 0.
 
@@ -25,7 +24,7 @@ class SVM(Learner):
 class SVC(SVM):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.01):
         super().__init__(kernel, degree, gamma, C, eps)
-        self.sv_X, self.sv_y, = np.zeros(0), np.zeros(0)
+        self.sv_y = np.zeros(0)
         self.alphas = np.zeros(0)
 
     def fit(self, X, y):
@@ -116,6 +115,7 @@ class SVR(SVM):
         self.alphas_n = alphas[m:]
 
         sv_idx = list(filter(lambda i: alphas[i] > self.eps, range(len(y))))
+        self.sv_X = X
         self.n_sv = len(sv_idx)
         if self.kernel == linear_kernel:
             self.w = np.dot(self.alphas_p - self.alphas_n, X)
@@ -134,41 +134,9 @@ class SVR(SVM):
         """
         if self.w is None:
             return np.dot(self.alphas_p - self.alphas_n,
-                          self.kernel(X, X, self.degree)
+                          self.kernel(self.sv_X, X, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(X, X, self.gamma)
+                          self.kernel(self.sv_X, X, self.gamma)
                           if self.kernel is rbf_kernel else
-                          self.kernel(X, X)) + self.b  # linear kernel
+                          self.kernel(self.sv_X, X)) + self.b  # linear kernel
         return np.dot(X, self.w) + self.b
-
-
-if __name__ == '__main__':
-    ml_cup_train = np.delete(np.genfromtxt('./data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
-    X, y = ml_cup_train[:, :-2], ml_cup_train[:, -1:].ravel()
-
-    svr = SVR(kernel=rbf_kernel, degree=3., eps=0.01).fit(X, y)
-    pred = svr.predict(X)
-    print(mean_squared_error(pred, y))
-    print(mean_euclidean_error(pred, y))
-
-    from sklearn.svm import SVR
-
-    svr_sk = SVR(kernel='rbf', degree=3., epsilon=0.01).fit(X, y)
-    pred = svr_sk.predict(X)
-    print(mean_squared_error(pred, y))
-    print(mean_euclidean_error(pred, y))
-
-    ml_cup_train = np.delete(np.genfromtxt('./data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
-    X, y = ml_cup_train[:, :-2], ml_cup_train[:, -2:]
-
-    svr = MultiOutputLearner(SVR).fit(X, y, kernel=rbf_kernel, degree=3., eps=0.01)
-    pred = svr.predict(X)
-    print(mean_squared_error(pred, y))
-    print(mean_euclidean_error(pred, y))
-
-    from sklearn.multioutput import MultiOutputRegressor
-
-    svr_sk = MultiOutputRegressor(SVR(kernel='rbf', degree=3., epsilon=0.01)).fit(X, y)
-    pred = svr_sk.predict(X)
-    print(mean_squared_error(pred, y))
-    print(mean_euclidean_error(pred, y))

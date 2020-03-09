@@ -82,6 +82,12 @@ class MultiClassClassifier(Learner):
 
 
 class MultiOutputLearner(Learner):
+    """Multi target regression
+    This strategy consists of fitting one regressor per target. This is a
+    simple strategy for extending regressors that do not natively support
+    multi-target regression.
+    """
+
     def __init__(self, learner):
         self.learner = learner
         self.learners = []
@@ -94,15 +100,15 @@ class MultiOutputLearner(Learner):
         :return: array of classifiers
         """
         self.n_output = y.shape[1]
-        for target in self.n_output:
+        for target in range(self.n_output):
             clf = self.learner(**kwargs)
             clf.fit(X, y[:, target].ravel())
             self.learners.append(copy.deepcopy(clf))
         return self
 
     def predict(self, X):
-        y_pred = np.zeros(X.shape[0], self.n_output)
-        for target in self.n_output:
+        y_pred = np.zeros((X.shape[0], self.n_output))
+        for target in range(self.n_output):
             y_pred[:, target] = self.learners[target].predict(X)
         return y_pred
 
