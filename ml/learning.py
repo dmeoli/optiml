@@ -4,7 +4,7 @@ import numpy as np
 
 from ml.losses import mean_squared_error, cross_entropy
 from ml.neural_network.activations import Sigmoid
-from ml.regularizers import l2, l1
+from ml.regularizers import l2
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
 
@@ -141,13 +141,14 @@ class LinearModelLossFunction(OptimizationFunction):
         return self.loss(self.linear_model._predict(X, theta), y) + self.linear_model.regularization(theta)
 
     def jacobian(self, theta, X, y):
-        return np.dot(X.T, self.linear_model._predict(X, theta) - y) + self.linear_model.lmbda * theta / X.shape[0]
+        return (np.dot(X.T, self.linear_model._predict(X, theta) - y) +
+                self.linear_model.regularization.derivative(theta)) / X.shape[0]
 
 
 class LinearRegressionLearner(Learner):
 
     def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None,
-                 max_f_eval=1000, regularization=l1, lmbda=0.01, verbose=False):
+                 max_f_eval=1000, regularization=l2, lmbda=0.01, verbose=False):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
@@ -177,7 +178,7 @@ class LinearRegressionLearner(Learner):
 class LogisticRegressionLearner(Learner):
 
     def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None,
-                 max_f_eval=1000, regularization=l1, lmbda=0.01, verbose=False):
+                 max_f_eval=1000, regularization=l2, lmbda=0.01, verbose=False):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size

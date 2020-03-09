@@ -29,11 +29,11 @@ class NeuralNetworkLossFunction(OptimizationFunction):
 
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
-        return self.loss(self.neural_net.forward(X), y) + \
+        return self.loss(self.neural_net.forward(X), y) / X.shape[0] + \
                np.sum(np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
                              if isinstance(layer, ParamLayer)) +
                       np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
-                             if isinstance(layer, ParamLayer) and layer.use_bias)) / X.shape[0]
+                             if isinstance(layer, ParamLayer) and layer.use_bias))
 
     def jacobian(self, packed_weights_biases, X, y):
         return self.neural_net._pack(*self.neural_net.backward(self.delta(self.neural_net.forward(X), y)))
@@ -77,9 +77,9 @@ class NeuralNetwork(Layer, Learner):
         for layer in self.layers[::-1]:
             if isinstance(layer, ParamLayer):
                 delta, grads = layer.backward(delta)
-                weights_grads.append(grads['dW'] + layer.w_reg.lmbda * layer.W)
+                weights_grads.append(grads['dW'] + layer.w_reg.derivative(layer.W))
                 if layer.use_bias:
-                    biases_grads.append(grads['db'] + layer.b_reg.lmbda * layer.b)
+                    biases_grads.append(grads['db'] + layer.b_reg.derivative(layer.b))
             else:
                 delta = layer.backward(delta)
         return weights_grads[::-1], biases_grads[::-1]
