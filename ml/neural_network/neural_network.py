@@ -155,4 +155,10 @@ class NeuralNetwork(Layer, Learner):
         return self
 
     def predict(self, X):
-        return self.forward(X).ravel() if isinstance(self.layers[-1]._a, Linear) else np.argmax(self.forward(X), axis=1)
+        if isinstance(self.layers[-1]._a, Linear):  # regression
+            if self.layers[-1].fan_out is 1:
+                return self.forward(X).ravel()
+            else:
+                return self.forward(X)
+        else:  # classification
+            return np.argmax(self.forward(X), axis=1)

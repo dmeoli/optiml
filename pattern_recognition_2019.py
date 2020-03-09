@@ -23,5 +23,4 @@ if __name__ == '__main__':
         FullyConnected(n_in=7 * 7 * 16, n_out=10, activation=softmax))
     cnn.fit(X_train, y_train, loss=cross_entropy, optimizer=Adam, learning_rate=0.001,
             momentum_type='none', momentum=0.9, epochs=300, batch_size=128, max_f_eval=10000, verbose=True, plot=True)
-    pred = cnn.predict(X_test)
-    print(accuracy_score(pred, y_test))
+    print(accuracy_score(cnn.predict(X_test), y_test))
