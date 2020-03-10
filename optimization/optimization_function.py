@@ -31,7 +31,7 @@ class OptimizationFunction:
         :param x: 1D array of points at which the Jacobian is to be computed.
         :return:  the Jacobian of the function at x.
         """
-        return self.jac(np.asarray(x))
+        return self.jac(x)
 
     def hessian(self, x):
         """
@@ -39,7 +39,7 @@ class OptimizationFunction:
         :param x: 1D array of points at which the Hessian is to be computed.
         :return:  the Hessian matrix of the function at x.
         """
-        return self.hes(np.asarray(x)).reshape((x.size, x.size))
+        return self.hes(x)
 
     def plot(self, x_min, x_max, y_min, y_max):
         raise NotImplementedError

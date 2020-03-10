@@ -16,12 +16,11 @@ from optimization.unconstrained.amsgrad import AMSGrad
 from optimization.unconstrained.conjugate_gradient import NonlinearConjugateGradient
 from optimization.unconstrained.gradient_descent import GradientDescent, SteepestGradientDescent
 from optimization.unconstrained.heavy_ball_gradient import HeavyBallGradient
-from optimization.unconstrained.newton import Newton
 from optimization.unconstrained.quasi_newton import BFGS
 from optimization.unconstrained.rmsprop import RMSProp
 from optimization.unconstrained.rprop import RProp
 
-line_search_optimizers = [NonlinearConjugateGradient, SteepestDescentAcceleratedGradient, Newton,
+line_search_optimizers = [NonlinearConjugateGradient, SteepestDescentAcceleratedGradient,
                           SteepestGradientDescent, HeavyBallGradient, BFGS]
 
 max_f_eval = [10000, 15000, 20000, 25000, 30000]
