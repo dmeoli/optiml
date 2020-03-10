@@ -75,9 +75,9 @@ class NeuralNetwork(Layer, Learner):
         for layer in self.layers[::-1]:
             if isinstance(layer, ParamLayer):
                 delta, grads = layer.backward(delta)
-                weights_grads.append(grads['dW'] + layer.w_reg.derivative(layer.W))
+                weights_grads.append(grads['dW'] + layer.w_reg.jacobian(layer.W))
                 if layer.use_bias:
-                    biases_grads.append(grads['db'] + layer.b_reg.derivative(layer.b))
+                    biases_grads.append(grads['db'] + layer.b_reg.jacobian(layer.b))
             else:
                 delta = layer.backward(delta)
         return weights_grads[::-1], biases_grads[::-1]

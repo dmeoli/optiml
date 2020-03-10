@@ -6,7 +6,7 @@ from ml.metrics import mean_euclidean_error
 from ml.neural_network.activations import sigmoid, tanh, relu, linear
 from ml.neural_network.layers import FullyConnected
 from ml.neural_network.neural_network import NeuralNetwork
-from ml.regularizers import L2
+from ml.regularizers import L2, L1
 from optimization.unconstrained.accelerated_gradient import AcceleratedGradient, SteepestDescentAcceleratedGradient
 from optimization.unconstrained.adadelta import AdaDelta
 from optimization.unconstrained.adagrad import AdaGrad
@@ -43,7 +43,7 @@ learning_rate_epochs = {1000: 0.001,
                         200: 0.05,
                         100: 0.1}
 
-regularizers = [L2(0.01), L2(0.1)]
+regularizers = [L1(0.01), L1(0.1), L2(0.01), L2(0.1)]
 
 k_folds = [3, 5]
 
@@ -56,9 +56,9 @@ if __name__ == '__main__':
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
     net = NeuralNetwork(
-        FullyConnected(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L2(0.1), b_reg=L2(0.1), use_bias=True),
-        FullyConnected(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L2(0.1), b_reg=L2(0.1), use_bias=True),
-        FullyConnected(20, 2, linear, w_init=glorot_uniform, w_reg=L2(0.1), b_reg=L2(0.1), use_bias=True))
+        FullyConnected(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True),
+        FullyConnected(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True),
+        FullyConnected(20, 2, linear, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True))
 
     net.fit(X_train, y_train, loss=mean_squared_error, optimizer=BFGS, learning_rate=0.01, momentum_type='nesterov',
             momentum=0.9, epochs=1000, batch_size=None, max_f_eval=25000, verbose=True, plot=True)

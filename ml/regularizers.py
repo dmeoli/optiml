@@ -8,7 +8,7 @@ class Regularizer:
     def function(self, theta):
         raise NotImplementedError
 
-    def derivative(self, theta):
+    def jacobian(self, theta):
         raise NotImplementedError
 
     def __call__(self, theta):
@@ -22,6 +22,9 @@ class L1(Regularizer):
     def function(self, theta):
         return self.lmbda * np.sum(np.abs(theta))  # or np.linalg.norm(theta, ord=1) ** 2
 
+    def jacobian(self, theta):
+        return self.lmbda * np.sign(theta)
+
 
 class L2(Regularizer):
     def __init__(self, lmbda=0.01):
@@ -30,7 +33,7 @@ class L2(Regularizer):
     def function(self, theta):
         return self.lmbda * np.sum(np.square(theta))  # or np.linalg.norm(theta) ** 2
 
-    def derivative(self, theta):
+    def jacobian(self, theta):
         return self.lmbda * 2 * theta
 
 

@@ -63,7 +63,7 @@ class FullyConnected(ParamLayer):
 
     def backward(self, delta):
         # dW, db
-        dZ = delta * self._a.derivative(self._WX_b)
+        dZ = delta * self._a.jacobian(self._WX_b)
         grads = {'dW': self._X.T.dot(dZ)}
         if self.use_bias:
             grads['db'] = np.sum(dZ, axis=0, keepdims=True)
@@ -120,7 +120,7 @@ class Conv2D(ParamLayer):
     def backward(self, delta):
         # according to:
         # https://medium.com/@2017csm1006/forward-and-backpropagation-in-convolutional-neural-network-4dfa96d7b37e
-        dZ = delta * self._a.derivative(self._WX_b)
+        dZ = delta * self._a.jacobian(self._WX_b)
 
         # dW, db
         dW = np.empty_like(self.W)  # [c,h,w,out]
