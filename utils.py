@@ -9,6 +9,15 @@ def not_test(func):
     return func
 
 
+def load_monk(dataset):
+    if dataset not in (1, 2, 3):
+        raise ValueError('unknown monk dataset type {}'.format(dataset))
+    monks = [np.delete(np.genfromtxt('./ml/data/monks/monks-' + str(dataset) + '.' + type), -1, axis=1)
+             for type in ('train', 'test')]
+    return (monks[0][:, 1:], monks[1][:, 1:],  # X_train, X_test
+            monks[0][:, 0].ravel(), monks[1][:, 0].ravel())  # y_train, y_test
+
+
 def iter_mini_batches(Xy, batch_size):
     """Return an iterator that successively yields tuples containing aligned
     mini batches of size batch_size from sliceable objects given in Xy, in

@@ -1,20 +1,11 @@
 # Machine Learning & Numerical Optimization [![Build Status](https://travis-ci.org/dmeoli/MachineLearningNumericalOptimization.svg?branch=master)](https://travis-ci.org/dmeoli/MachineLearningNumericalOptimization)
 
-This code is an implementation of machine learning models and numerical optimization algorithms developed during the 
-Machine Learning & Numerical Methods and Optimization courses @ [Department of Computer Science](https://www.di.unipi.it/en/) 
-@ [University of Pisa](https://www.unipi.it/index.php/english).
-
-The main focus of this project is to provide a simple, intuitive and modular implementation of some of the most 
-important optimization algorithms used as core solver for many machine learning models.
+This code is a simple and modular implementation of some of the most important optimization algorithms used as core 
+solver for many machine learning models developed during the Machine Learning & Numerical Methods and Optimization 
+courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [University of Pisa](https://www.unipi.it/index.php/english).
 
 ## Contents
 - Optimization Algorithms
-    - Constrained Optimization
-        - [ ] Projected Gradient
-        - [ ] Conditional Gradient or Frank-Wolfe
-        - [ ] Active Set
-        - [ ] Interior Point
-        - [ ] Dual
     - Unconstrained Optimization
         - Exact Line Search Methods
             - [x] Quadratic Steepest Gradient Descent
@@ -65,7 +56,13 @@ important optimization algorithms used as core solver for many machine learning 
             - [x] RMSProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
-                   
+    - Constrained Optimization
+        - [ ] Projected Gradient
+        - [ ] Conditional Gradient or Frank-Wolfe
+        - [ ] Active Set
+        - [ ] Interior Point
+        - [ ] Dual
+                           
 - Machine Learning Models
     - [x] Linear Regression
         - [x] Regularizers
