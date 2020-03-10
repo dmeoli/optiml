@@ -131,7 +131,7 @@ class LinearModelLossFunction(OptimizationFunction):
 
     def f_star(self):
         if self.x_star() is not None:
-            return self.function(self.x_star(), self.X, self.y)
+            return self.loss(self.linear_model._predict(self.X, self.x_star()), self.y)
         return super().f_star()
 
     def args(self):
@@ -142,7 +142,7 @@ class LinearModelLossFunction(OptimizationFunction):
 
     def jacobian(self, theta, X, y):
         return (np.dot(X.T, self.linear_model._predict(X, theta) - y) +
-                self.linear_model.regularization.derivative(theta)) / X.shape[0]
+                self.linear_model.regularization.derivative(theta) / X.shape[0])
 
 
 class LinearRegressionLearner(Learner):

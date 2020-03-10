@@ -29,16 +29,13 @@ class NeuralNetworkLossFunction(OptimizationFunction):
 
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
-        return self.loss(self.neural_net.forward(X), y) / X.shape[0] + \
-               np.sum(np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
-                             if isinstance(layer, ParamLayer)) +
-                      np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
-                             if isinstance(layer, ParamLayer) and layer.use_bias))
+        return (self.loss(self.neural_net.forward(X), y) +
+                np.sum(np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
+                              if isinstance(layer, ParamLayer)) +
+                       np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
+                              if isinstance(layer, ParamLayer) and layer.use_bias)) / X.shape[0])
 
     def jacobian(self, packed_weights_biases, X, y):
-        return self.neural_net._pack(*self.neural_net.backward(self.delta(self.neural_net.forward(X), y)))
-
-    def delta(self, y_pred, y_true):
         """
         The calculation of delta here works with following
         combinations of loss function and output activation:
@@ -46,8 +43,9 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         cross entropy + softmax
         binary cross entropy + sigmoid
         """
-        assert y_pred.shape == y_true.shape
-        return y_pred - y_true
+        y_pred = self.neural_net.forward(X)
+        assert y_pred.shape == y.shape
+        return self.neural_net._pack(*self.neural_net.backward(y_pred - y))
 
     def plot(self, epochs, loss_history):
         fig, ax = plt.subplots()
