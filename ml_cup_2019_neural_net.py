@@ -56,9 +56,9 @@ if __name__ == '__main__':
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
     net = NeuralNetwork(
-        FullyConnected(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L2(0.01), b_reg=L2(0.01), use_bias=True),
-        FullyConnected(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L2(0.01), b_reg=L2(0.01), use_bias=True),
-        FullyConnected(20, 2, linear, w_init=glorot_uniform, w_reg=L2(0.01), b_reg=L2(0.01), use_bias=True))
+        FullyConnected(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L2(0.1), b_reg=L2(0.1), use_bias=True),
+        FullyConnected(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L2(0.1), b_reg=L2(0.1), use_bias=True),
+        FullyConnected(20, 2, linear, w_init=glorot_uniform, w_reg=L2(0.1), b_reg=L2(0.1), use_bias=True))
 
     net.fit(X_train, y_train, loss=mean_squared_error, optimizer=BFGS, learning_rate=0.01, momentum_type='nesterov',
             momentum=0.9, epochs=1000, batch_size=None, max_f_eval=25000, verbose=True, plot=True)

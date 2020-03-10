@@ -20,7 +20,7 @@ class L1(Regularizer):
         super().__init__(lmbda)
 
     def function(self, theta):
-        return self.lmbda * np.sum(np.abs(theta))
+        return self.lmbda * np.sum(np.abs(theta))  # or np.linalg.norm(theta, ord=1) ** 2
 
 
 class L2(Regularizer):
@@ -28,7 +28,7 @@ class L2(Regularizer):
         super().__init__(lmbda)
 
     def function(self, theta):
-        return self.lmbda * np.sum(np.square(theta))
+        return self.lmbda * np.sum(np.square(theta))  # or np.linalg.norm(theta) ** 2
 
     def derivative(self, theta):
         return self.lmbda * 2 * theta

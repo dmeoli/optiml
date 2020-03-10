@@ -69,11 +69,11 @@ important optimization algorithms used as core solver for many machine learning 
 - Machine Learning Models
     - [x] Linear Regression
         - [x] Regularizers
-            - [x] L1 or Lasso Regression
+            - [ ] L1 or Lasso Regression
             - [x] L2 or Ridge Regression
     - [x] Logistic Regression
         - [x] Regularizers
-            - [x] L1 or Lasso
+            - [ ] L1 or Lasso
             - [x] L2 or Ridge or Tikhonov
     - [x] Support Vector Machines
         - [x] Support Vector Classifier
@@ -89,7 +89,7 @@ important optimization algorithms used as core solver for many machine learning 
             - [x] Cross Entropy or Log Loss
             - [x] Binary Cross Entropy or Binary Log Loss
         - [x] Regularizers
-            - [x] L1 or Lasso
+            - [ ] L1 or Lasso
             - [x] L2 or Ridge or Tikhonov
         - [x] Activations
             - [x] Sigmoid
