@@ -145,7 +145,7 @@ class BFGS(LineSearchOptimizer):
             if self.iter == 1:
                 if self.delta > 0:
                     # initial approximation of inverse of Hessian = scaled identity
-                    B = self.delta * np.eye(self.n)
+                    B = self.delta * np.identity(self.n)
                 else:
                     # initial approximation of inverse of Hessian computed by finite differences of gradient
                     small_step = max(-self.delta, 1e-8)
@@ -158,7 +158,7 @@ class BFGS(LineSearchOptimizer):
                     B = (B + B.T) / 2  # ensure it is symmetric
                     lambda_n = min(np.linalg.eigvalsh(B))  # smallest eigenvalue
                     if lambda_n < 1e-6:
-                        B = B + (1e-6 - lambda_n) * np.eye(self.n)
+                        B = B + (1e-6 - lambda_n) * np.identity(self.n)
                     B = np.linalg.inv(B)
 
             if self.verbose:

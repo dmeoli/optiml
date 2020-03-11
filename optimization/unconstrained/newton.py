@@ -133,15 +133,14 @@ class Newton(LineSearchOptimizer):
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args in self.args:
-            if self.iter == 1:
-                v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
-                H = self.f.hessian(self.wrt, *args)
-                ng = np.linalg.norm(g)
+            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+            H = self.f.hessian(self.wrt, *args)
+            ng = np.linalg.norm(g)
 
-                if self.eps < 0:
-                    ng0 = -ng  # norm of first subgradient
-                else:
-                    ng0 = 1  # un-scaled stopping criterion
+            if self.eps < 0:
+                ng0 = -ng  # norm of first subgradient
+            else:
+                ng0 = 1  # un-scaled stopping criterion
 
             if self.verbose:
                 print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
@@ -167,7 +166,7 @@ class Newton(LineSearchOptimizer):
             if lambda_n < self.delta:
                 if self.verbose:
                     print('\t{:1.4e}'.format(self.delta - lambda_n), end='')
-                H = H + (self.delta - lambda_n) * np.eye(self.n)
+                H = H + (self.delta - lambda_n) * np.identity(self.n)
             else:
                 if self.verbose:
                     print('\t{:1.4e}'.format(0), end='')
