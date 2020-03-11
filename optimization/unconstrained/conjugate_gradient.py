@@ -18,25 +18,23 @@ class ConjugateGradientQuadratic(Optimizer):
         self.r_start = r_start
 
     def minimize(self):
-        cost_history = np.full(self.max_iter, np.nan)
 
         if self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
-            print('\t\tbeta')
+            print('\t\tbeta', end='')
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args in self.args:
             v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
-            cost_history[self.iter - 1] = v
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
@@ -56,7 +54,7 @@ class ConjugateGradientQuadratic(Optimizer):
             if self.iter == 1:  # first iteration is off-line, standard gradient
                 d = -g
                 if self.verbose:
-                    print('\t\t')
+                    print('\t\t', end='')
             else:  # normal iterations, use appropriate formula
                 if self.r_start > 0 and self.iter % self.n * self.r_start == 0:
                     # ... unless a restart is being performed
@@ -67,7 +65,7 @@ class ConjugateGradientQuadratic(Optimizer):
                     beta = g.T.dot(self.f.hessian(self.wrt, *args)).dot(past_d) / \
                            past_d.T.dot(self.f.hessian(self.wrt, *args)).dot(past_d)
                     if self.verbose:
-                        print('\t{:1.4f}'.format(beta))
+                        print('\t{:1.4f}'.format(beta), end='')
 
                 if beta != 0:
                     d = -g + beta * past_d
@@ -112,7 +110,7 @@ class ConjugateGradientQuadratic(Optimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, cost_history, status
+        return self.wrt, status
 
 
 class ConjugateGradient(LineSearchOptimizer):
@@ -264,30 +262,27 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
-        cost_history = np.full(self.max_iter, np.nan)
 
         if self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
                 prev_v = np.inf
-            print('\tbeta\tls\tit\ta*')
+            print('\tbeta\tls\tit\ta*', end='')
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args in self.args:
-            if self.iter is 1:
-                v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
-                cost_history[self.iter - 1] = v
-                ng = np.linalg.norm(g)
-                if self.eps < 0:
-                    ng0 = -ng  # norm of first subgradient
-                else:
-                    ng0 = 1  # un-scaled stopping criterion
+            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+            ng = np.linalg.norm(g)
+            if self.eps < 0:
+                ng0 = -ng  # norm of first subgradient
+            else:
+                ng0 = 1  # un-scaled stopping criterion
 
             if self.verbose:
-                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
+                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
@@ -343,11 +338,10 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
             # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
                 d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
-            cost_history[self.iter - 1] = v
 
             # output statistics
             if self.verbose:
-                print('\t{:1.2e}'.format(a))
+                print('\t{:1.2e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
                 status = 'error'
@@ -376,4 +370,4 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, cost_history, status
+        return self.wrt, status

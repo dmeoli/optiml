@@ -123,28 +123,26 @@ class BFGS(LineSearchOptimizer):
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
-        cost_history = np.full(self.max_iter, np.nan)
 
         if self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
                 prev_v = np.inf
-            print('\tls\tit\ta*\t\t\trho')
+            print('\tls\tit\ta*\t\t\trho', end='')
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args in self.args:
-            if self.iter == 1:
-                v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
-                cost_history[self.iter - 1] = v
-                ng = np.linalg.norm(g)
-                if self.eps < 0:
-                    ng0 = -ng  # norm of first subgradient
-                else:
-                    ng0 = 1  # un-scaled stopping criterion
+            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+            ng = np.linalg.norm(g)
+            if self.eps < 0:
+                ng0 = -ng  # norm of first subgradient
+            else:
+                ng0 = 1  # un-scaled stopping criterion
 
+            if self.iter == 1:
                 if self.delta > 0:
                     # initial approximation of inverse of Hessian = scaled identity
                     B = self.delta * np.eye(self.n)
@@ -164,7 +162,7 @@ class BFGS(LineSearchOptimizer):
                     B = np.linalg.inv(B)
 
             if self.verbose:
-                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
+                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
@@ -190,7 +188,6 @@ class BFGS(LineSearchOptimizer):
             # compute step size: as in Newton's method, the default initial step size is 1
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
                 d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
-            cost_history[self.iter - 1] = v
 
             # output statistics
             if self.verbose:
@@ -217,7 +214,7 @@ class BFGS(LineSearchOptimizer):
             rho = 1 / rho
 
             if self.verbose:
-                print('\t{:1.4e}'.format(rho))
+                print('\t{:1.4e}'.format(rho), end='')
 
             D = B.dot(y) * s.T
             B = B + rho * ((1 + rho * y.T.dot(B).dot(y)) * (s.dot(s.T)) - D - D.T)
@@ -241,4 +238,4 @@ class BFGS(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, cost_history, status
+        return self.wrt, status

@@ -131,14 +131,13 @@ class SteepestDescentAcceleratedGradient(LineSearchOptimizer):
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
-        cost_history = np.full(self.max_iter, np.nan)
 
         if self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
                 prev_v = np.inf
-            print('\tls\tit\ta*\t\t\tgamma')
+            print('\tls\tit\ta*\t\t\tgamma', end='')
 
         gamma = 1
         if self.wf == 3:
@@ -155,7 +154,6 @@ class SteepestDescentAcceleratedGradient(LineSearchOptimizer):
 
         for args in self.args:
             v, g = self.f.function(y, *args), self.f.jacobian(y, *args)
-            cost_history[self.iter - 1] = v
             ng = np.linalg.norm(g)
             if f_eval == 1 and self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
@@ -171,7 +169,7 @@ class SteepestDescentAcceleratedGradient(LineSearchOptimizer):
 
             # output statistics
             if self.verbose:
-                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
+                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
@@ -192,13 +190,12 @@ class SteepestDescentAcceleratedGradient(LineSearchOptimizer):
             # compute step size
             a, xv, last_wrt, last_g, f_eval = self.line_search.search(
                 -g, self.wrt, last_wrt, last_g, f_eval, v, -ng, args)
-            cost_history[self.iter - 1] = xv
             if self.line_search.a_start < 0:
                 self.line_search.a_start = abs(-a)
 
             # output statistics
             if self.verbose:
-                print('\t{:1.2e}\t{:1.4e}'.format(a, gamma))
+                print('\t{:1.2e}\t{:1.4e}'.format(a, gamma), end='')
 
             if a <= self.line_search.min_a:
                 status = 'error'
@@ -254,7 +251,7 @@ class SteepestDescentAcceleratedGradient(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, cost_history, status
+        return self.wrt, status
 
 
 class AcceleratedGradient(Optimizer):
@@ -320,8 +317,8 @@ class AcceleratedGradient(Optimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, wrt=random_uniform, batch_size=None, wf=0, eps=1e-6,
-                 max_iter=1000, step_rate=0.01, mon=1e-6, verbose=False, plot=False):
+    def __init__(self, f, wrt=random_uniform, batch_size=None, wf=0, eps=1e-6, max_iter=1000, step_rate=0.01,
+                 mon=1e-6, momentum_type='none', momentum=0.9, verbose=False, plot=False):
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(step_rate):
             raise ValueError('step_rate is not a real scalar')
@@ -336,16 +333,23 @@ class AcceleratedGradient(Optimizer):
         if not 0 <= wf <= 3:
             raise ValueError('unknown fast gradient formula {}'.format(wf))
         self.wf = wf
+        if not np.isscalar(momentum):
+            raise ValueError('momentum is not a real scalar')
+        if not momentum > 0:
+            raise ValueError('momentum must be > 0')
+        self.momentum = momentum
+        if momentum_type not in ('standard', 'nesterov', 'none'):
+            raise ValueError('unknown momentum type {}'.format(momentum_type))
+        self.momentum_type = momentum_type
 
     def minimize(self):
-        cost_history = np.full(self.max_iter, np.nan)
 
         if self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
                 prev_v = np.inf
-            print('\tgamma')
+            print('\tgamma', end='')
 
         gamma = 1
         if self.wf == 3:
@@ -362,7 +366,6 @@ class AcceleratedGradient(Optimizer):
 
         for args in self.args:
             v, g = self.f.function(y, *args), self.f.jacobian(y, *args)
-            cost_history[self.iter - 1] = v
             ng = np.linalg.norm(g)
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
@@ -376,7 +379,7 @@ class AcceleratedGradient(Optimizer):
 
             # output statistics
             if self.verbose:
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
@@ -401,7 +404,7 @@ class AcceleratedGradient(Optimizer):
 
             # output statistics
             if self.verbose:
-                print('\t{:1.4e}'.format(gamma))
+                print('\t{:1.4e}'.format(gamma), end='')
 
             # possibly plot the trajectory
             if self.plot and self.n == 2:
@@ -449,4 +452,4 @@ class AcceleratedGradient(Optimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, cost_history, status
+        return self.wrt, status

@@ -126,14 +126,13 @@ class HeavyBallGradient(LineSearchOptimizer):
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
-        cost_history = np.full(self.max_iter, np.nan)
 
         if self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
                 prev_v = np.inf
-            print('\tls\tit\ta*')
+            print('\tls\tit\ta*', end='')
 
         past_d = np.zeros((self.n,))
 
@@ -141,17 +140,15 @@ class HeavyBallGradient(LineSearchOptimizer):
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args in self.args:
-            if self.iter is 1:
-                v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
-                cost_history[self.iter - 1] = v
-                ng = np.linalg.norm(g)
-                if self.eps < 0:
-                    ng0 = -ng  # norm of first subgradient
-                else:
-                    ng0 = 1  # un-scaled stopping criterion
+            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+            ng = np.linalg.norm(g)
+            if self.eps < 0:
+                ng0 = -ng  # norm of first subgradient
+            else:
+                ng0 = 1  # un-scaled stopping criterion
 
             if self.verbose:
-                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
+                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
@@ -184,11 +181,10 @@ class HeavyBallGradient(LineSearchOptimizer):
             # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
                 d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
-            cost_history[self.iter - 1] = v
 
             # output statistics
             if self.verbose:
-                print('\t{:1.2e}'.format(a))
+                print('\t{:1.2e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
                 status = 'error'
@@ -216,4 +212,4 @@ class HeavyBallGradient(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, cost_history, status
+        return self.wrt, status

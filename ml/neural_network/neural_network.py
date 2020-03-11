@@ -1,3 +1,5 @@
+import inspect
+
 import autograd.numpy as np
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import OneHotEncoder
@@ -7,7 +9,7 @@ from ml.learning import Learner
 from ml.neural_network.activations import Linear
 from ml.neural_network.layers import Layer, ParamLayer
 from optimization.optimization_function import OptimizationFunction
-from optimization.optimizer import LineSearchOptimizer
+from optimization.optimizer import LineSearchOptimizer, Optimizer
 from optimization.unconstrained.gradient_descent import GradientDescent
 
 plt.style.use('ggplot')
@@ -15,23 +17,32 @@ plt.style.use('ggplot')
 
 class NeuralNetworkLossFunction(OptimizationFunction):
 
-    def __init__(self, X, y, neural_net, loss):
+    def __init__(self, X, y, neural_net, loss, verbose):
         super().__init__(X.shape[1])
         self.X = X
         self.y = y
         self.neural_net = neural_net
         self.loss = loss
+        self.verbose = verbose
+        self.loss_history = ([], [])  # training loss history, validation loss history
+        if not isinstance(self.neural_net.layers[-1]._a, Linear):  # classification
+            self.accuracy_history = ([], [])  # training accuracy history, validation loss history
 
     def args(self):
         return self.X, self.y
 
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
-        return (self.loss(self.neural_net.forward(X), y) +
+        loss = (self.loss(self.neural_net.forward(X), y) +
                 np.sum(np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
                               if isinstance(layer, ParamLayer)) +
                        np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
                               if isinstance(layer, ParamLayer) and layer.use_bias)) / X.shape[0])
+        if inspect.stack()[1].function is 'minimize':  # caller's method name
+            if self.verbose and self.loss_history[0] and not isinstance(self.neural_net.layers[-1]._a, Linear):
+                print('\t accuracy: {:4f}'.format(0.), end='')
+            self.loss_history[0].append(loss)
+        return loss
 
     def jacobian(self, packed_weights_biases, X, y):
         """
@@ -45,14 +56,24 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         assert y_pred.shape == y.shape
         return self.neural_net._pack(*self.neural_net.backward(y_pred - y))
 
-    def plot(self, epochs, loss_history):
-        fig, ax = plt.subplots()
-        ax.plot(range(epochs), loss_history, 'b.', alpha=0.2)
-        ax.set_title('model loss')
-        ax.set_xlabel('epoch')
-        ax.set_ylabel('loss')
-        ax.legend(['train'])
+    def plot(self):
+        fig, loss = plt.subplots()
+        loss.plot(self.loss_history[0], 'b.', alpha=0.2)
+        # loss.plot(self.loss_history[1], 'r-')
+        loss.set_title('model loss')
+        loss.set_xlabel('epoch')
+        loss.set_ylabel('loss')
+        loss.legend(['training', 'validation'])
         plt.show()
+        if not isinstance(self.neural_net.layers[-1]._a, Linear):  # classification
+            fig, accuracy = plt.subplots()
+            accuracy.plot(self.accuracy_history[0], 'b.', alpha=0.2)
+            accuracy.plot(self.accuracy_history[1], 'r-')
+            accuracy.set_title('model accuracy')
+            loss.set_xlabel('epoch')
+            loss.set_ylabel('accuracy')
+            loss.legend(['training', 'validation'])
+            plt.show()
 
 
 class NeuralNetwork(Layer, Learner):
@@ -131,7 +152,7 @@ class NeuralNetwork(Layer, Learner):
 
         packed_weights_biases = self._pack(*self.params)
 
-        loss = NeuralNetworkLossFunction(X, y, self, loss)
+        loss = NeuralNetworkLossFunction(X, y, self, loss, verbose)
         if issubclass(optimizer, LineSearchOptimizer):
             opt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size,
                             max_iter=epochs, max_f_eval=max_f_eval, verbose=verbose).minimize()
@@ -145,7 +166,7 @@ class NeuralNetwork(Layer, Learner):
         self._unpack(opt[0])
 
         if plot:
-            loss.plot(epochs, opt[1])
+            loss.plot()
 
         return self
 

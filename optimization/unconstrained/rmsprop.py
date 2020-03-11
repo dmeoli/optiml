@@ -37,7 +37,6 @@ class RMSProp(Optimizer):
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
-            print()
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
@@ -48,13 +47,12 @@ class RMSProp(Optimizer):
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
                         print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     prev_v = v
-                print()
 
             # stopping criteria
             if ng <= self.eps:

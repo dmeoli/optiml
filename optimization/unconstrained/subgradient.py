@@ -103,7 +103,6 @@ class Subgradient(LineSearchOptimizer):
                          m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
 
     def minimize(self):
-        cost_history = np.full(self.max_iter, np.nan)
 
         if self.eps < 0 and self.f.f_star() == np.inf:
             # no way of cheating since the true optimal value is unknown
@@ -114,7 +113,7 @@ class Subgradient(LineSearchOptimizer):
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
                 prev_v = np.inf
-            print('\ta*')
+            print('\ta*', end='')
 
         x_ref = self.wrt
         f_ref = np.inf  # best f-value found so far
@@ -126,7 +125,6 @@ class Subgradient(LineSearchOptimizer):
 
         for args in self.args:
             v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
-            cost_history[self.iter - 1] = v
             ng = np.linalg.norm(g)
 
             if self.eps > 0:  # target-level step size
@@ -141,7 +139,7 @@ class Subgradient(LineSearchOptimizer):
 
             # output statistics
             if self.verbose:
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
@@ -175,7 +173,7 @@ class Subgradient(LineSearchOptimizer):
 
             # output statistics
             if self.verbose:
-                print('\t{:1.4e}'.format(a))
+                print('\t{:1.4e}'.format(a), end='')
 
             # stopping criteria
             if a <= self.line_search.min_a:
@@ -203,4 +201,4 @@ class Subgradient(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return x, cost_history, status
+        return x, status

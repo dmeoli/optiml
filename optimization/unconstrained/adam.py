@@ -43,31 +43,27 @@ class Adam(Optimizer):
         self.step = 0
 
     def minimize(self):
-        cost_history = np.full(self.max_iter, np.nan)
 
         if self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
-            print()
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         for args in self.args:
             v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
-            cost_history[self.iter - 1] = v
             ng = np.linalg.norm(g)
 
             if self.verbose:
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
                     if prev_v < np.inf:
                         print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     prev_v = v
-                print()
 
             # stopping criteria
             if ng <= self.eps:
@@ -116,4 +112,4 @@ class Adam(Optimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, cost_history, status
+        return self.wrt, status
