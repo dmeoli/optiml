@@ -1,6 +1,7 @@
 import random
 
 import numpy as np
+from sklearn.preprocessing import OneHotEncoder
 
 
 def not_test(func):
@@ -9,12 +10,13 @@ def not_test(func):
     return func
 
 
-def load_monk(dataset):
-    if dataset not in (1, 2, 3):
-        raise ValueError('unknown monk dataset type {}'.format(dataset))
-    monks = [np.delete(np.genfromtxt('./ml/data/monks/monks-' + str(dataset) + '.' + type), -1, axis=1)
+def load_monk(n_dataset):
+    if n_dataset not in (1, 2, 3):
+        raise ValueError('unknown monk dataset type {}'.format(n_dataset))
+    monks = [np.delete(np.genfromtxt('./ml/data/monks/monks-' + str(n_dataset) + '.' + type), -1, axis=1)
              for type in ('train', 'test')]
-    return (monks[0][:, 1:], monks[1][:, 1:],  # X_train, X_test
+    return (OneHotEncoder().fit_transform(monks[0][:, 1:]).toarray(),  # X_train
+            OneHotEncoder().fit_transform(monks[1][:, 1:]).toarray(),  # X_test
             monks[0][:, 0].ravel(), monks[1][:, 0].ravel())  # y_train, y_test
 
 
@@ -48,20 +50,3 @@ def iter_mini_batches(Xy, batch_size):
                 start = i * batch_size
                 stop = (i + 1) * batch_size
                 yield [param[slice(start, stop)] for param in Xy]
-
-
-def to_categorical(y, num_classes=None):
-    """Converts a class vector (integers) to binary class matrix."""
-    y = np.array(y, dtype=np.int)
-    input_shape = y.shape
-    if input_shape and input_shape[-1] == 1 and len(input_shape) > 1:
-        input_shape = tuple(input_shape[:-1])
-    y = y.ravel()
-    if not num_classes:
-        num_classes = np.max(y) + 1
-    n = y.shape[0]
-    categorical = np.zeros((n, num_classes), dtype=np.float)
-    categorical[np.arange(n), y] = 1
-    output_shape = input_shape + (num_classes,)
-    categorical = np.reshape(categorical, output_shape)
-    return categorical

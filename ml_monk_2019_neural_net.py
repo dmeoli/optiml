@@ -11,7 +11,6 @@ if __name__ == '__main__':
         X_train, X_test, y_train, y_test = load_monk(i)
         n_neurons = X_train.shape[1]
         net = NeuralNetwork(FullyConnected(n_neurons, n_neurons, sigmoid),
-                            FullyConnected(n_neurons, n_neurons, sigmoid),
                             FullyConnected(n_neurons, 2, softmax))
-        net.fit(X_train, y_train, loss=cross_entropy, optimizer=BFGS, epochs=1000, verbose=True, plot=True)
+        net.fit(X_train, y_train, loss=cross_entropy, optimizer=BFGS, epochs=1000, verbose=False, plot=True)
         print("monk's #" + str(i) + " accuracy: " + str(accuracy_score(net.predict(X_test), y_test)))
