@@ -85,30 +85,44 @@ class Quadratic(OptimizationFunction):
     def args(self):
         return self.Q, self.q
 
-    def function(self, x, Q, q):
+    def function(self, x, Q=None, q=None):
         """
         A general quadratic function f(x) = 1/2 x^T Q x - q^T x.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
+        :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
+                           the Hessian (i.e. the quadratic part) of f. If it is not
+                           positive semidefinite, f(x) will be unbounded below.
+        :param q: ([n x 1] real column vector): the linear part of f.
         :return:  the value of a general quadratic function if x, the optimal solution of a
                   linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
         """
+        Q, q = Q if Q is not None else self.Q, q if q is not None else self.q
         return 0.5 * x.T.dot(Q).dot(x) - q.T.dot(x)
 
-    def jacobian(self, x, Q, q):
+    def jacobian(self, x, Q=None, q=None):
         """
         The Jacobian (i.e. gradient) of a general quadratic function J f(x) = Q x - q.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
+        :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
+                           the Hessian (i.e. the quadratic part) of f. If it is not
+                           positive semidefinite, f(x) will be unbounded below.
+        :param q: ([n x 1] real column vector): the linear part of f.
         :return:  the Jacobian of a general quadratic function.
         """
+        Q, q = Q if Q is not None else self.Q, q if q is not None else self.q
         return Q.dot(x) - q
 
-    def hessian(self, x, Q, q):
+    def hessian(self, x, Q=None, q=None):
         """
         The Hessian matrix of a general quadratic function H f(x) = Q.
         :param x: 1D array of points at which the Hessian is to be computed.
+        :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
+                           the Hessian (i.e. the quadratic part) of f. If it is not
+                           positive semidefinite, f(x) will be unbounded below.
+        :param q: ([n x 1] real column vector): the linear part of f.
         :return:  the Hessian matrix (i.e. the quadratic part) of a general quadratic function at x.
         """
-        return Q
+        return Q if Q is not None else self.Q
 
     def plot(self, x_min=-5, x_max=2, y_min=-5, y_max=2):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))

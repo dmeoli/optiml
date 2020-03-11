@@ -25,7 +25,7 @@ class MultiClassClassifier(Learner):
         self.decision_function = decision_function
         self.n_class, self.classifiers = 0, []
 
-    def fit(self, X, y):
+    def fit(self, X, y, **kwargs):
         """
         Trains n_class or n_class * (n_class - 1) / 2 classifiers
         according to the training method, ovr or ovo respectively.
@@ -41,7 +41,7 @@ class MultiClassClassifier(Learner):
                 y1[y1 != label] = -1.
                 y1[y1 == label] = 1.
                 clf = copy.deepcopy(self.learner)
-                clf.fit(X, y1)
+                clf.fit(X, y1, **kwargs)
                 self.classifiers.append(clf)
         else:  # use one-vs-one method
             n_labels = len(labels)
@@ -52,7 +52,7 @@ class MultiClassClassifier(Learner):
                     y1[y1 == labels[i]] = -1.
                     y1[y1 == labels[j]] = 1.
                     clf = copy.deepcopy(self.learner)
-                    clf.fit(x1, y1)
+                    clf.fit(x1, y1, **kwargs)
                     self.classifiers.append(clf)
         return self
 
@@ -92,7 +92,7 @@ class MultiOutputLearner(Learner):
         self.learner = learner
         self.learners = []
 
-    def fit(self, X, y):
+    def fit(self, X, y, **kwargs):
         """
         Trains n_output learner
         :param X: array of size [n_samples, n_features] holding the training samples
@@ -102,7 +102,7 @@ class MultiOutputLearner(Learner):
         self.n_output = y.shape[1]
         for target in range(self.n_output):
             clf = copy.deepcopy(self.learner)
-            clf.fit(X, y[:, target].ravel())
+            clf.fit(X, y[:, target].ravel(), **kwargs)
             self.learners.append(clf)
         return self
 

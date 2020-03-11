@@ -5,6 +5,7 @@ from ml.learning import MultiOutputLearner
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error
 from ml.svm.svm import SVR
+from optimization.constrained.projected_gradient import ProjectedGradient
 
 if __name__ == '__main__':
     ml_cup_train = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
@@ -12,7 +13,7 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
-    svr = MultiOutputLearner(SVR(kernel=rbf_kernel, eps=0.1)).fit(X_train, y_train)
+    svr = MultiOutputLearner(SVR(kernel=rbf_kernel, eps=0.1)).fit(X_train, y_train, optimizer=ProjectedGradient)
     pred = svr.predict(X_test)
     print(mean_squared_error(pred, y_test))
     print(mean_euclidean_error(pred, y_test))

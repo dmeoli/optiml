@@ -3,6 +3,8 @@ from qpsolvers import solve_qp
 
 from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel
 from ml.learning import Learner
+from optimization.constrained.projected_gradient import ProjectedGradient
+from optimization.optimization_function import Quadratic
 
 
 class SVM(Learner):
@@ -19,6 +21,9 @@ class SVM(Learner):
         self.w = None
         self.b = 0.
 
+    def fit(self, X, y, optimizer=None, max_iter=1000):
+        raise NotImplementedError
+
 
 class SVC(SVM):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.1):
@@ -26,9 +31,9 @@ class SVC(SVM):
         self.sv_y = np.zeros(0)
         self.alphas = np.zeros(0)
 
-    def fit(self, X, y):
+    def fit(self, X, y, optimizer=None, max_iter=1000):
         """
-        Trains the model by solving a quadratic programming problem.
+        Trains the model by solving a constrained quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
         """
@@ -44,7 +49,8 @@ class SVC(SVM):
         ub = np.hstack((np.zeros(m), np.zeros(m) + self.C))  # upper bounds
         Aeq = y.astype(np.float).reshape((1, -1))
         beq = np.zeros(1)
-        self.alphas = solve_qp(Q, q, lb, ub, Aeq, beq, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
+        self.alphas = (optimizer(Quadratic(Q, q), max_iter).minimize(ub) if optimizer else  # box constrained quadratic
+                       solve_qp(Q, q, lb, ub, Aeq, beq, solver='cvxopt', sym_proj=True))  # Lagrange multipliers
 
         sv_idx = np.arange(len(self.alphas))[self.alphas > self.eps]
         self.sv, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
@@ -86,9 +92,9 @@ class SVR(SVM):
         self.alphas_p = np.zeros(0)
         self.alphas_n = np.zeros(0)
 
-    def fit(self, X, y):
+    def fit(self, X, y, optimizer=None, max_iter=1000):
         """
-        Trains the model by solving a quadratic programming problem.
+        Trains the model by solving a constrained quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
         """
@@ -106,7 +112,8 @@ class SVR(SVM):
         ub = np.hstack((np.zeros(2 * m), np.zeros(2 * m) + self.C))  # upper bounds
         Aeq = np.hstack((np.ones(m), -np.ones(m))).reshape((1, -1))
         beq = np.zeros(1)
-        alphas = solve_qp(Q, q, lb, ub, Aeq, beq, solver='cvxopt', sym_proj=True)  # Lagrange multipliers
+        alphas = (optimizer(Quadratic(Q, q), max_iter).minimize(ub) if optimizer else  # box constrained quadratic
+                  solve_qp(Q, q, lb, ub, Aeq, beq, solver='cvxopt', sym_proj=True))  # Lagrange multipliers
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 
