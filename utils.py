@@ -1,3 +1,4 @@
+import os
 import random
 
 import numpy as np
@@ -13,7 +14,8 @@ def not_test(func):
 def load_monk(n_dataset):
     if n_dataset not in (1, 2, 3):
         raise ValueError('unknown monk dataset type {}'.format(n_dataset))
-    monks = [np.delete(np.genfromtxt('./ml/data/monks/monks-' + str(n_dataset) + '.' + type), -1, axis=1)
+    path = os.path.dirname(os.path.abspath(__file__))
+    monks = [np.delete(np.genfromtxt(path + '/ml/data/monks/monks-' + str(n_dataset) + '.' + type), -1, axis=1)
              for type in ('train', 'test')]
     return (OneHotEncoder().fit_transform(monks[0][:, 1:]).toarray(),  # X_train
             OneHotEncoder().fit_transform(monks[1][:, 1:]).toarray(),  # X_test

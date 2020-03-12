@@ -79,18 +79,18 @@ class ProjectedGradient(ConstrainedOptimizer):
         if self.verbose:
             print('iter\tf(x)\t\t||g(x)||')
 
-        self.wrt = ub / 2  # start from the middle of the box
+        wrt = ub / 2  # start from the middle of the box
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            v, g = self.f.function(wrt), self.f.jacobian(wrt)
             d = -g
 
             # project the direction over the active constraints
-            d[ub - self.wrt <= 1e-12 and d > 0] = 0
-            d[self.wrt <= 1e-12 and d < 0] = 0
+            d[np.logical_and(ub - wrt <= 1e-12, d > 0)] = 0
+            d[np.logical_and(wrt <= 1e-12, d < 0)] = 0
 
             # compute the norm of the (projected) gradient
             ng = np.linalg.norm(d)
@@ -106,21 +106,20 @@ class ProjectedGradient(ConstrainedOptimizer):
                 status = 'stopped'
                 break
 
-            # first, compute the maximum feasible step size maxt such that
-            #
+            # first, compute the maximum feasible step size maxt such that:
             #   0 <= x[i] + maxt * d[i] <= ub[i]   for all i
 
             idx = d > 0  # positive gradient entries
-            maxt = min((ub(idx) - self.wrt(idx)) / d[idx])
+            maxt = min((ub(idx) - wrt(idx)) / d[idx])
             idx = d < 0  # negative gradient entries
-            maxt = min(maxt, min(-self.wrt(idx) / d[idx]))
+            maxt = min(maxt, min(-wrt(idx) / d[idx]))
 
             # compute optimal unbounded step size:
             # min (1/2) ( x + a d )^T * Q * ( x + a d ) + q^T * ( x + a d ) =
             #     (1/2) a^2 ( d^T * Q * d ) + a d^T * ( Q * x + q ) [ + const ]
             #
             # ==> a = - d^T * ( Q * x + q ) / d^T * Q * d
-            den = d.T.dot(self.f.hessian(self.wrt)).dot(d)
+            den = d.T.dot(self.f.hessian(wrt)).dot(d)
 
             if den <= 1e-16:  # d^T * Q * d = 0  ==>  f is linear along d
                 t = maxt  # just take the maximum possible step size
@@ -128,7 +127,7 @@ class ProjectedGradient(ConstrainedOptimizer):
                 # optimal unbounded step size restricted to max feasible step
                 t = min((-g.T * d) / den, maxt)
 
-            self.wrt += t * d
+            wrt += t * d
 
             self.iter += 1
 
@@ -136,4 +135,4 @@ class ProjectedGradient(ConstrainedOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status
+        return wrt, status

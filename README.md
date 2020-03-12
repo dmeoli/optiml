@@ -62,6 +62,11 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [ ] Active Set
         - [ ] Interior Point
         - [ ] Dual
+
+- Optimization Functions
+    - [x] Rosenbrock
+    - [x] Ackley
+    - [x] Quadratic
                            
 - Machine Learning Models
     - [x] Linear Regression
