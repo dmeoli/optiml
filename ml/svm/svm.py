@@ -1,17 +1,20 @@
+import cvxopt
 import numpy as np
+import qpsolvers
 from qpsolvers import solve_qp
-from scipy.optimize import minimize, lsq_linear
+from scipy.optimize import minimize
 
 from ml.learning import Learner
 from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel
-from optimization.constrained.projected_gradient import ConstrainedOptimizer
 from optimization.optimization_function import Quadratic
 
 
-def scipy_solve_qp(f, y, G, h):
+def scipy_solve_qp(f, y, G, h, max_iter, verbose):
     return minimize(fun=f.function, jac=f.jacobian, x0=np.random.rand(f.n),
                     constraints=({'type': 'ineq', 'fun': lambda x: h - np.dot(G, x), 'jac': lambda x: -G},
-                                 {'type': 'eq', 'fun': lambda x: np.dot(x, y), 'jac': lambda x: y})).x
+                                 {'type': 'eq', 'fun': lambda x: np.dot(x, y), 'jac': lambda x: y}),
+                    options={'maxiter': max_iter,
+                             'disp': verbose}).x
 
 
 class SVM(Learner):
@@ -38,7 +41,7 @@ class SVC(SVM):
         self.sv_y = np.zeros(0)
         self.alphas = np.zeros(0)
 
-    def fit(self, X, y, optimizer, max_iter=1000):
+    def fit(self, X, y, optimizer, max_iter=1000, verbose=False):
         """
         Trains the model by solving a constrained quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
@@ -50,8 +53,8 @@ class SVC(SVM):
              self.kernel(X, X, self.gamma)
              if self.kernel is rbf_kernel else
              self.kernel(X, X))  # linear kernel
-        P = K * np.outer(y, y)  # quadratic part
-        q = -np.ones(m)  # linear part
+        P = K * np.outer(y, y)
+        q = -np.ones(m)
         G = np.vstack((-np.identity(m), np.identity(m)))  # inequality matrix
         lb = np.zeros(m)  # lower bounds
         ub = np.ones(m) * self.C  # upper bounds
@@ -63,11 +66,12 @@ class SVC(SVM):
         # inequalities Gx <= h (A is m x n, where m = 2n is the number of inequalities
         # (n box constraints, 2 inequalities each)
         # equalities Ax = b (these's only one equality constraint, i.e. y.T.dot(x) = 0)
-        lagrangian = Quadratic(P, np.ones_like(y))
-
-        self.alphas = (scipy_solve_qp(lagrangian, y, G, h) if optimizer is scipy_solve_qp else
+        lagrangian = Quadratic(P, np.ones_like(q))
+        if optimizer is solve_qp:
+            qpsolvers.cvxopt_.options['show_progress'] = verbose
+        self.alphas = (scipy_solve_qp(lagrangian, y, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
                        solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True) if optimizer is solve_qp else
-                       optimizer(lagrangian, max_iter).minimize(ub)[0])
+                       optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
 
         sv_idx = np.arange(len(self.alphas))[self.alphas > self.eps]
         self.sv, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
@@ -109,7 +113,7 @@ class SVR(SVM):
         self.alphas_p = np.zeros(0)
         self.alphas_n = np.zeros(0)
 
-    def fit(self, X, y, optimizer=None, max_iter=1000):
+    def fit(self, X, y, optimizer=None, max_iter=1000, verbose=False):
         """
         Trains the model by solving a constrained quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
@@ -121,10 +125,9 @@ class SVR(SVM):
              self.kernel(X, X, self.gamma)
              if self.kernel is rbf_kernel else
              self.kernel(X, X))  # linear kernel
-        # quadratic part
         P = np.vstack((np.hstack((K, -K)),  # alphas_p, alphas_n
                        np.hstack((-K, K))))  # alphas_n, alphas_p
-        q = np.hstack((-y, y)) + self.eps  # linear part
+        q = np.hstack((-y, y)) + self.eps
         G = np.vstack((-np.identity(2 * m), np.identity(2 * m)))  # inequality matrix
         lb = np.zeros(2 * m)  # lower bounds
         ub = np.ones(2 * m) * self.C  # upper bounds
@@ -136,11 +139,12 @@ class SVR(SVM):
         # inequalities Gx <= h (A is m x n, where m = 2n is the number of inequalities
         # (n box constraints, 2 inequalities each)
         # equalities Ax = b (these's only one equality constraint, i.e. y.T.dot(x) = 0)
-        lagrangian = Quadratic(P, np.ones_like(y))
-
-        alphas = (scipy_solve_qp(lagrangian, y, G, h) if optimizer is scipy_solve_qp else
+        lagrangian = Quadratic(P, np.ones_like(q))
+        if optimizer is solve_qp:
+            qpsolvers.cvxopt_.options['show_progress'] = verbose
+        alphas = (scipy_solve_qp(lagrangian, q, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
                   solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True) if optimizer is solve_qp else
-                  optimizer(lagrangian, max_iter).minimize(ub)[0])
+                  optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 

@@ -110,9 +110,9 @@ class ProjectedGradient(ConstrainedOptimizer):
             #   0 <= x[i] + maxt * d[i] <= ub[i]   for all i
 
             idx = d > 0  # positive gradient entries
-            maxt = min((ub(idx) - wrt(idx)) / d[idx])
+            maxt = min((ub[idx] - wrt[idx]) / d[idx])
             idx = d < 0  # negative gradient entries
-            maxt = min(maxt, min(-wrt(idx) / d[idx]))
+            maxt = min(maxt, min(-wrt[idx] / d[idx]))
 
             # compute optimal unbounded step size:
             # min (1/2) ( x + a d )^T * Q * ( x + a d ) + q^T * ( x + a d ) =

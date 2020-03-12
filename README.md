@@ -57,11 +57,13 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
                 - [x] standard momentum
                 - [x] Nesterov momentum
     - Constrained Optimization
-        - [ ] Projected Gradient
-        - [ ] Conditional Gradient or Frank-Wolfe
-        - [ ] Active Set
-        - [ ] Interior Point
-        - [ ] Dual
+        - [x] Projected Gradient
+        - [x] Conditional Gradient or Frank-Wolfe
+        - [x] Active Set
+        - [x] Interior Point
+        - [x] Lagrangian Dual
+        - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
+        - [x] [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
 
 - Optimization Functions
     - [x] Rosenbrock
