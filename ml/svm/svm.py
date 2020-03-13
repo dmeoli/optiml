@@ -1,4 +1,3 @@
-import cvxopt
 import numpy as np
 import qpsolvers
 from qpsolvers import solve_qp
@@ -6,6 +5,7 @@ from scipy.optimize import minimize
 
 from ml.learning import Learner
 from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel
+from optimization.constrained.projected_gradient import ConstrainedOptimizer
 from optimization.optimization_function import Quadratic
 
 
@@ -13,6 +13,13 @@ def scipy_solve_qp(f, y, G, h, max_iter, verbose):
     return minimize(fun=f.function, jac=f.jacobian, x0=np.random.rand(f.n),
                     constraints=({'type': 'ineq', 'fun': lambda x: h - np.dot(G, x), 'jac': lambda x: -G},
                                  {'type': 'eq', 'fun': lambda x: np.dot(x, y), 'jac': lambda x: y}),
+                    options={'maxiter': max_iter,
+                             'disp': verbose}).x
+
+
+def scipy_solve_qp_with_bounds(f, ub, max_iter, verbose):
+    return minimize(fun=f.function, jac=f.jacobian, x0=ub / 2,  # initial feasible solution is the middle of the box
+                    bounds=[(l, u) for l, u in zip(np.zeros_like(ub), ub)],
                     options={'maxiter': max_iter,
                              'disp': verbose}).x
 
@@ -41,7 +48,7 @@ class SVC(SVM):
         self.sv_y = np.zeros(0)
         self.alphas = np.zeros(0)
 
-    def fit(self, X, y, optimizer, max_iter=1000, verbose=False):
+    def fit(self, X, y, optimizer=solve_qp, max_iter=1000, verbose=False):
         """
         Trains the model by solving a constrained quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
@@ -70,8 +77,11 @@ class SVC(SVM):
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
         self.alphas = (scipy_solve_qp(lagrangian, y, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
+                       scipy_solve_qp_with_bounds(lagrangian, ub, max_iter, verbose)
+                       if optimizer is scipy_solve_qp_with_bounds else
                        solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True) if optimizer is solve_qp else
-                       optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
+                       optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0]
+                       if issubclass(optimizer, ConstrainedOptimizer) else ValueError)
 
         sv_idx = np.arange(len(self.alphas))[self.alphas > self.eps]
         self.sv, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
@@ -113,7 +123,7 @@ class SVR(SVM):
         self.alphas_p = np.zeros(0)
         self.alphas_n = np.zeros(0)
 
-    def fit(self, X, y, optimizer=None, max_iter=1000, verbose=False):
+    def fit(self, X, y, optimizer=solve_qp, max_iter=1000, verbose=False):
         """
         Trains the model by solving a constrained quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
@@ -143,8 +153,11 @@ class SVR(SVM):
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
         alphas = (scipy_solve_qp(lagrangian, q, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
+                  scipy_solve_qp_with_bounds(lagrangian, ub, max_iter, verbose)
+                  if optimizer is scipy_solve_qp_with_bounds else
                   solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True) if optimizer is solve_qp else
-                  optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
+                  optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0]
+                  if issubclass(optimizer, ConstrainedOptimizer) else ValueError)
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 
