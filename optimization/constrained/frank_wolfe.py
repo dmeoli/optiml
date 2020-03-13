@@ -26,7 +26,7 @@ class FrankWolfe(ConstrainedOptimizer):
     #   value of the best lower bound obtained so far is less than or equal to
     #   eps
     #
-    # - MaxIter (integer scalar, optional, default value 1000): the maximum
+    # - max_iter (integer scalar, optional, default value 1000): the maximum
     #   number of iterations
     #
     # - t (real scalar scalar, optional, default value 0): if the stabilized
@@ -46,20 +46,20 @@ class FrankWolfe(ConstrainedOptimizer):
     # - status (string, optional): a string describing the status of the
     #   algorithm at termination, with the following possible values:
     #
-    #   = 'optimal': the algorithm terminated having proven that x is a(n
-    #     approximately) optimal solution, i.e., the norm of the gradient at x
+    #   = 'optimal': the algorithm terminated having proven that x is an
+    #     (approximately) optimal solution, i.e., the norm of the gradient at x
     #     is less than the required threshold
     #
     #   = 'stopped': the algorithm terminated having exhausted the maximum
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, t=0, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+    def __init__(self, f, t=0., eps=1e-6, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, eps, max_iter, verbose, plot)
         if not np.isreal(t) or not np.isscalar(t):
             raise ValueError('t is not a real scalar')
-        if t < 0 or t > 1:
-            raise ValueError('t is not in [0, 1]')
+        if not 0 <= t < 1:
+            raise ValueError('t has to lie in [0, 1)')
         self.t = t
 
     def minimize(self, ub):
@@ -68,16 +68,15 @@ class FrankWolfe(ConstrainedOptimizer):
 
         best_lb = -np.inf  # best lower bound so far (= none, really)
 
-        print('iter\tf(x)\t\tlb\t\tgap\n\n')
+        print('iter\tf(x)\t\tlb\t\t\tgap')
 
         while True:
-
             v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
 
             # solve min { <g, y> : 0 <= y <= u }
-            y = np.zeros(self.n)
-            ind = g < 0
-            y[ind].lvalue = ub[ind]
+            y = np.zeros(self.f.n)
+            idx = g < 0
+            y[idx] = ub[idx]
 
             # compute the lower bound: remember that the first-order approximation
             # is f( x ) + g ( y - x )
@@ -88,13 +87,13 @@ class FrankWolfe(ConstrainedOptimizer):
             # compute the relative gap
             gap = (v - best_lb) / max(abs(v), 1)
 
-            print('%4d\t%1.8e\t%1.8e\t%1.4e\n'.format(self.iter, v, best_lb, gap))
+            print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, best_lb, gap))
 
             if gap <= self.eps:
                 status = 'optimal'
                 break
 
-            if self.iter > self.max_iter:
+            if self.iter >= self.max_iter:
                 status = 'stopped'
                 break
 
@@ -108,14 +107,14 @@ class FrankWolfe(ConstrainedOptimizer):
             d = y - self.wrt
 
             # compute optimal unbounded step size:
-            # min (1/2) (x + a d)^T * Q * (x + a d) + q' * (x + a d) =
+            # min (1/2) (x + a d)^T * Q * (x + a d) + q^T * (x + a d) =
             #     (1/2) a^2 (d^T * Q * d) + a d^T * (Q * x + q) [+ const]
             #
             # ==> a = -d^T * (Q * x + q) / d^T * Q * d
             #
             den = d.T.dot(self.f.hessian(self.wrt)).dot(d)
 
-            if den <= 1e-16:  # d' * Q * d = 0  ==>  f is linear along d
+            if den <= 1e-16:  # d^T * Q * d = 0  ==>  f is linear along d
                 alpha = 1  # just take the maximum possible step size
             else:
                 # optimal unbounded step size restricted to max feasible step

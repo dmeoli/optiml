@@ -56,6 +56,8 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] RMSProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
+        - [ ] Others
+            - [ ] Proximal Bundle
     - Constrained Optimization
         - [x] Projected Gradient
         - [x] Conditional Gradient or Frank-Wolfe

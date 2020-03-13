@@ -1,3 +1,6 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
 from optimization.constrained.projected_gradient import ConstrainedOptimizer
 
 
@@ -40,9 +43,9 @@ class LagrangianDual(ConstrainedOptimizer):
     #   criterion is on the (relative, w.r.t. the first one) norm of the
     #   (projected) gradient
     #
-    # - MaxFeval (integer scalar, optional, default value 1000): the maximum
+    # - max_f_eval (integer scalar, optional, default value 1000): the maximum
     #   number of function evaluations (hence, iterations will be not more than
-    #   MaxFeval because at each iteration at least a function evaluation is
+    #   max_f_eval because at each iteration at least a function evaluation is
     #   performed, possibly more due to the line search).
     #
     # - m1 (real scalar, optional, default value 0.01): first parameter of the
@@ -52,7 +55,7 @@ class LagrangianDual(ConstrainedOptimizer):
     #   the Armijo-Wolfe-type line search (strong curvature condition), it
     #   should to be in (0,1);
     #
-    # - astart (real scalar, optional, default value 1): starting value of
+    # - a_start (real scalar, optional, default value 1): starting value of
     #   alpha in the line search (> 0)
     #
     # - sfgrd (real scalar, optional, default value 0.01): safeguard parameter
@@ -61,13 +64,13 @@ class LagrangianDual(ConstrainedOptimizer):
     #   large w.r.t. the one at the other (which leads to choosing a point
     #   extremely near to the other endpoint), a *safeguarded* version of
     #   interpolation is used whereby the new point is chosen in the interval
-    #   [ as * ( 1 + sfgrd ) , am * ( 1 - sfgrd ) ], being [ as , am ] the
+    #   [as * (1 + sfgrd), am * (1 - sfgrd)], being [as, am] the
     #   current interval, whatever quadratic interpolation says. If you
-    #   experiemce problems with the line search taking too many iterations to
+    #   experience problems with the line search taking too many iterations to
     #   converge at "nasty" points, try to increase this
     #
     # - mina (real scalar, optional, default value 1e-16): if the algorithm
-    #   determines a stepsize value <= mina, this is taken as an indication
+    #   determines a step size value <= mina, this is taken as an indication
     #   that something has gone wrong (the gradient is not a direction of
     #   descent, so maybe the function is not differentiable) and computation
     #   is stopped. It is legal to take mina = 0, thereby in fact skipping this
@@ -84,8 +87,8 @@ class LagrangianDual(ConstrainedOptimizer):
     # - status (string, optional): a string describing the status of the
     #   algorithm at termination, with the following possible values:
     #
-    #   = 'optimal': the algorithm terminated having proven that x is a(n
-    #     approximately) optimal solution, i.e., the norm of the gradient at x
+    #   = 'optimal': the algorithm terminated having proven that x is an
+    #     (approximately) optimal solution, i.e., the norm of the gradient at x
     #     is less than the required threshold
     #
     #   = 'stopped': the algorithm terminated having exhausted the maximum
@@ -117,97 +120,73 @@ class LagrangianDual(ConstrainedOptimizer):
 
     # compute straight away the Cholesky factorization of Q, this will be used
     # at each iteration to solve the Lagrangian relaxation
-    [R, p] = chol(BCQP.Q)
+    [R, p] = np.linalg.cholesky(BCQP.Q)
     if p > 0:
         error(mstring('BCQP.Q not positive definite, this is not supported (yet)'))
-    end
 
     if not isempty(varargin):
         dolh = logical(varargin(1))
     else:
         dolh = true
-    end
 
     if length(varargin) > 1:
         eps = varargin(2)
         if not isreal(eps) or not isscalar(eps):
             error(mstring('eps is not a real scalar'))
-        end
     else:
         eps = 1e-6
-    end
 
     if length(varargin) > 2:
         MaxFeval = round(varargin(3))
         if not isscalar(MaxFeval):
             error(mstring('MaxFeval is not an integer scalar'))
-        end
     else:
         MaxFeval = 1000
-    end
 
     if length(varargin) > 3:
         m1 = varargin(4)
         if not isscalar(m1):
             error(mstring('m1 is not a real scalar'))
-        end
         if m1 <= 0 or m1 >= 1:
             error(mstring('m1 is not in (0 ,1)'))
-        end
     else:
         m1 = 0.01
-    end
 
     if length(varargin) > 4:
         m2 = varargin(5)
         if not isscalar(m1):
             error(mstring('m2 is not a real scalar'))
-        end
         if m2 <= 0 or m2 >= 1:
             error(mstring('m2 is not in (0, 1)'))
-        end
     else:
         m2 = 0.9
-    end
 
     if length(varargin) > 5:
         astart = varargin(6)
         if not isscalar(astart):
             error(mstring('astart is not a real scalar'))
-        end
         if astart < 0:
             error(mstring('astart must be > 0'))
-        end
     else:
         astart = 1
-    end
 
     if length(varargin) > 6:
         sfgrd = varargin(7)
         if not isscalar(sfgrd):
             error(mstring('sfgrd is not a real scalar'))
-        end
         if sfgrd <= 0 or sfgrd >= 1:
             error(mstring('sfgrd is not in (0, 1)'))
-        end
     else:
         sfgrd = 0.01
-    end
 
     if length(varargin) > 7:
         mina = varargin(8)
         if not isscalar(mina):
             error(mstring('mina is not a real scalar'))
-        end
         if mina < 0:
             error(mstring('mina is < 0'))
-        end
     else:
         mina = 1e-12
-    end
-
-    # initializations - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     x = BCQP.u / 2  # initial feasible solution is the middle of the box
     v = 0.5 * x.cT * BCQP.Q * x + BCQP.q.cT * x
@@ -217,66 +196,52 @@ class LagrangianDual(ConstrainedOptimizer):
         fprintf(mstring('feval\\tub\\t\\tp(l)\\t\\tgap\\t\\tls feval\\ta*\\n\\n'))
     else:
         fprintf(mstring('feval\\tp(l)\\t\\t|| grad ||\\tls feval\\ta*\\n\\n'))
-    end
 
     feval = 0
 
     _lambda = zeros(2 * n, 1)
     [p, lastg] = phi(_lambda)
 
-    # main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    while true:
-        # project the direction = - gradient over the active constraints- - - -
+    while True:
+        # project the direction = - gradient over the active constraints
         d = -lastg
-        d(_lambda <= logical_and(1e-12, d < 0)).lvalue = 0
-
-        # output statistics - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        d(_lambda <= np.logical_and(1e-12, d < 0)).lvalue = 0
 
         if dolh:
             # compute the relative gap
-            gap = (v + p) / max(mcat([abs(v), 1]))
+            gap = (v + p) / max(abs(v), 1)
 
-            fprintf(mstring('%4d\\t%1.8e\\t%1.8e\\t%1.4e\\t'), feval, v, -p, gap)
+            print('%4d\\t%1.8e\\t%1.8e\\t%1.4e\\t'.format(feval, v, -p, gap))
 
             if gap <= eps:
                 fprintf(mstring('OPT\\n'))
                 status = mstring('optimal')
                 break
-            end
         else:
             # compute the norm of the projected gradient
-            gnorm = norm(d)
+            gnorm = np.linalg.norm(d)
 
-            fprintf(mstring('%4d\\t%1.8e\\t%1.4e\\t'), feval, -p, gnorm)
+            print('%4d\\t%1.8e\\t%1.4e\\t'.format(feval, -p, gnorm))
 
             if feval == 1:
                 gnorm0 = gnorm
-            end
             if gnorm <= eps * gnorm0:
                 fprintf(mstring('OPT\\n'))
                 status = mstring('optimal')
                 break
-            end
-        end
-        # stopping criteria - - - - - - - - - - - - - - - - - - - - - - - - - -
 
         if feval > MaxFeval:
             fprintf(mstring('STOP\\n'))
             status = mstring('stopped')
             break
-        end
 
-        # compute step size - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-        # first, compute the maximum feasible stepsize maxt such that
+        # first, compute the maximum feasible step size maxt such that
         #
         #   0 <= lambda( i ) + maxt * d( i )   for all i
 
-        ind = d < 0  # negative gradient entries
-        if any(ind):
-            maxt = min(astart, min(-_lambda(ind) / eldiv / d(ind)))
+        idx = d < 0  # negative gradient entries
+        if any(idx):
+            maxt = min(astart, min(-_lambda(idx) / eldiv / d(idx)))
         else:
             maxt = astart
         end
@@ -293,16 +258,7 @@ class LagrangianDual(ConstrainedOptimizer):
             break
         end
 
-        # compute new point - - - - - - - - - - - - - - - - - - - - - - - - - -
-
         _lambda = _lambda + a * d
-
-        # iterate - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    end
-
-    # end of main loop- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     if nargout > 1:
         varargout(1).lvalue = x
@@ -316,12 +272,7 @@ class LagrangianDual(ConstrainedOptimizer):
         varargout(3).lvalue = _lambda
     end
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # inner functions - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-
-@mfunction("p, y")
 def solveLagrangian(_lambda=None):
     # The Lagrangian relaxation of the problem is
     #
@@ -359,7 +310,6 @@ def solveLagrangian(_lambda=None):
     feval = feval + 1
 
 
-@mfunction("p, g")
 def phi(_lambda=None):
     # phi( lambda ) is the Lagrangian function of the problem. With x the
     # optimal solution of the minimization problem (see solveLagrangian()), the
@@ -374,15 +324,15 @@ def phi(_lambda=None):
     p = -p
 
     # compute gradient
-    g = mcat([BCQP.u - y, OMPCSEMI, y])
+    g = np.vstack((BCQP.u - y, y))
 
     if dolh:
         # compute an heuristic solution out of the solution y of the Lagrangian
         # relaxation by projecting y on the box
 
         y(y < 0).lvalue = 0
-        ind = y > BCQP.u
-        y(ind).lvalue = BCQP.u(ind)
+        idx = y > BCQP.u
+        y(idx).lvalue = BCQP.u(idx)
 
         # compute cost of feasible solution
         pv = 0.5 * y.cT * BCQP.Q * y + BCQP.q.cT * y
@@ -390,9 +340,6 @@ def phi(_lambda=None):
         if pv < v:  # it is better than best one found so far
             x = y  # y becomes the incumbent
             v = pv
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 def phi1d(alpha=None):
@@ -410,7 +357,7 @@ def ArmijoWolfeLS(phi0=None, phip0=None, _as=None, m1=None, m2=None):
     # phi0 = phi( 0 ), phip0 = phi'( 0 ) < 0
     #
     # as > 0 is the first value to be tested, and it is also the *maximum*
-    # possible stepsize: if phi'( as ) < 0 then the LS is immediately
+    # possible step size: if phi'( as ) < 0 then the LS is immediately
     # terminated
     #
     # m1 and m2 are the standard Armijo-Wolfe parameters; note that the strong

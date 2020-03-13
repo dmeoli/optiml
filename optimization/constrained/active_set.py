@@ -34,8 +34,8 @@ class ActiveSet(ConstrainedOptimizer):
     # - status (string, optional): a string describing the status of the
     #   algorithm at termination, with the following possible values:
     #
-    #   = 'optimal': the algorithm terminated having proven that x is a(n
-    #     approximately) optimal solution, i.e., the norm of the gradient at x
+    #   = 'optimal': the algorithm terminated having proven that x is an
+    #     (approximately) optimal solution, i.e., the norm of the gradient at x
     #     is less than the required threshold
     #
     #   = 'stopped': the algorithm terminated having exhausted the maximum
@@ -55,44 +55,43 @@ class ActiveSet(ConstrainedOptimizer):
         # active, L and U respectively. Of course, L and U have to be disjoint.
         # Since we start from the middle of the box, both the initial active sets
         # are empty
-        L = false(n, 1)
-        U = false(n, 1)
+        L = np.full(self.n, False)
+        U = np.full(self.n, False)
 
         # the set of "active variables", those that do *not* belong to any of the
         # two active sets and therefore are "free", is therefore the complement to
         # 1 : n of L union U; since L and U are empty now, A = 1 : n
-        A = true(n, 1)
+        A = np.full(self.n, True)
 
         print('iter\tf(self.wrt)\t\t| B |\tI/O')
 
         while True:
+            print('{:4d}\t{:1.8e}\t{:d}\t'.format(self.iter, v, sum(L) + sum(U)))
 
-            print('%4d\t%1.8e\t%d\t'), i, v, sum(L) + sum(U)
-
-            if i > self.max_iter:
+            if self.iter >= self.max_iter:
                 status = 'stopped'
                 break
 
             # solve the *unconstrained* problem restricted to A the problem reads:
             #
-            #  min { (1/2) x_A' * Q_{AA} * x_A + ( q_A + u_U' * Q_{UA} ) * x_A }
-            #    [ + (1/2) x_U' * Q_{UU} * x_U ]
+            #  min { (1/2) x_A^T * Q_{AA} * x_A + ( q_A + u_U^T * Q_{UA} ) * x_A }
+            #    [ + (1/2) x_U^T * Q_{UU} * x_U ]
             #
             # and therefore the optimal solution is:
             #
-            #   x_A^* = - Q_{AA}^{-1} ( q_A + u_U' * Q_{UA} )
+            #   x_A* = - Q_{AA}^{-1} ( q_A + u_U^T * Q_{UA} )
             #
             # not that this actually is a *constrained* problem subject to equality
             # constraints, but in our case equality constraints just fix variables
             # (and anyway, any QP problem with equality constraints reduces to an
             # unconstrained one)
 
-            xs = np.zeros(n, 1)
-            xs[U].lvalue = ub[U]
-            opts.SYM = true  # tell it Q_{AA} is positive definite (hence of
-            opts.POSDEF = true  # course symmetric), it'll probably do the right
+            xs = np.zeros(self.n)
+            xs[U] = ub[U]
+            sym = True  # tell it Q_{AA} is positive definite (hence of
+            posdef = True  # course symmetric), it'll probably do the right
             # thing and use Cholesky to solve the system
-            xs[A].lvalue = linsolve(BCQP.Q(A, A), -(BCQP.q(A) + BCQP.Q(A, U) * ub[U]), opts)
+            xs[A].lvalue = np.linalg.solve(self.f.Q(A, A), -(self.f.q(A) + self.f.Q(A, U) * ub[U]), sym, posdef)
 
             if np.all(xs[A] <= np.logical_and(ub[A] + 1e-12, xs[A] >= -1e-12)):
                 # the solution of the unconstrained problem is actually feasible
@@ -111,23 +110,23 @@ class ActiveSet(ConstrainedOptimizer):
                     uppr = True
 
                 if not h:
-                    print('\nOPT\t%1.8e\n'), v)
+                    print('\nOPT\t%1.8e\n'.format(v))
                     status = 'optimal'
                     break
                 else:
-                    h = h(1, 1)  # that's probably Bland's anti-cycle rule
-                    A(h).lvalue = True
+                    h = h[1, 1]  # that's probably Bland's anti-cycle rule
+                    A[h] = True
                     if uppr:
-                        U(h).lvalue = False
+                        U[h] = False
                         print('O %d(U)'.format(h))
                     else:
-                        L(h).lvalue = False
+                        L[h] = False
                         print('O %d(L)\n'.format(h))
             else:  # the solution of the unconstrained problem is *not* feasible
                 # this means that d = xs - self.wrt is a descent direction, use it
                 # of course, only the "free" part really needs to be computed
 
-                d = np.zeros(n, 1)
+                d = np.zeros(self.n)
                 d[A].lvalue = xs[A] - self.wrt(A)
 
                 # first, compute the maximum feasible step size max_t such that:
@@ -147,14 +146,14 @@ class ActiveSet(ConstrainedOptimizer):
 
                 # update the active set(s)
                 nL = np.logical_and(A, self.wrt <= 1e-12)
-                L(nL).lvalue = True
-                A(nL).lvalue = False
+                L[nL] = True
+                A[nL] = False
 
                 nU = np.logical_and(A, self.wrt >= ub - 1e-12)
-                U(nU).lvalue = True
-                A(nU).lvalue = False
+                U[nU] = True
+                A[nU] = False
 
-                print('I %d+%d\n'.format(sum(nL), sum(nU)))
+                print('I %d+%d'.format(sum(nL), sum(nU)))
 
             self.iter += 1
 

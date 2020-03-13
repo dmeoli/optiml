@@ -64,8 +64,8 @@ class ProximalBundle(Optimizer):
     # - status (string): a string describing the status of the algorithm at
     #   termination
     #
-    #   = 'optimal': the algorithm terminated having proven that x is a(n
-    #     approximately) optimal solution; this only happens when "cheating",
+    #   = 'optimal': the algorithm terminated having proven that x is an
+    #     (approximately) optimal solution; this only happens when "cheating",
     #     i.e., explicitly uses v_* = f([]) > -inf, unless in the very
     #     unlikely case that f() spontaneously produces an almost-null
     #     subgradient
@@ -177,8 +177,8 @@ class ProximalBundle(Optimizer):
                 status = 'unbounded'
                 break
 
-            G = [G, OMPCSEMI, g.T]
-            F = [F, OMPCSEMI, fd - g.T * (self.wrt + d)]
+            G = np.vstack((G, g.T))
+            F = np.vstack([F, fd - g.T * (self.wrt + d)])
 
             # SS / NS decision
 

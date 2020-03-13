@@ -61,8 +61,8 @@ class ProjectedGradient(ConstrainedOptimizer):
     # - status (string, optional): a string describing the status of the
     #   algorithm at termination, with the following possible values:
     #
-    #   = 'optimal': the algorithm terminated having proven that x is a(n
-    #     approximately) optimal solution, i.e., the norm of the gradient at x
+    #   = 'optimal': the algorithm terminated having proven that x is an
+    #     (approximately) optimal solution, i.e., the norm of the gradient at x
     #     is less than the required threshold
     #
     #   = 'stopped': the algorithm terminated having exhausted the maximum

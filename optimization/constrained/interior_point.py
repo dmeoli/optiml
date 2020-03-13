@@ -49,7 +49,7 @@ class InteriorPoint(ConstrainedOptimizer):
 
     printCS = 0
 
-    def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+    def __init__(self, f, eps=1e-10, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, eps, max_iter, verbose, plot)
 
     def minimize(self, ub):
@@ -70,9 +70,9 @@ class InteriorPoint(ConstrainedOptimizer):
         #
         # if x and ( \lambda^+ , \lambda^- ) satisfy SKKTS, then
         #
-        #   v = (1/2) x' Q x + q x
+        #   v = (1/2) x^T Q x + q x
         #
-        #   p = - \lambda^+ u - (1/2) x' Q x
+        #   p = - \lambda^+ u - (1/2) x^T Q x
         #
         # are, respectively, a valid upper and lower bound on v(P), and
         #
@@ -152,7 +152,7 @@ class InteriorPoint(ConstrainedOptimizer):
 
         while True:
 
-            xQx = self.wrt.cT * BCQP.Q * self.wrt
+            xQx = self.wrt.dot(self.f.hessian(self.wrt)).dot(self.wrt)
             v = 0.5 * xQx + BCQP.q.cT * self.wrt
             p = -lp.cT * ub - 0.5 * xQx
             gap = (v - p) / max(abs(v), 1)
