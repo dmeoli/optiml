@@ -1,11 +1,10 @@
-import numpy as np
 from qpsolvers import solve_qp
 from sklearn.model_selection import train_test_split
 
 from ml.learning import MultiOutputLearner
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error
-from ml.svm.kernels import rbf_kernel
+from ml.svm.kernels import *
 from ml.svm.svm import SVR, scipy_solve_qp, scipy_solve_qp_with_bounds
 from optimization.constrained.active_set import ActiveSet
 from optimization.constrained.frank_wolfe import FrankWolfe
@@ -22,16 +21,27 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
-    svr = MultiOutputLearner(SVR(kernel=rbf_kernel, eps=0.1))
-    svr.fit(X_train, y_train, optimizer=ProjectedGradient, verbose=False)
+    svr = MultiOutputLearner(SVR(kernel=linear_kernel, eps=0.1))
+    svr.fit(X_train, y_train, optimizer=solve_qp, verbose=False)
+    for learner in svr.learners:
+        print('w = ', learner.w)
+        print('b = ', learner.b)
+        print('idx of support vectors = ', learner.sv_idx)
+        print('support vectors = ', learner.sv)
     pred = svr.predict(X_test)
-    print(mean_squared_error(pred, y_test))
-    print(mean_euclidean_error(pred, y_test))
+    print('mse: ', mean_squared_error(pred, y_test))
+    print('mee: ', mean_euclidean_error(pred, y_test))
+    print()
 
     from sklearn.multioutput import MultiOutputRegressor
     from sklearn.svm import SVR
 
-    svr_sk = MultiOutputRegressor(SVR(kernel='rbf', epsilon=0.1)).fit(X_train, y_train)
-    pred = svr_sk.predict(X_test)
-    print(mean_squared_error(pred, y_test))
-    print(mean_euclidean_error(pred, y_test))
+    svr = MultiOutputRegressor(SVR(kernel='linear', epsilon=0.1)).fit(X_train, y_train)
+    for learner in svr.estimators_:
+        print('w = ', learner.coef_)
+        print('b = ', learner.intercept_)
+        print('idx of support vectors = ', learner.support_)
+        print('support vectors = ', learner.support_vectors_)
+    pred = svr.predict(X_test)
+    print('mse: ', mean_squared_error(pred, y_test))
+    print('mee: ', mean_euclidean_error(pred, y_test))

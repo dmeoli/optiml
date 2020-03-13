@@ -5,14 +5,17 @@ from scipy.optimize import minimize
 
 from ml.learning import Learner
 from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel
-from optimization.constrained.projected_gradient import ConstrainedOptimizer
 from optimization.optimization_function import Quadratic
 
 
 def scipy_solve_qp(f, y, G, h, max_iter, verbose):
     return minimize(fun=f.function, jac=f.jacobian, x0=np.random.rand(f.n),
-                    constraints=({'type': 'ineq', 'fun': lambda x: h - np.dot(G, x), 'jac': lambda x: -G},
-                                 {'type': 'eq', 'fun': lambda x: np.dot(x, y), 'jac': lambda x: y}),
+                    constraints=({'type': 'ineq',
+                                  'fun': lambda x: h - np.dot(G, x),
+                                  'jac': lambda x: -G},
+                                 {'type': 'eq',
+                                  'fun': lambda x: np.dot(x, y),
+                                  'jac': lambda x: y}),
                     options={'maxiter': max_iter,
                              'disp': verbose}).x
 
@@ -25,15 +28,15 @@ def scipy_solve_qp_with_bounds(f, ub, max_iter, verbose):
 
 
 class SVM(Learner):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.1):
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1.):
         self.kernel = kernel
         self.degree = degree
         if gamma not in ('scale', 'auto'):
             raise ValueError('unknown gamma type {}'.format(gamma))
         self.gamma = gamma
         self.C = C
-        self.eps = eps
         self.n_sv = -1
+        self.sv_idx = np.zeros(0)
         self.sv = np.zeros(0)
         self.w = None
         self.b = 0.
@@ -43,8 +46,8 @@ class SVM(Learner):
 
 
 class SVC(SVM):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.1):
-        super().__init__(kernel, degree, gamma, C, eps)
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1.):
+        super().__init__(kernel, degree, gamma, C)
         self.sv_y = np.zeros(0)
         self.alphas = np.zeros(0)
 
@@ -62,10 +65,12 @@ class SVC(SVM):
              self.kernel(X, X))  # linear kernel
         P = K * np.outer(y, y)
         q = -np.ones(m)
+
         G = np.vstack((-np.identity(m), np.identity(m)))  # inequality matrix
         lb = np.zeros(m)  # lower bounds
         ub = np.ones(m) * self.C  # upper bounds
         h = np.hstack((lb, ub))  # inequality vector
+
         A = y.astype(np.float)  # equality matrix
         b = np.zeros(1)  # equality vector
 
@@ -80,13 +85,13 @@ class SVC(SVM):
                        scipy_solve_qp_with_bounds(lagrangian, ub, max_iter, verbose)
                        if optimizer is scipy_solve_qp_with_bounds else
                        solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True) if optimizer is solve_qp else
-                       optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0]
-                       if issubclass(optimizer, ConstrainedOptimizer) else ValueError)
+                       optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
 
-        sv_idx = np.arange(len(self.alphas))[self.alphas > self.eps]
-        self.sv, self.sv_y, self.alphas = X[sv_idx], y[sv_idx], self.alphas[sv_idx]
+        self.sv_idx = np.argwhere(self.alphas > 1e-5).ravel()
+        self.sv, self.sv_y, self.alphas = X[self.sv_idx], y[self.sv_idx], self.alphas[self.sv_idx]
         self.n_sv = len(self.alphas)
-        if self.kernel == linear_kernel:
+
+        if self.kernel is linear_kernel:
             self.w = np.dot(self.alphas * self.sv_y, self.sv)
 
         self.b = np.mean(self.sv_y - np.dot(self.alphas * self.sv_y,
@@ -101,13 +106,11 @@ class SVC(SVM):
         """
         Predicts the score for a given example.
         """
-        if self.w is None:
+        if self.kernel is not linear_kernel:
             return np.dot(self.alphas * self.sv_y,
                           self.kernel(self.sv, X, self.degree)
-                          if self.kernel is polynomial_kernel else
-                          self.kernel(self.sv, X, self.gamma)
-                          if self.kernel is rbf_kernel else
-                          self.kernel(self.sv, X)) + self.b  # linear kernel
+                          if self.kernel is polynomial_kernel else  # self.kernel is rbf_kernel
+                          self.kernel(self.sv, X, self.gamma)) + self.b
         return np.dot(X, self.w) + self.b
 
     def predict(self, X):
@@ -119,7 +122,8 @@ class SVC(SVM):
 
 class SVR(SVM):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.1):
-        super().__init__(kernel, degree, gamma, C, eps)
+        super().__init__(kernel, degree, gamma, C)
+        self.eps = eps
         self.alphas_p = np.zeros(0)
         self.alphas_n = np.zeros(0)
 
@@ -138,10 +142,12 @@ class SVR(SVM):
         P = np.vstack((np.hstack((K, -K)),  # alphas_p, alphas_n
                        np.hstack((-K, K))))  # alphas_n, alphas_p
         q = np.hstack((-y, y)) + self.eps
+
         G = np.vstack((-np.identity(2 * m), np.identity(2 * m)))  # inequality matrix
         lb = np.zeros(2 * m)  # lower bounds
         ub = np.ones(2 * m) * self.C  # upper bounds
         h = np.hstack((lb, ub))  # inequality vector
+
         A = np.hstack((np.ones(m), -np.ones(m)))  # equality matrix
         b = np.zeros(1)  # equality vector
 
@@ -156,33 +162,33 @@ class SVR(SVM):
                   scipy_solve_qp_with_bounds(lagrangian, ub, max_iter, verbose)
                   if optimizer is scipy_solve_qp_with_bounds else
                   solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True) if optimizer is solve_qp else
-                  optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0]
-                  if issubclass(optimizer, ConstrainedOptimizer) else ValueError)
+                  optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 
-        self.sv = X
+        self.sv_idx = np.argwhere(alphas > 1e-5).ravel()
+        self.sv, alphas = X, alphas[self.sv_idx]
         self.n_sv = len(alphas)
-        if self.kernel == linear_kernel:
+
+        if self.kernel is linear_kernel:
             self.w = np.dot(self.alphas_p - self.alphas_n, X)
 
         self.b = np.mean(y - self.eps - np.dot(self.alphas_p - self.alphas_n,
-                                               self.kernel(X, X, self.degree)
+                                               self.kernel(self.sv, X, self.degree)
                                                if self.kernel is polynomial_kernel else
-                                               self.kernel(X, X, self.gamma)
+                                               self.kernel(self.sv, X, self.gamma)
                                                if self.kernel is rbf_kernel else  # linear kernel
-                                               self.kernel(X, X)))
+                                               self.kernel(self.sv, X)))
         return self
 
     def predict(self, X):
         """
         Predicts the score of a given example.
         """
-        if self.w is None:
+        if self.kernel is not linear_kernel:
             return np.dot(self.alphas_p - self.alphas_n,
                           self.kernel(self.sv, X, self.degree)
-                          if self.kernel is polynomial_kernel else
-                          self.kernel(self.sv, X, self.gamma)
-                          if self.kernel is rbf_kernel else
-                          self.kernel(self.sv, X)) + self.b  # linear kernel
+                          if self.kernel is polynomial_kernel else  # self.kernel is rbf_kernel
+                          self.kernel(self.sv, X, self.gamma)) + self.b
+
         return np.dot(X, self.w) + self.b
