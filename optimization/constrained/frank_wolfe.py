@@ -1,15 +1,14 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
 from optimization.constrained.projected_gradient import ConstrainedOptimizer
 
 
 class FrankWolfe(ConstrainedOptimizer):
-    # function [ v , x , status ] = FWBCQP( BCQP , eps , MaxIter , t )
-    #
     # Apply the (possibly, stabilized) Frank-Wolfe algorithm with exact line
     # search to the convex Box-Constrained Quadratic program
     #
     #  (P) min { (1/2) x^T * Q * x + q * x : 0 <= x <= u }
-    #
-    # encoded in the structure BCQP.
     #
     # Input:
     #
@@ -30,10 +29,10 @@ class FrankWolfe(ConstrainedOptimizer):
     # - MaxIter (integer scalar, optional, default value 1000): the maximum
     #   number of iterations
     #
-    # - t (real scalar scalar, optional, default value 0): if the stablized
+    # - t (real scalar scalar, optional, default value 0): if the stabilized
     #   version of the approach is used, then the new point is chosen in the
-    #   box of relative sixe t around the current point, i.e., the component
-    #   x[ i ] is allowed to change by not more than plus or minus t * u[ i ].
+    #   box of relative size around the current point, i.e., the component
+    #   x[i] is allowed to change by not more than plus or minus t * u[i].
     #   if t = 0, then the non-stabilized version of the algorithm is used.
     #
     # Output:
@@ -55,150 +54,79 @@ class FrankWolfe(ConstrainedOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    if not isstruct(BCQP):
-        error(mstring('BCQP not a struct'))
-    end
-
-    if not isfield(BCQP, mstring('Q')) or not isfield(BCQP, mstring('q')) or not isfield(BCQP, mstring('u')):
-        error(mstring('BCQP not a well-formed struct'))
-    end
-
-    if not isreal(BCQP.Q) or not isreal(BCQP.q) or not isreal(BCQP.u):
-        error(mstring('BCQP not a well-formed struct'))
-    end
-
-    n = size(BCQP.q, 1)
-    if size(BCQP.q, 2) != 1 or not isequal(size(BCQP.Q), mcat([n, n])) or not isequal(size(BCQP.u), mcat([n, 1])):
-        error(mstring('BCQP not a well-formed struct'))
-    end
-
-    if not isempty(varargin):
-        eps = varargin(1)
-        if not isreal(eps) or not isscalar(eps):
-            error(mstring('eps is not a real scalar'))
-        end
-    else:
-        eps = 1e-6
-    end
-
-    if length(varargin) > 1:
-        MaxIter = round(varargin(2))
-        if not isscalar(MaxIter):
-            error(mstring('MaxIter is not an integer scalar'))
-        end
-    else:
-        MaxIter = 1000
-    end
-
-    if length(varargin) > 2:
-        t = varargin(3)
-        if not isreal(t) or not isscalar(t):
-            error(mstring('t is not a real scalar'))
-        end
+    def __init__(self, f, t=0, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+        super().__init__(f, eps, max_iter, verbose, plot)
+        if not np.isreal(t) or not np.isscalar(t):
+            raise ValueError('t is not a real scalar')
         if t < 0 or t > 1:
-            error(mstring('t is not in [0, 1]'))
-        end
-    else:
-        t = 0
-    end
+            raise ValueError('t is not in [0, 1]')
+        self.t = t
 
-    # initializations - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    def minimize(self, ub):
 
-    x = BCQP.u / 2  # start from the middle of the box
+        self.wrt = ub / 2  # start from the middle of the box
 
-    bestlb = -inf  # best lower bound so far (= none, really)
+        best_lb = -np.inf  # best lower bound so far (= none, really)
 
-    fprintf(mstring('Frank-Wolfe method\\n'))
-    fprintf(mstring('iter\\tf(x)\\t\\tlb\\t\\tgap\\n\\n'))
+        print('iter\tf(x)\t\tlb\t\tgap\n\n')
 
-    i = 1
+        while True:
 
-    # main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
 
-    while true:
-        # compute function value and direction = - gradient - - - - - - - - - -
+            # solve min { <g, y> : 0 <= y <= u }
+            y = np.zeros(self.n)
+            ind = g < 0
+            y[ind].lvalue = ub[ind]
 
-        v = 0.5 * x.cT * BCQP.Q * x + BCQP.q.cT * x
-        g = BCQP.Q * x + BCQP.q
+            # compute the lower bound: remember that the first-order approximation
+            # is f( x ) + g ( y - x )
+            lb = v + g.T.dot(y - self.wrt)
+            if lb > best_lb:
+                best_lb = lb
 
-        # solve min { < g , y > : 0 <= y <= u }
-        y = zeros(n, 1)
-        ind = g < 0
-        y(ind).lvalue = BCQP.u(ind)
+            # compute the relative gap
+            gap = (v - best_lb) / max(abs(v), 1)
 
-        # compute the lower bound: remember that the first-order approximation
-        # is f( x ) + g ( y - x )
-        lb = v + g.cT * (y - x)
-        if lb > bestlb:
-            bestlb = lb
-        end
+            print('%4d\t%1.8e\t%1.8e\t%1.4e\n'.format(self.iter, v, best_lb, gap))
 
-        # compute the relative gap
-        gap = (v - bestlb) / max(mcat([abs(v), 1]))
+            if gap <= self.eps:
+                status = 'optimal'
+                break
 
-        # output statistics - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            if self.iter > self.max_iter:
+                status = 'stopped'
+                break
 
-        fprintf(mstring('%4d\\t%1.8e\\t%1.8e\\t%1.4e\\n'), i, v, bestlb, gap)
+            # in the stabilized case, restrict y in the box
+            if self.t > 0:
+                y = max(self.wrt - self.t * ub, min(self.wrt + self.t * ub, y))
 
-        # stopping criteria - - - - - - - - - - - - - - - - - - - - - - - - - -
-        if gap <= eps:
-            status = mstring('optimal')
-            break
-        end
+            # compute step size
+            # we are taking direction d = y - x and y is feasible, hence the
+            # maximum step size is 1
+            d = y - self.wrt
 
-        if i > MaxIter:
-            status = mstring('stopped')
-            break
-        end
+            # compute optimal unbounded step size:
+            # min (1/2) (x + a d)^T * Q * (x + a d) + q' * (x + a d) =
+            #     (1/2) a^2 (d^T * Q * d) + a d^T * (Q * x + q) [+ const]
+            #
+            # ==> a = -d^T * (Q * x + q) / d^T * Q * d
+            #
+            den = d.T.dot(self.f.hessian(self.wrt)).dot(d)
 
-        # in the stabilized case, restrict y in the box - - - - - - - - - - - -
+            if den <= 1e-16:  # d' * Q * d = 0  ==>  f is linear along d
+                alpha = 1  # just take the maximum possible step size
+            else:
+                # optimal unbounded step size restricted to max feasible step
+                alpha = min(-g.T.dot(d) / den, 1)
 
-        if t > 0:
-            y = max(x - t * BCQP.u, min(x + t * BCQP.u, y))
-        end
+            self.wrt += alpha * d
 
-        # compute step size - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # we are taking direction d = y - x and y is feasible, hence the
-        # maximum stepsize is 1
+            self.iter += 1
 
-        d = y - x
-
-        # compute optimal unbounded stepsize:
-        # min (1/2) ( x + a d )' * Q * ( x + a d ) + q' * ( x + a d ) =
-        #     (1/2) a^2 ( d' * Q * d ) + a d' * ( Q * x + q ) [ + const ]
-        #
-        # ==> a = - d' * ( Q * x + q ) / d' * Q * d
-        #
-        den = d.cT * BCQP.Q * d
-
-        if den <= 1e-16:  # d' * Q * d = 0  ==>  f is linear along d
-            alpha = 1  # just take the maximum possible stepsize
-        else:
-            # optimal unbounded stepsize restricted to max feasible step
-            alpha = min(mcat([(-g.cT * d) / den, 1]))
-        end
-
-        # compute new point - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-        x = x + alpha * d
-
-        # iterate - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        i = i + 1
-
-    end
-
-    # end of main loop- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    if nargout > 1:
-        varargout(1).lvalue = x
-    end
-
-    if nargout > 2:
-        varargout(2).lvalue = status
-    end
-
-
-end  # the end- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        if self.verbose:
+            print()
+        if self.plot and self.n == 2:
+            plt.show()
+        return self.wrt, status

@@ -6,14 +6,12 @@ class LagrangianDual(ConstrainedOptimizer):
     #
     #  (P) min { (1/2) x^T * Q * x + q * x : 0 <= x <= u }
     #
-    # encoded in the structure BCQP using a dual approach, where Q must be
-    # strictly positive definite. The box constraints 0 <= x <= u are relaxed
-    # (with Lagrangian multipliers \lambda^- and \lambda^+, respectively) and
-    # the corresponding Lagrangian Dual is solved by means of an ad-hoc
-    # implementation of the Projected Gradient method (since the Lagrangian
-    # multipliers are constrained in sign, and the Lagrangian function is
-    # differentiable owing to strict-positive-definiteness of Q) using a
-    # classical Armijo-Wolfe line search.
+    # The box constraints 0 <= x <= u are relaxed (with Lagrangian multipliers
+    # \lambda^- and \lambda^+, respectively) and the corresponding Lagrangian
+    # Dual is solved by means of an ad-hoc implementation of the Projected
+    # Gradient method (since the Lagrangian multipliers are constrained in
+    # sign, and the Lagrangian function is differentiable owing to
+    # strict-positive-definiteness of Q) using a classical Armijo-Wolfe line search.
     #
     # A rough Lagrangian heuristic is implemented whereby the dual solution is
     # projected on the box at each iteration to provide an upper bound, which

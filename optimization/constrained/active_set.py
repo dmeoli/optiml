@@ -1,3 +1,6 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
 from optimization.constrained.projected_gradient import ConstrainedOptimizer
 
 
@@ -6,9 +9,6 @@ class ActiveSet(ConstrainedOptimizer):
     # program
     #
     #  (P) min { (1/2) x^T * Q * x + q * x : 0 <= x <= u }
-    #
-    # encoded in the structure BCQP, where Q must be strictly positive
-    # definite.
     #
     # Input:
     #
@@ -47,8 +47,8 @@ class ActiveSet(ConstrainedOptimizer):
 
     def minimize(self, ub):
 
-        x = BCQP.u / 2  # start from the middle of the box
-        v = 0.5 * x.cT * BCQP.Q * x + BCQP.q.cT * x
+        self.wrt = ub / 2  # start from the middle of the box
+        v = self.f.function(self.wrt)
 
         # Because all constraints are box ones, the active set is logically
         # partitioned onto the set of lower and upper bound constraints that are
@@ -63,32 +63,22 @@ class ActiveSet(ConstrainedOptimizer):
         # 1 : n of L union U; since L and U are empty now, A = 1 : n
         A = true(n, 1)
 
-        fprintf(mstring('Active Set method\\n'))
-        fprintf(mstring('iter\\tf(x)\\t\\t| B |\\tI/O\\n\\n'))
-
-        i = 1
-
-        # main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        print('iter\tf(self.wrt)\t\t| B |\tI/O')
 
         while True:
-            # output statistics - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            fprintf(mstring('%4d\\t%1.8e\\t%d\\t'), i, v, sum(L) + sum(U))
+            print('%4d\t%1.8e\t%d\t'), i, v, sum(L) + sum(U)
 
-            # stopping criteria - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-            if i > MaxIter:
-                status = mstring('stopped')
+            if i > self.max_iter:
+                status = 'stopped'
                 break
 
-            # solve the *unconstrained* problem restricted to A - - - - - - - - - -
-            # the problem reads
+            # solve the *unconstrained* problem restricted to A the problem reads:
             #
             #  min { (1/2) x_A' * Q_{AA} * x_A + ( q_A + u_U' * Q_{UA} ) * x_A }
             #    [ + (1/2) x_U' * Q_{UU} * x_U ]
             #
-            # and therefore the optimal solution is
+            # and therefore the optimal solution is:
             #
             #   x_A^* = - Q_{AA}^{-1} ( q_A + u_U' * Q_{UA} )
             #
@@ -97,82 +87,79 @@ class ActiveSet(ConstrainedOptimizer):
             # (and anyway, any QP problem with equality constraints reduces to an
             # unconstrained one)
 
-            xs = zeros(n, 1)
-            xs(U).lvalue = BCQP.u(U)
+            xs = np.zeros(n, 1)
+            xs[U].lvalue = ub[U]
             opts.SYM = true  # tell it Q_{AA} is positive definite (hence of
             opts.POSDEF = true  # course symmetric), it'll probably do the right
             # thing and use Cholesky to solve the system
-            xs(A).lvalue = linsolve(BCQP.Q(A, A), -(BCQP.q(A) + BCQP.Q(A, U) * BCQP.u(U)), opts)
+            xs[A].lvalue = linsolve(BCQP.Q(A, A), -(BCQP.q(A) + BCQP.Q(A, U) * ub[U]), opts)
 
-            if all(xs(A) <= logical_and(BCQP.u(A) + 1e-12, xs(A) >= -1e-12)):
+            if np.all(xs[A] <= np.logical_and(ub[A] + 1e-12, xs[A] >= -1e-12)):
                 # the solution of the unconstrained problem is actually feasible
 
                 # move the current point right there
-                x = xs
+                self.wrt = xs
 
                 # compute function value and gradient
-                v = 0.5 * x.cT * BCQP.Q * x + BCQP.q.cT * x
-                g = BCQP.Q * x + BCQP.q
+                v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
 
-                h = find(logical_and(L, g < -1e-12))
-                if not isempty(h):
-                    uppr = false
+                h = find(np.logical_and(L, g < -1e-12))
+                if h:
+                    uppr = False
                 else:
-                    h = find(logical_and(U, g > 1e-12))
-                    uppr = true
+                    h = find(np.logical_and(U, g > 1e-12))
+                    uppr = True
 
-                if isempty(h):
-                    fprintf(mstring('\\nOPT\\t%1.8e\\n'), v)
-                    status = mstring('optimal')
+                if not h:
+                    print('\nOPT\t%1.8e\n'), v)
+                    status = 'optimal'
                     break
                 else:
                     h = h(1, 1)  # that's probably Bland's anti-cycle rule
-                    A(h).lvalue = true
+                    A(h).lvalue = True
                     if uppr:
-                        U(h).lvalue = false
-                        fprintf(mstring('O %d(U)\\n'), h)
+                        U(h).lvalue = False
+                        print('O %d(U)'.format(h))
                     else:
-                        L(h).lvalue = false
-                        fprintf(mstring('O %d(L)\\n'), h)
+                        L(h).lvalue = False
+                        print('O %d(L)\n'.format(h))
             else:  # the solution of the unconstrained problem is *not* feasible
-                # this means that d = xs - x is a descent direction, use it
+                # this means that d = xs - self.wrt is a descent direction, use it
                 # of course, only the "free" part really needs to be computed
 
-                d = zeros(n, 1)
-                d(A).lvalue = xs(A) - x(A)
+                d = np.zeros(n, 1)
+                d[A].lvalue = xs[A] - self.wrt(A)
 
-                # first, compute the maximum feasible stepsize maxt such that
-                #
-                #   0 <= x( i ) + maxt * d( i ) <= u( i )   for all i
+                # first, compute the maximum feasible step size max_t such that:
+                #   0 <= self.wrt[i] + max_t * d[i] <= u[i]   for all i
 
-                ind = logical_and(A, d > 0)  # positive gradient entries
-                maxt = min((BCQP.u(ind) - x(ind)) / eldiv / d(ind))
-                ind = logical_and(A, d < 0)  # negative gradient entries
-                maxt = min(mcat([maxt, min(-x(ind) / eldiv / d(ind))]))
+                idx = np.logical_and(A, d > 0)  # positive gradient entries
+                max_t = min((ub[idx] - self.wrt(idx)) / d[idx])
+                idx = np.logical_and(A, d < 0)  # negative gradient entries
+                max_t = min(max_t, min(-self.wrt(idx) / d[idx]))
 
                 # it is useless to compute the optimal t, because we know already
-                # that it is 1, whereas maxt necessarily is < 1
-                x = x + maxt * d
+                # that it is 1, whereas max_t necessarily is < 1
+                self.wrt = self.wrt + max_t * d
 
                 # compute function value
-                v = 0.5 * x.cT * BCQP.Q * x + BCQP.q.cT * x
+                v = self.f.function(self.wrt)
 
                 # update the active set(s)
-                nL = logical_and(A, x <= 1e-12)
-                L(nL).lvalue = true
-                A(nL).lvalue = false
+                nL = np.logical_and(A, self.wrt <= 1e-12)
+                L(nL).lvalue = True
+                A(nL).lvalue = False
 
-                nU = logical_and(A, x >= BCQP.u - 1e-12)
-                U(nU).lvalue = true
-                A(nU).lvalue = false
+                nU = np.logical_and(A, self.wrt >= ub - 1e-12)
+                U(nU).lvalue = True
+                A(nU).lvalue = False
 
-                fprintf(mstring('I %d+%d\\n'), sum(nL), sum(nU))
+                print('I %d+%d\n'.format(sum(nL), sum(nU)))
 
-            # iterate - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            i = i + 1
+            self.iter += 1
 
-        if nargout > 1:
-            varargout(1).lvalue = x
-
-        if nargout > 2:
-            varargout(2).lvalue = status
+        if self.verbose:
+            print()
+        if self.plot and self.n == 2:
+            plt.show()
+        return self.wrt, status

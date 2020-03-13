@@ -33,8 +33,6 @@ class ProjectedGradient(ConstrainedOptimizer):
     #
     #  (P) min { (1/2) x^T * Q * x + q * x : 0 <= x <= ub }
     #
-    # encoded in the structure BCQP.
-    #
     # Input:
     #
     # - BCQP, the structure encoding the BCQP to be solved within its fields:
@@ -102,7 +100,7 @@ class ProjectedGradient(ConstrainedOptimizer):
                 status = 'optimal'
                 break
 
-            if self.iter > self.max_iter:
+            if self.iter >= self.max_iter:
                 status = 'stopped'
                 break
 
@@ -112,7 +110,7 @@ class ProjectedGradient(ConstrainedOptimizer):
             idx = d > 0  # positive gradient entries
             max_t = min((ub[idx] - self.wrt[idx]) / d[idx], default=0.)
             idx = d < 0  # negative gradient entries
-            max_t = min(max_t, min(-self.wrt[idx] / d[idx]))
+            max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=0.))
 
             # compute optimal unbounded step size:
             # min (1/2) ( x + a d )^T * Q * ( x + a d ) + q^T * ( x + a d ) =
