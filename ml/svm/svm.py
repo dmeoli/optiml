@@ -64,6 +64,7 @@ class SVC(SVM):
              if self.kernel is rbf_kernel else
              self.kernel(X, X))  # linear kernel
         P = K * np.outer(y, y)
+        P = (P + P.T) / 2  # ensure P is symmetric
         q = -np.ones(m)
 
         G = np.vstack((-np.identity(m), np.identity(m)))  # inequality matrix
@@ -84,7 +85,7 @@ class SVC(SVM):
         self.alphas = (scipy_solve_qp(lagrangian, y, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
                        scipy_solve_qp_with_bounds(lagrangian, ub, max_iter, verbose)
                        if optimizer is scipy_solve_qp_with_bounds else
-                       solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True) if optimizer is solve_qp else
+                       solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
                        optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
 
         self.sv_idx = np.argwhere(self.alphas > 1e-5).ravel()
@@ -141,6 +142,7 @@ class SVR(SVM):
              self.kernel(X, X))  # linear kernel
         P = np.vstack((np.hstack((K, -K)),  # alphas_p, alphas_n
                        np.hstack((-K, K))))  # alphas_n, alphas_p
+        P = (P + P.T) / 2  # ensure P is symmetric
         q = np.hstack((-y, y)) + self.eps
 
         G = np.vstack((-np.identity(2 * m), np.identity(2 * m)))  # inequality matrix
@@ -161,7 +163,7 @@ class SVR(SVM):
         alphas = (scipy_solve_qp(lagrangian, q, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
                   scipy_solve_qp_with_bounds(lagrangian, ub, max_iter, verbose)
                   if optimizer is scipy_solve_qp_with_bounds else
-                  solve_qp(P, q, G, h, A, b, solver='cvxopt', sym_proj=True) if optimizer is solve_qp else
+                  solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
                   optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
