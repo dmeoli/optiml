@@ -129,7 +129,7 @@ class ProximalBundle(Optimizer):
                     ng0 = 1  # un-scaled stopping criterion
 
             # construct the master problem
-            d = sdpvar(self.n, 1)
+            d = sdpvar(self.n)
             v = sdpvar(1, 1)
 
             M = v * np.ones(np.size(G, 1), 1) >= F + G * (d + self.wrt)

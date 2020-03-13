@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.linalg import cho_solve, cho_factor
 
 from optimization.constrained.projected_gradient import ConstrainedOptimizer
 
@@ -55,18 +56,20 @@ class ActiveSet(ConstrainedOptimizer):
         # active, L and U respectively. Of course, L and U have to be disjoint.
         # Since we start from the middle of the box, both the initial active sets
         # are empty
-        L = np.full(self.n, False)
-        U = np.full(self.n, False)
+        L = np.full(self.f.n, False)
+        U = np.full(self.f.n, False)
 
         # the set of "active variables", those that do *not* belong to any of the
         # two active sets and therefore are "free", is therefore the complement to
         # 1 : n of L union U; since L and U are empty now, A = 1 : n
-        A = np.full(self.n, True)
+        A = np.full(self.f.n, True)
 
-        print('iter\tf(self.wrt)\t\t| B |\tI/O')
+        if self.verbose:
+            print('iter\tf(self.wrt)\t\t| B |\tI/O')
 
         while True:
-            print('{:4d}\t{:1.8e}\t{:d}\t'.format(self.iter, v, sum(L) + sum(U)))
+            if self.verbose:
+                print('{:4d}\t{:1.8e}\t{:d}\t'.format(self.iter, v, sum(L) + sum(U)))
 
             if self.iter >= self.max_iter:
                 status = 'stopped'
@@ -74,24 +77,26 @@ class ActiveSet(ConstrainedOptimizer):
 
             # solve the *unconstrained* problem restricted to A the problem reads:
             #
-            #  min { (1/2) x_A^T * Q_{AA} * x_A + ( q_A + u_U^T * Q_{UA} ) * x_A }
+            #  min { (1/2) x_A^T * Q_{AA} * x_A + (q_A + u_U^T * Q_{UA}) * x_A }
             #    [ + (1/2) x_U^T * Q_{UU} * x_U ]
             #
             # and therefore the optimal solution is:
             #
-            #   x_A* = - Q_{AA}^{-1} ( q_A + u_U^T * Q_{UA} )
+            #   x_A* = -Q_{AA}^{-1} (q_A + u_U^T * Q_{UA})
             #
             # not that this actually is a *constrained* problem subject to equality
             # constraints, but in our case equality constraints just fix variables
             # (and anyway, any QP problem with equality constraints reduces to an
             # unconstrained one)
 
-            xs = np.zeros(self.n)
+            xs = np.zeros(self.f.n)
             xs[U] = ub[U]
-            sym = True  # tell it Q_{AA} is positive definite (hence of
-            posdef = True  # course symmetric), it'll probably do the right
-            # thing and use Cholesky to solve the system
-            xs[A].lvalue = np.linalg.solve(self.f.Q(A, A), -(self.f.q(A) + self.f.Q(A, U) * ub[U]), sym, posdef)
+            # thing and use Cholesky to speed up solving a symmetric linear system
+            # (Q_{AA} is positive definite (hence of course symmetric))
+            c, low = cho_factor(self.f.Q[A, A])
+            xs[A] = cho_solve((c, low), -(self.f.q[A] + self.f.Q[A, U] * ub[U]))
+            assert np.allclose(self.f.Q[A, A].dot(xs[A]) + (self.f.q[A] + self.f.Q[A, U] * ub[U]),
+                               np.zeros_like(-(self.f.q[A] + self.f.Q[A, U] * ub[U])))
 
             if np.all(xs[A] <= np.logical_and(ub[A] + 1e-12, xs[A] >= -1e-12)):
                 # the solution of the unconstrained problem is actually feasible
@@ -102,15 +107,16 @@ class ActiveSet(ConstrainedOptimizer):
                 # compute function value and gradient
                 v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
 
-                h = find(np.logical_and(L, g < -1e-12))
-                if h:
+                h = np.nonzero(np.logical_and(L, g < -1e-12))[0]
+                if h.size > 0:
                     uppr = False
                 else:
-                    h = find(np.logical_and(U, g > 1e-12))
+                    h = np.nonzero(np.logical_and(U, g > 1e-12))[0]
                     uppr = True
 
-                if not h:
-                    print('\nOPT\t%1.8e\n'.format(v))
+                if not h.size > 0:
+                    if self.verbose:
+                        print('\nOPT\t%1.8e\n'.format(v))
                     status = 'optimal'
                     break
                 else:
@@ -118,28 +124,30 @@ class ActiveSet(ConstrainedOptimizer):
                     A[h] = True
                     if uppr:
                         U[h] = False
-                        print('O %d(U)'.format(h))
+                        if self.verbose:
+                            print('O %d(U)'.format(h))
                     else:
                         L[h] = False
-                        print('O %d(L)\n'.format(h))
+                        if self.verbose:
+                            print('O %d(L)\n'.format(h))
             else:  # the solution of the unconstrained problem is *not* feasible
                 # this means that d = xs - self.wrt is a descent direction, use it
                 # of course, only the "free" part really needs to be computed
 
-                d = np.zeros(self.n)
-                d[A].lvalue = xs[A] - self.wrt(A)
+                d = np.zeros(self.f.n)
+                d[A].lvalue = xs[A] - self.wrt[A]
 
                 # first, compute the maximum feasible step size max_t such that:
                 #   0 <= self.wrt[i] + max_t * d[i] <= u[i]   for all i
 
                 idx = np.logical_and(A, d > 0)  # positive gradient entries
-                max_t = min((ub[idx] - self.wrt(idx)) / d[idx])
+                max_t = min((ub[idx] - self.wrt[idx]) / d[idx])
                 idx = np.logical_and(A, d < 0)  # negative gradient entries
-                max_t = min(max_t, min(-self.wrt(idx) / d[idx]))
+                max_t = min(max_t, min(-self.wrt[idx] / d[idx]))
 
                 # it is useless to compute the optimal t, because we know already
                 # that it is 1, whereas max_t necessarily is < 1
-                self.wrt = self.wrt + max_t * d
+                self.wrt += max_t * d
 
                 # compute function value
                 v = self.f.function(self.wrt)
@@ -153,7 +161,8 @@ class ActiveSet(ConstrainedOptimizer):
                 U[nU] = True
                 A[nU] = False
 
-                print('I %d+%d'.format(sum(nL), sum(nU)))
+                if self.verbose:
+                    print('I %d+%d'.format(sum(nL), sum(nU)))
 
             self.iter += 1
 

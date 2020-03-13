@@ -101,176 +101,163 @@ class LagrangianDual(ConstrainedOptimizer):
     # - l ([ 2 * n x 1 ] real column vector, optional): the best Lagrangian
     #   multipliers found so far (possibly the optimal ones)
 
-    if not isstruct(BCQP):
-        error(mstring('BCQP not a struct'))
-    end
+    def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+        super().__init__(f, eps, max_iter, verbose, plot)
 
-    if not isfield(BCQP, mstring('Q')) or not isfield(BCQP, mstring('q')) or not isfield(BCQP, mstring('u')):
-        error(mstring('BCQP not a well-formed struct'))
-    end
+        # compute straight away the Cholesky factorization of Q, this will be used
+        # at each iteration to solve the Lagrangian relaxation
+        [R, p] = np.linalg.cholesky(BCQP.Q)
+        if p > 0:
+            error(mstring('BCQP.Q not positive definite, this is not supported (yet)'))
 
-    if not isreal(BCQP.Q) or not isreal(BCQP.q) or not isreal(BCQP.u):
-        error(mstring('BCQP not a well-formed struct'))
-    end
+        if not isempty(varargin):
+            dolh = logical(varargin(1))
+        else:
+            dolh = true
 
-    n = size(BCQP.q, 1)
-    if size(BCQP.q, 2) != 1 or not isequal(size(BCQP.Q), mcat([n, n])) or not isequal(size(BCQP.u), mcat([n, 1])):
-        error(mstring('BCQP not a well-formed struct'))
-    end
+        if length(varargin) > 1:
+            eps = varargin(2)
+            if not isreal(eps) or not isscalar(eps):
+                error(mstring('eps is not a real scalar'))
+        else:
+            eps = 1e-6
 
-    # compute straight away the Cholesky factorization of Q, this will be used
-    # at each iteration to solve the Lagrangian relaxation
-    [R, p] = np.linalg.cholesky(BCQP.Q)
-    if p > 0:
-        error(mstring('BCQP.Q not positive definite, this is not supported (yet)'))
+        if length(varargin) > 2:
+            MaxFeval = round(varargin(3))
+            if not isscalar(MaxFeval):
+                error(mstring('MaxFeval is not an integer scalar'))
+        else:
+            MaxFeval = 1000
 
-    if not isempty(varargin):
-        dolh = logical(varargin(1))
-    else:
-        dolh = true
+        if length(varargin) > 3:
+            m1 = varargin(4)
+            if not isscalar(m1):
+                error(mstring('m1 is not a real scalar'))
+            if m1 <= 0 or m1 >= 1:
+                error(mstring('m1 is not in (0 ,1)'))
+        else:
+            m1 = 0.01
 
-    if length(varargin) > 1:
-        eps = varargin(2)
-        if not isreal(eps) or not isscalar(eps):
-            error(mstring('eps is not a real scalar'))
-    else:
-        eps = 1e-6
+        if length(varargin) > 4:
+            m2 = varargin(5)
+            if not isscalar(m1):
+                error(mstring('m2 is not a real scalar'))
+            if m2 <= 0 or m2 >= 1:
+                error(mstring('m2 is not in (0, 1)'))
+        else:
+            m2 = 0.9
 
-    if length(varargin) > 2:
-        MaxFeval = round(varargin(3))
-        if not isscalar(MaxFeval):
-            error(mstring('MaxFeval is not an integer scalar'))
-    else:
-        MaxFeval = 1000
+        if length(varargin) > 5:
+            astart = varargin(6)
+            if not isscalar(astart):
+                error(mstring('astart is not a real scalar'))
+            if astart < 0:
+                error(mstring('astart must be > 0'))
+        else:
+            astart = 1
 
-    if length(varargin) > 3:
-        m1 = varargin(4)
-        if not isscalar(m1):
-            error(mstring('m1 is not a real scalar'))
-        if m1 <= 0 or m1 >= 1:
-            error(mstring('m1 is not in (0 ,1)'))
-    else:
-        m1 = 0.01
+        if length(varargin) > 6:
+            sfgrd = varargin(7)
+            if not isscalar(sfgrd):
+                error(mstring('sfgrd is not a real scalar'))
+            if sfgrd <= 0 or sfgrd >= 1:
+                error(mstring('sfgrd is not in (0, 1)'))
+        else:
+            sfgrd = 0.01
 
-    if length(varargin) > 4:
-        m2 = varargin(5)
-        if not isscalar(m1):
-            error(mstring('m2 is not a real scalar'))
-        if m2 <= 0 or m2 >= 1:
-            error(mstring('m2 is not in (0, 1)'))
-    else:
-        m2 = 0.9
+        if length(varargin) > 7:
+            mina = varargin(8)
+            if not isscalar(mina):
+                error(mstring('mina is not a real scalar'))
+            if mina < 0:
+                error(mstring('mina is < 0'))
+        else:
+            mina = 1e-12
 
-    if length(varargin) > 5:
-        astart = varargin(6)
-        if not isscalar(astart):
-            error(mstring('astart is not a real scalar'))
-        if astart < 0:
-            error(mstring('astart must be > 0'))
-    else:
-        astart = 1
+    def minimize(self, ub):
+        x = BCQP.u / 2  # initial feasible solution is the middle of the box
+        v = 0.5 * x.cT * BCQP.Q * x + BCQP.q.cT * x
 
-    if length(varargin) > 6:
-        sfgrd = varargin(7)
-        if not isscalar(sfgrd):
-            error(mstring('sfgrd is not a real scalar'))
-        if sfgrd <= 0 or sfgrd >= 1:
-            error(mstring('sfgrd is not in (0, 1)'))
-    else:
-        sfgrd = 0.01
-
-    if length(varargin) > 7:
-        mina = varargin(8)
-        if not isscalar(mina):
-            error(mstring('mina is not a real scalar'))
-        if mina < 0:
-            error(mstring('mina is < 0'))
-    else:
-        mina = 1e-12
-
-    x = BCQP.u / 2  # initial feasible solution is the middle of the box
-    v = 0.5 * x.cT * BCQP.Q * x + BCQP.q.cT * x
-
-    fprintf(mstring('Lagrangian Dual\\n'))
-    if dolh:
-        fprintf(mstring('feval\\tub\\t\\tp(l)\\t\\tgap\\t\\tls feval\\ta*\\n\\n'))
-    else:
-        fprintf(mstring('feval\\tp(l)\\t\\t|| grad ||\\tls feval\\ta*\\n\\n'))
-
-    feval = 0
-
-    _lambda = zeros(2 * n, 1)
-    [p, lastg] = phi(_lambda)
-
-    while True:
-        # project the direction = - gradient over the active constraints
-        d = -lastg
-        d(_lambda <= np.logical_and(1e-12, d < 0)).lvalue = 0
-
+        fprintf(mstring('Lagrangian Dual\\n'))
         if dolh:
-            # compute the relative gap
-            gap = (v + p) / max(abs(v), 1)
-
-            print('%4d\\t%1.8e\\t%1.8e\\t%1.4e\\t'.format(feval, v, -p, gap))
-
-            if gap <= eps:
-                fprintf(mstring('OPT\\n'))
-                status = mstring('optimal')
-                break
+            fprintf(mstring('f eval\\tub\\t\\tp(l)\\t\\tgap\\t\\tls f eval\\ta*\\n\\n'))
         else:
-            # compute the norm of the projected gradient
-            gnorm = np.linalg.norm(d)
+            fprintf(mstring('f eval\\tp(l)\\t\\t|| grad ||\\tls f eval\\ta*\\n\\n'))
 
-            print('%4d\\t%1.8e\\t%1.4e\\t'.format(feval, -p, gnorm))
+        feval = 0
 
-            if feval == 1:
-                gnorm0 = gnorm
-            if gnorm <= eps * gnorm0:
-                fprintf(mstring('OPT\\n'))
-                status = mstring('optimal')
+        _lambda = zeros(2 * n, 1)
+        [p, lastg] = phi(_lambda)
+
+        while True:
+            # project the direction = - gradient over the active constraints
+            d = -lastg
+            d(_lambda <= np.logical_and(1e-12, d < 0)).lvalue = 0
+
+            if dolh:
+                # compute the relative gap
+                gap = (v + p) / max(abs(v), 1)
+
+                print('%4d\\t%1.8e\\t%1.8e\\t%1.4e\\t'.format(feval, v, -p, gap))
+
+                if gap <= eps:
+                    fprintf(mstring('OPT\\n'))
+                    status = mstring('optimal')
+                    break
+            else:
+                # compute the norm of the projected gradient
+                gnorm = np.linalg.norm(d)
+
+                print('%4d\\t%1.8e\\t%1.4e\\t'.format(feval, -p, gnorm))
+
+                if feval == 1:
+                    gnorm0 = gnorm
+                if gnorm <= eps * gnorm0:
+                    fprintf(mstring('OPT\\n'))
+                    status = mstring('optimal')
+                    break
+
+            if feval > MaxFeval:
+                fprintf(mstring('STOP\\n'))
+                status = mstring('stopped')
                 break
 
-        if feval > MaxFeval:
-            fprintf(mstring('STOP\\n'))
-            status = mstring('stopped')
-            break
+            # first, compute the maximum feasible step size maxt such that
+            #
+            #   0 <= lambda( i ) + maxt * d( i )   for all i
 
-        # first, compute the maximum feasible step size maxt such that
-        #
-        #   0 <= lambda( i ) + maxt * d( i )   for all i
+            idx = d < 0  # negative gradient entries
+            if any(idx):
+                maxt = min(astart, min(-_lambda(idx) / eldiv / d(idx)))
+            else:
+                maxt = astart
+            end
 
-        idx = d < 0  # negative gradient entries
-        if any(idx):
-            maxt = min(astart, min(-_lambda(idx) / eldiv / d(idx)))
-        else:
-            maxt = astart
+            # now run the line search
+            phip0 = lastg.cT * d
+            [a, p] = ArmijoWolfeLS(p, phip0, maxt, m1, m2)
+
+            fprintf(mstring('\\t%1.4e\\n'), a)
+
+            if a <= mina:
+                fprintf(mstring('\\tERR\\n'))
+                status = mstring('error')
+                break
+            end
+
+            _lambda = _lambda + a * d
+
+        if nargout > 1:
+            varargout(1).lvalue = x
         end
 
-        # now run the line search
-        phip0 = lastg.cT * d
-        [a, p] = ArmijoWolfeLS(p, phip0, maxt, m1, m2)
-
-        fprintf(mstring('\\t%1.4e\\n'), a)
-
-        if a <= mina:
-            fprintf(mstring('\\tERR\\n'))
-            status = mstring('error')
-            break
+        if nargout > 2:
+            varargout(2).lvalue = status
         end
 
-        _lambda = _lambda + a * d
-
-    if nargout > 1:
-        varargout(1).lvalue = x
-    end
-
-    if nargout > 2:
-        varargout(2).lvalue = status
-    end
-
-    if nargout > 3:
-        varargout(3).lvalue = _lambda
-    end
+        if nargout > 3:
+            varargout(3).lvalue = _lambda
+        end
 
 
 def solveLagrangian(_lambda=None):
