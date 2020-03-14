@@ -20,13 +20,6 @@ def scipy_solve_qp(f, y, G, h, max_iter, verbose):
                              'disp': verbose}).x
 
 
-def scipy_solve_qp_with_bounds(f, ub, max_iter, verbose):
-    return minimize(fun=f.function, jac=f.jacobian, x0=ub / 2,  # initial feasible solution is the middle of the box
-                    bounds=[(l, u) for l, u in zip(np.zeros_like(ub), ub)],
-                    options={'maxiter': max_iter,
-                             'disp': verbose}).x
-
-
 class SVM(Learner):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1.):
         self.kernel = kernel
@@ -83,10 +76,8 @@ class SVC(SVM):
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
         self.alphas = (scipy_solve_qp(lagrangian, y, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
-                       scipy_solve_qp_with_bounds(lagrangian, ub, max_iter, verbose)
-                       if optimizer is scipy_solve_qp_with_bounds else
                        solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                       optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
+                       optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
 
         self.sv_idx = np.argwhere(self.alphas > 1e-5).ravel()
         self.sv, self.sv_y, self.alphas = X[self.sv_idx], y[self.sv_idx], self.alphas[self.sv_idx]
@@ -161,10 +152,8 @@ class SVR(SVM):
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
         alphas = (scipy_solve_qp(lagrangian, q, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
-                  scipy_solve_qp_with_bounds(lagrangian, ub, max_iter, verbose)
-                  if optimizer is scipy_solve_qp_with_bounds else
                   solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                  optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
+                  optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 

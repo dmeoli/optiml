@@ -5,15 +5,15 @@ from ml.learning import MultiOutputLearner
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error
 from ml.svm.kernels import *
-from ml.svm.svm import SVR, scipy_solve_qp, scipy_solve_qp_with_bounds
+from ml.svm.svm import SVR, scipy_solve_qp
 from optimization.constrained.active_set import ActiveSet
 from optimization.constrained.frank_wolfe import FrankWolfe
 from optimization.constrained.interior_point import InteriorPoint
 from optimization.constrained.lagrangian_dual import LagrangianDual
 from optimization.constrained.projected_gradient import ProjectedGradient
 
-constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint, LagrangianDual,
-                          solve_qp, scipy_solve_qp, scipy_solve_qp_with_bounds]
+constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint,
+                          LagrangianDual, solve_qp, scipy_solve_qp]
 
 if __name__ == '__main__':
     ml_cup_train = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)

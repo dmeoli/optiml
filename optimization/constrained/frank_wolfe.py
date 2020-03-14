@@ -8,17 +8,17 @@ class FrankWolfe(ConstrainedOptimizer):
     # Apply the (possibly, stabilized) Frank-Wolfe algorithm with exact line
     # search to the convex Box-Constrained Quadratic program
     #
-    #  (P) min { (1/2) x^T * Q * x + q * x : 0 <= x <= u }
+    #  (P) min { (1/2) x^T * Q * x + q * x : Ax = b, 0 <= x <= ub }
     #
     # Input:
     #
     # - BCQP, the structure encoding the BCQP to be solved within its fields:
     #
-    #   = BCQP.Q: n \times n symmetric positive semidefinite real matrix
+    #   = BCQP.Q:  n \times n symmetric positive semidefinite real matrix
     #
-    #   = BCQP.q: n \times 1 real vector
+    #   = BCQP.q:  n \times 1 real vector
     #
-    #   = BCQP.u: n \times 1 real vector > 0
+    #   = BCQP.ub: n \times 1 real vector > 0
     #
     # - eps (real scalar, optional, default value 1e-6): the accuracy in the
     #   stopping criterion: the algorithm is stopped when the relative gap
@@ -40,7 +40,7 @@ class FrankWolfe(ConstrainedOptimizer):
     # - v (real scalar): the best function value found so far (possibly the
     #   optimal one)
     #
-    # - x ([ n x 1 ] real column vector, optional): the best solution found so
+    # - x ([n x 1] real column vector, optional): the best solution found so
     #   far (possibly the optimal one)
     #
     # - status (string, optional): a string describing the status of the
@@ -62,7 +62,7 @@ class FrankWolfe(ConstrainedOptimizer):
             raise ValueError('t has to lie in [0, 1)')
         self.t = t
 
-    def minimize(self, ub):
+    def minimize(self, A, b, ub):
 
         self.wrt = ub / 2  # start from the middle of the box
 

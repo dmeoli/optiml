@@ -212,6 +212,9 @@ class Ackley(OptimizationFunction):
     def x_star(self):
         return np.zeros(self.n)
 
+    def f_star(self):
+        return self.function(self.x_star())
+
     def function(self, x):
         """
         The Ackley function.

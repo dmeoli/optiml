@@ -2,12 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from optimization.constrained.projected_gradient import ConstrainedOptimizer
+from optimization.optimizer import LineSearchOptimizer
 
 
-class LagrangianDual(ConstrainedOptimizer):
+class LagrangianDual(ConstrainedOptimizer, LineSearchOptimizer):
     # Solve the convex Box-Constrained Quadratic program
     #
-    #  (P) min { (1/2) x^T * Q * x + q * x : 0 <= x <= u }
+    #  (P) min { (1/2) x^T * Q * x + q * x : Ax = b, 0 <= x <= ub }
     #
     # The box constraints 0 <= x <= u are relaxed (with Lagrangian multipliers
     # \lambda^- and \lambda^+, respectively) and the corresponding Lagrangian
@@ -24,11 +25,11 @@ class LagrangianDual(ConstrainedOptimizer):
     #
     # - BCQP, the structure encoding the BCQP to be solved within its fields:
     #
-    #   = BCQP.Q: n \times n symmetric positive semidefinite real matrix
+    #   = BCQP.Q:  n \times n symmetric positive semidefinite real matrix
     #
-    #   = BCQP.q: n \times 1 real vector
+    #   = BCQP.q:  n \times 1 real vector
     #
-    #   = BCQP.u: n \times 1 real vector > 0
+    #   = BCQP.ub: n \times 1 real vector > 0
     #
     # - dolh (logical scalar, optional, default value 1): true if a quick
     #   Lagrangian Heuristic is implemented whereby the current solution of the
@@ -69,7 +70,7 @@ class LagrangianDual(ConstrainedOptimizer):
     #   experience problems with the line search taking too many iterations to
     #   converge at "nasty" points, try to increase this
     #
-    # - mina (real scalar, optional, default value 1e-16): if the algorithm
+    # - min_a (real scalar, optional, default value 1e-16): if the algorithm
     #   determines a step size value <= mina, this is taken as an indication
     #   that something has gone wrong (the gradient is not a direction of
     #   descent, so maybe the function is not differentiable) and computation
@@ -81,7 +82,7 @@ class LagrangianDual(ConstrainedOptimizer):
     # - v (real scalar): the best function value found so far (possibly the
     #   optimal one)
     #
-    # - x ([ n x 1 ] real column vector, optional): the best solution found so
+    # - x ([n x 1] real column vector, optional): the best solution found so
     #   far (possibly the optimal one)
     #
     # - status (string, optional): a string describing the status of the
@@ -98,95 +99,40 @@ class LagrangianDual(ConstrainedOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see mina above)
     #
-    # - l ([ 2 * n x 1 ] real column vector, optional): the best Lagrangian
+    # - l ([2 * n x 1] real column vector, optional): the best Lagrangian
     #   multipliers found so far (possibly the optimal ones)
 
-    def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, eps, max_iter, verbose, plot)
+    def __init__(self, f, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+                 tau=0.95, sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
+        super().__init__(f, None, None, eps, max_iter, max_f_eval, m1, m2,
+                         a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
 
         # compute straight away the Cholesky factorization of Q, this will be used
         # at each iteration to solve the Lagrangian relaxation
-        [R, p] = np.linalg.cholesky(BCQP.Q)
+        [R, p] = np.linalg.cholesky(self.f.Q)
         if p > 0:
-            error(mstring('BCQP.Q not positive definite, this is not supported (yet)'))
+            raise ValueError('Q is not positive definite, this is not yet supported')
 
         if not isempty(varargin):
             dolh = logical(varargin(1))
         else:
-            dolh = true
+            dolh = True
 
-        if length(varargin) > 1:
-            eps = varargin(2)
-            if not isreal(eps) or not isscalar(eps):
-                error(mstring('eps is not a real scalar'))
+    def minimize(self, A, b, ub):
+        self.wrt = ub / 2  # initial feasible solution is the middle of the box
+
+        last_wrt = np.zeros((self.n,))  # last point visited in the line search
+        last_g = np.zeros((self.n,))  # gradient of last_self.wrt
+        f_eval = 1  # f() evaluations count ("common" with LSs)
+
+        v = self.f.function(self.wrt)
+
+        if self.dolh:
+            print('f eval\tub\t\tp(l)\t\tgap\t\tls f eval\ta*')
         else:
-            eps = 1e-6
+            print('f eval\tp(l)\t\t||g(x)||\tls f eval\ta*')
 
-        if length(varargin) > 2:
-            MaxFeval = round(varargin(3))
-            if not isscalar(MaxFeval):
-                error(mstring('MaxFeval is not an integer scalar'))
-        else:
-            MaxFeval = 1000
-
-        if length(varargin) > 3:
-            m1 = varargin(4)
-            if not isscalar(m1):
-                error(mstring('m1 is not a real scalar'))
-            if m1 <= 0 or m1 >= 1:
-                error(mstring('m1 is not in (0 ,1)'))
-        else:
-            m1 = 0.01
-
-        if length(varargin) > 4:
-            m2 = varargin(5)
-            if not isscalar(m1):
-                error(mstring('m2 is not a real scalar'))
-            if m2 <= 0 or m2 >= 1:
-                error(mstring('m2 is not in (0, 1)'))
-        else:
-            m2 = 0.9
-
-        if length(varargin) > 5:
-            astart = varargin(6)
-            if not isscalar(astart):
-                error(mstring('astart is not a real scalar'))
-            if astart < 0:
-                error(mstring('astart must be > 0'))
-        else:
-            astart = 1
-
-        if length(varargin) > 6:
-            sfgrd = varargin(7)
-            if not isscalar(sfgrd):
-                error(mstring('sfgrd is not a real scalar'))
-            if sfgrd <= 0 or sfgrd >= 1:
-                error(mstring('sfgrd is not in (0, 1)'))
-        else:
-            sfgrd = 0.01
-
-        if length(varargin) > 7:
-            mina = varargin(8)
-            if not isscalar(mina):
-                error(mstring('mina is not a real scalar'))
-            if mina < 0:
-                error(mstring('mina is < 0'))
-        else:
-            mina = 1e-12
-
-    def minimize(self, ub):
-        x = BCQP.u / 2  # initial feasible solution is the middle of the box
-        v = 0.5 * x.cT * BCQP.Q * x + BCQP.q.cT * x
-
-        fprintf(mstring('Lagrangian Dual\\n'))
-        if dolh:
-            fprintf(mstring('f eval\\tub\\t\\tp(l)\\t\\tgap\\t\\tls f eval\\ta*\\n\\n'))
-        else:
-            fprintf(mstring('f eval\\tp(l)\\t\\t|| grad ||\\tls f eval\\ta*\\n\\n'))
-
-        feval = 0
-
-        _lambda = zeros(2 * n, 1)
+        _lambda = np.zeros(2 * self.n)
         [p, lastg] = phi(_lambda)
 
         while True:
@@ -194,70 +140,61 @@ class LagrangianDual(ConstrainedOptimizer):
             d = -lastg
             d(_lambda <= np.logical_and(1e-12, d < 0)).lvalue = 0
 
-            if dolh:
+            if self.dolh:
                 # compute the relative gap
                 gap = (v + p) / max(abs(v), 1)
 
-                print('%4d\\t%1.8e\\t%1.8e\\t%1.4e\\t'.format(feval, v, -p, gap))
+                print('%4d\\t%1.8e\\t%1.8e\\t%1.4e\\t'.format(f_eval, v, -p, gap))
 
-                if gap <= eps:
-                    fprintf(mstring('OPT\\n'))
-                    status = mstring('optimal')
+                if gap <= self.eps:
+                    status = 'optimal'
                     break
             else:
                 # compute the norm of the projected gradient
-                gnorm = np.linalg.norm(d)
+                ng = np.linalg.norm(d)
 
-                print('%4d\\t%1.8e\\t%1.4e\\t'.format(feval, -p, gnorm))
+                print('%4d\\t%1.8e\\t%1.4e\\t'.format(f_eval, -p, ng))
 
-                if feval == 1:
-                    gnorm0 = gnorm
-                if gnorm <= eps * gnorm0:
-                    fprintf(mstring('OPT\\n'))
-                    status = mstring('optimal')
+                if f_eval == 1:
+                    ng0 = ng
+                if ng <= self.eps * ng0:
+                    status = 'optimal'
                     break
 
-            if feval > MaxFeval:
-                fprintf(mstring('STOP\\n'))
-                status = mstring('stopped')
+            if f_eval >= self.line_search.max_f_eval:
+                status = 'stopped'
                 break
 
-            # first, compute the maximum feasible step size maxt such that
+            # first, compute the maximum feasible step size maxt such that:
             #
-            #   0 <= lambda( i ) + maxt * d( i )   for all i
+            #   0 <= lambda[i] + maxt * d[i]   for all i
 
             idx = d < 0  # negative gradient entries
             if any(idx):
-                maxt = min(astart, min(-_lambda(idx) / eldiv / d(idx)))
+                maxt = min(self.line_search.a_start, min(-_lambda(idx) / d(idx)))
             else:
-                maxt = astart
-            end
+                maxt = self.line_search.a_start
 
             # now run the line search
-            phip0 = lastg.cT * d
+            phip0 = lastg.T * d
             [a, p] = ArmijoWolfeLS(p, phip0, maxt, m1, m2)
 
-            fprintf(mstring('\\t%1.4e\\n'), a)
+            print('\t{:1.4e}'.format(a))
 
-            if a <= mina:
-                fprintf(mstring('\\tERR\\n'))
-                status = mstring('error')
+            if a <= self.line_search.min_a:
+                status = 'error'
                 break
-            end
 
             _lambda = _lambda + a * d
 
         if nargout > 1:
-            varargout(1).lvalue = x
-        end
+            varargout(1).lvalue = self.wrt
 
         if nargout > 2:
             varargout(2).lvalue = status
-        end
 
         if nargout > 3:
             varargout(3).lvalue = _lambda
-        end
 
 
 def solveLagrangian(_lambda=None):

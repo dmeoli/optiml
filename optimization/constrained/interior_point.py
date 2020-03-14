@@ -9,17 +9,17 @@ class InteriorPoint(ConstrainedOptimizer):
     # Apply the Primal-Dual (feasible) Interior (barrier) Method to the convex
     # Box-Constrained Quadratic program
     #
-    #  (P) min { (1/2) x^T * Q * x + q * x : 0 <= x <= u }
+    #  (P) min { (1/2) x^T * Q * x + q * x : Ax = b, 0 <= x <= ub }
     #
     # Input:
     #
     # - BCQP, the structure encoding the BCQP to be solved within its fields:
     #
-    #   = BCQP.Q: n \times n symmetric positive semidefinite real matrix
+    #   = BCQP.Q:  n \times n symmetric positive semidefinite real matrix
     #
-    #   = BCQP.q: n \times 1 real vector
+    #   = BCQP.q:  n \times 1 real vector
     #
-    #   = BCQP.u: n \times 1 real vector > 0
+    #   = BCQP.ub: n \times 1 real vector > 0
     #
     # - MaxIter (integer scalar, optional, default value 1000): the maximum
     #   number of iterations
@@ -34,7 +34,7 @@ class InteriorPoint(ConstrainedOptimizer):
     # - v (real scalar): the best function value found so far (possibly the
     #   optimal one)
     #
-    # - x ([ n x 1 ] real column vector, optional): the best solution found so
+    # - x ([n x 1] real column vector, optional): the best solution found so
     #   far (possibly the optimal one)
     #
     # - status (string, optional): a string describing the status of the
@@ -51,7 +51,7 @@ class InteriorPoint(ConstrainedOptimizer):
     def __init__(self, f, eps=1e-10, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, eps, max_iter, verbose, plot)
 
-    def minimize(self, ub):
+    def minimize(self, A, b, ub):
 
         # the Slackened KKT System for (P) (written without slacks) is
         #

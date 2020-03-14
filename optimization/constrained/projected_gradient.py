@@ -23,7 +23,7 @@ class ConstrainedOptimizer:
         self.verbose = verbose
         self.plot = plot
 
-    def minimize(self, ub):
+    def minimize(self, A, b, ub):
         raise NotImplementedError
 
 
@@ -31,15 +31,15 @@ class ProjectedGradient(ConstrainedOptimizer):
     # Apply the Projected Gradient algorithm with exact line search to the
     # convex Box-Constrained Quadratic program
     #
-    #  (P) min { (1/2) x^T * Q * x + q * x : 0 <= x <= ub }
+    #  (P) min { (1/2) x^T * Q * x + q * x : Ax = b, 0 <= x <= ub }
     #
     # Input:
     #
     # - BCQP, the structure encoding the BCQP to be solved within its fields:
     #
-    #   = BCQP.Q: n \times n symmetric positive semidefinite real matrix
+    #   = BCQP.Q:  n \times n symmetric positive semidefinite real matrix
     #
-    #   = BCQP.q: n \times 1 real vector
+    #   = BCQP.q:  n \times 1 real vector
     #
     #   = BCQP.ub: n \times 1 real vector > 0
     #
@@ -55,7 +55,7 @@ class ProjectedGradient(ConstrainedOptimizer):
     # - v (real scalar): the best function value found so far (possibly the
     #   optimal one)
     #
-    # - x ([ n x 1 ] real column vector, optional): the best solution found so
+    # - x ([n x 1] real column vector, optional): the best solution found so
     #   far (possibly the optimal one)
     #
     # - status (string, optional): a string describing the status of the
@@ -72,7 +72,7 @@ class ProjectedGradient(ConstrainedOptimizer):
     def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, eps, max_iter, verbose, plot)
 
-    def minimize(self, ub):
+    def minimize(self, A, b, ub):
 
         if self.verbose:
             print('iter\tf(x)\t\t||g(x)||')
@@ -113,10 +113,10 @@ class ProjectedGradient(ConstrainedOptimizer):
             max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=0.))
 
             # compute optimal unbounded step size:
-            # min (1/2) ( x + a d )^T * Q * ( x + a d ) + q^T * ( x + a d ) =
-            #     (1/2) a^2 ( d^T * Q * d ) + a d^T * ( Q * x + q ) [ + const ]
+            # min (1/2) (x + a d)^T * Q * (x + a d) + q^T * (x + a d) =
+            #     (1/2) a^2 (d^T * Q * d) + a d^T * (Q * x + q) [ + const ]
             #
-            # ==> a = - d^T * ( Q * x + q ) / d^T * Q * d
+            # ==> a = - d^T * (Q * x + q) / d^T * Q * d
             den = d.T.dot(self.f.hessian(self.wrt)).dot(d)
 
             if den <= 1e-16:  # d^T * Q * d = 0  ==>  f is linear along d

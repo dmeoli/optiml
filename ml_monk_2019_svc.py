@@ -3,7 +3,7 @@ from sklearn.svm import SVC as SKLSVC
 
 from ml.metrics import accuracy_score
 from ml.svm.kernels import *
-from ml.svm.svm import SVC, scipy_solve_qp, scipy_solve_qp_with_bounds
+from ml.svm.svm import SVC, scipy_solve_qp
 from optimization.constrained.active_set import ActiveSet
 from optimization.constrained.frank_wolfe import FrankWolfe
 from optimization.constrained.interior_point import InteriorPoint
@@ -11,8 +11,8 @@ from optimization.constrained.lagrangian_dual import LagrangianDual
 from optimization.constrained.projected_gradient import ProjectedGradient
 from utils import load_monk
 
-constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint, LagrangianDual,
-                          solve_qp, scipy_solve_qp, scipy_solve_qp_with_bounds]
+constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint,
+                          LagrangianDual, solve_qp, scipy_solve_qp]
 
 if __name__ == '__main__':
     for i in (1, 2, 3):

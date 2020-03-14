@@ -9,19 +9,19 @@ class ActiveSet(ConstrainedOptimizer):
     # Apply the Active Set Method to the convex Box-Constrained Quadratic
     # program
     #
-    #  (P) min { (1/2) x^T * Q * x + q * x : 0 <= x <= u }
+    #  (P) min { (1/2) x^T * Q * x + q * x : Ax = b, 0 <= x <= ub }
     #
     # Input:
     #
     # - BCQP, the structure encoding the BCQP to be solved within its fields:
     #
-    #   = BCQP.Q: n \times n symmetric positive semidefinite real matrix
+    #   = BCQP.Q:  n \times n symmetric positive semidefinite real matrix
     #
-    #   = BCQP.q: n \times 1 real vector
+    #   = BCQP.q:  n \times 1 real vector
     #
-    #   = BCQP.u: n \times 1 real vector > 0
+    #   = BCQP.ub: n \times 1 real vector > 0
     #
-    # - MaxIter (integer scalar, optional, default value 1000): the maximum
+    # - max_iter (integer scalar, optional, default value 1000): the maximum
     #   number of iterations
     #
     # Output:
@@ -29,7 +29,7 @@ class ActiveSet(ConstrainedOptimizer):
     # - v (real scalar): the best function value found so far (possibly the
     #   optimal one)
     #
-    # - x ([ n x 1 ] real column vector, optional): the best solution found so
+    # - x ([n x 1] real column vector, optional): the best solution found so
     #   far (possibly the optimal one)
     #
     # - status (string, optional): a string describing the status of the
@@ -51,7 +51,7 @@ class ActiveSet(ConstrainedOptimizer):
         self.wrt = ub / 2  # start from the middle of the box
         v = self.f.function(self.wrt)
 
-        # Because all constraints are box ones, the active set is logically
+        # because all constraints are box ones, the active set is logically
         # partitioned onto the set of lower and upper bound constraints that are
         # active, L and U respectively. Of course, L and U have to be disjoint.
         # Since we start from the middle of the box, both the initial active sets
@@ -130,7 +130,8 @@ class ActiveSet(ConstrainedOptimizer):
                         L[h] = False
                         if self.verbose:
                             print('O %d(L)\n'.format(h))
-            else:  # the solution of the unconstrained problem is *not* feasible
+            else:
+                # the solution of the unconstrained problem is *not* feasible
                 # this means that d = xs - self.wrt is a descent direction, use it
                 # of course, only the "free" part really needs to be computed
 
