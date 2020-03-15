@@ -46,7 +46,7 @@ class ActiveSet(ConstrainedOptimizer):
     def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, eps, max_iter, verbose, plot)
 
-    def minimize(self, ub):
+    def minimize(self, A, b, ub):
 
         self.wrt = ub / 2  # start from the middle of the box
         v = self.f.function(self.wrt)

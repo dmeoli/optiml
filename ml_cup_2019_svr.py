@@ -22,12 +22,12 @@ if __name__ == '__main__':
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
     svr = MultiOutputLearner(SVR(kernel=linear_kernel, eps=0.1))
-    svr.fit(X_train, y_train, optimizer=solve_qp, verbose=False)
-    for learner in svr.learners:
-        print('w = ', learner.w)
-        print('b = ', learner.b)
-        print('idx of support vectors = ', learner.sv_idx)
-        print('support vectors = ', learner.sv)
+    svr.fit(X_train, y_train, optimizer=scipy_solve_qp, verbose=False)
+    # for learner in svr.learners:
+    #     print('w = ', learner.w)
+    #     print('b = ', learner.b)
+    #     print('idx of support vectors = ', learner.sv_idx)
+    #     print('support vectors = ', learner.sv)
     pred = svr.predict(X_test)
     print('mse: ', mean_squared_error(pred, y_test))
     print('mee: ', mean_euclidean_error(pred, y_test))
@@ -37,11 +37,11 @@ if __name__ == '__main__':
     from sklearn.svm import SVR
 
     svr = MultiOutputRegressor(SVR(kernel='linear', epsilon=0.1)).fit(X_train, y_train)
-    for learner in svr.estimators_:
-        print('w = ', learner.coef_)
-        print('b = ', learner.intercept_)
-        print('idx of support vectors = ', learner.support_)
-        print('support vectors = ', learner.support_vectors_)
+    # for learner in svr.estimators_:
+    #     print('w = ', learner.coef_)
+    #     print('b = ', learner.intercept_)
+    #     print('idx of support vectors = ', learner.support_)
+    #     print('support vectors = ', learner.support_vectors_)
     pred = svr.predict(X_test)
-    print('mse: ', mean_squared_error(pred, y_test))
-    print('mee: ', mean_euclidean_error(pred, y_test))
+    print('sklearn mse: ', mean_squared_error(pred, y_test))
+    print('sklearn mee: ', mean_euclidean_error(pred, y_test))

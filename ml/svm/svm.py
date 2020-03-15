@@ -8,14 +8,14 @@ from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel
 from optimization.optimization_function import Quadratic
 
 
-def scipy_solve_qp(f, y, G, h, max_iter, verbose):
+def scipy_solve_qp(f, G, h, A, max_iter, verbose):
     return minimize(fun=f.function, jac=f.jacobian, x0=np.random.rand(f.n),
                     constraints=({'type': 'ineq',
                                   'fun': lambda x: h - np.dot(G, x),
                                   'jac': lambda x: -G},
                                  {'type': 'eq',
-                                  'fun': lambda x: np.dot(x, y),
-                                  'jac': lambda x: y}),
+                                  'fun': lambda x: np.dot(x, A),
+                                  'jac': lambda x: A}),
                     options={'maxiter': max_iter,
                              'disp': verbose}).x
 
@@ -34,7 +34,7 @@ class SVM(Learner):
         self.w = None
         self.b = 0.
 
-    def fit(self, X, y, optimizer=None, max_iter=1000):
+    def fit(self, X, y, optimizer=solve_qp, max_iter=1000):
         raise NotImplementedError
 
 
@@ -49,6 +49,9 @@ class SVC(SVM):
         Trains the model by solving a constrained quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
+        :param optimizer:
+        :param max_iter:
+        :param verbose:
         """
         m = len(y)  # m = n_samples
         K = (self.kernel(X, X, self.degree)
@@ -75,7 +78,7 @@ class SVC(SVM):
         lagrangian = Quadratic(P, np.ones_like(q))
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
-        self.alphas = (scipy_solve_qp(lagrangian, y, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
+        self.alphas = (scipy_solve_qp(lagrangian, G, h, A, max_iter, verbose) if optimizer is scipy_solve_qp else
                        solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
                        optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
 
@@ -124,6 +127,9 @@ class SVR(SVM):
         Trains the model by solving a constrained quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
+        :param optimizer:
+        :param max_iter:
+        :param verbose:
         """
         m = len(y)  # m = n_samples
         K = (self.kernel(X, X, self.degree)
@@ -151,7 +157,7 @@ class SVR(SVM):
         lagrangian = Quadratic(P, np.ones_like(q))
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
-        alphas = (scipy_solve_qp(lagrangian, q, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
+        alphas = (scipy_solve_qp(lagrangian, G, h, q, max_iter, verbose) if optimizer is scipy_solve_qp else
                   solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
                   optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
         self.alphas_p = alphas[:m]
