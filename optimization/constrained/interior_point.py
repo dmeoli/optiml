@@ -9,7 +9,7 @@ class InteriorPoint(ConstrainedOptimizer):
     # Apply the Primal-Dual (feasible) Interior (barrier) Method to the convex
     # Box-Constrained Quadratic program
     #
-    #  (P) min { (1/2) 1/2 x^T Q x - q^T x : Ax = b, 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x - q^T x : Ax = b, 0 <= x <= ub }
     #
     # Input:
     #

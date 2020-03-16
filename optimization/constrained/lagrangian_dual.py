@@ -8,7 +8,7 @@ from optimization.optimizer import LineSearchOptimizer
 class LagrangianDual(ConstrainedOptimizer, LineSearchOptimizer):
     # Solve the convex Box-Constrained Quadratic program
     #
-    #  (P) min { (1/2) 1/2 x^T Q x - q^T x : Ax = b, 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x - q^T x : Ax = b, 0 <= x <= ub }
     #
     # The box constraints 0 <= x <= u are relaxed (with Lagrangian multipliers
     # \lambda^- and \lambda^+, respectively) and the corresponding Lagrangian
