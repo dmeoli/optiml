@@ -2,6 +2,7 @@ import os
 import random
 
 import numpy as np
+from scipy.linalg import ldl
 from sklearn.preprocessing import OneHotEncoder
 
 
@@ -9,6 +10,28 @@ def not_test(func):
     """Decorator to mark a function or method as not a test"""
     func.__test__ = False
     return func
+
+
+def cholesky_solve(A, b):
+    """Symmetric positive definite matrix"""
+    # A = L L^T
+    L = np.linalg.cholesky(A)
+    # L y = b => y = L^-1 b
+    y = np.linalg.inv(L).dot(b)
+    # L^T x = y => x = L^T^-1 y
+    return np.linalg.inv(L.T).dot(y)
+
+
+def cholesky_ldl_solve(A, b):
+    """Symmetric indefinite matrix"""
+    # A = L D L^T
+    L, D, _ = ldl(A)
+    # L y = b => y = L^-1 b
+    y = np.linalg.inv(L).dot(b)
+    # D z = y => z = D^-1 y
+    z = np.linalg.inv(D).dot(y)
+    # L^T x = z => x = L^T^-1 z
+    return np.linalg.inv(L.T).dot(z)
 
 
 def load_monk(n_dataset):

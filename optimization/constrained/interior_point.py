@@ -1,15 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.linalg import cho_solve, cho_factor
 
 from optimization.constrained.projected_gradient import ConstrainedOptimizer
+from utils import cholesky_solve
 
 
 class InteriorPoint(ConstrainedOptimizer):
     # Apply the Primal-Dual (feasible) Interior (barrier) Method to the convex
     # Box-Constrained Quadratic program
     #
-    #  (P) min { (1/2) x^T * Q * x + q * x : Ax = b, 0 <= x <= ub }
+    #  (P) min { (1/2) 1/2 x^T Q x - q^T x : Ax = b, 0 <= x <= ub }
     #
     # Input:
     #
@@ -21,7 +21,7 @@ class InteriorPoint(ConstrainedOptimizer):
     #
     #   = BCQP.ub: n \times 1 real vector > 0
     #
-    # - MaxIter (integer scalar, optional, default value 1000): the maximum
+    # - max_iter (integer scalar, optional, default value 1000): the maximum
     #   number of iterations
     #
     # - eps (real scalar, optional, default value 1e-10): the accuracy in the
@@ -169,18 +169,17 @@ class InteriorPoint(ConstrainedOptimizer):
                 break
 
             # solve the SKKTS
-            # note: the "complicated" term in W has the form
+            # note: the "complicated" term in W has the form:
             #
-            #  mu [ 1 / ( u_i - x_i ) - 1 / x_i ]
+            #  mu [ 1 / (u_i - x_i) - 1 / x_i ]
             #
-            # which can be rewritten
+            # which can be rewritten:
             #
-            #  mu ( u_i - 2 x_i ) / [ ( u_i - x_i ) * x_i ]
+            #  mu (u_i - 2 x_i) / [ (u_i - x_i) * x_i ]
             #
-            # it appears this last form is *vastly* more numerically stable, try
-            # for yourself if you don't believe me
+            # it appears this last form is *vastly* more numerically stable
 
-            mu = (v - p) / (4 * self.f.n * self.f.n)  # use \rho = 1 / ( # of constraints )
+            mu = (v - p) / (4 * self.f.n * self.f.n)  # use \rho = 1 / (# of constraints)
 
             umx = ub - self.wrt
             H = self.f.Q + np.diag(lp / umx + lm / self.wrt)
@@ -188,9 +187,8 @@ class InteriorPoint(ConstrainedOptimizer):
             w = mu * (ub - 2 * self.wrt) / (umx.dot(self.wrt)) + lp - lm
 
             # and use Cholesky to solve the system
-            c, low = cho_factor(H)
-            dx = cho_solve((c, low), w)
-            assert np.allclose(H.dot(dx) - w, np.zeros_like(w))
+            # because H is symmetric positive definite matrix
+            dx = cholesky_solve(H, w)
 
             dlp = (mu * np.ones(self.f.n) + lp.dot(dx)) / umx - lp
 

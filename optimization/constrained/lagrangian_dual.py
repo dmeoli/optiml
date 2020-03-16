@@ -8,7 +8,7 @@ from optimization.optimizer import LineSearchOptimizer
 class LagrangianDual(ConstrainedOptimizer, LineSearchOptimizer):
     # Solve the convex Box-Constrained Quadratic program
     #
-    #  (P) min { (1/2) x^T * Q * x + q * x : Ax = b, 0 <= x <= ub }
+    #  (P) min { (1/2) 1/2 x^T Q x - q^T x : Ax = b, 0 <= x <= ub }
     #
     # The box constraints 0 <= x <= u are relaxed (with Lagrangian multipliers
     # \lambda^- and \lambda^+, respectively) and the corresponding Lagrangian
@@ -102,21 +102,17 @@ class LagrangianDual(ConstrainedOptimizer, LineSearchOptimizer):
     # - l ([2 * n x 1] real column vector, optional): the best Lagrangian
     #   multipliers found so far (possibly the optimal ones)
 
-    def __init__(self, f, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+    def __init__(self, f, dolh=True, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
                  tau=0.95, sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
         super().__init__(f, None, None, eps, max_iter, max_f_eval, m1, m2,
                          a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
-
-        # compute straight away the Cholesky factorization of Q, this will be used
+        # compute the Cholesky factorization of Q, this will be used
         # at each iteration to solve the Lagrangian relaxation
-        [R, p] = np.linalg.cholesky(self.f.Q)
-        if p > 0:
+        try:
+            self.R = np.linalg.cholesky(self.f.Q)
+        except np.linalg.LinAlgError:
             raise ValueError('Q is not positive definite, this is not yet supported')
-
-        if not isempty(varargin):
-            dolh = logical(varargin(1))
-        else:
-            dolh = True
+        self.dolh = dolh
 
     def minimize(self, A, b, ub):
         self.wrt = ub / 2  # initial feasible solution is the middle of the box
@@ -209,15 +205,15 @@ def solveLagrangian(_lambda=None):
     # The optimal solution of the Lagrangian relaxation is the (unique)
     # solution of the linear system
     #
-    #       Q * x = - q - lambda^+ + lambda^-
+    #       Q x = - q - lambda^+ + lambda^-
     #
     # Since we have computed at the beginning the Cholesky factorization of Q,
     # i.e., Q = R' * R, where R is upper triangular and therefore RT is lower
     # triangular, we obtain this by just two triangular backsolves:
     #
-    #       R' * z = - q - lambda^+ + lambda^-
+    #       R^T z = - q - lambda^+ + lambda^-
     #
-    #       R * x = z
+    #       R x = z
     #
     # return the function value and the primal solution
 

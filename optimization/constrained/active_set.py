@@ -1,15 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.linalg import cho_solve, cho_factor
 
 from optimization.constrained.projected_gradient import ConstrainedOptimizer
+from utils import cholesky_solve
 
 
 class ActiveSet(ConstrainedOptimizer):
     # Apply the Active Set Method to the convex Box-Constrained Quadratic
     # program
     #
-    #  (P) min { (1/2) x^T * Q * x + q * x : Ax = b, 0 <= x <= ub }
+    #  (P) min { (1/2) 1/2 x^T Q x - q^T x : Ax = b, 0 <= x <= ub }
     #
     # Input:
     #
@@ -92,9 +92,8 @@ class ActiveSet(ConstrainedOptimizer):
             xs = np.zeros(self.f.n)
             xs[U] = ub[U]
             # thing and use Cholesky to speed up solving a symmetric linear system
-            # (Q_{AA} is positive definite (hence of course symmetric))
-            c, low = cho_factor(self.f.Q[A, A])
-            xs[A] = cho_solve((c, low), -(self.f.q[A] + self.f.Q[A, U] * ub[U]))
+            # (Q_{AA} is symmetric positive definite matrix)
+            xs[A] = cholesky_solve(self.f.Q[A, A], -(self.f.q[A] + self.f.Q[A, U] * ub[U]))
             assert np.allclose(self.f.Q[A, A].dot(xs[A]) + (self.f.q[A] + self.f.Q[A, U] * ub[U]),
                                np.zeros_like(-(self.f.q[A] + self.f.Q[A, U] * ub[U])))
 
@@ -116,7 +115,7 @@ class ActiveSet(ConstrainedOptimizer):
 
                 if not h.size > 0:
                     if self.verbose:
-                        print('\nOPT\t%1.8e\n'.format(v))
+                        print('\t{:1.8e}\n'.format(v))
                     status = 'optimal'
                     break
                 else:
@@ -136,7 +135,7 @@ class ActiveSet(ConstrainedOptimizer):
                 # of course, only the "free" part really needs to be computed
 
                 d = np.zeros(self.f.n)
-                d[A].lvalue = xs[A] - self.wrt[A]
+                d[A] = xs[A] - self.wrt[A]
 
                 # first, compute the maximum feasible step size max_t such that:
                 #   0 <= self.wrt[i] + max_t * d[i] <= u[i]   for all i
