@@ -65,7 +65,7 @@ class ActiveSet(ConstrainedOptimizer):
         A = np.full(self.f.n, True)
 
         if self.verbose:
-            print('iter\tf(self.wrt)\t\t| B |\tI/O')
+            print('iter\tf(x)\t\t| B |\tI/O')
 
         while True:
             if self.verbose:
@@ -77,12 +77,12 @@ class ActiveSet(ConstrainedOptimizer):
 
             # solve the *unconstrained* problem restricted to A the problem reads:
             #
-            #  min { (1/2) x_A^T * Q_{AA} * x_A + (q_A + u_U^T * Q_{UA}) * x_A }
-            #    [ + (1/2) x_U^T * Q_{UU} * x_U ]
+            #  min { (1/2) x_A^T Q_{AA} x_A + (q_A + u_U^T Q_{UA}) x_A }
+            #    [ + (1/2) x_U^T Q_{UU} x_U ]
             #
             # and therefore the optimal solution is:
             #
-            #   x_A* = -Q_{AA}^{-1} (q_A + u_U^T * Q_{UA})
+            #   x_A* = -Q_{AA}^{-1} (q_A + u_U^T Q_{UA})
             #
             # not that this actually is a *constrained* problem subject to equality
             # constraints, but in our case equality constraints just fix variables
@@ -138,7 +138,7 @@ class ActiveSet(ConstrainedOptimizer):
                 d[A] = xs[A] - self.wrt[A]
 
                 # first, compute the maximum feasible step size max_t such that:
-                #   0 <= self.wrt[i] + max_t * d[i] <= u[i]   for all i
+                #   0 <= self.wrt[i] + max_t d[i] <= u[i]   for all i
 
                 idx = np.logical_and(A, d > 0)  # positive gradient entries
                 max_t = min((ub[idx] - self.wrt[idx]) / d[idx])
