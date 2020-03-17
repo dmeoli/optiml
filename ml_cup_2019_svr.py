@@ -21,8 +21,8 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
-    svr = MultiOutputLearner(SVR(kernel=linear_kernel, eps=0.1))
-    svr.fit(X_train, y_train, optimizer=scipy_solve_qp, verbose=False)
+    svr = MultiOutputLearner(SVR(kernel=rbf_kernel, eps=0.1))
+    svr.fit(X_train, y_train, optimizer=ProjectedGradient, verbose=False)
     # for learner in svr.learners:
     #     print('w = ', learner.w)
     #     print('b = ', learner.b)
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     from sklearn.multioutput import MultiOutputRegressor
     from sklearn.svm import SVR
 
-    svr = MultiOutputRegressor(SVR(kernel='linear', epsilon=0.1)).fit(X_train, y_train)
+    svr = MultiOutputRegressor(SVR(kernel='rbf', epsilon=0.1)).fit(X_train, y_train)
     # for learner in svr.estimators_:
     #     print('w = ', learner.coef_)
     #     print('b = ', learner.intercept_)

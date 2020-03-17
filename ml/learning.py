@@ -207,4 +207,4 @@ class LogisticRegressionLearner(Learner):
         return self._predict(X, self.w)
 
     def predict(self, X):
-        return np.where(self.predict_score(X) >= 0.5, self.labels[1], self.labels[0]).astype(np.int)
+        return np.where(self.predict_score(X) >= 0.5, self.labels[1], self.labels[0])

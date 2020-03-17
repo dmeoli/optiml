@@ -5,7 +5,7 @@ from scipy.optimize import minimize
 
 from ml.learning import Learner
 from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel
-from optimization.optimization_function import Quadratic, Lagrangian
+from optimization.optimization_function import Quadratic
 
 
 def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
@@ -55,6 +55,9 @@ class SVC(SVM):
         :param max_iter:
         :param verbose:
         """
+        self.labels = np.unique(y)
+        y = np.where(y == self.labels[0], -1, 1)
+
         m = len(y)  # m = n_samples
         K = (self.kernel(X, X, self.C, self.degree)
              if self.kernel is polynomial_kernel else
@@ -77,13 +80,12 @@ class SVC(SVM):
         # inequalities Gx <= h (A is m x n, where m = 2n is the number of inequalities
         # (n box constraints, 2 inequalities each)
         # equalities Ax = b (these's only one equality constraint, i.e. y.T.dot(x) = 0)
+        obj = Quadratic(P, np.ones_like(q))
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
-        self.alphas = (scipy_solve_qp(Quadratic(P, np.ones_like(q)), G, h, A, b, max_iter, verbose)
-                       if optimizer is scipy_solve_qp else
+        self.alphas = (scipy_solve_qp(obj, G, h, A, b, max_iter, verbose) if optimizer is scipy_solve_qp else
                        solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                       optimizer(Lagrangian(P, np.ones_like(q)),
-                                 max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
+                       optimizer(obj, max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
 
         self.sv_idx = np.argwhere(self.alphas > 1e-5).ravel()
         self.sv, self.sv_y, self.alphas = X[self.sv_idx], y[self.sv_idx], self.alphas[self.sv_idx]
@@ -115,7 +117,7 @@ class SVC(SVM):
         """
         Predicts the class of a given example.
         """
-        return np.sign(self.predict_score(X))
+        return np.where(self.predict_score(X) >= 0, self.labels[1], self.labels[0])
 
 
 class SVR(SVM):
@@ -157,12 +159,12 @@ class SVR(SVM):
         # inequalities Gx <= h (A is m x n, where m = 2n is the number of inequalities
         # (n box constraints, 2 inequalities each)
         # equalities Ax = b (these's only one equality constraint, i.e. y.T.dot(x) = 0)
+        obj = Quadratic(P, np.ones_like(q))
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
-        alphas = (scipy_solve_qp(Quadratic(P, np.ones_like(q)), G, h, A, b, max_iter, verbose)
-                  if optimizer is scipy_solve_qp else
+        alphas = (scipy_solve_qp(obj, G, h, A, b, max_iter, verbose) if optimizer is scipy_solve_qp else
                   solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                  optimizer(Lagrangian(P, np.ones_like(q)), max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
+                  optimizer(obj, max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 
