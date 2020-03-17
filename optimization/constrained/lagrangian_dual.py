@@ -122,7 +122,7 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
 
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
 
-        v = self.f.function(self.wrt, A, b)
+        v = self.f.function(self.wrt)
 
         if self.dolh:
             print('iter\tf eval\tub\t\tp(l)\t\tgap', end='')

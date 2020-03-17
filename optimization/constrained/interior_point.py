@@ -139,7 +139,7 @@ class InteriorPoint(ConstrainedOptimizer):
 
         # compute a feasible interior dual solution satisfying SKKTS with x for some
         # \mu we don't care much of
-        g = self.f.jacobian(self.wrt, A, b)
+        g = self.f.jacobian(self.wrt)
         lp = 1e-6 * np.ones(self.f.n)
         lm = lp
         idx = g >= 0
@@ -151,7 +151,7 @@ class InteriorPoint(ConstrainedOptimizer):
             print('iter\tv\t\t\tp\t\t\tgap')
 
         while True:
-            v = self.f.function(self.wrt, A, b)
+            v = self.f.function(self.wrt)
             xQx = self.wrt.dot(self.f.Q).dot(self.wrt)
             p = -lp.T.dot(ub) - 0.5 * xQx
             gap = (v - p) / max(abs(v), 1)

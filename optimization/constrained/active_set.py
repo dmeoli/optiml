@@ -48,7 +48,7 @@ class ActiveSet(ConstrainedOptimizer):
     def minimize(self, A, b, ub):
 
         self.wrt = ub / 2  # start from the middle of the box
-        v = self.f.function(self.wrt, A, b)
+        v = self.f.function(self.wrt)
 
         # because all constraints are box ones, the active set is logically
         # partitioned onto the set of lower and upper bound constraints that are
@@ -103,7 +103,7 @@ class ActiveSet(ConstrainedOptimizer):
                 self.wrt = xs
 
                 # compute function value and gradient
-                v, g = self.f.function(self.wrt, A, b), self.f.jacobian(self.wrt, A, b)
+                v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
 
                 h = np.nonzero(np.logical_and(L, g < -1e-12))[0]
                 if h.size > 0:
@@ -149,7 +149,7 @@ class ActiveSet(ConstrainedOptimizer):
                 self.wrt += max_t * d
 
                 # compute function value
-                v = self.f.function(self.wrt, A, b)
+                v = self.f.function(self.wrt)
 
                 # update the active set(s)
                 nL = np.logical_and(A, self.wrt <= 1e-12)

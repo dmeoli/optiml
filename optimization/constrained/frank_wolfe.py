@@ -72,7 +72,7 @@ class FrankWolfe(ConstrainedOptimizer):
             print('iter\tf(x)\t\tlb\t\t\tgap')
 
         while True:
-            v, g = self.f.function(self.wrt, A, b), self.f.jacobian(self.wrt, A, b)
+            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
 
             # solve min { <g, y> : 0 <= y <= u }
             y = np.zeros(self.f.n)

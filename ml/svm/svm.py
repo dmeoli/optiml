@@ -4,7 +4,7 @@ from qpsolvers import solve_qp
 from scipy.optimize import minimize
 
 from ml.learning import Learner
-from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel
+from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel, sigmoid_kernel
 from optimization.optimization_function import Quadratic
 
 
@@ -22,7 +22,7 @@ def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
 
 class SVM(Learner):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1.):
-        if kernel not in (linear_kernel, polynomial_kernel, rbf_kernel):
+        if kernel not in (linear_kernel, polynomial_kernel, rbf_kernel, sigmoid_kernel):
             raise ValueError('unknown kernel function {}'.format(kernel))
         self.kernel = kernel
         self.degree = degree
@@ -63,6 +63,8 @@ class SVC(SVM):
              if self.kernel is polynomial_kernel else
              self.kernel(X, X, self.gamma)
              if self.kernel is rbf_kernel else
+             self.kernel(X, X, self.C, self.gamma)
+             if self.kernel is sigmoid_kernel else
              self.kernel(X, X))  # linear kernel
         P = K * np.outer(y, y)
         P = (P + P.T) / 2  # ensure P is symmetric
@@ -98,8 +100,10 @@ class SVC(SVM):
                                             self.kernel(self.sv, self.sv, self.C, self.degree)
                                             if self.kernel is polynomial_kernel else
                                             self.kernel(self.sv, self.sv, self.gamma)
-                                            if self.kernel is rbf_kernel else  # linear kernel
-                                            self.kernel(self.sv, self.sv)))
+                                            if self.kernel is rbf_kernel else
+                                            self.kernel(self.sv, self.sv, self.C, self.gamma)
+                                            if self.kernel is sigmoid_kernel else
+                                            self.kernel(self.sv, self.sv)))  # linear kernel
         return self
 
     def predict_score(self, X):
@@ -109,8 +113,10 @@ class SVC(SVM):
         if self.kernel is not linear_kernel:
             return np.dot(self.alphas * self.sv_y,
                           self.kernel(self.sv, X, self.C, self.degree)
-                          if self.kernel is polynomial_kernel else  # self.kernel is rbf_kernel
-                          self.kernel(self.sv, X, self.gamma)) + self.b
+                          if self.kernel is polynomial_kernel else
+                          self.kernel(self.sv, X, self.gamma)
+                          if self.kernel is rbf_kernel else
+                          self.kernel(self.sv, X, self.C, self.gamma)) + self.b  # sigmoid kernel
         return np.dot(X, self.w) + self.b
 
     def predict(self, X):
@@ -141,6 +147,8 @@ class SVR(SVM):
              if self.kernel is polynomial_kernel else
              self.kernel(X, X, self.gamma)
              if self.kernel is rbf_kernel else
+             self.kernel(X, X, self.C, self.gamma)
+             if self.kernel is sigmoid_kernel else
              self.kernel(X, X))  # linear kernel
         P = np.vstack((np.hstack((K, -K)),  # alphas_p, alphas_n
                        np.hstack((-K, K))))  # alphas_n, alphas_p
@@ -179,8 +187,10 @@ class SVR(SVM):
                                                self.kernel(self.sv, X, self.C, self.degree)
                                                if self.kernel is polynomial_kernel else
                                                self.kernel(self.sv, X, self.gamma)
-                                               if self.kernel is rbf_kernel else  # linear kernel
-                                               self.kernel(self.sv, X)))
+                                               if self.kernel is rbf_kernel else
+                                               self.kernel(self.sv, X, self.C, self.gamma)
+                                               if self.kernel is sigmoid_kernel else
+                                               self.kernel(self.sv, X)))  # linear kernel
         return self
 
     def predict(self, X):
@@ -190,7 +200,9 @@ class SVR(SVM):
         if self.kernel is not linear_kernel:
             return np.dot(self.alphas_p - self.alphas_n,
                           self.kernel(self.sv, X, self.C, self.degree)
-                          if self.kernel is polynomial_kernel else  # self.kernel is rbf_kernel
-                          self.kernel(self.sv, X, self.gamma)) + self.b
+                          if self.kernel is polynomial_kernel else
+                          self.kernel(self.sv, X, self.gamma)
+                          if self.kernel is rbf_kernel else
+                          self.kernel(self.sv, X, self.C, self.gamma)) + self.b  # sigmoid kernel
 
         return np.dot(X, self.w) + self.b

@@ -83,7 +83,7 @@ class ProjectedGradient(ConstrainedOptimizer):
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
-            v, g = self.f.function(self.wrt, A, b), self.f.jacobian(self.wrt, A, b)
+            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
             d = -g
 
             # project the direction over the active constraints
