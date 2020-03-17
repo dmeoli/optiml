@@ -2,14 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from optimization.constrained.projected_gradient import ConstrainedOptimizer
-from utils import cholesky_solve
 
 
 class ActiveSet(ConstrainedOptimizer):
     # Apply the Active Set Method to the convex Box-Constrained Quadratic
     # program
     #
-    #  (P) min { 1/2 x^T Q x - q^T x : Ax = b, 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
     #
     # Input:
     #
@@ -49,7 +48,7 @@ class ActiveSet(ConstrainedOptimizer):
     def minimize(self, A, b, ub):
 
         self.wrt = ub / 2  # start from the middle of the box
-        v = self.f.function(self.wrt)
+        v = self.f.function(self.wrt, A, b)
 
         # because all constraints are box ones, the active set is logically
         # partitioned onto the set of lower and upper bound constraints that are
@@ -93,18 +92,18 @@ class ActiveSet(ConstrainedOptimizer):
             xs[U] = ub[U]
             # thing and use Cholesky to speed up solving a symmetric linear system
             # (Q_{AA} is symmetric positive definite matrix)
-            xs[A] = cholesky_solve(self.f.Q[A, A], -(self.f.q[A] + self.f.Q[A, U] * ub[U]))
-            assert np.allclose(self.f.Q[A, A].dot(xs[A]) + (self.f.q[A] + self.f.Q[A, U] * ub[U]),
-                               np.zeros_like(-(self.f.q[A] + self.f.Q[A, U] * ub[U])))
+            from scipy.linalg import lu_factor, lu_solve
+            xs[A] = lu_solve(lu_factor(self.f.Q[A, :][:, A]),
+                             -(self.f.q[A] + (self.f.Q[A, :][:, U] or 0. * ub[U] or 0.)))
 
-            if np.all(xs[A] <= np.logical_and(ub[A] + 1e-12, xs[A] >= -1e-12)):
+            if np.all(xs[A] <= ub[A] + 1e-12) and np.all(xs[A] >= -1e-12):
                 # the solution of the unconstrained problem is actually feasible
 
                 # move the current point right there
                 self.wrt = xs
 
                 # compute function value and gradient
-                v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+                v, g = self.f.function(self.wrt, A, b), self.f.jacobian(self.wrt, A, b)
 
                 h = np.nonzero(np.logical_and(L, g < -1e-12))[0]
                 if h.size > 0:
@@ -141,16 +140,16 @@ class ActiveSet(ConstrainedOptimizer):
                 #   0 <= self.wrt[i] + max_t d[i] <= u[i]   for all i
 
                 idx = np.logical_and(A, d > 0)  # positive gradient entries
-                max_t = min((ub[idx] - self.wrt[idx]) / d[idx])
+                max_t = min((ub[idx] - self.wrt[idx]) / d[idx], default=0.)
                 idx = np.logical_and(A, d < 0)  # negative gradient entries
-                max_t = min(max_t, min(-self.wrt[idx] / d[idx]))
+                max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=0.))
 
                 # it is useless to compute the optimal t, because we know already
                 # that it is 1, whereas max_t necessarily is < 1
                 self.wrt += max_t * d
 
                 # compute function value
-                v = self.f.function(self.wrt)
+                v = self.f.function(self.wrt, A, b)
 
                 # update the active set(s)
                 nL = np.logical_and(A, self.wrt <= 1e-12)

@@ -147,6 +147,14 @@ class Quadratic(OptimizationFunction):
         return surface_plot, surface_axes, contour_plot, contour_axes
 
 
+class Lagrangian(Quadratic):
+    def function(self, x, A, b, Q=None, q=None):
+        return super().function(x, Q, q) + x.dot(A.dot(x) - b.item())
+
+    def jacobian(self, x, A, b, Q=None, q=None):
+        return super().jacobian(x, Q, q) + A
+
+
 # 2x2 quadratic function with nicely conditioned Hessian
 quad1 = Quadratic(np.array([[6, -2], [-2, 6]]), np.array([10, 5]))
 # 2x2 quadratic function with less nicely conditioned Hessian

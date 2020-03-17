@@ -5,10 +5,10 @@ def linear_kernel(X, y):
     return np.dot(X, y.T)
 
 
-def polynomial_kernel(X, y, degree=3.):
+def polynomial_kernel(X, y, C=1., degree=3.):
     """A non-stationary kernel well suited for problems
     where all the training data is normalized"""
-    return np.dot(X, y.T) ** degree
+    return (np.dot(X, y.T) + C) ** degree
 
 
 def rbf_kernel(X, y, gamma='scale'):

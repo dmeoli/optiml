@@ -31,7 +31,7 @@ class ProjectedGradient(ConstrainedOptimizer):
     # Apply the Projected Gradient algorithm with exact line search to the
     # convex Box-Constrained Quadratic program
     #
-    #  (P) min { 1/2 x^T Q x - q^T x : Ax = b, 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
     #
     # Input:
     #
@@ -83,7 +83,7 @@ class ProjectedGradient(ConstrainedOptimizer):
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            v, g = self.f.function(self.wrt, A, b), self.f.jacobian(self.wrt, A, b)
             d = -g
 
             # project the direction over the active constraints
@@ -105,7 +105,7 @@ class ProjectedGradient(ConstrainedOptimizer):
                 break
 
             # first, compute the maximum feasible step size max_t such that:
-            #   0 <= x[i] + max_t * d[i] <= ub[i]   for all i
+            #   0 <= x[i] + max_t d[i] <= ub[i]   for all i
 
             idx = d > 0  # positive gradient entries
             max_t = min((ub[idx] - self.wrt[idx]) / d[idx], default=0.)
@@ -113,13 +113,13 @@ class ProjectedGradient(ConstrainedOptimizer):
             max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=0.))
 
             # compute optimal unbounded step size:
-            # min (1/2) (x + a d)^T * Q * (x + a d) + q^T * (x + a d) =
-            #     (1/2) a^2 (d^T * Q * d) + a d^T * (Q * x + q) [ + const ]
+            # min (1/2) (x + a d)^T Q (x + a d) + q^T (x + a d) =
+            #     (1/2) a^2 (d^T Q d) + a d^T (Q x + q) [ + const ]
             #
-            # ==> a = - d^T * (Q * x + q) / d^T * Q * d
+            # ==> a = - d^T (Q x + q) / d^T Q d
             den = d.T.dot(self.f.hessian(self.wrt)).dot(d)
 
-            if den <= 1e-16:  # d^T * Q * d = 0  ==>  f is linear along d
+            if den <= 1e-16:  # d^T * Q * d = 0 ==> f is linear along d
                 t = max_t  # just take the maximum possible step size
             else:
                 # optimal unbounded step size restricted to max feasible step

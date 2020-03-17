@@ -9,7 +9,7 @@ class InteriorPoint(ConstrainedOptimizer):
     # Apply the Primal-Dual (feasible) Interior (barrier) Method to the convex
     # Box-Constrained Quadratic program
     #
-    #  (P) min { 1/2 x^T Q x - q^T x : Ax = b, 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
     #
     # Input:
     #
@@ -57,9 +57,9 @@ class InteriorPoint(ConstrainedOptimizer):
         #
         #   Q x + q + \lambda^+ - \lambda^- = 0
         #
-        #   \lambda^+ (u - x) = \mu * e
+        #   \lambda^+ (u - x) = \mu e
         #
-        #   \lambda^- x = \mu * e
+        #   \lambda^- x = \mu e
         #
         #   0 <= x <= u
         #
@@ -75,7 +75,7 @@ class InteriorPoint(ConstrainedOptimizer):
         #
         # are, respectively, a valid upper and lower bound on v(P), and:
         #
-        #   v - p = \mu * 2 * n
+        #   v - p = \mu 2 n
         #
         # With x -> x + dx, \lambda^+ -> lp + dlp, \lambda^+ -> lm + dlm such that:
         #
@@ -85,9 +85,9 @@ class InteriorPoint(ConstrainedOptimizer):
         #
         #   Q dx + dlp - dlm = 0                                (1)
         #
-        #   (lp + dlp) (u - x - dx) = \mu * e                   (2)
+        #   (lp + dlp) (u - x - dx) = \mu e                     (2)
         #
-        #   (lm + dlm) (x   + dx) = \mu * e                     (3)
+        #   (lm + dlm) (x   + dx) = \mu e                       (3)
         #
         #   - x <= dx <= u - x                                  (4)
         #
@@ -100,15 +100,15 @@ class InteriorPoint(ConstrainedOptimizer):
         #
         #   Q dx + dlp - dlm = 0                                (1)
         #
-        #  -lp dx + dlp (u - x) = \mu * e - lp (u - x)          (2')
+        #  -lp dx + dlp (u - x) = \mu e - lp (u - x)            (2')
         #
-        #   lm dx + dlm x = \mu * e - lm x                      (3')
+        #   lm dx + dlm x = \mu e - lm x                        (3')
         #
         # we can then use (2') and (3') to write:
         #
-        #    dlp = (\mu * e + lp dx) / (u - x) - lp             (2'')
+        #    dlp = (\mu e + lp dx) / (u - x) - lp               (2'')
         #
-        #    dlm = (\mu * e - lm dx) / x - lm                   (3'')
+        #    dlm = (\mu e - lm dx) / x - lm                     (3'')
         #
         # putting (2'') and (3'') in (1) gives:
         #
@@ -118,7 +118,7 @@ class InteriorPoint(ConstrainedOptimizer):
         #
         #   H = Q + lp / (u - x) + lm / x
         #
-        #   w = \mu * [e / (u - x) - e / x] + lp - lm
+        #   w = \mu [e / (u - x) - e / x] + lp - lm
         #
         # where note that lp - lm = -Q x - q.
         #
@@ -139,7 +139,7 @@ class InteriorPoint(ConstrainedOptimizer):
 
         # compute a feasible interior dual solution satisfying SKKTS with x for some
         # \mu we don't care much of
-        g = self.f.jacobian(self.wrt)
+        g = self.f.jacobian(self.wrt, A, b)
         lp = 1e-6 * np.ones(self.f.n)
         lm = lp
         idx = g >= 0
@@ -151,7 +151,7 @@ class InteriorPoint(ConstrainedOptimizer):
             print('iter\tv\t\t\tp\t\t\tgap')
 
         while True:
-            v = self.f.function(self.wrt)
+            v = self.f.function(self.wrt, A, b)
             xQx = self.wrt.dot(self.f.Q).dot(self.wrt)
             p = -lp.T.dot(ub) - 0.5 * xQx
             gap = (v - p) / max(abs(v), 1)
@@ -175,7 +175,7 @@ class InteriorPoint(ConstrainedOptimizer):
             #
             # which can be rewritten:
             #
-            #  mu (u_i - 2 x_i) / [ (u_i - x_i) * x_i ]
+            #  mu (u_i - 2 x_i) / [ (u_i - x_i) x_i ]
             #
             # it appears this last form is *vastly* more numerically stable
 
@@ -183,7 +183,7 @@ class InteriorPoint(ConstrainedOptimizer):
 
             umx = ub - self.wrt
             H = self.f.Q + np.diag(lp / umx + lm / self.wrt)
-            # w = mu * (np.ones(n) / umx - np.ones(n) / self.wrt) + lp - lm;
+            # w = mu (np.ones(n) / umx - np.ones(n) / self.wrt) + lp - lm;
             w = mu * (ub - 2 * self.wrt) / (umx.dot(self.wrt)) + lp - lm
 
             # and use Cholesky to solve the system

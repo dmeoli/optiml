@@ -5,10 +5,10 @@ from optimization.constrained.projected_gradient import ConstrainedOptimizer
 from optimization.optimizer import LineSearchOptimizer
 
 
-class LagrangianDual(ConstrainedOptimizer, LineSearchOptimizer):
-    # Solve the convex Box-Constrained Quadratic program
+class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
+    # Solve the convex Box-Constrained Quadratic program:
     #
-    #  (P) min { 1/2 x^T Q x - q^T x : Ax = b, 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
     #
     # The box constraints 0 <= x <= u are relaxed (with Lagrangian multipliers
     # \lambda^- and \lambda^+, respectively) and the corresponding Lagrangian
@@ -113,34 +113,36 @@ class LagrangianDual(ConstrainedOptimizer, LineSearchOptimizer):
         except np.linalg.LinAlgError:
             raise ValueError('Q is not positive definite, this is not yet supported')
         self.dolh = dolh
+        self.f_eval = 1  # f() evaluations count ("common" with LSs)
 
     def minimize(self, A, b, ub):
+        self.ub = ub
+
         self.wrt = ub / 2  # initial feasible solution is the middle of the box
 
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
-        last_g = np.zeros((self.n,))  # gradient of last_self.wrt
-        f_eval = 1  # f() evaluations count ("common" with LSs)
 
-        v = self.f.function(self.wrt)
+        v = self.f.function(self.wrt, A, b)
 
         if self.dolh:
-            print('f eval\tub\t\tp(l)\t\tgap\t\tls f eval\ta*')
+            print('iter\tf eval\tub\t\tp(l)\t\tgap', end='')
         else:
-            print('f eval\tp(l)\t\t||g(x)||\tls f eval\ta*')
+            print('iter\tf eval\tp(l)\t\t||g(x)||', end='')
+        print('\tls\tit\ta*')
 
-        _lambda = np.zeros(2 * self.n)
-        [p, lastg] = phi(_lambda)
+        _lambda = np.zeros(2 * self.f.n)
+        p, last_g = self.phi(_lambda)
 
         while True:
-            # project the direction = - gradient over the active constraints
-            d = -lastg
-            d(_lambda <= np.logical_and(1e-12, d < 0)).lvalue = 0
+            # project the direction = -gradient over the active constraints
+            d = -last_g
+            d[_lambda <= np.logical_and(1e-12, d < 0)] = 0
 
             if self.dolh:
                 # compute the relative gap
                 gap = (v + p) / max(abs(v), 1)
 
-                print('%4d\\t%1.8e\\t%1.8e\\t%1.4e\\t'.format(f_eval, v, -p, gap))
+                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}\t'.format(self.iter, self.f_eval, v, -p, gap))
 
                 if gap <= self.eps:
                     status = 'optimal'
@@ -149,31 +151,35 @@ class LagrangianDual(ConstrainedOptimizer, LineSearchOptimizer):
                 # compute the norm of the projected gradient
                 ng = np.linalg.norm(d)
 
-                print('%4d\\t%1.8e\\t%1.4e\\t'.format(f_eval, -p, ng))
+                print('{:4d}\t{:4d}\t{:1.8e}\t{:1.4e}\t'.format(self.iter, self.f_eval, -p, ng))
 
-                if f_eval == 1:
+                if self.f_eval is 1:
                     ng0 = ng
                 if ng <= self.eps * ng0:
                     status = 'optimal'
                     break
 
-            if f_eval >= self.line_search.max_f_eval:
+            if self.f_eval >= self.line_search.max_f_eval:
                 status = 'stopped'
                 break
 
-            # first, compute the maximum feasible step size maxt such that:
+            # first, compute the maximum feasible step size max_t such that:
             #
-            #   0 <= lambda[i] + maxt * d[i]   for all i
+            #   0 <= lambda[i] + max_t * d[i]   for all i
 
             idx = d < 0  # negative gradient entries
             if any(idx):
-                maxt = min(self.line_search.a_start, min(-_lambda(idx) / d(idx)))
+                max_t = min(self.line_search.a_start, min(-_lambda(idx) / d(idx)))
             else:
-                maxt = self.line_search.a_start
+                max_t = self.line_search.a_start
 
             # now run the line search
-            phip0 = lastg.T * d
-            [a, p] = ArmijoWolfeLS(p, phip0, maxt, m1, m2)
+            phi_p0 = last_g.T * d
+
+            # compute step size
+            self.line_search.a_start = max_t
+            a, v, last_wrt, last_g, self.f_eval = self.line_search.search(
+                d, self.wrt, last_wrt, last_g, self.f_eval, p, phi_p0)
 
             print('\t{:1.4e}'.format(a))
 
@@ -183,139 +189,82 @@ class LagrangianDual(ConstrainedOptimizer, LineSearchOptimizer):
 
             _lambda = _lambda + a * d
 
-        if nargout > 1:
-            varargout(1).lvalue = self.wrt
+            self.iter += 1
 
-        if nargout > 2:
-            varargout(2).lvalue = status
+        if self.verbose:
+            print()
+        if self.plot and self.n == 2:
+            plt.show()
+        return self.wrt, status, _lambda
 
-        if nargout > 3:
-            varargout(3).lvalue = _lambda
+    def solve_lagrangian(self, lmbda=None):
+        # The Lagrangian relaxation of the problem is:
+        #
+        #    min { (1/2) x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x
+        #  min { (1/2) x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ u
+        #
+        # where lambda^+ are the first n components of lmbda, and lambda^- the
+        # last n components; both are constrained to be >= 0.
+        #
+        # The optimal solution of the Lagrangian relaxation is the (unique)
+        # solution of the linear system:
+        #
+        #       Q x = -q - lambda^+ + lambda^-
+        #
+        # Since we have computed at the beginning the Cholesky factorization of Q,
+        # i.e., Q = R^T  R, where R is upper triangular and therefore R^T is lower
+        # triangular, we obtain this by just two triangular backsolves:
+        #
+        #       R^T z = -q - lambda^+ + lambda^-
+        #
+        #       R x = z
+        #
+        # return the function value and the primal solution.
 
+        ql = self.f.q + lmbda[:self.f.n] - lmbda[self.f.n:]
+        from scipy.linalg import lu_factor, lu_solve
 
-def solveLagrangian(_lambda=None):
-    # The Lagrangian relaxation of the problem is
-    #
-    #  min { (1/2) x' * Q * x + q * x - lambda^+ * ( u - x ) - lambda^- * ( x )
-    # = min { (1/2) x' * Q * x + ( q + lambda^+ - lambda^- ) * x - lambda^+ * u
-    #
-    # where lambda^+ are the first n components of lambda[], and lambda^- the
-    # last n components; both are constrained to be >= 0
-    #
-    # The optimal solution of the Lagrangian relaxation is the (unique)
-    # solution of the linear system
-    #
-    #       Q x = - q - lambda^+ + lambda^-
-    #
-    # Since we have computed at the beginning the Cholesky factorization of Q,
-    # i.e., Q = R' * R, where R is upper triangular and therefore RT is lower
-    # triangular, we obtain this by just two triangular backsolves:
-    #
-    #       R^T z = - q - lambda^+ + lambda^-
-    #
-    #       R x = z
-    #
-    # return the function value and the primal solution
+        z = lu_solve(lu_factor(self.f.Q.T), -ql)
+        y = lu_solve(lu_factor(self.f.Q), z)
+        # z = solve_triangular(self.R.T, -ql, lower=True) # TODO
+        # y = solve_triangular(self.R, z, lower=False) # TODO
 
-    ql = BCQP.q + _lambda(mslice[1:n]) - _lambda(mslice[n + 1:end])
-    opts.LT = true
-    z = linsolve(R.cT, -ql, opts)
-    opts.LT = false
-    opts.UT = true
-    y = linsolve(R, z, opts)
+        # compute phi-value
+        p = (0.5 * y.T * self.f.Q + ql.cT) * y - lmbda[:self.f.n].T * self.ub
 
-    # compute phi-value
-    p = (0.5 * y.cT * BCQP.Q + ql.cT) * y - _lambda(mslice[1:n]).cT * BCQP.u
+        self.f_eval += 1
 
-    feval = feval + 1
+        return p, y
 
+    def phi(self, lmbda=None):
+        # phi( lambda ) is the Lagrangian function of the problem. With x the
+        # optimal solution of the minimization problem (see solve_lagrangian), the
+        # gradient at lambda is [x - u; -x]
+        #
+        # however, the line search is written for minimization but we rather want
+        # to maximize phi(), hence we have to change the sign of both function
+        # values and gradient entries
 
-def phi(_lambda=None):
-    # phi( lambda ) is the Lagrangian function of the problem. With x the
-    # optimal solution of the minimization problem (see solveLagrangian()), the
-    # gradient at lambda is [ x - u ; - x ]
-    #
-    # however, the line search is written for minimization but we rather want
-    # to maximize phi(), hence we have to change the sign of both function
-    # values and gradient entries
+        # solve the Lagrangian relaxation
+        p, y = self.solve_lagrangian(lmbda)
+        p = -p
 
-    # solve the Lagrangian relaxation
-    [p, y] = solveLagrangian(_lambda)
-    p = -p
+        # compute gradient
+        g = np.vstack((self.ub - y, y))
 
-    # compute gradient
-    g = np.vstack((BCQP.u - y, y))
+        if self.dolh:
+            # compute an heuristic solution out of the solution y of the Lagrangian
+            # relaxation by projecting y on the box
 
-    if dolh:
-        # compute an heuristic solution out of the solution y of the Lagrangian
-        # relaxation by projecting y on the box
+            y[y < 0] = 0
+            idx = y > self.ub
+            y[idx] = self.ub[idx]
 
-        y(y < 0).lvalue = 0
-        idx = y > BCQP.u
-        y(idx).lvalue = BCQP.u(idx)
+            # compute cost of feasible solution
+            pv = 0.5 * y.T * self.f.Q * y + self.f.q.T * y
 
-        # compute cost of feasible solution
-        pv = 0.5 * y.cT * BCQP.Q * y + BCQP.q.cT * y
+            if pv < v:  # it is better than best one found so far
+                x = y  # y becomes the incumbent
+                v = pv
 
-        if pv < v:  # it is better than best one found so far
-            x = y  # y becomes the incumbent
-            v = pv
-
-
-def phi1d(alpha=None):
-    # phi( lambda ) is the Lagrangian function of the problem; then,
-    # phi( alpha ) = phi( lambda + alpha d ) and
-    # phi'( alpha ) = < \nabla phi( lambda + alpha * d ) , d >
-
-    [p, lastg] = phi(_lambda + alpha * d)
-    pp = d.cT * lastg
-
-
-def ArmijoWolfeLS(phi0=None, phip0=None, _as=None, m1=None, m2=None):
-    # performs an Armijo-Wolfe Line Search.
-    #
-    # phi0 = phi( 0 ), phip0 = phi'( 0 ) < 0
-    #
-    # as > 0 is the first value to be tested, and it is also the *maximum*
-    # possible step size: if phi'( as ) < 0 then the LS is immediately
-    # terminated
-    #
-    # m1 and m2 are the standard Armijo-Wolfe parameters; note that the strong
-    # Wolfe condition is used
-    #
-    # returns the optimal step and the optimal f-value
-
-    a = _as
-    [phia, phips] = phi1d(a)
-    if phips <= 0:
-        fprintf(mstring('%2d'), 1)
-        return
-
-    lsiter = 1  # count ls iterations
-
-    am = 0
-    phipm = phip0
-    while (feval <= MaxFeval) and ((_as - am)) > mina and (phips > 1e-12):
-
-        # compute the new value by safeguarded quadratic interpolation
-        a = (am * phips - _as * phipm) / (phips - phipm)
-        a = max(mcat([am * (1 + sfgrd), min(mcat([_as * (1 - sfgrd), a]))]))
-
-        # compute phi( a )
-        [phia, phip] = phi1d(a)
-
-        if (phia <= phi0 + m1 * a * phip0) and (abs(phip) <= -m2 * phip0):
-            break  # Armijo + strong Wolfe satisfied, we are done
-
-        # restrict the interval based on sign of the derivative in a
-        if phip < 0:
-            am = a
-            phipm = phip
-        else:
-            _as = a
-            if _as <= mina:
-                break
-            phips = phip
-        lsiter = lsiter + 1
-
-    fprintf(mstring('%2d'), lsiter)
+        return p, g

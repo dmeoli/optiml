@@ -5,16 +5,16 @@ from scipy.optimize import minimize
 
 from ml.learning import Learner
 from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel
-from optimization.optimization_function import Quadratic
+from optimization.optimization_function import Quadratic, Lagrangian
 
 
-def scipy_solve_qp(f, G, h, A, max_iter, verbose):
+def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
     return minimize(fun=f.function, jac=f.jacobian, x0=np.random.rand(f.n),
                     constraints=({'type': 'ineq',
                                   'fun': lambda x: h - np.dot(G, x),
                                   'jac': lambda x: -G},
                                  {'type': 'eq',
-                                  'fun': lambda x: np.dot(x, A),
+                                  'fun': lambda x: np.dot(A, x) - b,
                                   'jac': lambda x: A}),
                     options={'maxiter': max_iter,
                              'disp': verbose}).x
@@ -22,6 +22,8 @@ def scipy_solve_qp(f, G, h, A, max_iter, verbose):
 
 class SVM(Learner):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1.):
+        if kernel not in (linear_kernel, polynomial_kernel, rbf_kernel):
+            raise ValueError('unknown kernel function {}'.format(kernel))
         self.kernel = kernel
         self.degree = degree
         if gamma not in ('scale', 'auto'):
@@ -54,7 +56,7 @@ class SVC(SVM):
         :param verbose:
         """
         m = len(y)  # m = n_samples
-        K = (self.kernel(X, X, self.degree)
+        K = (self.kernel(X, X, self.C, self.degree)
              if self.kernel is polynomial_kernel else
              self.kernel(X, X, self.gamma)
              if self.kernel is rbf_kernel else
@@ -75,12 +77,13 @@ class SVC(SVM):
         # inequalities Gx <= h (A is m x n, where m = 2n is the number of inequalities
         # (n box constraints, 2 inequalities each)
         # equalities Ax = b (these's only one equality constraint, i.e. y.T.dot(x) = 0)
-        lagrangian = Quadratic(P, np.ones_like(q))
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
-        self.alphas = (scipy_solve_qp(lagrangian, G, h, A, max_iter, verbose) if optimizer is scipy_solve_qp else
+        self.alphas = (scipy_solve_qp(Quadratic(P, np.ones_like(q)), G, h, A, b, max_iter, verbose)
+                       if optimizer is scipy_solve_qp else
                        solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                       optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
+                       optimizer(Lagrangian(P, np.ones_like(q)),
+                                 max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
 
         self.sv_idx = np.argwhere(self.alphas > 1e-5).ravel()
         self.sv, self.sv_y, self.alphas = X[self.sv_idx], y[self.sv_idx], self.alphas[self.sv_idx]
@@ -90,7 +93,7 @@ class SVC(SVM):
             self.w = np.dot(self.alphas * self.sv_y, self.sv)
 
         self.b = np.mean(self.sv_y - np.dot(self.alphas * self.sv_y,
-                                            self.kernel(self.sv, self.sv, self.degree)
+                                            self.kernel(self.sv, self.sv, self.C, self.degree)
                                             if self.kernel is polynomial_kernel else
                                             self.kernel(self.sv, self.sv, self.gamma)
                                             if self.kernel is rbf_kernel else  # linear kernel
@@ -103,7 +106,7 @@ class SVC(SVM):
         """
         if self.kernel is not linear_kernel:
             return np.dot(self.alphas * self.sv_y,
-                          self.kernel(self.sv, X, self.degree)
+                          self.kernel(self.sv, X, self.C, self.degree)
                           if self.kernel is polynomial_kernel else  # self.kernel is rbf_kernel
                           self.kernel(self.sv, X, self.gamma)) + self.b
         return np.dot(X, self.w) + self.b
@@ -132,7 +135,7 @@ class SVR(SVM):
         :param verbose:
         """
         m = len(y)  # m = n_samples
-        K = (self.kernel(X, X, self.degree)
+        K = (self.kernel(X, X, self.C, self.degree)
              if self.kernel is polynomial_kernel else
              self.kernel(X, X, self.gamma)
              if self.kernel is rbf_kernel else
@@ -154,12 +157,12 @@ class SVR(SVM):
         # inequalities Gx <= h (A is m x n, where m = 2n is the number of inequalities
         # (n box constraints, 2 inequalities each)
         # equalities Ax = b (these's only one equality constraint, i.e. y.T.dot(x) = 0)
-        lagrangian = Quadratic(P, np.ones_like(q))
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
-        alphas = (scipy_solve_qp(lagrangian, G, h, q, max_iter, verbose) if optimizer is scipy_solve_qp else
+        alphas = (scipy_solve_qp(Quadratic(P, np.ones_like(q)), G, h, A, b, max_iter, verbose)
+                  if optimizer is scipy_solve_qp else
                   solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                  optimizer(lagrangian, max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
+                  optimizer(Lagrangian(P, np.ones_like(q)), max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 
@@ -171,7 +174,7 @@ class SVR(SVM):
             self.w = np.dot(self.alphas_p - self.alphas_n, X)
 
         self.b = np.mean(y - self.eps - np.dot(self.alphas_p - self.alphas_n,
-                                               self.kernel(self.sv, X, self.degree)
+                                               self.kernel(self.sv, X, self.C, self.degree)
                                                if self.kernel is polynomial_kernel else
                                                self.kernel(self.sv, X, self.gamma)
                                                if self.kernel is rbf_kernel else  # linear kernel
@@ -184,7 +187,7 @@ class SVR(SVM):
         """
         if self.kernel is not linear_kernel:
             return np.dot(self.alphas_p - self.alphas_n,
-                          self.kernel(self.sv, X, self.degree)
+                          self.kernel(self.sv, X, self.C, self.degree)
                           if self.kernel is polynomial_kernel else  # self.kernel is rbf_kernel
                           self.kernel(self.sv, X, self.gamma)) + self.b
 

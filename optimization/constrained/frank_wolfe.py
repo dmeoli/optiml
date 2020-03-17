@@ -8,7 +8,7 @@ class FrankWolfe(ConstrainedOptimizer):
     # Apply the (possibly, stabilized) Frank-Wolfe algorithm with exact line
     # search to the convex Box-Constrained Quadratic program
     #
-    #  (P) min { 1/2 x^T Q x - q^T x : Ax = b, 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
     #
     # Input:
     #
@@ -68,10 +68,11 @@ class FrankWolfe(ConstrainedOptimizer):
 
         best_lb = -np.inf  # best lower bound so far (= none, really)
 
-        print('iter\tf(x)\t\tlb\t\t\tgap')
+        if self.verbose:
+            print('iter\tf(x)\t\tlb\t\t\tgap')
 
         while True:
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            v, g = self.f.function(self.wrt, A, b), self.f.jacobian(self.wrt, A, b)
 
             # solve min { <g, y> : 0 <= y <= u }
             y = np.zeros(self.f.n)
@@ -87,7 +88,8 @@ class FrankWolfe(ConstrainedOptimizer):
             # compute the relative gap
             gap = (v - best_lb) / max(abs(v), 1)
 
-            print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, best_lb, gap))
+            if self.verbose:
+                print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, best_lb, gap))
 
             if gap <= self.eps:
                 status = 'optimal'
