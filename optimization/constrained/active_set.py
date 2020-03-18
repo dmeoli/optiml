@@ -83,6 +83,7 @@ class ActiveSet(ConstrainedOptimizer):
             # thing and use Cholesky to speed up solving a symmetric linear system
             # (Q_{AA} is symmetric positive definite matrix)
             from scipy.linalg import lu_factor, lu_solve
+            # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
             xs[A] = lu_solve(lu_factor(self.f.hessian(self.wrt)[A, :][:, A]),
                              -(self.f.hessian(self.wrt)[A] +
                                (self.f.hessian(self.wrt)[A, :][:, U] or 0. * ub[U] or 0.)))

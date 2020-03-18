@@ -9,7 +9,7 @@ from ml.learning import Learner
 from ml.neural_network.activations import Linear
 from ml.neural_network.layers import Layer, ParamLayer
 from optimization.optimization_function import OptimizationFunction
-from optimization.optimizer import LineSearchOptimizer, Optimizer
+from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GradientDescent
 
 plt.style.use('ggplot')
@@ -172,9 +172,9 @@ class NeuralNetwork(Layer, Learner):
 
     def predict(self, X):
         if isinstance(self.layers[-1]._a, Linear):  # regression
-            if self.layers[-1].fan_out is 1:
+            if self.layers[-1].fan_out is 1:  # one target
                 return self.forward(X).ravel()
-            else:
+            else:  # multi target
                 return self.forward(X)
         else:  # classification
             return np.argmax(self.forward(X), axis=1)

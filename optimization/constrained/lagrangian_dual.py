@@ -12,10 +12,10 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
     #
     # The box constraints 0 <= x <= u are relaxed (with Lagrangian multipliers
     # \lambda^- and \lambda^+, respectively) and the corresponding Lagrangian
-    # Dual is solved by means of an ad-hoc implementation of the Projected
+    # dual is solved by means of an ad-hoc implementation of the Projected
     # Gradient method (since the Lagrangian multipliers are constrained in
     # sign, and the Lagrangian function is differentiable owing to
-    # strict-positive-definiteness of Q) using a classical Armijo-Wolfe line search.
+    # strict-positive-definiteness of Q) using a classical Armijo Wolfe line search.
     #
     # A rough Lagrangian heuristic is implemented whereby the dual solution is
     # projected on the box at each iteration to provide an upper bound, which
@@ -121,7 +121,7 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
         print('\tls\tit\ta*')
 
         _lambda = np.zeros(2 * self.f.n)
-        p, last_g = self.phi(_lambda)
+        p, last_g, v = self.phi(v, _lambda)
 
         while True:
             # project the direction = -gradient over the active constraints
@@ -202,7 +202,7 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
         #       Q x = -q - lambda^+ + lambda^-
         #
         # Since we have computed at the beginning the Cholesky factorization of Q,
-        # i.e., Q = R^T  R, where R is upper triangular and therefore R^T is lower
+        # i.e., Q = R^T R, where R is upper triangular and therefore R^T is lower
         # triangular, we obtain this by just two triangular backsolves:
         #
         #       R^T z = -q - lambda^+ + lambda^-
@@ -213,27 +213,26 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
 
         ql = self.f.q + lmbda[:self.f.n] - lmbda[self.f.n:]
         from scipy.linalg import lu_factor, lu_solve
-
+        # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
         z = lu_solve(lu_factor(self.f.hessian(self.wrt).T), -ql)
         y = lu_solve(lu_factor(self.f.hessian(self.wrt)), z)
-        # z = solve_triangular(self.R.T, -ql, lower=True) # TODO
-        # y = solve_triangular(self.R, z, lower=False) # TODO
+        # z = solve_triangular(self.R.T, -ql, lower=True)
+        # y = solve_triangular(self.R, z, lower=False)
 
         # compute phi-value
-        p = (0.5 * y.T * self.f.hessian(self.wrt) + ql.cT) * y - lmbda[:self.f.n].T * self.ub
+        p = (0.5 * y.T.dot(self.f.hessian(self.wrt)) + ql.T).dot(y) - lmbda[:self.f.n].T.dot(self.ub)
 
         self.f_eval += 1
 
         return p, y
 
-    def phi(self, lmbda=None):
-        # phi( lambda ) is the Lagrangian function of the problem. With x the
+    def phi(self, v, lmbda=None):
+        # Compute the Lagrangian function of the problem. With x the
         # optimal solution of the minimization problem (see solve_lagrangian), the
-        # gradient at lambda is [x - u; -x]
-        #
-        # however, the line search is written for minimization but we rather want
+        # gradient at lambda is [x - u; -x].
+        # However, the line search is written for minimization but we rather want
         # to maximize phi(), hence we have to change the sign of both function
-        # values and gradient entries
+        # values and gradient entries.
 
         # solve the Lagrangian relaxation
         p, y = self.solve_lagrangian(lmbda)
@@ -251,10 +250,10 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
             y[idx] = self.ub[idx]
 
             # compute cost of feasible solution
-            pv = 0.5 * y.T * self.f.hessian(self.wrt) * y + self.f.q.T * y
+            pv = 0.5 * y.T.dot(self.f.hessian(self.wrt)).dot(y) + self.f.q.T.dot(y)
 
             if pv < v:  # it is better than best one found so far
-                x = y  # y becomes the incumbent
+                self.wrt = y  # y becomes the incumbent
                 v = pv
 
-        return p, g
+        return p, g, v
