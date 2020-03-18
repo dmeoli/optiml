@@ -10,16 +10,6 @@ class ActiveSet(ConstrainedOptimizer):
     #
     #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
     #
-    # Input:
-    #
-    # - BCQP, the structure encoding the BCQP to be solved within its fields:
-    #
-    #   = BCQP.Q:  n \times n symmetric positive semidefinite real matrix
-    #
-    #   = BCQP.q:  n \times 1 real vector
-    #
-    #   = BCQP.ub: n \times 1 real vector > 0
-    #
     # - max_iter (integer scalar, optional, default value 1000): the maximum
     #   number of iterations
     #

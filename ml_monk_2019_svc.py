@@ -17,7 +17,7 @@ constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoin
 if __name__ == '__main__':
     for i in (1, 2, 3):
         X_train, X_test, y_train, y_test = load_monk(i)
-        svc = SVC(kernel=linear_kernel).fit(X_train, y_train, optimizer=ProjectedGradient, verbose=False)
+        svc = SVC(kernel=polynomial_kernel).fit(X_train, y_train, optimizer=ProjectedGradient, verbose=False)
         # print('w = ', svc.w)
         # print('b = ', svc.b)
         # print('idx of support vectors = ', svc.sv_idx)
@@ -26,7 +26,7 @@ if __name__ == '__main__':
         # print()
 
         X_train, X_test, y_train, y_test = load_monk(i)
-        svc = SKLSVC(kernel='linear').fit(X_train, y_train)
+        svc = SKLSVC(kernel='poly').fit(X_train, y_train)
         # print('w = ', svc.coef_)
         # print('b = ', svc.intercept_)
         # print('idx of support vectors = ', svc.support_)

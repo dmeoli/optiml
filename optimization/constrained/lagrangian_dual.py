@@ -21,16 +21,6 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
     # projected on the box at each iteration to provide an upper bound, which
     # is then used in the stopping criterion.
     #
-    # Input:
-    #
-    # - BCQP, the structure encoding the BCQP to be solved within its fields:
-    #
-    #   = BCQP.Q:  n \times n symmetric positive semidefinite real matrix
-    #
-    #   = BCQP.q:  n \times 1 real vector
-    #
-    #   = BCQP.ub: n \times 1 real vector > 0
-    #
     # - dolh (logical scalar, optional, default value 1): true if a quick
     #   Lagrangian Heuristic is implemented whereby the current solution of the
     #   Lagrangian subproblem is projected on the box constraints

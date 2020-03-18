@@ -33,16 +33,6 @@ class ProjectedGradient(ConstrainedOptimizer):
     #
     #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
     #
-    # Input:
-    #
-    # - BCQP, the structure encoding the BCQP to be solved within its fields:
-    #
-    #   = BCQP.Q:  n \times n symmetric positive semidefinite real matrix
-    #
-    #   = BCQP.q:  n \times 1 real vector
-    #
-    #   = BCQP.ub: n \times 1 real vector > 0
-    #
     # - eps (real scalar, optional, default value 1e-6): the accuracy in the
     #   stopping criterion: the algorithm is stopped when the norm of the
     #   (projected) gradient is less than or equal to eps

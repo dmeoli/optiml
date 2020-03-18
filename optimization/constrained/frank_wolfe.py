@@ -10,16 +10,6 @@ class FrankWolfe(ConstrainedOptimizer):
     #
     #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
     #
-    # Input:
-    #
-    # - BCQP, the structure encoding the BCQP to be solved within its fields:
-    #
-    #   = BCQP.Q:  n \times n symmetric positive semidefinite real matrix
-    #
-    #   = BCQP.q:  n \times 1 real vector
-    #
-    #   = BCQP.ub: n \times 1 real vector > 0
-    #
     # - eps (real scalar, optional, default value 1e-6): the accuracy in the
     #   stopping criterion: the algorithm is stopped when the relative gap
     #   between the value of the best primal solution (the current one) and the
@@ -109,8 +99,8 @@ class FrankWolfe(ConstrainedOptimizer):
             d = y - self.wrt
 
             # compute optimal unbounded step size:
-            # min (1/2) (x + a d)^T * Q * (x + a d) + q^T * (x + a d) =
-            #     (1/2) a^2 (d^T * Q * d) + a d^T * (Q * x + q) [+ const]
+            #   min 1/2 (x + a d)^T * Q * (x + a d) + q^T * (x + a d)
+            # min 1/2 a^2 (d^T * Q * d) + a d^T * (Q * x + q) [+ const]
             #
             # ==> a = -d^T * (Q * x + q) / d^T * Q * d
             #
