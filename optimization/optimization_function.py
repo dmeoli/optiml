@@ -134,8 +134,8 @@ class Quadratic(OptimizationFunction):
         #                      T                           T
         # f(x, y) = 1/2 * | x |  * | a  b | * | x | - | d |  * | x |
         #                 | y |    | b  c |   | y |   | e |    | y |
-        z = 0.5 * self.Q[0][0] * x ** 2 + self.Q[0][1] * x * y + \
-            0.5 * self.Q[1][1] * y ** 2 - self.q[0] * x - self.q[1] * y
+        z = (0.5 * self.Q[0][0] * x ** 2 + self.Q[0][1] * x * y +
+             0.5 * self.Q[1][1] * y ** 2 - self.q[0] * x - self.q[1] * y)
 
         surface_axes.plot_surface(x, y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
 
@@ -160,6 +160,29 @@ quad4 = Quadratic(np.array([[3, -5], [-5, 3]]), np.array([10, 5]))
 # 2x2 quadratic function with "very elongated" Hessian
 # (a very small positive minimum eigenvalue, the other much larger)
 quad5 = Quadratic(np.array([[101, -99], [-99, 101]]), np.array([10, 5]))
+
+
+class Lagrangian(Quadratic):
+    def __init__(self, Q, q, A, b):
+        """
+        Construct Lagrangian function with equality constraints A x = b
+        :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
+                           the Hessian (i.e. the quadratic part) of f. If it is not
+                           positive semidefinite, f(x) will be unbounded below.
+        :param q: ([n x 1] real column vector): the linear part of f.
+        :param A: equality constraints matrix
+        :param b: equality constraints vector
+        """
+        super().__init__(Q, q)
+        self.A = A
+        self.b = b
+
+    def function(self, x, Q=None, q=None):
+        # L(x, lmbda) = f(x) + lmbda^T * (A x - b)
+        return super().function(x, Q, q) + self.A.dot(x) - self.b
+
+    def jacobian(self, x, Q=None, q=None):
+        return super().jacobian(x, Q, q) + self.A
 
 
 class Rosenbrock(OptimizationFunction):

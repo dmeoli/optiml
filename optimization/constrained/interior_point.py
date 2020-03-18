@@ -41,7 +41,7 @@ class InteriorPoint(ConstrainedOptimizer):
     def __init__(self, f, eps=1e-10, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, eps, max_iter, verbose, plot)
 
-    def minimize(self, A, b, ub):
+    def minimize(self, ub):
 
         # the Slackened KKT System for (P) (written without slacks) is
         #
@@ -142,7 +142,7 @@ class InteriorPoint(ConstrainedOptimizer):
 
         while True:
             v = self.f.function(self.wrt)
-            xQx = self.wrt.dot(self.f.Q).dot(self.wrt)
+            xQx = self.wrt.dot(self.f.hessian(self.wrt)).dot(self.wrt)
             p = -lp.T.dot(ub) - 0.5 * xQx
             gap = (v - p) / max(abs(v), 1)
 
@@ -172,7 +172,7 @@ class InteriorPoint(ConstrainedOptimizer):
             mu = (v - p) / (4 * self.f.n * self.f.n)  # use \rho = 1 / (# of constraints)
 
             umx = ub - self.wrt
-            H = self.f.Q + np.diag(lp / umx + lm / self.wrt)
+            H = self.f.hessian(self.wrt) + np.diag(lp / umx + lm / self.wrt)
             # w = mu (np.ones(n) / umx - np.ones(n) / self.wrt) + lp - lm;
             w = mu * (ub - 2 * self.wrt) / (umx.dot(self.wrt)) + lp - lm
 

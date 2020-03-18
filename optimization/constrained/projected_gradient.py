@@ -23,7 +23,7 @@ class ConstrainedOptimizer:
         self.verbose = verbose
         self.plot = plot
 
-    def minimize(self, A, b, ub):
+    def minimize(self, ub):
         raise NotImplementedError
 
 
@@ -62,7 +62,7 @@ class ProjectedGradient(ConstrainedOptimizer):
     def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, eps, max_iter, verbose, plot)
 
-    def minimize(self, A, b, ub):
+    def minimize(self, ub):
 
         if self.verbose:
             print('iter\tf(x)\t\t||g(x)||')

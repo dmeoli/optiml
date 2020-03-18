@@ -58,7 +58,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
                 - [x] Nesterov momentum
         - [ ] Others
             - [ ] Proximal Bundle
-    - Constrained Optimization
+    - Box-Constrained Optimization
         - [x] Projected Gradient
         - [x] Conditional Gradient or Frank-Wolfe
         - [x] Active Set

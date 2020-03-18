@@ -52,7 +52,7 @@ class FrankWolfe(ConstrainedOptimizer):
             raise ValueError('t has to lie in [0, 1)')
         self.t = t
 
-    def minimize(self, A, b, ub):
+    def minimize(self, ub):
 
         self.wrt = ub / 2  # start from the middle of the box
 

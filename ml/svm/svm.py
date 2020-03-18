@@ -5,17 +5,14 @@ from scipy.optimize import minimize
 
 from ml.learning import Learner
 from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel, sigmoid_kernel
-from optimization.optimization_function import Quadratic
+from optimization.optimization_function import Lagrangian
 
 
-def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
+def scipy_solve_qp(f, G, h, max_iter, verbose):
     return minimize(fun=f.function, jac=f.jacobian, x0=np.random.rand(f.n),
                     constraints=({'type': 'ineq',
                                   'fun': lambda x: h - np.dot(G, x),
-                                  'jac': lambda x: -G},
-                                 {'type': 'eq',
-                                  'fun': lambda x: np.dot(A, x) - b,
-                                  'jac': lambda x: A}),
+                                  'jac': lambda x: -G}),
                     options={'maxiter': max_iter,
                              'disp': verbose}).x
 
@@ -82,12 +79,12 @@ class SVC(SVM):
         # inequalities Gx <= h (A is m x n, where m = 2n is the number of inequalities
         # (n box constraints, 2 inequalities each)
         # equalities Ax = b (these's only one equality constraint, i.e. y.T.dot(x) = 0)
-        obj = Quadratic(P, np.ones_like(q))
+        obj = Lagrangian(P, np.ones_like(q), A, b.item())
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
-        self.alphas = (scipy_solve_qp(obj, G, h, A, b, max_iter, verbose) if optimizer is scipy_solve_qp else
+        self.alphas = (scipy_solve_qp(obj, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
                        solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                       optimizer(obj, max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
+                       optimizer(obj, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
 
         self.sv_idx = np.argwhere(self.alphas > 1e-5).ravel()
         self.sv, self.sv_y, self.alphas = X[self.sv_idx], y[self.sv_idx], self.alphas[self.sv_idx]
@@ -166,13 +163,13 @@ class SVR(SVM):
         # we'd like to minimize the negative of the Lagrangian dual function subject to linear constraints:
         # inequalities Gx <= h (A is m x n, where m = 2n is the number of inequalities
         # (n box constraints, 2 inequalities each)
-        # equalities Ax = b (these's only one equality constraint, i.e. y.T.dot(x) = 0)
-        obj = Quadratic(P, np.ones_like(q))
+        # equalities Ax = b (these's only one equality constraint, i.e. x.T.dot(x) = 0)
+        obj = Lagrangian(P, np.ones_like(q), A, b.item())
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
-        alphas = (scipy_solve_qp(obj, G, h, A, b, max_iter, verbose) if optimizer is scipy_solve_qp else
+        alphas = (scipy_solve_qp(obj, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
                   solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                  optimizer(obj, max_iter=max_iter, verbose=verbose).minimize(A, b, ub)[0])
+                  optimizer(obj, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 

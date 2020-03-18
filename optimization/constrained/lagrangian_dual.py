@@ -99,13 +99,13 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
         # compute the Cholesky factorization of Q, this will be used
         # at each iteration to solve the Lagrangian relaxation
         try:
-            self.R = np.linalg.cholesky(self.f.Q)
+            self.R = np.linalg.cholesky(self.f.hessian(self.wrt))
         except np.linalg.LinAlgError:
             raise ValueError('Q is not positive definite, this is not yet supported')
         self.dolh = dolh
         self.f_eval = 1  # f() evaluations count ("common" with LSs)
 
-    def minimize(self, A, b, ub):
+    def minimize(self, ub):
         self.ub = ub
 
         self.wrt = ub / 2  # initial feasible solution is the middle of the box
@@ -214,13 +214,13 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
         ql = self.f.q + lmbda[:self.f.n] - lmbda[self.f.n:]
         from scipy.linalg import lu_factor, lu_solve
 
-        z = lu_solve(lu_factor(self.f.Q.T), -ql)
-        y = lu_solve(lu_factor(self.f.Q), z)
+        z = lu_solve(lu_factor(self.f.hessian(self.wrt).T), -ql)
+        y = lu_solve(lu_factor(self.f.hessian(self.wrt)), z)
         # z = solve_triangular(self.R.T, -ql, lower=True) # TODO
         # y = solve_triangular(self.R, z, lower=False) # TODO
 
         # compute phi-value
-        p = (0.5 * y.T * self.f.Q + ql.cT) * y - lmbda[:self.f.n].T * self.ub
+        p = (0.5 * y.T * self.f.hessian(self.wrt) + ql.cT) * y - lmbda[:self.f.n].T * self.ub
 
         self.f_eval += 1
 
@@ -251,7 +251,7 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
             y[idx] = self.ub[idx]
 
             # compute cost of feasible solution
-            pv = 0.5 * y.T * self.f.Q * y + self.f.q.T * y
+            pv = 0.5 * y.T * self.f.hessian(self.wrt) * y + self.f.q.T * y
 
             if pv < v:  # it is better than best one found so far
                 x = y  # y becomes the incumbent

@@ -35,7 +35,7 @@ class ActiveSet(ConstrainedOptimizer):
     def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, eps, max_iter, verbose, plot)
 
-    def minimize(self, A, b, ub):
+    def minimize(self, ub):
 
         self.wrt = ub / 2  # start from the middle of the box
         v = self.f.function(self.wrt)
@@ -83,8 +83,9 @@ class ActiveSet(ConstrainedOptimizer):
             # thing and use Cholesky to speed up solving a symmetric linear system
             # (Q_{AA} is symmetric positive definite matrix)
             from scipy.linalg import lu_factor, lu_solve
-            xs[A] = lu_solve(lu_factor(self.f.Q[A, :][:, A]),
-                             -(self.f.q[A] + (self.f.Q[A, :][:, U] or 0. * ub[U] or 0.)))
+            xs[A] = lu_solve(lu_factor(self.f.hessian(self.wrt)[A, :][:, A]),
+                             -(self.f.hessian(self.wrt)[A] +
+                               (self.f.hessian(self.wrt)[A, :][:, U] or 0. * ub[U] or 0.)))
 
             if np.all(xs[A] <= ub[A] + 1e-12) and np.all(xs[A] >= -1e-12):
                 # the solution of the unconstrained problem is actually feasible
