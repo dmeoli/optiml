@@ -1,7 +1,7 @@
 from qpsolvers import solve_qp
 from sklearn.model_selection import train_test_split
 
-from ml.learning import MultiOutputLearner
+from ml.learning import MultiTargetRegressor
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error
 from ml.svm.kernels import *
@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
-    svr = MultiOutputLearner(SVR(kernel=rbf_kernel, eps=0.1))
+    svr = MultiTargetRegressor(SVR(kernel=rbf_kernel, eps=0.1))
     svr.fit(X_train, y_train, optimizer=ProjectedGradient, verbose=False)
     # for learner in svr.learners:
     #     print('w = ', learner.w)

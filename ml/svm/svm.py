@@ -53,6 +53,8 @@ class SVC(SVM):
         :param verbose:
         """
         self.labels = np.unique(y)
+        if self.labels.size > 2:
+            raise ValueError('use MultiClassClassifier to train a model over more than two labels')
         y = np.where(y == self.labels[0], -1, 1)
 
         m = len(y)  # m = n_samples

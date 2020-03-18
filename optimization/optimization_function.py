@@ -178,7 +178,7 @@ class Lagrangian(Quadratic):
         self.b = b
 
     def function(self, x, Q=None, q=None):
-        # L(x, lmbda) = f(x) + lmbda^T * (A x - b)
+        # L(x, lmbda) = f(x) + lmbda^T (A x - b)
         return super().function(x, Q, q) + self.A.dot(x) - self.b
 
     def jacobian(self, x, Q=None, q=None):

@@ -81,9 +81,8 @@ class MultiClassClassifier(Learner):
             return np.argmax(vote, axis=1)
 
 
-class MultiOutputLearner(Learner):
-    """Multi target regression
-    This strategy consists of fitting one regressor per target. This is a
+class MultiTargetRegressor(Learner):
+    """This strategy consists of fitting one regressor per target. This is a
     simple strategy for extending regressors that do not natively support
     multi-target regression.
     """
@@ -159,6 +158,10 @@ class LinearRegressionLearner(Learner):
         self.verbose = verbose
 
     def fit(self, X, y):
+        self.targets = y.shape[1] if y.ndim > 1 else 1
+        if self.targets > 1:
+            raise ValueError('use MultiTargetRegressor to train a model over more than one target')
+
         loss = LinearModelLossFunction(X, y, self, mean_squared_error)
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(f=loss, batch_size=self.batch_size, max_iter=self.epochs,
@@ -190,7 +193,10 @@ class LogisticRegressionLearner(Learner):
 
     def fit(self, X, y):
         self.labels = np.unique(y)
+        if self.labels.size > 2:
+            raise ValueError('use MultiClassClassifier to train a model over more than two labels')
         y = np.where(y == self.labels[0], 0, 1)
+
         loss = LinearModelLossFunction(X, y, self, cross_entropy)
         if issubclass(self.optimizer, LineSearchOptimizer):
             self.w = self.optimizer(f=loss, batch_size=self.batch_size, max_iter=self.epochs,
