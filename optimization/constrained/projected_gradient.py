@@ -1,35 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.optimization_function import Quadratic
+from optimization.optimization_function import BoxConstrainedQuadratic
+from optimization.optimizer import Optimizer
 
 
-class ConstrainedOptimizer:
-    def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        if not isinstance(f, Quadratic):
-            raise TypeError('f is not a quadratic function')
-        self.f = f
-        if not np.isscalar(eps):
-            raise ValueError('eps is not a real scalar')
-        if not eps > 0:
-            raise ValueError('eps must be > 0')
-        self.eps = eps
-        if not np.isscalar(max_iter):
-            raise ValueError('max_iter is not an integer scalar')
-        if not max_iter > 0:
-            raise ValueError('max_iter must be > 0')
-        self.max_iter = max_iter
-        self.iter = 1
-        self.verbose = verbose
-        self.plot = plot
-
-    def minimize(self, ub):
-        raise NotImplementedError
-
-
-class ProjectedGradient(ConstrainedOptimizer):
+class ProjectedGradient(Optimizer):
     # Apply the Projected Gradient algorithm with exact line search to the
-    # convex Box-Constrained Quadratic program
+    # convex Box-Constrained Quadratic program:
     #
     #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
     #
@@ -60,14 +38,15 @@ class ProjectedGradient(ConstrainedOptimizer):
     #     necessarily the optimal one
 
     def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, eps, max_iter, verbose, plot)
+        if not isinstance(f, BoxConstrainedQuadratic):
+            raise TypeError('f is not a box-constrained quadratic function')
+        super().__init__(f, f.ub / 2,  # start from the middle of the box
+                         eps=eps, max_iter=max_iter, verbose=verbose, plot=plot)
 
-    def minimize(self, ub):
+    def minimize(self):
 
         if self.verbose:
             print('iter\tf(x)\t\t||g(x)||')
-
-        self.wrt = ub / 2  # start from the middle of the box
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
@@ -77,7 +56,7 @@ class ProjectedGradient(ConstrainedOptimizer):
             d = -g
 
             # project the direction over the active constraints
-            d[np.logical_and(ub - self.wrt <= 1e-12, d > 0)] = 0
+            d[np.logical_and(self.f.ub - self.wrt <= 1e-12, d > 0)] = 0
             d[np.logical_and(self.wrt <= 1e-12, d < 0)] = 0
 
             # compute the norm of the (projected) gradient
@@ -98,7 +77,7 @@ class ProjectedGradient(ConstrainedOptimizer):
             #   0 <= x[i] + max_t d[i] <= ub[i]   for all i
 
             idx = d > 0  # positive gradient entries
-            max_t = min((ub[idx] - self.wrt[idx]) / d[idx], default=0.)
+            max_t = min((self.f.ub[idx] - self.wrt[idx]) / d[idx], default=0.)
             idx = d < 0  # negative gradient entries
             max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=0.))
 
@@ -116,6 +95,8 @@ class ProjectedGradient(ConstrainedOptimizer):
                 t = min(-g.T.dot(d) / den, max_t)
 
             self.wrt += t * d
+
+            # TODO add plotting
 
             self.iter += 1
 

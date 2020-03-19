@@ -12,7 +12,7 @@ from optimization.unconstrained.quasi_newton import BFGS
 
 def test_neural_network_regression():
     X, y = load_boston(return_X_y=True)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, test_size=0.2)
     net = NeuralNetwork(FullyConnected(13, 5, sigmoid),
                         FullyConnected(5, 3, sigmoid),
                         FullyConnected(3, 1, linear))
@@ -22,7 +22,7 @@ def test_neural_network_regression():
 
 def test_neural_network_classification():
     X, y = load_iris(return_X_y=True)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, test_size=0.2)
     net = NeuralNetwork(FullyConnected(4, 4, sigmoid),
                         FullyConnected(4, 4, sigmoid),
                         FullyConnected(4, 3, softmax))

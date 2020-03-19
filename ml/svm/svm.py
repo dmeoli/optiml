@@ -8,7 +8,7 @@ from scipy.optimize import minimize
 
 from ml.learning import Learner
 from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel, sigmoid_kernel
-from optimization.optimization_function import Quadratic
+from optimization.optimization_function import BoxConstrainedQuadratic
 
 plt.style.use('ggplot')
 
@@ -154,8 +154,8 @@ def scipy_solve_qp(f, G, h, max_iter, verbose):
                              'disp': verbose}).x
 
 
-class SVMLagrangianRelaxation(Quadratic):
-    def __init__(self, Q, q, A, b):
+class SVMLagrangianRelaxation(BoxConstrainedQuadratic):
+    def __init__(self, Q, q, ub, A, b):
         """
         Construct the Lagrangian relaxation of the SVC learning problem with equality constraints A x = b
         :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
@@ -165,7 +165,7 @@ class SVMLagrangianRelaxation(Quadratic):
         :param A: equality constraints matrix
         :param b: equality constraints vector
         """
-        super().__init__(Q, q)
+        super().__init__(Q, q, ub)
         self.A = A
         self.b = b
 
@@ -220,12 +220,12 @@ class SVC(SVM):
         # inequalities Gx <= h (A is m x n, where m = 2n is the number of inequalities
         # (n box constraints, 2 inequalities each)
         # equalities Ax = b (these's only one equality constraint, i.e. y.T.dot(x) = 0)
-        obj = SVMLagrangianRelaxation(P, np.ones_like(q), A, b.item())
+        obj = SVMLagrangianRelaxation(P, np.ones_like(q), ub, A, b.item())
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
         self.alphas = (scipy_solve_qp(obj, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
                        solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                       optimizer(obj, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
+                       optimizer(obj, max_iter=max_iter, verbose=verbose).minimize()[0])
 
         self.sv_idx = np.argwhere(self.alphas > 1e-5).ravel()
         self.sv, self.sv_y, self.alphas = X[self.sv_idx], y[self.sv_idx], self.alphas[self.sv_idx]
@@ -305,12 +305,12 @@ class SVR(SVM):
         # inequalities Gx <= h (A is m x n, where m = 2n is the number of inequalities
         # (n box constraints, 2 inequalities each)
         # equalities Ax = b (these's only one equality constraint, i.e. x.T.dot(x) = 0)
-        obj = SVMLagrangianRelaxation(P, np.ones_like(q), A, b.item())
+        obj = SVMLagrangianRelaxation(P, np.ones_like(q), ub, A, b.item())
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
         alphas = (scipy_solve_qp(obj, G, h, max_iter, verbose) if optimizer is scipy_solve_qp else
                   solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                  optimizer(obj, max_iter=max_iter, verbose=verbose).minimize(ub)[0])
+                  optimizer(obj, max_iter=max_iter, verbose=verbose).minimize()[0])
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 

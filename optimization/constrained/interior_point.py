@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.constrained.projected_gradient import ConstrainedOptimizer
+from optimization.optimization_function import BoxConstrainedQuadratic
+from optimization.optimizer import Optimizer
 from utils import cholesky_solve
 
 
-class InteriorPoint(ConstrainedOptimizer):
+class InteriorPoint(Optimizer):
     # Apply the Primal-Dual (feasible) Interior (barrier) Method to the convex
-    # Box-Constrained Quadratic program
+    # Box-Constrained Quadratic program:
     #
     #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
     #
@@ -39,9 +40,12 @@ class InteriorPoint(ConstrainedOptimizer):
     #     necessarily the optimal one
 
     def __init__(self, f, eps=1e-10, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, eps, max_iter, verbose, plot)
+        if not isinstance(f, BoxConstrainedQuadratic):
+            raise TypeError('f is not a box-constrained quadratic function')
+        super().__init__(f, f.ub / 2,  # start from the middle of the box
+                         eps=eps, max_iter=max_iter, verbose=verbose, plot=plot)
 
-    def minimize(self, ub):
+    def minimize(self):
 
         # the Slackened KKT System for (P) (written without slacks) is
         #
@@ -124,9 +128,6 @@ class InteriorPoint(ConstrainedOptimizer):
         # so lm and lp would not be interior. The obvious solution is to add to
         # both a term eps * e with some small eps (1e-6)
 
-        # compute a feasible interior primal solution (the middle of the box)
-        self.wrt = ub / 2
-
         # compute a feasible interior dual solution satisfying SKKTS with x for some
         # \mu we don't care much of
         g = self.f.jacobian(self.wrt)
@@ -140,10 +141,13 @@ class InteriorPoint(ConstrainedOptimizer):
         if self.verbose:
             print('iter\tv\t\t\tp\t\t\tgap')
 
+        if self.plot and self.n == 2:
+            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
+
         while True:
             v = self.f.function(self.wrt)
             xQx = self.wrt.dot(self.f.hessian(self.wrt)).dot(self.wrt)
-            p = -lp.T.dot(ub) - 0.5 * xQx
+            p = -lp.T.dot(self.f.ub) - 0.5 * xQx
             gap = (v - p) / max(abs(v), 1)
 
             if self.verbose:
@@ -161,20 +165,20 @@ class InteriorPoint(ConstrainedOptimizer):
             # solve the SKKTS
             # note: the "complicated" term in W has the form:
             #
-            #  mu [ 1 / (u_i - x_i) - 1 / x_i ]
+            #  mu [1 / (u_i - x_i) - 1 / x_i]
             #
             # which can be rewritten:
             #
-            #  mu (u_i - 2 x_i) / [ (u_i - x_i) x_i ]
+            #  mu (u_i - 2 x_i) / [(u_i - x_i) x_i]
             #
             # it appears this last form is *vastly* more numerically stable
 
             mu = (v - p) / (4 * self.f.n * self.f.n)  # use \rho = 1 / (# of constraints)
 
-            umx = ub - self.wrt
+            umx = self.f.ub - self.wrt
             H = self.f.hessian(self.wrt) + np.diag(lp / umx + lm / self.wrt)
             # w = mu (np.ones(n) / umx - np.ones(n) / self.wrt) + lp - lm;
-            w = mu * (ub - 2 * self.wrt) / (umx.dot(self.wrt)) + lp - lm
+            w = mu * (self.f.ub - 2 * self.wrt) / (umx.dot(self.wrt)) + lp - lm
 
             # and use Cholesky to solve the system
             # because H is symmetric positive definite matrix
@@ -213,6 +217,8 @@ class InteriorPoint(ConstrainedOptimizer):
             self.wrt += maxt * dx
             lp = lp + maxt * dlp
             lm = lm + maxt * dlm
+
+            # TODO add plotting
 
             self.iter += 1
 

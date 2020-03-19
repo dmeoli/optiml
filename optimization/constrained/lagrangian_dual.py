@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.constrained.projected_gradient import ConstrainedOptimizer
+from optimization.optimization_function import BoxConstrainedQuadratic
 from optimization.optimizer import LineSearchOptimizer
 
 
-class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
+class LagrangianDual(LineSearchOptimizer):
     # Solve the convex Box-Constrained Quadratic program:
     #
     #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
@@ -94,8 +94,11 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
 
     def __init__(self, f, dolh=True, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
                  tau=0.95, sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
-        super().__init__(f, None, None, eps, max_iter, max_f_eval, m1, m2,
-                         a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        if not isinstance(f, BoxConstrainedQuadratic):
+            raise TypeError('f is not a box-constrained quadratic function')
+        super().__init__(f, f.ub / 2,  # start from the middle of the box,
+                         eps=eps, max_iter=max_iter, max_f_eval=max_f_eval, m1=m1, m2=m2, a_start=a_start,
+                         tau=tau, sfgrd=sfgrd, m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
         # compute the Cholesky factorization of Q, this will be used
         # at each iteration to solve the Lagrangian relaxation
         try:
@@ -105,10 +108,7 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
         self.dolh = dolh
         self.f_eval = 1  # f() evaluations count ("common" with LSs)
 
-    def minimize(self, ub):
-        self.ub = ub
-
-        self.wrt = ub / 2  # initial feasible solution is the middle of the box
+    def minimize(self):
 
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
 
@@ -121,7 +121,10 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
         print('\tls\tit\ta*')
 
         _lambda = np.zeros(2 * self.f.n)
-        p, last_g, v = self.phi(v, _lambda)
+        p, last_g, v = self.phi(self.f.ub, v, _lambda)
+
+        if self.plot and self.n == 2:
+            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
             # project the direction = -gradient over the active constraints
@@ -179,6 +182,8 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
 
             _lambda = _lambda + a * d
 
+            # TODO add plotting
+
             self.iter += 1
 
         if self.verbose:
@@ -187,7 +192,7 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
             plt.show()
         return self.wrt, status, _lambda
 
-    def solve_lagrangian(self, lmbda=None):
+    def solve_lagrangian(self, ub, lmbda=None):
         # The Lagrangian relaxation of the problem is:
         #
         #    min { (1/2) x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x
@@ -220,13 +225,13 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
         # y = solve_triangular(self.R, z, lower=False)
 
         # compute phi-value
-        p = (0.5 * y.T.dot(self.f.hessian(self.wrt)) + ql.T).dot(y) - lmbda[:self.f.n].T.dot(self.ub)
+        p = (0.5 * y.T.dot(self.f.hessian(self.wrt)) + ql.T).dot(y) - lmbda[:self.f.n].T.dot(ub)
 
         self.f_eval += 1
 
         return p, y
 
-    def phi(self, v, lmbda=None):
+    def phi(self, ub, v, lmbda=None):
         # Compute the Lagrangian function of the problem. With x the
         # optimal solution of the minimization problem (see solve_lagrangian), the
         # gradient at lambda is [x - u; -x].
@@ -235,19 +240,19 @@ class LagrangianDual(LineSearchOptimizer, ConstrainedOptimizer):
         # values and gradient entries.
 
         # solve the Lagrangian relaxation
-        p, y = self.solve_lagrangian(lmbda)
+        p, y = self.solve_lagrangian(ub, lmbda)
         p = -p
 
         # compute gradient
-        g = np.vstack((self.ub - y, y))
+        g = np.vstack((ub - y, y))
 
         if self.dolh:
             # compute an heuristic solution out of the solution y of the Lagrangian
             # relaxation by projecting y on the box
 
             y[y < 0] = 0
-            idx = y > self.ub
-            y[idx] = self.ub[idx]
+            idx = y > ub
+            y[idx] = ub[idx]
 
             # compute cost of feasible solution
             pv = 0.5 * y.T.dot(self.f.hessian(self.wrt)).dot(y) + self.f.q.T.dot(y)

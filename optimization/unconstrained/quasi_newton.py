@@ -156,7 +156,7 @@ class BFGS(LineSearchOptimizer):
                         gp = self.f.jacobian(xp, *args)
                         B[i] = ((gp - g) / small_step).T
                     B = (B + B.T) / 2  # ensure it is symmetric
-                    lambda_n = min(np.linalg.eigvalsh(B))  # smallest eigenvalue
+                    lambda_n = np.linalg.eigvalsh(B)[0]  # smallest eigenvalue
                     if lambda_n < 1e-6:
                         B = B + (1e-6 - lambda_n) * np.identity(self.n)
                     B = np.linalg.inv(B)

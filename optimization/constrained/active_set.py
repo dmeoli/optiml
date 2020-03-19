@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.constrained.projected_gradient import ConstrainedOptimizer
+from optimization.optimization_function import BoxConstrainedQuadratic
+from optimization.optimizer import Optimizer
 
 
-class ActiveSet(ConstrainedOptimizer):
+class ActiveSet(Optimizer):
     # Apply the Active Set Method to the convex Box-Constrained Quadratic
-    # program
+    # program:
     #
     #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
     #
@@ -33,11 +34,13 @@ class ActiveSet(ConstrainedOptimizer):
     #     necessarily the optimal one
 
     def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, eps, max_iter, verbose, plot)
+        if not isinstance(f, BoxConstrainedQuadratic):
+            raise TypeError('f is not a box-constrained quadratic function')
+        super().__init__(f, f.ub / 2,  # start from the middle of the box
+                         eps=eps, max_iter=max_iter, verbose=verbose, plot=plot)
 
-    def minimize(self, ub):
+    def minimize(self):
 
-        self.wrt = ub / 2  # start from the middle of the box
         v = self.f.function(self.wrt)
 
         # because all constraints are box ones, the active set is logically
@@ -55,6 +58,9 @@ class ActiveSet(ConstrainedOptimizer):
 
         if self.verbose:
             print('iter\tf(x)\t\t| B |\tI/O')
+
+        if self.plot and self.n == 2:
+            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
             if self.verbose:
@@ -79,16 +85,16 @@ class ActiveSet(ConstrainedOptimizer):
             # unconstrained one)
 
             xs = np.zeros(self.f.n)
-            xs[U] = ub[U]
+            xs[U] = self.f.ub[U]
             # thing and use Cholesky to speed up solving a symmetric linear system
             # (Q_{AA} is symmetric positive definite matrix)
             from scipy.linalg import lu_factor, lu_solve
             # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
             xs[A] = lu_solve(lu_factor(self.f.hessian(self.wrt)[A, :][:, A]),
                              -(self.f.hessian(self.wrt)[A] +
-                               (self.f.hessian(self.wrt)[A, :][:, U] or 0. * ub[U] or 0.)))
+                               (self.f.hessian(self.wrt)[A, :][:, U] or 0. * self.f.ub[U] or 0.)))
 
-            if np.all(xs[A] <= ub[A] + 1e-12) and np.all(xs[A] >= -1e-12):
+            if np.all(xs[A] <= self.f.ub[A] + 1e-12) and np.all(xs[A] >= -1e-12):
                 # the solution of the unconstrained problem is actually feasible
 
                 # move the current point right there
@@ -132,7 +138,7 @@ class ActiveSet(ConstrainedOptimizer):
                 #   0 <= self.wrt[i] + max_t d[i] <= u[i]   for all i
 
                 idx = np.logical_and(A, d > 0)  # positive gradient entries
-                max_t = min((ub[idx] - self.wrt[idx]) / d[idx], default=0.)
+                max_t = min((self.f.ub[idx] - self.wrt[idx]) / d[idx], default=0.)
                 idx = np.logical_and(A, d < 0)  # negative gradient entries
                 max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=0.))
 
@@ -148,12 +154,14 @@ class ActiveSet(ConstrainedOptimizer):
                 L[nL] = True
                 A[nL] = False
 
-                nU = np.logical_and(A, self.wrt >= ub - 1e-12)
+                nU = np.logical_and(A, self.wrt >= self.f.ub - 1e-12)
                 U[nU] = True
                 A[nU] = False
 
                 if self.verbose:
                     print('I %d+%d'.format(sum(nL), sum(nU)))
+
+            # TODO add plotting
 
             self.iter += 1
 

@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.constrained.projected_gradient import ConstrainedOptimizer
+from optimization.optimization_function import BoxConstrainedQuadratic
+from optimization.optimizer import Optimizer
 
 
-class FrankWolfe(ConstrainedOptimizer):
+class FrankWolfe(Optimizer):
     # Apply the (possibly, stabilized) Frank-Wolfe algorithm with exact line
-    # search to the convex Box-Constrained Quadratic program
+    # search to the convex Box-Constrained Quadratic program:
     #
     #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
     #
@@ -45,21 +46,25 @@ class FrankWolfe(ConstrainedOptimizer):
     #     necessarily the optimal one
 
     def __init__(self, f, t=0., eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, eps, max_iter, verbose, plot)
+        if not isinstance(f, BoxConstrainedQuadratic):
+            raise TypeError('f is not a box-constrained quadratic function')
+        super().__init__(f, f.ub / 2,  # start from the middle of the box
+                         eps=eps, max_iter=max_iter, verbose=verbose, plot=plot)
         if not np.isreal(t) or not np.isscalar(t):
             raise ValueError('t is not a real scalar')
         if not 0 <= t < 1:
             raise ValueError('t has to lie in [0, 1)')
         self.t = t
 
-    def minimize(self, ub):
-
-        self.wrt = ub / 2  # start from the middle of the box
+    def minimize(self):
 
         best_lb = -np.inf  # best lower bound so far (= none, really)
 
         if self.verbose:
             print('iter\tf(x)\t\tlb\t\t\tgap')
+
+        if self.plot and self.n == 2:
+            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
             v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
@@ -67,10 +72,10 @@ class FrankWolfe(ConstrainedOptimizer):
             # solve min { <g, y> : 0 <= y <= u }
             y = np.zeros(self.f.n)
             idx = g < 0
-            y[idx] = ub[idx]
+            y[idx] = self.f.ub[idx]
 
             # compute the lower bound: remember that the first-order approximation
-            # is f( x ) + g ( y - x )
+            # is f(x) + g(y - x)
             lb = v + g.T.dot(y - self.wrt)
             if lb > best_lb:
                 best_lb = lb
@@ -91,7 +96,7 @@ class FrankWolfe(ConstrainedOptimizer):
 
             # in the stabilized case, restrict y in the box
             if self.t > 0:
-                y = max(self.wrt - self.t * ub, min(self.wrt + self.t * ub, y))
+                y = max(self.wrt - self.t * self.f.ub, min(self.wrt + self.t * self.f.ub, y))
 
             # compute step size
             # we are taking direction d = y - x and y is feasible, hence the
@@ -113,6 +118,8 @@ class FrankWolfe(ConstrainedOptimizer):
                 alpha = min(-g.T.dot(d) / den, 1)
 
             self.wrt += alpha * d
+
+            # TODO add plotting
 
             self.iter += 1
 

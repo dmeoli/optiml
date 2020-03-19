@@ -162,6 +162,143 @@ quad4 = Quadratic(np.array([[3, -5], [-5, 3]]), np.array([10, 5]))
 quad5 = Quadratic(np.array([[101, -99], [-99, 101]]), np.array([10, 5]))
 
 
+class BoxConstrainedQuadratic(Quadratic):
+    # Produces a structure encoding a convex Box-Constrained Quadratic program:
+    #
+    #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
+    #
+    # Input:
+    #
+    # - n (integer, scalar): the size of the problem
+    #
+    # - actv (real, scalar, default 0.5): how many box constraints (as a
+    #   fraction of the number of variables n of the problems) the
+    #   unconstrained optimum will violate, and therefore we expect to be
+    #   active in the constrained optimum; note that there is no guarantee that
+    #   exactly actv constraints will be active, they may be less or (more
+    #   likely) more, except when actv = 0 because then the unconstrained
+    #   optimum is surely feasible and therefore it will be the constrained
+    #   optimum as well
+    #
+    # - rank (real, scalar, default 1.1): Q will be obtained as Q = G^T G, with
+    #   G a m \times n random matrix with m = rank * n. If rank > 1 then Q can
+    #   be expected to be full-rank, if rank < 1 it will not
+    #
+    # - ecc (real, scalar, default 0.99): the eccentricity of Q, i.e., the
+    #   ratio ( \lambda_1 - \lambda_n ) / ( \lambda_1 + \lambda_n ), with
+    #   \lambda_1 the largest eigenvalue and \lambda_n the smallest one. Note
+    #   that this makes sense only if \lambda_n > 0, for otherwise the
+    #   eccentricity is always 1; hence, this setting is ignored if
+    #   \lambda_n = 0, i.e., Q is not full-rank (see above). An eccentricity of
+    #   0 means that all eigenvalues are equal, as eccentricity -> 1 the
+    #   largest eigenvalue gets larger and larger w.r.t. the smallest one
+    #
+    # - seed (integer, default 0): the seed for the random number generator
+    #
+    # - u_min (real, scalar, default 8): the minimum value of each u_i
+    #
+    # - u_max (real, scalar, default 12): the maximum value of each u_i
+    #
+    # Output:
+    #
+    # - BCQP.Q:  n \times n symmetric positive semidefinite real matrix
+    #
+    # - BCQP.q:  n \times 1 real vector
+    #
+    # - BCQP.ub: n \times 1 real vector > 0
+
+    def __init__(self, Q=None, q=None, ub=None, n=10, actv=0.5, rank=1.1, ecc=0.99, u_min=8, u_max=12):
+        if Q is None and q is None:
+            if not np.isscalar(n) or not np.isreal(n):
+                raise ValueError('n not a real scalar')
+            n = round(n)
+            if n <= 0:
+                raise ValueError('n must be > 0')
+            if not np.isscalar(actv) or not np.isreal(actv):
+                raise ValueError('actv not a real scalar')
+            if actv < 0 or actv > 1:
+                raise ValueError('actv must be in [0, 1]')
+            if not np.isscalar(rank) or not np.isreal(rank):
+                raise ValueError('rank not a real scalar')
+            if rank <= 0:
+                raise ValueError('rank must be > 0')
+            if not np.isscalar(ecc) or not np.isreal(ecc):
+                raise ValueError('ecc not a real scalar')
+            if ecc < 0 or ecc >= 1:
+                raise ValueError('ecc must be in [0, 1)')
+            if not np.isscalar(u_min) or not np.isreal(u_min):
+                raise ValueError('u_min not a real scalar')
+            if u_min <= 0:
+                raise ValueError('u_min must be > 0')
+            if not np.isscalar(u_max) or not np.isreal(u_max):
+                raise ValueError('u_min not a real scalar')
+            if u_max <= u_min:
+                raise ValueError('u_max must be > u_min')
+
+            ub = u_min * np.ones(n) + (u_max - u_min) * np.random.rand(n)
+
+            G = np.random.rand(round(rank * n), n)
+            Q = G.T.dot(G)
+
+            # compute eigenvalue decomposition
+            D, V = np.linalg.eigh(Q)  # V.dot(np.diag(D)).dot(V.T) = Q
+
+            if D[0] > 1e-14:  # smallest eigenvalue
+                # modify eccentricity only if \lambda_n > 0, for when \lambda_n = 0 the
+                # eccentricity is 1 by default. The formula is:
+                #
+                #                         \lambda_i - \lambda_n           2 ecc
+                # \lambda_i = \lambda_n + --------------------- \lambda_n -------
+                #                         \lambda_1 - \lambda_n           1 - ecc
+                #
+                # This leaves \lambda_n unchanged, and modifies all the other ones
+                # proportionally so that:
+                #
+                #   \lambda_1 - \lambda_n
+                #   --------------------- = ecc
+                #   \lambda_1 - \lambda_n
+
+                l = D[0] + (D[0] / (D[-1] - D[0])) * (2 * ecc / (1 - ecc)) * (D - D[0])
+
+                Q = V.dot(np.diag(l)).dot(V.T)
+
+            # we first generate the unconstrained minimum z of the problem in the form:
+            #
+            #    min 1/2 (x - z)^T Q (x - z) =
+            #    min 1/2 x^T Q x - z^T Q x + 1/2 z^T Q z
+            #
+            # and then we set q = -z^T Q
+
+            z = np.zeros(n)
+
+            # out_b[i] = True if z[i] will be out of the bounds
+            out_b = np.random.rand(n) <= actv
+
+            # 50/50 chance of being left of lb or right of ub
+            lr = np.random.rand(n) <= 0.5
+            l = np.logical_and(out_b, lr)
+            r = np.logical_and(out_b, np.logical_not(lr))
+
+            # a random amount left of the lb[0]
+            z[l] = -np.random.rand(sum(l)) * ub[l]
+
+            # a random amount right of the ub[u]
+            z[r] = ub[r] * (1 + np.random.rand(sum(r)))
+
+            out_b = np.logical_not(out_b)  # entries that will be inside the bound
+            # pick at random in [0, u]
+            z[out_b] = np.random.rand(sum(out_b)) * ub[out_b]
+
+            q = -Q.dot(z)
+
+        super().__init__(Q, q)
+        self.ub = ub
+
+    def plot(self, x_min=-5, x_max=2, y_min=-5, y_max=2):
+        # TODO add box-constraints
+        pass
+
+
 class Rosenbrock(OptimizationFunction):
 
     def __init__(self, n=2, a=1, b=2):

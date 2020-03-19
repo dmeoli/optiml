@@ -71,6 +71,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
     - [x] Rosenbrock
     - [x] Ackley
     - [x] Quadratic
+    - [x] Box-Constrained Quadratic
                            
 - Machine Learning Models
     - [x] Linear Regression
