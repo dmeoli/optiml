@@ -195,8 +195,8 @@ class LagrangianDual(LineSearchOptimizer):
     def solve_lagrangian(self, ub, lmbda=None):
         # The Lagrangian relaxation of the problem is:
         #
-        #    min { 1/2 x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x
-        #  min { 1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ u
+        #    min { 1/2 x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x }
+        #  min { 1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ u }
         #
         # where lambda^+ are the first n components of lmbda, and lambda^- the
         # last n components; both are constrained to be >= 0.
@@ -234,7 +234,7 @@ class LagrangianDual(LineSearchOptimizer):
     def phi(self, ub, v, lmbda=None):
         # Compute the Lagrangian function of the problem. With x the
         # optimal solution of the minimization problem (see solve_lagrangian), the
-        # gradient at lambda is [x - u; -x].
+        # gradient at lambda is [x - u, -x].
         # However, the line search is written for minimization but we rather want
         # to maximize phi(), hence we have to change the sign of both function
         # values and gradient entries.

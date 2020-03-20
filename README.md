@@ -64,7 +64,6 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [x] Active Set
         - [x] Interior Point
         - [x] Lagrangian Dual
-        - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
         - [x] [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
 
 - Optimization Functions

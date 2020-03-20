@@ -82,10 +82,10 @@ class ProjectedGradient(Optimizer):
             max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=np.inf))
 
             # compute optimal unbounded step size:
-            # min (1/2) (x + a d)^T Q (x + a d) + q^T (x + a d) =
-            #     (1/2) a^2 (d^T Q d) + a d^T (Q x + q) [ + const ]
+            #   min { 1/2 (x + a d)^T Q (x + a d) + q^T (x + a d) }
+            # min { 1/2 a^2 (d^T Q d) + a d^T (Q x + q) } [ + const ]
             #
-            # ==> a = - d^T (Q x + q) / d^T Q d
+            # => a = - d^T (Q x + q) / d^T Q d
             den = d.T.dot(self.f.hessian(self.wrt)).dot(d)
 
             if den <= 1e-16:  # d^T * Q * d = 0 ==> f is linear along d
