@@ -96,8 +96,7 @@ class Quadratic(OptimizationFunction):
         :return:  the value of a general quadratic function if x, the optimal solution of a
                   linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
         """
-        Q, q = Q if Q is not None else self.Q, q if q is not None else self.q
-        return 0.5 * x.T.dot(Q).dot(x) - q.T.dot(x)
+        return 0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x)
 
     def jacobian(self, x, Q=None, q=None):
         """
@@ -109,8 +108,7 @@ class Quadratic(OptimizationFunction):
         :param q: ([n x 1] real column vector): the linear part of f.
         :return:  the Jacobian of a general quadratic function.
         """
-        Q, q = Q if Q is not None else self.Q, q if q is not None else self.q
-        return Q.dot(x) - q
+        return self.Q.dot(x) - self.q
 
     def hessian(self, x, Q=None, q=None):
         """
@@ -122,7 +120,7 @@ class Quadratic(OptimizationFunction):
         :param q: ([n x 1] real column vector): the linear part of f.
         :return:  the Hessian matrix (i.e. the quadratic part) of a general quadratic function at x.
         """
-        return Q if Q is not None else self.Q
+        return self.Q
 
     def plot(self, x_min=-5, x_max=2, y_min=-5, y_max=2):
         x, y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
@@ -165,7 +163,7 @@ quad5 = Quadratic(np.array([[101, -99], [-99, 101]]), np.array([10, 5]))
 class BoxConstrainedQuadratic(Quadratic):
     # Produces a structure encoding a convex Box-Constrained Quadratic program:
     #
-    #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
 
     def __init__(self, Q, q, ub):
         super().__init__(Q, q)

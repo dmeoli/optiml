@@ -70,7 +70,7 @@ class ActiveSet(Optimizer):
                 status = 'stopped'
                 break
 
-            # solve the *unconstrained* problem restricted to A the problem reads:
+            # solve the unconstrained problem restricted to A the problem reads:
             #
             #  min { (1/2) x_A^T Q_{AA} x_A + (q_A + u_U^T Q_{UA}) x_A }
             #    [ + (1/2) x_U^T Q_{UU} x_U ]

@@ -45,8 +45,8 @@ class SteepestGradientDescentQuadratic(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args in self.args:
-            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+        while True:
+            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
             ng = np.linalg.norm(g)
 
             if self.verbose:
@@ -69,7 +69,7 @@ class SteepestGradientDescentQuadratic(Optimizer):
             d = -g
 
             # check if f is unbounded below
-            den = d.T.dot(self.f.hessian(self.wrt, *args)).dot(d)
+            den = d.T.dot(self.f.Q).dot(d)
 
             if den <= 1e-12:
                 # this is actually two different cases:
@@ -99,7 +99,7 @@ class SteepestGradientDescentQuadratic(Optimizer):
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
             # <\nabla f(x_i), \nabla f(x_i+1)> = 0
-            assert np.isclose(self.f.jacobian(self.wrt - step, *args).T.dot(self.f.jacobian(self.wrt, *args)), 0)
+            assert np.isclose(self.f.jacobian(self.wrt - step).T.dot(self.f.jacobian(self.wrt)), 0)
 
             self.iter += 1
 

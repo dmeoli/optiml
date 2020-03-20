@@ -29,8 +29,8 @@ class ConjugateGradientQuadratic(Optimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args in self.args:
-            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+        while True:
+            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
             ng = np.linalg.norm(g)
 
             if self.verbose:
@@ -62,8 +62,7 @@ class ConjugateGradientQuadratic(Optimizer):
                     if self.verbose:
                         print('\t(res)', end='')
                 else:
-                    beta = g.T.dot(self.f.hessian(self.wrt, *args)).dot(past_d) / \
-                           past_d.T.dot(self.f.hessian(self.wrt, *args)).dot(past_d)
+                    beta = g.T.dot(self.f.Q).dot(past_d) / past_d.T.dot(self.f.Q).dot(past_d)
                     if self.verbose:
                         print('\t{:1.4f}'.format(beta), end='')
 
@@ -73,7 +72,7 @@ class ConjugateGradientQuadratic(Optimizer):
                     d = -g
 
             # check if f is unbounded below
-            den = d.T.dot(self.f.hessian(self.wrt, *args)).dot(d)
+            den = d.T.dot(self.f.Q).dot(d)
 
             if den <= 1e-12:
                 # this is actually two different cases:
