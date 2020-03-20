@@ -138,9 +138,9 @@ class ActiveSet(Optimizer):
                 #   0 <= self.wrt[i] + max_t d[i] <= u[i]   for all i
 
                 idx = np.logical_and(A, d > 0)  # positive gradient entries
-                max_t = min((self.f.ub[idx] - self.wrt[idx]) / d[idx], default=0.)
+                max_t = min((self.f.ub[idx] - self.wrt[idx]) / d[idx], default=np.inf)
                 idx = np.logical_and(A, d < 0)  # negative gradient entries
-                max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=0.))
+                max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=np.inf))
 
                 # it is useless to compute the optimal t, because we know already
                 # that it is 1, whereas max_t necessarily is < 1

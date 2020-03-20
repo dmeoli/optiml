@@ -195,8 +195,8 @@ class LagrangianDual(LineSearchOptimizer):
     def solve_lagrangian(self, ub, lmbda=None):
         # The Lagrangian relaxation of the problem is:
         #
-        #    min { (1/2) x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x
-        #  min { (1/2) x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ u
+        #    min { 1/2 x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x
+        #  min { 1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ u
         #
         # where lambda^+ are the first n components of lmbda, and lambda^- the
         # last n components; both are constrained to be >= 0.

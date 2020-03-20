@@ -77,9 +77,9 @@ class ProjectedGradient(Optimizer):
             #   0 <= x[i] + max_t d[i] <= ub[i]   for all i
 
             idx = d > 0  # positive gradient entries
-            max_t = min((self.f.ub[idx] - self.wrt[idx]) / d[idx], default=0.)
+            max_t = min((self.f.ub[idx] - self.wrt[idx]) / d[idx], default=np.inf)
             idx = d < 0  # negative gradient entries
-            max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=0.))
+            max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=np.inf))
 
             # compute optimal unbounded step size:
             # min (1/2) (x + a d)^T Q (x + a d) + q^T (x + a d) =
