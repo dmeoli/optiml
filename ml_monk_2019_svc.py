@@ -20,9 +20,9 @@ if __name__ == '__main__':
     for i in (1, 2, 3):
         X_train, X_test, y_train, y_test = load_monk(i)
         svc = SVC(kernel=polynomial_kernel).fit(X_train, y_train, optimizer=ProjectedGradient, verbose=False)
-        print("monk's #" + str(i) + " accuracy: " + str(accuracy_score(svc.predict(X_test), y_test)))
+        print("monk #" + str(i) + " accuracy: " + str(accuracy_score(svc.predict(X_test), y_test)))
 
         X_train, X_test, y_train, y_test = load_monk(i)
         svc = SKLSVC(kernel='poly').fit(X_train, y_train)
-        print("sklearn monk's #" + str(i) + " accuracy: " + str(accuracy_score(svc.predict(X_test), y_test)))
+        print("sklearn monk #" + str(i) + " accuracy: " + str(accuracy_score(svc.predict(X_test), y_test)))
         print()

@@ -12,4 +12,4 @@ if __name__ == '__main__':
         net = NeuralNetwork(FullyConnected(17, 17, sigmoid),
                             FullyConnected(17, 2, softmax))
         net.fit(X_train, y_train, loss=cross_entropy, optimizer=BFGS, epochs=1000, verbose=False, plot=True)
-        print("monk's #" + str(i) + " accuracy: " + str(accuracy_score(net.predict(X_test), y_test)))
+        print("monk #" + str(i) + " accuracy: " + str(accuracy_score(net.predict(X_test), y_test)))
