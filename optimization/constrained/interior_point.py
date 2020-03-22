@@ -10,7 +10,7 @@ class InteriorPoint(Optimizer):
     # Apply the Primal-Dual (feasible) Interior (barrier) Method to the convex
     # Box-Constrained Quadratic program:
     #
-    #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
     #
     # - max_iter (integer scalar, optional, default value 1000): the maximum
     #   number of iterations
@@ -47,7 +47,7 @@ class InteriorPoint(Optimizer):
 
     def minimize(self):
 
-        # the Slackened KKT System for (P) (written without slacks) is
+        # the Slackened KKT System for (P) (written without slacks) is:
         #
         #   Q x + q + \lambda^+ - \lambda^- = 0
         #
@@ -63,9 +63,9 @@ class InteriorPoint(Optimizer):
         #
         # if x and (\lambda^+, \lambda^-) satisfy SKKTS, then:
         #
-        #   v = (1/2) x^T Q x + q x
+        #   v = 1/2 x^T Q x + q x
         #
-        #   p = -\lambda^+ u - (1/2) x^T Q x
+        #   p = -\lambda^+ u - 1/2 x^T Q x
         #
         # are, respectively, a valid upper and lower bound on v(P), and:
         #
@@ -132,7 +132,7 @@ class InteriorPoint(Optimizer):
         # \mu we don't care much of
         g = self.f.jacobian(self.wrt)
         lp = 1e-6 * np.ones(self.f.n)
-        lm = lp
+        lm = np.copy(lp)
         idx = g >= 0
         lm[idx] = lm[idx] + g[idx]
         idx = np.logical_not(idx)
@@ -146,7 +146,7 @@ class InteriorPoint(Optimizer):
 
         while True:
             v = self.f.function(self.wrt)
-            xQx = self.wrt.dot(self.f.hessian(self.wrt)).dot(self.wrt)
+            xQx = self.wrt.dot(self.f.Q).dot(self.wrt)
             p = -lp.T.dot(self.f.ub) - 0.5 * xQx
             gap = (v - p) / max(abs(v), 1)
 
@@ -176,7 +176,7 @@ class InteriorPoint(Optimizer):
             mu = (v - p) / (4 * self.f.n * self.f.n)  # use \rho = 1 / (# of constraints)
 
             umx = self.f.ub - self.wrt
-            H = self.f.hessian(self.wrt) + np.diag(lp / umx + lm / self.wrt)
+            H = self.f.Q + np.diag(lp / umx + lm / self.wrt)
             # w = mu (np.ones(n) / umx - np.ones(n) / self.wrt) + lp - lm;
             w = mu * (self.f.ub - 2 * self.wrt) / (umx.dot(self.wrt)) + lp - lm
 
@@ -189,34 +189,32 @@ class InteriorPoint(Optimizer):
             dlm = (mu * np.ones(self.f.n) - lm.dot(dx)) / self.wrt - lm
 
             # compute maximum feasible primal step size
-
             idx = dx < 0  # negative direction entries
             if any(idx):
-                maxt = min(-self.wrt(idx) / dx[idx])
+                max_t = min(-self.wrt[idx] / dx[idx])
             else:
-                maxt = np.inf
+                max_t = np.inf
 
             idx = dx > 0  # positive direction entries
             if any(idx):
-                maxt = min(maxt, min(umx(idx) / dx[idx]))
+                max_t = min(max_t, min(umx[idx] / dx[idx]))
 
             # compute maximum feasible dual step size
-
             idx = dlp < 0  # negative direction entries
             if any(idx):
-                maxt = min(maxt, min(-lp[idx] / dlp[idx]))
+                max_t = min(max_t, min(-lp[idx] / dlp[idx]))
 
             idx = dlm < 0  # negative direction entries
             if any(idx):
-                maxt = min(maxt, min(-lm[idx] / dlm[idx]))
+                max_t = min(max_t, min(-lm[idx] / dlm[idx]))
 
             # compute new primal-dual solution
 
-            maxt = 0.9995 * maxt  # ensure the new iterate remains interior
+            max_t *= 0.9995  # ensure the new iterate remains interior
 
-            self.wrt += maxt * dx
-            lp = lp + maxt * dlp
-            lm = lm + maxt * dlm
+            self.wrt += max_t * dx
+            lp += max_t * dlp
+            lm += max_t * dlm
 
             # TODO add plotting
 

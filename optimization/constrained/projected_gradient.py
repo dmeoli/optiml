@@ -9,7 +9,7 @@ class ProjectedGradient(Optimizer):
     # Apply the Projected Gradient algorithm with exact line search to the
     # convex Box-Constrained Quadratic program:
     #
-    #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
     #
     # - eps (real scalar, optional, default value 1e-6): the accuracy in the
     #   stopping criterion: the algorithm is stopped when the norm of the
@@ -86,7 +86,7 @@ class ProjectedGradient(Optimizer):
             # min { 1/2 a^2 (d^T Q d) + a d^T (Q x + q) } [ + const ]
             #
             # => a = - d^T (Q x + q) / d^T Q d
-            den = d.T.dot(self.f.hessian(self.wrt)).dot(d)
+            den = d.T.dot(self.f.Q).dot(d)
 
             if den <= 1e-16:  # d^T * Q * d = 0 ==> f is linear along d
                 t = max_t  # just take the maximum possible step size

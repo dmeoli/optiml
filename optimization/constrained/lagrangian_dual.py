@@ -8,7 +8,7 @@ from optimization.optimizer import LineSearchOptimizer
 class LagrangianDual(LineSearchOptimizer):
     # Solve the convex Box-Constrained Quadratic program:
     #
-    #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
     #
     # The box constraints 0 <= x <= u are relaxed (with Lagrangian multipliers
     # \lambda^- and \lambda^+, respectively) and the corresponding Lagrangian
@@ -102,7 +102,7 @@ class LagrangianDual(LineSearchOptimizer):
         # compute the Cholesky factorization of Q, this will be used
         # at each iteration to solve the Lagrangian relaxation
         try:
-            self.R = np.linalg.cholesky(self.f.hessian(self.wrt))
+            self.R = np.linalg.cholesky(self.f.Q)
         except np.linalg.LinAlgError:
             raise ValueError('Q is not positive definite, this is not yet supported')
         self.dolh = dolh
@@ -219,13 +219,13 @@ class LagrangianDual(LineSearchOptimizer):
         ql = self.f.q + lmbda[:self.f.n] - lmbda[self.f.n:]
         from scipy.linalg import lu_factor, lu_solve
         # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
-        z = lu_solve(lu_factor(self.f.hessian(self.wrt).T), -ql)
-        y = lu_solve(lu_factor(self.f.hessian(self.wrt)), z)
+        z = lu_solve(lu_factor(self.f.Q.T), -ql)
+        y = lu_solve(lu_factor(self.f.Q), z)
         # z = solve_triangular(self.R.T, -ql, lower=True)
         # y = solve_triangular(self.R, z, lower=False)
 
         # compute phi-value
-        p = (0.5 * y.T.dot(self.f.hessian(self.wrt)) + ql.T).dot(y) - lmbda[:self.f.n].T.dot(ub)
+        p = (0.5 * y.T.dot(self.f.Q) + ql.T).dot(y) - lmbda[:self.f.n].T.dot(ub)
 
         self.f_eval += 1
 
@@ -255,7 +255,7 @@ class LagrangianDual(LineSearchOptimizer):
             y[idx] = ub[idx]
 
             # compute cost of feasible solution
-            pv = 0.5 * y.T.dot(self.f.hessian(self.wrt)).dot(y) + self.f.q.T.dot(y)
+            pv = 0.5 * y.T.dot(self.f.Q).dot(y) + self.f.q.T.dot(y)
 
             if pv < v:  # it is better than best one found so far
                 self.wrt = y  # y becomes the incumbent

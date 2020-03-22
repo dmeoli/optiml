@@ -4,6 +4,7 @@ import qpsolvers
 from matplotlib.lines import Line2D
 from matplotlib.ticker import FuncFormatter, FormatStrFormatter
 from qpsolvers import solve_qp
+from scipy.optimize import minimize
 
 from ml.learning import Learner
 from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel, sigmoid_kernel
@@ -144,6 +145,15 @@ class SVM(Learner):
         plt.show()
 
 
+def scipy_solve_qp(f, G, h, max_iter, verbose):
+    return minimize(fun=f.function, jac=f.jacobian, x0=np.random.rand(f.n),
+                    constraints=({'type': 'ineq',
+                                  'fun': lambda x: h - np.dot(G, x),
+                                  'jac': lambda x: -G}),
+                    options={'maxiter': max_iter,
+                             'disp': verbose}).x
+
+
 class SVC(SVM):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., r=0.):
         super().__init__(kernel, degree, gamma, C, r)
@@ -191,8 +201,9 @@ class SVC(SVM):
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
         self.alphas = (solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                       optimizer(BoxConstrainedQuadratic(P, np.ones_like(q), ub),
-                                 max_iter=max_iter, verbose=verbose).minimize()[0])
+                       scipy_solve_qp(BoxConstrainedQuadratic(P, q, ub), G, h, max_iter, verbose)
+                       if optimizer is scipy_solve_qp else optimizer(BoxConstrainedQuadratic(P, -np.ones_like(q), ub),
+                                                                     max_iter=max_iter, verbose=verbose).minimize()[0])
 
         self.sv_idx = np.argwhere(self.alphas > 1e-5).ravel()
         self.sv, self.sv_y, self.alphas = X[self.sv_idx], y[self.sv_idx], self.alphas[self.sv_idx]
@@ -275,8 +286,9 @@ class SVR(SVM):
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
         alphas = (solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                  optimizer(BoxConstrainedQuadratic(P, np.ones_like(q), ub),
-                            max_iter=max_iter, verbose=verbose).minimize()[0])
+                  scipy_solve_qp(BoxConstrainedQuadratic(P, q, ub), G, h, max_iter, verbose)
+                  if optimizer is scipy_solve_qp else optimizer(BoxConstrainedQuadratic(P, q, ub),
+                                                                max_iter=max_iter, verbose=verbose).minimize()[0])
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 

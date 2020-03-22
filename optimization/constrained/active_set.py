@@ -9,7 +9,7 @@ class ActiveSet(Optimizer):
     # Apply the Active Set Method to the convex Box-Constrained Quadratic
     # program:
     #
-    #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
     #
     # - max_iter (integer scalar, optional, default value 1000): the maximum
     #   number of iterations
@@ -64,7 +64,7 @@ class ActiveSet(Optimizer):
 
         while True:
             if self.verbose:
-                print('{:4d}\t{:1.8e}\t{:d}\t'.format(self.iter, v, sum(L) + sum(U)))
+                print('{:4d}\t{:1.4e}\t\t{:d}\t'.format(self.iter, v, sum(L) + sum(U)), end='')
 
             if self.iter >= self.max_iter:
                 status = 'stopped'
@@ -90,9 +90,7 @@ class ActiveSet(Optimizer):
             # (Q_{AA} is symmetric positive definite matrix)
             from scipy.linalg import lu_factor, lu_solve
             # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
-            xs[A] = lu_solve(lu_factor(self.f.hessian(self.wrt)[A, :][:, A]),
-                             -(self.f.hessian(self.wrt)[A] +
-                               (self.f.hessian(self.wrt)[A, :][:, U] or 0. * self.f.ub[U] or 0.)))
+            xs[A] = lu_solve(lu_factor(self.f.Q[A, :][:, A]), -(self.f.q[A] + (self.f.Q[A, :][:, U] * self.f.ub[U])))
 
             if np.all(xs[A] <= self.f.ub[A] + 1e-12) and np.all(xs[A] >= -1e-12):
                 # the solution of the unconstrained problem is actually feasible
@@ -112,7 +110,7 @@ class ActiveSet(Optimizer):
 
                 if not h.size > 0:
                     if self.verbose:
-                        print('\t{:1.8e}\n'.format(v))
+                        print('\t{:1.8e}\n'.format(v), end='')
                     status = 'optimal'
                     break
                 else:
@@ -121,11 +119,11 @@ class ActiveSet(Optimizer):
                     if uppr:
                         U[h] = False
                         if self.verbose:
-                            print('O %d(U)'.format(h))
+                            print('O {:d}(U)'.format(h), end='')
                     else:
                         L[h] = False
                         if self.verbose:
-                            print('O %d(L)\n'.format(h))
+                            print('O {:d}(L)\n'.format(h), end='')
             else:
                 # the solution of the unconstrained problem is *not* feasible
                 # this means that d = xs - self.wrt is a descent direction, use it
@@ -159,7 +157,7 @@ class ActiveSet(Optimizer):
                 A[nU] = False
 
                 if self.verbose:
-                    print('I %d+%d'.format(sum(nL), sum(nU)))
+                    print('I {:d}+{:d}'.format(sum(nL), sum(nU)))
 
             # TODO add plotting
 

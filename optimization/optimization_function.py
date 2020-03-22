@@ -80,12 +80,9 @@ class Quadratic(OptimizationFunction):
         return np.linalg.inv(self.Q).dot(self.q)  # or np.linalg.solve(self.Q, self.q)
 
     def f_star(self):
-        return self.function(self.x_star(), *self.args())
+        return self.function(self.x_star())
 
-    def args(self):
-        return self.Q, self.q
-
-    def function(self, x, Q=None, q=None):
+    def function(self, x):
         """
         A general quadratic function f(x) = 1/2 x^T Q x - q^T x.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
@@ -98,7 +95,7 @@ class Quadratic(OptimizationFunction):
         """
         return 0.5 * x.T.dot(self.Q).dot(x) - self.q.T.dot(x)
 
-    def jacobian(self, x, Q=None, q=None):
+    def jacobian(self, x):
         """
         The Jacobian (i.e. gradient) of a general quadratic function J f(x) = Q x - q.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
@@ -110,7 +107,7 @@ class Quadratic(OptimizationFunction):
         """
         return self.Q.dot(x) - self.q
 
-    def hessian(self, x, Q=None, q=None):
+    def hessian(self, x):
         """
         The Hessian matrix of a general quadratic function H f(x) = Q.
         :param x: 1D array of points at which the Hessian is to be computed.
@@ -163,10 +160,10 @@ quad5 = Quadratic(np.array([[101, -99], [-99, 101]]), np.array([10, 5]))
 class BoxConstrainedQuadratic(Quadratic):
     # Produces a structure encoding a convex Box-Constrained Quadratic program:
     #
-    #  (P) min { 1/2 x^T Q x - q^T x : 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
 
     def __init__(self, Q, q, ub):
-        super().__init__(Q, q)
+        super().__init__(Q, -q)
         self.ub = ub
 
     def plot(self, x_min=-5, x_max=2, y_min=-5, y_max=2):
