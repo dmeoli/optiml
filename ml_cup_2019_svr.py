@@ -1,10 +1,13 @@
+import numpy as np
 from qpsolvers import solve_qp
 from sklearn.model_selection import train_test_split
+from sklearn.multioutput import MultiOutputRegressor
+from sklearn.svm import SVR as SKLSVR
 
 from ml.learning import MultiTargetRegressor
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error
-from ml.svm.kernels import *
+from ml.svm.kernels import linear_kernel, polynomial_kernel, rbf_kernel
 from ml.svm.svm import SVR, scipy_solve_qp
 from optimization.constrained.active_set import ActiveSet
 from optimization.constrained.frank_wolfe import FrankWolfe
@@ -15,6 +18,8 @@ from optimization.constrained.projected_gradient import ProjectedGradient
 constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint,
                           LagrangianDual, solve_qp, scipy_solve_qp]
 
+kernels = [linear_kernel, polynomial_kernel, rbf_kernel]
+
 if __name__ == '__main__':
     ml_cup_train = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
     X, y = ml_cup_train[:, :-2], ml_cup_train[:, -2:]
@@ -23,25 +28,12 @@ if __name__ == '__main__':
 
     svr = MultiTargetRegressor(SVR(kernel=rbf_kernel, eps=0.1))
     svr.fit(X_train, y_train, optimizer=ProjectedGradient, verbose=False)
-    # for learner in svr.learners:
-    #     print('w = ', learner.w)
-    #     print('b = ', learner.b)
-    #     print('idx of support vectors = ', learner.sv_idx)
-    #     print('support vectors = ', learner.sv)
     pred = svr.predict(X_test)
     print('mse: ', mean_squared_error(pred, y_test))
     print('mee: ', mean_euclidean_error(pred, y_test))
     print()
 
-    from sklearn.multioutput import MultiOutputRegressor
-    from sklearn.svm import SVR
-
-    svr = MultiOutputRegressor(SVR(kernel='rbf', epsilon=0.1)).fit(X_train, y_train)
-    # for learner in svr.estimators_:
-    #     print('w = ', learner.coef_)
-    #     print('b = ', learner.intercept_)
-    #     print('idx of support vectors = ', learner.support_)
-    #     print('support vectors = ', learner.support_vectors_)
+    svr = MultiOutputRegressor(SKLSVR(kernel='rbf', epsilon=0.1)).fit(X_train, y_train)
     pred = svr.predict(X_test)
     print('sklearn mse: ', mean_squared_error(pred, y_test))
     print('sklearn mee: ', mean_euclidean_error(pred, y_test))
