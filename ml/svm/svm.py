@@ -145,11 +145,14 @@ class SVM(Learner):
         plt.show()
 
 
-def scipy_solve_qp(f, G, h, max_iter, verbose):
-    return minimize(fun=f.function, jac=f.jacobian, x0=np.random.rand(f.n),
+def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
+    return minimize(fun=f.function, jac=f.jacobian, method='slsqp', x0=f.ub / 2,  # start from the middle of the box
                     constraints=({'type': 'ineq',
                                   'fun': lambda x: h - np.dot(G, x),
-                                  'jac': lambda x: -G}),
+                                  'jac': lambda x: -G},
+                                 {'type': 'eq',
+                                  'fun': lambda x: np.dot(A, x) - b,
+                                  'jac': lambda x: A}),
                     options={'maxiter': max_iter,
                              'disp': verbose}).x
 
@@ -201,7 +204,7 @@ class SVC(SVM):
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
         self.alphas = (solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                       scipy_solve_qp(BoxConstrainedQuadratic(P, q, ub), G, h, max_iter, verbose)
+                       scipy_solve_qp(BoxConstrainedQuadratic(P, q, ub), G, h, A, b, max_iter, verbose)
                        if optimizer is scipy_solve_qp else optimizer(BoxConstrainedQuadratic(P, -np.ones_like(q), ub),
                                                                      max_iter=max_iter, verbose=verbose).minimize()[0])
 
@@ -286,7 +289,7 @@ class SVR(SVM):
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
         alphas = (solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                  scipy_solve_qp(BoxConstrainedQuadratic(P, q, ub), G, h, max_iter, verbose)
+                  scipy_solve_qp(BoxConstrainedQuadratic(P, q, ub), G, h, A, b, max_iter, verbose)
                   if optimizer is scipy_solve_qp else optimizer(BoxConstrainedQuadratic(P, q, ub),
                                                                 max_iter=max_iter, verbose=verbose).minimize()[0])
         self.alphas_p = alphas[:m]

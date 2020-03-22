@@ -65,7 +65,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [x] Interior Point
         - [x] Lagrangian Dual
         - [ ] Sequential Minimal Optimization (SMO)
-        - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
+        - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
         - [x] [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
 
 - Optimization Functions

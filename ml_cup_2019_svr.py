@@ -22,7 +22,7 @@ if __name__ == '__main__':
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, test_size=0.2)
 
     svr = MultiTargetRegressor(SVR(kernel=rbf_kernel, eps=0.1))
-    svr.fit(X_train, y_train, optimizer=scipy_solve_qp, verbose=False)
+    svr.fit(X_train, y_train, optimizer=ProjectedGradient, verbose=False)
     # for learner in svr.learners:
     #     print('w = ', learner.w)
     #     print('b = ', learner.b)
