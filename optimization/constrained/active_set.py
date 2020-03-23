@@ -65,7 +65,7 @@ class ActiveSet(Optimizer):
 
         while True:
             if self.verbose:
-                print('{:4d}\t{:1.4e}\t {:d}\t'.format(self.iter, v, sum(L) + sum(U)), end='')
+                print('{:4d}\t{:1.4e}\t{:d}\t'.format(self.iter, v, sum(L) + sum(U)), end='')
 
             if self.iter >= self.max_iter:
                 status = 'stopped'
@@ -90,7 +90,7 @@ class ActiveSet(Optimizer):
             # thing and use Cholesky to speed up solving a symmetric linear system
             # (Q_{AA} is symmetric positive definite matrix)
             # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
-            xs[A] = cholesky_solve(self.f.Q[A, :][:, A], self.f.q[A] + self.f.Q[A, :][:, U].dot(self.f.ub[U]))
+            xs[A] = cholesky_solve(self.f.Q[A, :][:, A], self.f.q[A] - self.f.Q[A, :][:, U].dot(self.f.ub[U]))
 
             if np.logical_and(xs[A] <= self.f.ub[A] + 1e-12, xs[A] >= -1e-12).all():
                 # the solution of the unconstrained problem is actually feasible
@@ -109,8 +109,6 @@ class ActiveSet(Optimizer):
                     uppr = True
 
                 if not h.size > 0:
-                    if self.verbose:
-                        print('\t{:1.8e}\n'.format(v))
                     status = 'optimal'
                     break
                 else:
