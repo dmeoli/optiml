@@ -165,11 +165,11 @@ class InteriorPoint(Optimizer):
             # solve the SKKTS
             # note: the "complicated" term in W has the form:
             #
-            #  mu [1 / (u_i - x_i) - 1 / x_i]
+            #  \mu [1 / (u_i - x_i) - 1 / x_i]
             #
             # which can be rewritten:
             #
-            #  mu (u_i - 2 x_i) / [(u_i - x_i) x_i]
+            #  \mu (u_i - 2 x_i) / [(u_i - x_i) x_i]
             #
             # it appears this last form is *vastly* more numerically stable
 
@@ -177,8 +177,8 @@ class InteriorPoint(Optimizer):
 
             umx = self.f.ub - self.wrt
             H = self.f.Q + np.diag(lp / umx + lm / self.wrt)
-            # w = mu (np.ones(n) / umx - np.ones(n) / self.wrt) + lp - lm;
-            w = mu * (self.f.ub - 2 * self.wrt) / (umx.dot(self.wrt)) + lp - lm
+            # w = \mu (np.ones(n) / umx - np.ones(n) / self.wrt) + lp - lm
+            w = mu * (self.f.ub - 2 * self.wrt) / (umx * self.wrt) + lp - lm
 
             # and use Cholesky to solve the system
             # because H is symmetric positive definite matrix
