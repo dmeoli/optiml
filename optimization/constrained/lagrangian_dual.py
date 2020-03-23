@@ -100,16 +100,6 @@ class LagrangianDual(LineSearchOptimizer):
         super().__init__(LagrangianBoxConstrained(f), f.ub / 2,  # start from the middle of the box,
                          eps=eps, max_iter=max_iter, max_f_eval=max_f_eval, m1=m1, m2=m2, a_start=a_start,
                          tau=tau, sfgrd=sfgrd, m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
-
-        # compute the LDL^T Cholesky indefinite factorization of Q, this will
-        # be used at each iteration to solve the Lagrangian relaxation
-        # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
-        # self.R = ldl(self.f.Q)
-        try:
-            self.R = np.linalg.cholesky(self.f.Q)
-        except np.linalg.LinAlgError:
-            raise ValueError('Q is not positive definite, this is not yet supported')
-
         self.dolh = dolh
         self.f_eval = 1  # f() evaluations count ("common" with LSs)
 
@@ -122,9 +112,9 @@ class LagrangianDual(LineSearchOptimizer):
         if self.verbose:
             print('iter\tf eval\t', end='')
             if self.dolh:
-                print('ub\t\t\tp(l)\t\tgap\t\t', end='')
+                print('ub\t\t\tf(l)\t\tgap\t\t', end='')
             else:
-                print('p(l)\t\t\t||g(x)||', end='')
+                print('f(l)\t\t\t||g(l)||', end='')
             print('\tls\tit\ta*')
 
         lmbda = np.zeros(2 * self.f.n)
