@@ -3,6 +3,7 @@ import numpy as np
 
 from optimization.optimization_function import BoxConstrainedQuadratic
 from optimization.optimizer import Optimizer
+from utils import cholesky_solve
 
 
 class ActiveSet(Optimizer):
@@ -57,14 +58,14 @@ class ActiveSet(Optimizer):
         A = np.full(self.f.n, True)
 
         if self.verbose:
-            print('iter\tf(x)\t\t| B |\tI/O')
+            print('iter\tf(x)\t\t|B|\tI/O')
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
             if self.verbose:
-                print('{:4d}\t{:1.4e}\t\t{:d}\t'.format(self.iter, v, sum(L) + sum(U)), end='')
+                print('{:4d}\t{:1.4e}\t {:d}\t'.format(self.iter, v, sum(L) + sum(U)), end='')
 
             if self.iter >= self.max_iter:
                 status = 'stopped'
@@ -79,7 +80,7 @@ class ActiveSet(Optimizer):
             #
             #   x_A* = -Q_{AA}^{-1} (q_A + u_U^T Q_{UA})
             #
-            # not that this actually is a *constrained* problem subject to equality
+            # not that this actually is a constrained problem subject to equality
             # constraints, but in our case equality constraints just fix variables
             # (and anyway, any QP problem with equality constraints reduces to an
             # unconstrained one)
@@ -88,15 +89,14 @@ class ActiveSet(Optimizer):
             xs[U] = self.f.ub[U]
             # thing and use Cholesky to speed up solving a symmetric linear system
             # (Q_{AA} is symmetric positive definite matrix)
-            from scipy.linalg import lu_factor, lu_solve
             # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
-            xs[A] = lu_solve(lu_factor(self.f.Q[A, :][:, A]), -(self.f.q[A] + (self.f.Q[A, :][:, U] * self.f.ub[U])))
+            xs[A] = cholesky_solve(self.f.Q[A, :][:, A], self.f.q[A] + self.f.Q[A, :][:, U].dot(self.f.ub[U]))
 
-            if np.all(xs[A] <= self.f.ub[A] + 1e-12) and np.all(xs[A] >= -1e-12):
+            if np.logical_and(xs[A] <= self.f.ub[A] + 1e-12, xs[A] >= -1e-12).all():
                 # the solution of the unconstrained problem is actually feasible
 
                 # move the current point right there
-                self.wrt = xs
+                self.wrt = np.copy(xs)
 
                 # compute function value and gradient
                 v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
@@ -110,22 +110,22 @@ class ActiveSet(Optimizer):
 
                 if not h.size > 0:
                     if self.verbose:
-                        print('\t{:1.8e}\n'.format(v), end='')
+                        print('\t{:1.8e}\n'.format(v))
                     status = 'optimal'
                     break
                 else:
-                    h = h[1, 1]  # that's probably Bland's anti-cycle rule
+                    h = h[0]  # that's probably Bland's anti-cycle rule
                     A[h] = True
                     if uppr:
                         U[h] = False
                         if self.verbose:
-                            print('O {:d}(U)'.format(h), end='')
+                            print('O {:d}(U)'.format(h))
                     else:
                         L[h] = False
                         if self.verbose:
-                            print('O {:d}(L)\n'.format(h), end='')
+                            print('O {:d}(L)\n'.format(h))
             else:
-                # the solution of the unconstrained problem is *not* feasible
+                # the solution of the unconstrained problem is not feasible
                 # this means that d = xs - self.wrt is a descent direction, use it
                 # of course, only the "free" part really needs to be computed
 

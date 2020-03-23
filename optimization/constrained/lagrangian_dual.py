@@ -120,8 +120,8 @@ class LagrangianDual(LineSearchOptimizer):
             print('iter\tf eval\tp(l)\t\t||g(x)||', end='')
         print('\tls\tit\ta*')
 
-        _lambda = np.zeros(2 * self.f.n)
-        p, last_g, v = self.phi(self.f.ub, v, _lambda)
+        lmbda = np.zeros(2 * self.f.n)
+        p, last_g, v = self.phi(self.f.ub, v, lmbda)
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
@@ -129,7 +129,7 @@ class LagrangianDual(LineSearchOptimizer):
         while True:
             # project the direction = -gradient over the active constraints
             d = -last_g
-            d[_lambda <= np.logical_and(1e-12, d < 0)] = 0
+            d[np.logical_and(lmbda <= 1e-12, d < 0)] = 0
 
             if self.dolh:
                 # compute the relative gap
@@ -162,7 +162,7 @@ class LagrangianDual(LineSearchOptimizer):
 
             idx = d < 0  # negative gradient entries
             if any(idx):
-                max_t = min(self.line_search.a_start, min(-_lambda(idx) / d(idx)))
+                max_t = min(self.line_search.a_start, min(-lmbda(idx) / d(idx)))
             else:
                 max_t = self.line_search.a_start
 
@@ -180,7 +180,7 @@ class LagrangianDual(LineSearchOptimizer):
                 status = 'error'
                 break
 
-            _lambda = _lambda + a * d
+            lmbda += a * d
 
             # TODO add plotting
 
@@ -190,7 +190,7 @@ class LagrangianDual(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status, _lambda
+        return self.wrt, status, lmbda
 
     def solve_lagrangian(self, ub, lmbda=None):
         # The Lagrangian relaxation of the problem is:

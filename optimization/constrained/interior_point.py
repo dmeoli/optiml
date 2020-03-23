@@ -184,9 +184,9 @@ class InteriorPoint(Optimizer):
             # because H is symmetric positive definite matrix
             dx = cholesky_solve(H, w)
 
-            dlp = (mu * np.ones(self.f.n) + lp.dot(dx)) / umx - lp
+            dlp = (mu * np.ones(self.f.n) + lp * dx) / umx - lp
 
-            dlm = (mu * np.ones(self.f.n) - lm.dot(dx)) / self.wrt - lm
+            dlm = (mu * np.ones(self.f.n) - lm * dx) / self.wrt - lm
 
             # compute maximum feasible primal step size
             idx = dx < 0  # negative direction entries
