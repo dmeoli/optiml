@@ -69,11 +69,14 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [x] [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
 
 - Optimization Functions
-    - [x] Rosenbrock
-    - [x] Ackley
-    - [x] Quadratic
-    - [x] Box-Constrained Quadratic
-                           
+    - [x] Unconstrained
+        - [x] Rosenbrock
+        - [x] Ackley
+        - [x] Quadratic
+            - [x] Lagrangian Box-Constrained Quadratic
+    - [x] Constrained
+        - [x] Box-Constrained Quadratic
+
 - Machine Learning Models
     - [x] Linear Regression
         - [x] Regularizers

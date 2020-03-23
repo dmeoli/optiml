@@ -171,6 +171,92 @@ class BoxConstrainedQuadratic(Quadratic):
         pass
 
 
+class LagrangianBoxConstrained(Quadratic):
+
+    def __init__(self, f):
+        super().__init__(f.Q, f.q)
+        self.primal = f
+        # compute the LDL^T Cholesky indefinite factorization of Q, this will
+        # be used at each iteration to solve the Lagrangian relaxation
+        # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
+        # self.R = ldl(self.f.Q)
+        try:
+            self.R = np.linalg.cholesky(self.primal.Q)
+        except np.linalg.LinAlgError:
+            raise ValueError('Q is not positive definite, this is not yet supported')
+
+    def function(self, lmbda):
+        # The Lagrangian relaxation of the problem is:
+        #
+        #    min { 1/2 x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x }
+        #  min { 1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ u }
+        #
+        # where lambda^+ are the first n components of lmbda, and lambda^- the
+        # last n components; both are constrained to be >= 0.
+        #
+        # The optimal solution of the Lagrangian relaxation is the (unique)
+        # solution of the linear system:
+        #
+        #       Q x = -q - lambda^+ + lambda^-
+        #
+        # Since we have computed at the beginning the Cholesky factorization of Q,
+        # i.e., Q = R^T R, where R is upper triangular and therefore R^T is lower
+        # triangular, we obtain this by just two triangular backsolves:
+        #
+        #       R^T z = -q - lambda^+ + lambda^-
+        #
+        #       R x = z
+        #
+        # return the function value and the primal solution.
+
+        ql = -self.primal.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
+        # TODO solve the systems with LDL^T Cholesky indefinite factorization or with null space method
+        z = np.linalg.solve(self.R, -ql)
+        y = np.linalg.solve(self.R.T, z)
+        # z = solve_triangular(self.R.T, -ql, lower=True)
+        # y = solve_triangular(self.R, z, lower=False)
+
+        # compute phi-value
+        p = (0.5 * y.T.dot(self.primal.Q) + ql.T).dot(y) - lmbda[:self.primal.n].T.dot(self.primal.ub)
+
+        return -p
+
+    def jacobian(self, lmbda, dolh=False, wrt=None, v=None):
+        # Compute the Lagrangian function of the problem. With x the optimal
+        # solution of the minimization problem, the gradient at lambda is [x - u, -x].
+        # However, the line search is written for minimization but we rather want
+        # to maximize phi(), hence we have to change the sign of both function
+        # values and gradient entries.
+
+        ql = -self.primal.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
+        # TODO solve the systems with LDL^T Cholesky indefinite factorization or with null space method
+        z = np.linalg.solve(self.R, -ql)
+        y = np.linalg.solve(self.R.T, z)
+        # z = solve_triangular(self.R.T, -ql, lower=True)
+        # y = solve_triangular(self.R, z, lower=False)
+
+        g = np.hstack((self.primal.ub - y, y))
+
+        if dolh:
+            # compute an heuristic solution out of the solution y of
+            # the Lagrangian relaxation by projecting y on the box
+
+            y[y < 0] = 0
+            idx = y > self.primal.ub
+            y[idx] = self.primal.ub[idx]
+
+            # compute cost of feasible solution
+            pv = self.primal.function(y)
+
+            if pv < v:  # it is better than best one found so far
+                wrt = y  # y becomes the incumbent
+                v = pv
+
+            return g, wrt, v
+
+        return g
+
+
 class Rosenbrock(OptimizationFunction):
 
     def __init__(self, n=2, a=1, b=2):

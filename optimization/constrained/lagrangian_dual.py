@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.optimization_function import BoxConstrainedQuadratic
+from optimization.optimization_function import BoxConstrainedQuadratic, LagrangianBoxConstrained
 from optimization.optimizer import LineSearchOptimizer
 
 
@@ -96,15 +96,20 @@ class LagrangianDual(LineSearchOptimizer):
                  tau=0.95, sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
         if not isinstance(f, BoxConstrainedQuadratic):
             raise TypeError('f is not a box-constrained quadratic function')
-        super().__init__(f, f.ub / 2,  # start from the middle of the box,
+        self.primal = f
+        super().__init__(LagrangianBoxConstrained(f), f.ub / 2,  # start from the middle of the box,
                          eps=eps, max_iter=max_iter, max_f_eval=max_f_eval, m1=m1, m2=m2, a_start=a_start,
                          tau=tau, sfgrd=sfgrd, m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
-        # compute the Cholesky factorization of Q, this will be used
-        # at each iteration to solve the Lagrangian relaxation
+
+        # compute the LDL^T Cholesky indefinite factorization of Q, this will
+        # be used at each iteration to solve the Lagrangian relaxation
+        # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
+        # self.R = ldl(self.f.Q)
         try:
             self.R = np.linalg.cholesky(self.f.Q)
         except np.linalg.LinAlgError:
             raise ValueError('Q is not positive definite, this is not yet supported')
+
         self.dolh = dolh
         self.f_eval = 1  # f() evaluations count ("common" with LSs)
 
@@ -112,16 +117,23 @@ class LagrangianDual(LineSearchOptimizer):
 
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
 
-        v = self.f.function(self.wrt)
+        v = self.primal.function(self.wrt)
 
-        if self.dolh:
-            print('iter\tf eval\tub\t\tp(l)\t\tgap', end='')
-        else:
-            print('iter\tf eval\tp(l)\t\t||g(x)||', end='')
-        print('\tls\tit\ta*')
+        if self.verbose:
+            print('iter\tf eval\t', end='')
+            if self.dolh:
+                print('ub\t\t\tp(l)\t\tgap\t\t', end='')
+            else:
+                print('p(l)\t\t\t||g(x)||', end='')
+            print('\tls\tit\ta*')
 
         lmbda = np.zeros(2 * self.f.n)
-        p, last_g, v = self.phi(self.f.ub, v, lmbda)
+
+        p = self.f.function(lmbda)
+        if self.dolh:
+            last_g, self.wrt, v = self.f.jacobian(lmbda, self.dolh, self.wrt, v)
+        else:
+            last_g = self.f.jacobian(lmbda)
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
@@ -135,7 +147,9 @@ class LagrangianDual(LineSearchOptimizer):
                 # compute the relative gap
                 gap = (v + p) / max(abs(v), 1)
 
-                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}\t'.format(self.iter, self.f_eval, v, -p, gap))
+                if self.verbose:
+                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(
+                        self.iter, self.f_eval, v, -p, gap), end='')
 
                 if gap <= self.eps:
                     status = 'optimal'
@@ -144,9 +158,10 @@ class LagrangianDual(LineSearchOptimizer):
                 # compute the norm of the projected gradient
                 ng = np.linalg.norm(d)
 
-                print('{:4d}\t{:4d}\t{:1.8e}\t{:1.4e}\t'.format(self.iter, self.f_eval, -p, ng))
+                if self.verbose:
+                    print('{:4d}\t{:4d}\t{:1.8e}\t{:1.4e}'.format(self.iter, self.f_eval, -p, ng), end='')
 
-                if self.f_eval is 1:
+                if self.iter is 1:
                     ng0 = ng
                 if ng <= self.eps * ng0:
                     status = 'optimal'
@@ -162,17 +177,17 @@ class LagrangianDual(LineSearchOptimizer):
 
             idx = d < 0  # negative gradient entries
             if any(idx):
-                max_t = min(self.line_search.a_start, min(-lmbda(idx) / d(idx)))
+                max_t = min(self.line_search.a_start, min(-lmbda[idx] / d[idx]))
             else:
                 max_t = self.line_search.a_start
 
             # now run the line search
-            phi_p0 = last_g.T * d
+            phi_p0 = last_g.T.dot(d)
 
             # compute step size
             self.line_search.a_start = max_t
-            a, v, last_wrt, last_g, self.f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, self.f_eval, p, phi_p0)
+            a, p, last_wrt, last_g, self.f_eval = self.line_search.search(
+                d, lmbda, last_wrt, last_g, self.f_eval, p, phi_p0)
 
             print('\t{:1.4e}'.format(a))
 
@@ -191,74 +206,3 @@ class LagrangianDual(LineSearchOptimizer):
         if self.plot and self.n == 2:
             plt.show()
         return self.wrt, status, lmbda
-
-    def solve_lagrangian(self, ub, lmbda=None):
-        # The Lagrangian relaxation of the problem is:
-        #
-        #    min { 1/2 x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x }
-        #  min { 1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ u }
-        #
-        # where lambda^+ are the first n components of lmbda, and lambda^- the
-        # last n components; both are constrained to be >= 0.
-        #
-        # The optimal solution of the Lagrangian relaxation is the (unique)
-        # solution of the linear system:
-        #
-        #       Q x = -q - lambda^+ + lambda^-
-        #
-        # Since we have computed at the beginning the Cholesky factorization of Q,
-        # i.e., Q = R^T R, where R is upper triangular and therefore R^T is lower
-        # triangular, we obtain this by just two triangular backsolves:
-        #
-        #       R^T z = -q - lambda^+ + lambda^-
-        #
-        #       R x = z
-        #
-        # return the function value and the primal solution.
-
-        ql = self.f.q + lmbda[:self.f.n] - lmbda[self.f.n:]
-        from scipy.linalg import lu_factor, lu_solve
-        # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
-        z = lu_solve(lu_factor(self.f.Q.T), -ql)
-        y = lu_solve(lu_factor(self.f.Q), z)
-        # z = solve_triangular(self.R.T, -ql, lower=True)
-        # y = solve_triangular(self.R, z, lower=False)
-
-        # compute phi-value
-        p = (0.5 * y.T.dot(self.f.Q) + ql.T).dot(y) - lmbda[:self.f.n].T.dot(ub)
-
-        self.f_eval += 1
-
-        return p, y
-
-    def phi(self, ub, v, lmbda=None):
-        # Compute the Lagrangian function of the problem. With x the
-        # optimal solution of the minimization problem (see solve_lagrangian), the
-        # gradient at lambda is [x - u, -x].
-        # However, the line search is written for minimization but we rather want
-        # to maximize phi(), hence we have to change the sign of both function
-        # values and gradient entries.
-
-        # solve the Lagrangian relaxation
-        p, y = self.solve_lagrangian(ub, lmbda)
-        p = -p
-
-        # compute gradient
-        g = np.vstack((ub - y, y))
-
-        if self.dolh:
-            # compute an heuristic solution out of the solution y of the Lagrangian
-            # relaxation by projecting y on the box
-
-            y[y < 0] = 0
-            idx = y > ub
-            y[idx] = ub[idx]
-
-            # compute cost of feasible solution
-            pv = 0.5 * y.T.dot(self.f.Q).dot(y) + self.f.q.T.dot(y)
-
-            if pv < v:  # it is better than best one found so far
-                self.wrt = y  # y becomes the incumbent
-                v = pv
-
-        return p, g, v
