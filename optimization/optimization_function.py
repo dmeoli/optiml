@@ -49,7 +49,10 @@ class Quadratic(OptimizationFunction):
 
     def __init__(self, Q, q):
         """
-        Construct a general quadratic function with his linear and quadratic part.
+        Construct a quadratic function from its linear and quadratic part defined as:
+
+                                    1/2 x^T Q x + q^T x
+
         :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
                            the Hessian (i.e. the quadratic part) of f. If it is not
                            positive semidefinite, f(x) will be unbounded below.
@@ -86,10 +89,6 @@ class Quadratic(OptimizationFunction):
         """
         A general quadratic function f(x) = 1/2 x^T Q x - q^T x.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
-        :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
-                           the Hessian (i.e. the quadratic part) of f. If it is not
-                           positive semidefinite, f(x) will be unbounded below.
-        :param q: ([n x 1] real column vector): the linear part of f.
         :return:  the value of a general quadratic function if x, the optimal solution of a
                   linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
         """
@@ -99,10 +98,6 @@ class Quadratic(OptimizationFunction):
         """
         The Jacobian (i.e. gradient) of a general quadratic function J f(x) = Q x - q.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
-        :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
-                           the Hessian (i.e. the quadratic part) of f. If it is not
-                           positive semidefinite, f(x) will be unbounded below.
-        :param q: ([n x 1] real column vector): the linear part of f.
         :return:  the Jacobian of a general quadratic function.
         """
         return self.Q.dot(x) - self.q
@@ -111,10 +106,6 @@ class Quadratic(OptimizationFunction):
         """
         The Hessian matrix of a general quadratic function H f(x) = Q.
         :param x: 1D array of points at which the Hessian is to be computed.
-        :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
-                           the Hessian (i.e. the quadratic part) of f. If it is not
-                           positive semidefinite, f(x) will be unbounded below.
-        :param q: ([n x 1] real column vector): the linear part of f.
         :return:  the Hessian matrix (i.e. the quadratic part) of a general quadratic function at x.
         """
         return self.Q
@@ -143,26 +134,32 @@ class Quadratic(OptimizationFunction):
 
 
 # 2x2 quadratic function with nicely conditioned Hessian
-quad1 = Quadratic(np.array([[6, -2], [-2, 6]]), np.array([10, 5]))
+quad1 = Quadratic([[6, -2], [-2, 6]], [10, 5])
 # 2x2 quadratic function with less nicely conditioned Hessian
-quad2 = Quadratic(np.array([[5, -3], [-3, 5]]), np.array([10, 5]))
-# 2x2 quadratic function with Hessian having one zero eigenvalue
-# (singular matrix)
-quad3 = Quadratic(np.array([[4, -4], [-4, 4]]), np.array([10, 5]))
-# 2x2 quadratic function with indefinite Hessian
-# (one positive and one negative eigenvalue)
-quad4 = Quadratic(np.array([[3, -5], [-5, 3]]), np.array([10, 5]))
+quad2 = Quadratic([[5, -3], [-3, 5]], [10, 5])
+# 2x2 quadratic function with Hessian having one zero eigenvalue (singular matrix)
+quad3 = Quadratic([[4, -4], [-4, 4]], [10, 5])
+# 2x2 quadratic function with indefinite Hessian (one positive and one negative eigenvalue)
+quad4 = Quadratic([[3, -5], [-5, 3]], [10, 5])
 # 2x2 quadratic function with "very elongated" Hessian
 # (a very small positive minimum eigenvalue, the other much larger)
-quad5 = Quadratic(np.array([[101, -99], [-99, 101]]), np.array([10, 5]))
+quad5 = Quadratic([[101, -99], [-99, 101]], [10, 5])
 
 
 class BoxConstrainedQuadratic(Quadratic):
-    # Produces a structure encoding a convex Box-Constrained Quadratic program:
-    #
-    #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
 
     def __init__(self, Q, q, ub):
+        """
+        Construct a box-constrained quadratic function defined as:
+
+                    1/2 x^T Q x + q^T x : 0 <= x <= ub
+
+        :param Q:  ([n x n] real symmetric matrix, not necessarily positive semidefinite):
+                            the Hessian (i.e., the quadratic part) of f. If it is not
+                            positive semidefinite, f(x) will be unbounded below.
+        :param q:  ([n x 1] real column vector): the linear part of f.
+        :param ub: ([n x 1] real column vector): the upper bound of the box.
+        """
         super().__init__(Q, -q)
         self.ub = ub
 
@@ -174,6 +171,18 @@ class BoxConstrainedQuadratic(Quadratic):
 class LagrangianBoxConstrained(Quadratic):
 
     def __init__(self, f):
+        """
+        Construct the lagrangian relaxation of a box-constrained quadratic function defined as:
+
+                        1/2 x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x
+                    1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ u
+
+        where lambda^+ are the first n components of lmbda, and lambda^- the last n components;
+        both are constrained to be >= 0.
+        :param f: box-constrained quadratic function to be relaxed
+        """
+        if not isinstance(f, BoxConstrainedQuadratic):
+            raise TypeError('f is not a box-constrained quadratic function')
         super().__init__(f.Q, f.q)
         self.primal = f
         # compute the LDL^T Cholesky indefinite factorization of Q, this will
@@ -181,54 +190,50 @@ class LagrangianBoxConstrained(Quadratic):
         # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
         # self.R = ldl(self.f.Q)
         try:
-            self.R = np.linalg.cholesky(self.primal.Q)
+            self.R = np.linalg.cholesky(self.Q)
         except np.linalg.LinAlgError:
             raise ValueError('Q is not positive definite, this is not yet supported')
 
     def function(self, lmbda):
-        # The Lagrangian relaxation of the problem is:
-        #
-        #    min { 1/2 x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x }
-        #  min { 1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ u }
-        #
-        # where lambda^+ are the first n components of lmbda, and lambda^- the
-        # last n components; both are constrained to be >= 0.
-        #
-        # The optimal solution of the Lagrangian relaxation is the (unique)
-        # solution of the linear system:
-        #
-        #       Q x = -q - lambda^+ + lambda^-
-        #
-        # Since we have computed at the beginning the Cholesky factorization of Q,
-        # i.e., Q = R^T R, where R is upper triangular and therefore R^T is lower
-        # triangular, we obtain this by just two triangular backsolves:
-        #
-        #       R^T z = -q - lambda^+ + lambda^-
-        #
-        #       R x = z
-        #
-        # return the function value and the primal solution.
+        """
+        The optimal solution of the Lagrangian relaxation is the (unique)
+        solution of the linear system:
 
-        ql = -self.primal.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
+                        Q x = -q - lambda^+ + lambda^-
+
+        Since we have saved the LDL^T Cholesky factorization of Q,
+        i.e., Q = R^T R, where R is lower triangular and therefore R^T is upper
+        triangular, we obtain this by just two triangular backsolves:
+
+                        R z = -q - lambda^+ + lambda^-
+
+                                 R^T x = z
+
+        return the function value and the primal solution, respectively.
+        :param lmbda:
+        :return: the function value
+        """
+
+        ql = -self.q + lmbda[:self.n] - lmbda[self.n:]
         # TODO solve the systems with LDL^T Cholesky indefinite factorization or with null space method
         z = np.linalg.solve(self.R, -ql)
         y = np.linalg.solve(self.R.T, z)
         # z = solve_triangular(self.R.T, -ql, lower=True)
         # y = solve_triangular(self.R, z, lower=False)
 
-        # compute phi-value
-        p = (0.5 * y.T.dot(self.primal.Q) + ql.T).dot(y) - lmbda[:self.primal.n].T.dot(self.primal.ub)
-
-        return -p
+        return -((0.5 * y.T.dot(self.Q) + ql.T).dot(y) - lmbda[:self.n].T.dot(self.primal.ub))
 
     def jacobian(self, lmbda, dolh=False, wrt=None, v=None):
-        # Compute the Lagrangian function of the problem. With x the optimal
-        # solution of the minimization problem, the gradient at lambda is [x - u, -x].
-        # However, the line search is written for minimization but we rather want
-        # to maximize phi(), hence we have to change the sign of both function
-        # values and gradient entries.
+        """
+        Compute the jacobian of the lagrangian relaxation as follow: with x the optimal
+        solution of the minimization problem, the gradient at lmbda is [x - u, -x].
+        However, we rather want to maximize the lagrangian relaxation, hence we have to
+        change the sign of both function values and gradient entries.
+        :param lmbda:
+        :return:
+        """
 
-        ql = -self.primal.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
+        ql = -self.q + lmbda[:self.n] - lmbda[self.n:]
         # TODO solve the systems with LDL^T Cholesky indefinite factorization or with null space method
         z = np.linalg.solve(self.R, -ql)
         y = np.linalg.solve(self.R.T, z)
