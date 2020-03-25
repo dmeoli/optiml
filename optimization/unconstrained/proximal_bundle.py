@@ -170,7 +170,6 @@ class ProximalBundle(Optimizer):
                 break
 
             # compute function and subgradient
-
             fd, g = self.f.function(self.wrt + d, *args), self.f.jacobian(self.wrt + d, *args)
 
             if fd <= self.m_inf:
@@ -206,4 +205,4 @@ class ProximalBundle(Optimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status
+        return self.wrt, v, status

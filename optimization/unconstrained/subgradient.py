@@ -201,4 +201,4 @@ class Subgradient(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return x, status
+        return x, v, status

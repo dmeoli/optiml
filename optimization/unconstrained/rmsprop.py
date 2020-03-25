@@ -30,7 +30,6 @@ class RMSProp(Optimizer):
         self.step = 0
 
     def minimize(self):
-        cost_history = np.full(self.max_iter, np.nan)
 
         if self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
@@ -43,7 +42,6 @@ class RMSProp(Optimizer):
 
         for args in self.args:
             v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
-            cost_history[self.iter - 1] = v
             ng = np.linalg.norm(g)
 
             if self.verbose:
@@ -91,4 +89,4 @@ class RMSProp(Optimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, cost_history, status
+        return self.wrt, v, status

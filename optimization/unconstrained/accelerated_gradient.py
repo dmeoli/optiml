@@ -251,7 +251,7 @@ class SteepestDescentAcceleratedGradient(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status
+        return self.wrt, v, status
 
 
 class AcceleratedGradient(Optimizer):
@@ -452,4 +452,4 @@ class AcceleratedGradient(Optimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status
+        return self.wrt, v, status

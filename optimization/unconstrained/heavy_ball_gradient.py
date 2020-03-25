@@ -203,13 +203,10 @@ class HeavyBallGradient(LineSearchOptimizer):
             past_d = last_wrt - self.wrt
             self.wrt = last_wrt
 
-            g = last_g
-            ng = np.linalg.norm(g)
-
             self.iter += 1
 
         if self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status
+        return self.wrt, v, status

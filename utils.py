@@ -5,12 +5,6 @@ import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 
 
-def not_test(func):
-    """Decorator to mark a function or method as not a test"""
-    func.__test__ = False
-    return func
-
-
 def cholesky_solve(A, b):
     """Solve a symmetric definite linear system A x = b using Cholesky factorization"""
     L = np.linalg.cholesky(A)

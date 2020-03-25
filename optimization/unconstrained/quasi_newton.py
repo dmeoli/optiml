@@ -228,14 +228,10 @@ class BFGS(LineSearchOptimizer):
             # update new point
             self.wrt = last_wrt
 
-            # update gradient
-            g = last_g
-            ng = np.linalg.norm(g)
-
             self.iter += 1
 
         if self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status
+        return self.wrt, v, status
