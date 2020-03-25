@@ -51,7 +51,7 @@ class Quadratic(OptimizationFunction):
         """
         Construct a quadratic function from its linear and quadratic part defined as:
 
-                                    1/2 x^T Q x + q^T x
+                                    1/2 x^T Q x - q^T x
 
         :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
                            the Hessian (i.e. the quadratic part) of f. If it is not

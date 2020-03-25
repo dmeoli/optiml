@@ -56,53 +56,56 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] RMSProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
-        - [ ] Others
+        - Others
             - [ ] Proximal Bundle
     - Box-Constrained Optimization
-        - [x] Projected Gradient
-        - [x] Conditional Gradient or Frank-Wolfe
-        - [x] Active Set
-        - [x] Interior Point
-        - [x] Lagrangian Dual
-        - [ ] Sequential Minimal Optimization (SMO)
-        - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
-        - [x] [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
+        - Exact Line Search Methods
+            - [x] Projected Gradient
+            - [x] Frank-Wolfe or Conditional Gradient
+            - [x] Active Set
+            - [x] Interior Point
+        - Inexact Line Search Methods
+            - [x] Lagrangian Dual
+        - Others
+            - [ ] Sequential Minimal Optimization (SMO)
+            - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
+            - [x] [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
 
 - Optimization Functions
-    - [x] Unconstrained
+    - Unconstrained
         - [x] Rosenbrock
         - [x] Ackley
         - [x] Quadratic
             - [x] Lagrangian Box-Constrained Quadratic
-    - [x] Constrained
+    - Constrained
         - [x] Box-Constrained Quadratic
 
 - Machine Learning Models
     - [x] Linear Regression
-        - [x] Regularizers
+        - Regularizers
             - [x] L1 or Lasso Regression
             - [x] L2 or Ridge Regression
     - [x] Logistic Regression
-        - [x] Regularizers
+        - Regularizers
             - [x] L1 or Lasso
             - [x] L2 or Ridge or Tikhonov
-    - [x] Support Vector Machines
-        - [x] Support Vector Classifier
-        - [x] Support Vector Regression
-        - [x] Kernels
+    - [x] Support Vector Machines (SVM)
+        - [x] Support Vector Classifier (SVC)
+        - [x] Support Vector Regression (SVR)
+        - Kernels
             - [x] linear kernel
             - [x] polynomial kernel
             - [x] rbf kernel
     - [x] Neural Networks
-        - [x] Losses
+        - Losses
             - [x] Mean Squared Error
             - [x] Mean Absolute Error
             - [x] Cross Entropy or Log Loss
             - [x] Binary Cross Entropy or Binary Log Loss
-        - [x] Regularizers
+        - Regularizers
             - [x] L1 or Lasso
             - [x] L2 or Ridge or Tikhonov
-        - [x] Activations
+        - Activations
             - [x] Sigmoid
             - [x] Tanh
             - [x] ReLU
@@ -110,7 +113,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] ELU
             - [x] SoftMax
             - [x] SoftPlus
-        - [ ] Layers
+        - Layers
             - [x] Fully Connected
             - [x] Convolutional
             - [x] Max Pooling
@@ -121,7 +124,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [ ] Recurrent
             - [ ] Long Short-Term Memory (LSTM)
             - [ ] Gated Recurrent Units (GRU)
-        - [x] Initializers
+        - Initializers
             - [x] Xavier or Glorot normal and uniform
             - [x] He normal and uniform
 
