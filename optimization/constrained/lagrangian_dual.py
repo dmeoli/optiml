@@ -64,7 +64,7 @@ class LagrangianDual(LineSearchOptimizer):
     #   determines a step size value <= mina, this is taken as an indication
     #   that something has gone wrong (the gradient is not a direction of
     #   descent, so maybe the function is not differentiable) and computation
-    #   is stopped. It is legal to take mina = 0, thereby in fact skipping this
+    #   is stopped. It is legal to take min_a = 0, thereby in fact skipping this
     #   test.
     #
     # Output:
@@ -101,11 +101,10 @@ class LagrangianDual(LineSearchOptimizer):
                          eps=eps, max_iter=max_iter, max_f_eval=max_f_eval, m1=m1, m2=m2, a_start=a_start,
                          tau=tau, sfgrd=sfgrd, m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
         self.dolh = dolh
-        self.f_eval = 1  # f() evaluations count ("common" with LSs)
 
     def minimize(self):
-
-        last_wrt = np.zeros((self.n,))  # last point visited in the line search
+        last_lmbda = np.zeros(2 * self.f.n)  # last point visited in the line search
+        f_eval = 1  # f() evaluations count ("common" with LSs)
 
         v = self.primal.function(self.wrt)
 
@@ -138,8 +137,7 @@ class LagrangianDual(LineSearchOptimizer):
                 gap = (v + p) / max(abs(v), 1)
 
                 if self.verbose:
-                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(
-                        self.iter, self.f_eval, v, -p, gap), end='')
+                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, -p, gap), end='')
 
                 if gap <= self.eps:
                     status = 'optimal'
@@ -149,7 +147,7 @@ class LagrangianDual(LineSearchOptimizer):
                 ng = np.linalg.norm(d)
 
                 if self.verbose:
-                    print('{:4d}\t{:4d}\t{:1.8e}\t{:1.4e}'.format(self.iter, self.f_eval, -p, ng), end='')
+                    print('{:4d}\t{:4d}\t{:1.8e}\t{:1.4e}'.format(self.iter, f_eval, -p, ng), end='')
 
                 if self.iter is 1:
                     ng0 = ng
@@ -157,7 +155,7 @@ class LagrangianDual(LineSearchOptimizer):
                     status = 'optimal'
                     break
 
-            if self.f_eval >= self.line_search.max_f_eval:
+            if f_eval >= self.line_search.max_f_eval:
                 status = 'stopped'
                 break
 
@@ -171,15 +169,31 @@ class LagrangianDual(LineSearchOptimizer):
             else:
                 max_t = self.line_search.a_start
 
-            # now run the line search
             phi_p0 = last_g.T.dot(d)
 
             # compute step size
             self.line_search.a_start = max_t
-            a, p, last_wrt, last_g, self.f_eval = self.line_search.search(
-                d, lmbda, last_wrt, last_g, self.f_eval, p, phi_p0)
+            a, p, last_lmbda, last_g, f_eval = self.line_search.search(
+                d, lmbda, last_lmbda, last_g, f_eval, p, phi_p0)
 
-            print('\t{:1.4e}'.format(a))
+            if self.dolh:
+                y = np.copy(last_g[self.primal.n:])
+
+                # compute an heuristic solution out of the solution y of
+                # the Lagrangian relaxation by projecting y on the box
+                y[y < 0] = 0
+                idx = y > self.primal.ub
+                y[idx] = self.primal.ub[idx]
+
+                # compute cost of feasible solution
+                pv = self.primal.function(y)
+
+                if pv < v:  # it is better than best one found so far
+                    self.wrt = np.copy(y)  # y becomes the incumbent
+                    v = pv
+
+            if self.verbose:
+                print('\t{:1.4e}'.format(a))
 
             if a <= self.line_search.min_a:
                 status = 'error'
@@ -195,4 +209,4 @@ class LagrangianDual(LineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, status, lmbda
+        return self.wrt, v, status, lmbda
