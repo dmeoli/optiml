@@ -102,6 +102,24 @@ class LagrangianDual(LineSearchOptimizer):
                          tau=tau, sfgrd=sfgrd, m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
         self.dolh = dolh
 
+    def _dolh(self, v, last_g):
+        y = np.copy(last_g[self.primal.n:])
+
+        # compute an heuristic solution out of the solution y of
+        # the Lagrangian relaxation by projecting y on the box
+        y[y < 0] = 0
+        idx = y > self.primal.ub
+        y[idx] = self.primal.ub[idx]
+
+        # compute cost of feasible solution
+        pv = self.primal.function(y)
+
+        if pv < v:  # it is better than best one found so far
+            self.wrt = np.copy(y)  # y becomes the incumbent
+            v = pv
+
+        return v
+
     def minimize(self):
         last_lmbda = np.zeros(2 * self.f.n)  # last point visited in the line search
         f_eval = 1  # f() evaluations count ("common" with LSs)
@@ -118,11 +136,8 @@ class LagrangianDual(LineSearchOptimizer):
 
         lmbda = np.zeros(2 * self.f.n)
 
-        p = self.f.function(lmbda)
-        if self.dolh:
-            last_g, self.wrt, v = self.f.jacobian(lmbda, self.dolh, self.wrt, v)
-        else:
-            last_g = self.f.jacobian(lmbda)
+        p, last_g = self.f.function(lmbda), self.f.jacobian(lmbda)
+        v = self._dolh(v, last_g)
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
@@ -175,22 +190,7 @@ class LagrangianDual(LineSearchOptimizer):
             self.line_search.a_start = max_t
             a, p, last_lmbda, last_g, f_eval = self.line_search.search(
                 d, lmbda, last_lmbda, last_g, f_eval, p, phi_p0)
-
-            if self.dolh:
-                y = np.copy(last_g[self.primal.n:])
-
-                # compute an heuristic solution out of the solution y of
-                # the Lagrangian relaxation by projecting y on the box
-                y[y < 0] = 0
-                idx = y > self.primal.ub
-                y[idx] = self.primal.ub[idx]
-
-                # compute cost of feasible solution
-                pv = self.primal.function(y)
-
-                if pv < v:  # it is better than best one found so far
-                    self.wrt = np.copy(y)  # y becomes the incumbent
-                    v = pv
+            v = self._dolh(v, last_g)
 
             if self.verbose:
                 print('\t{:1.4e}'.format(a))

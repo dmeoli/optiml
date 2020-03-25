@@ -306,7 +306,7 @@ class LagrangianBoxConstrained(Quadratic):
 
         return -((0.5 * y.T.dot(self.Q) + ql.T).dot(y) - lmbda[:self.n].T.dot(self.primal.ub))
 
-    def jacobian(self, lmbda, dolh=False, wrt=None, v=None):
+    def jacobian(self, lmbda):
         """
         Compute the jacobian of the lagrangian relaxation as follow: with x the optimal
         solution of the minimization problem, the gradient at lmbda is [x - u, -x].
@@ -323,26 +323,7 @@ class LagrangianBoxConstrained(Quadratic):
         # z = solve_triangular(self.R.T, -ql, lower=True)
         # y = solve_triangular(self.R, z, lower=False)
 
-        g = np.hstack((self.primal.ub - y, y))
-
-        if dolh:
-            # compute an heuristic solution out of the solution y of
-            # the Lagrangian relaxation by projecting y on the box
-
-            y[y < 0] = 0
-            idx = y > self.primal.ub
-            y[idx] = self.primal.ub[idx]
-
-            # compute cost of feasible solution
-            pv = self.primal.function(y)
-
-            if pv < v:  # it is better than best one found so far
-                wrt = y  # y becomes the incumbent
-                v = pv
-
-            return g, wrt, v
-
-        return g
+        return np.hstack((self.primal.ub - y, y))
 
 
 class Rosenbrock(OptimizationFunction):
