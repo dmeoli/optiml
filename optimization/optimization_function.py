@@ -168,7 +168,7 @@ class BoxConstrainedQuadratic(Quadratic):
                 raise ValueError('n must be > 0')
             if not np.isscalar(actv) or not np.isreal(actv):
                 raise ValueError('actv not a real scalar')
-            if actv < 0 or actv > 1:
+            if not 0 <= actv <= 1:
                 raise ValueError('actv must be in [0, 1]')
             if not np.isscalar(rank) or not np.isreal(rank):
                 raise ValueError('rank not a real scalar')
@@ -176,7 +176,7 @@ class BoxConstrainedQuadratic(Quadratic):
                 raise ValueError('rank must be > 0')
             if not np.isscalar(ecc) or not np.isreal(ecc):
                 raise ValueError('ecc not a real scalar')
-            if ecc < 0 or ecc >= 1:
+            if not 0 <= ecc < 1:
                 raise ValueError('ecc must be in [0, 1)')
             if not np.isscalar(u_min) or not np.isreal(u_min):
                 raise ValueError('u_min not a real scalar')
@@ -216,7 +216,7 @@ class BoxConstrainedQuadratic(Quadratic):
 
             # we first generate the unconstrained minimum z of the problem in the form:
             #
-            #    min 1/2 (x - z)^T Q (x - z) =
+            #          min 1/2 (x - z)^T Q (x - z)
             #    min 1/2 x^T Q x - z^T Q x + 1/2 z^T Q z
             #
             # and then we set q = -z^T Q
