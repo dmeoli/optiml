@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.linalg import ldl
 
 from optimization.optimization_function import BoxConstrainedQuadratic
 from optimization.optimizer import Optimizer
@@ -90,7 +91,7 @@ class ActiveSet(Optimizer):
 
             # use the LDL^T Cholesky symmetric indefinite factorization to solve the
             # linear system since Q_{AA} is symmetric but could be not positive definite
-            xs[A] = ldl_solve(self.f.Q[A, :][:, A], self.f.q[A] - self.f.Q[A, :][:, U].dot(self.f.ub[U]))
+            xs[A] = ldl_solve(ldl(self.f.Q[A, :][:, A]), self.f.q[A] - self.f.Q[A, :][:, U].dot(self.f.ub[U]))
 
             if np.logical_and(xs[A] <= self.f.ub[A] + 1e-12, xs[A] >= -1e-12).all():
                 # the solution of the unconstrained problem is actually feasible
