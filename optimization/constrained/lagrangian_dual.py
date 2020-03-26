@@ -103,20 +103,21 @@ class LagrangianDual(LineSearchOptimizer):
         self.dolh = dolh
 
     def _dolh(self, v, last_g):
-        y = np.copy(last_g[self.primal.n:])
+        if self.dolh:
+            y = np.copy(last_g[self.primal.n:])
 
-        # compute an heuristic solution out of the solution y of
-        # the Lagrangian relaxation by projecting y on the box
-        y[y < 0] = 0
-        idx = y > self.primal.ub
-        y[idx] = self.primal.ub[idx]
+            # compute an heuristic solution out of the solution y of
+            # the Lagrangian relaxation by projecting y on the box
+            y[y < 0] = 0
+            idx = y > self.primal.ub
+            y[idx] = self.primal.ub[idx]
 
-        # compute cost of feasible solution
-        pv = self.primal.function(y)
+            # compute cost of feasible solution
+            pv = self.primal.function(y)
 
-        if pv < v:  # it is better than best one found so far
-            self.wrt = np.copy(y)  # y becomes the incumbent
-            v = pv
+            if pv < v:  # it is better than best one found so far
+                self.wrt = np.copy(y)  # y becomes the incumbent
+                v = pv
 
         return v
 
@@ -188,8 +189,7 @@ class LagrangianDual(LineSearchOptimizer):
 
             # compute step size
             self.line_search.a_start = max_t
-            a, p, last_lmbda, last_g, f_eval = self.line_search.search(
-                d, lmbda, last_lmbda, last_g, f_eval, p, phi_p0)
+            a, p, last_lmbda, last_g, f_eval = self.line_search.search(d, lmbda, last_lmbda, last_g, f_eval, p, phi_p0)
             v = self._dolh(v, last_g)
 
             if self.verbose:

@@ -3,7 +3,7 @@ import numpy as np
 
 from optimization.optimization_function import BoxConstrainedQuadratic
 from optimization.optimizer import Optimizer
-from utils import cholesky_solve
+from utils import ldl_solve
 
 
 class ActiveSet(Optimizer):
@@ -87,10 +87,10 @@ class ActiveSet(Optimizer):
 
             xs = np.zeros(self.f.n)
             xs[U] = self.f.ub[U]
-            # thing and use Cholesky to speed up solving a symmetric linear system
-            # (Q_{AA} is symmetric positive definite matrix)
-            # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
-            xs[A] = cholesky_solve(self.f.Q[A, :][:, A], self.f.q[A] - self.f.Q[A, :][:, U].dot(self.f.ub[U]))
+
+            # use the LDL^T Cholesky symmetric indefinite factorization to solve the
+            # linear system since Q_{AA} is symmetric but could be not positive definite
+            xs[A] = ldl_solve(self.f.Q[A, :][:, A], self.f.q[A] - self.f.Q[A, :][:, U].dot(self.f.ub[U]))
 
             if np.logical_and(xs[A] <= self.f.ub[A] + 1e-12, xs[A] >= -1e-12).all():
                 # the solution of the unconstrained problem is actually feasible

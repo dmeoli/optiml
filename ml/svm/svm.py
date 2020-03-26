@@ -197,10 +197,6 @@ class SVC(SVM):
         A = y.astype(np.float)  # equality matrix
         b = np.zeros(1)  # equality vector
 
-        # we'd like to minimize the negative of the Lagrangian dual function subject to linear constraints:
-        # inequalities Gx <= h (A is m x n, where m = 2n is the number of inequalities
-        # (n box constraints, 2 inequalities each)
-        # equalities Ax = b (these's only one equality constraint, i.e. y.T.dot(x) = 0)
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
         self.alphas = (solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
@@ -282,10 +278,6 @@ class SVR(SVM):
         A = np.hstack((np.ones(m), -np.ones(m)))  # equality matrix
         b = np.zeros(1)  # equality vector
 
-        # we'd like to minimize the negative of the Lagrangian dual function subject to linear constraints:
-        # inequalities Gx <= h (A is m x n, where m = 2n is the number of inequalities
-        # (n box constraints, 2 inequalities each)
-        # equalities Ax = b (these's only one equality constraint, i.e. x.T.dot(x) = 0)
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
         alphas = (solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else

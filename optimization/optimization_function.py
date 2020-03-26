@@ -4,6 +4,9 @@ from matplotlib import cm
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 from mpl_toolkits.mplot3d import Axes3D
+from scipy.linalg import ldl
+
+from utils import ldl_solve
 
 
 class OptimizationFunction:
@@ -80,7 +83,14 @@ class Quadratic(OptimizationFunction):
         self.q = q
 
     def x_star(self):
-        return np.linalg.inv(self.Q).dot(self.q)  # or np.linalg.solve(self.Q, self.q)
+        try:
+            # alternatively we can solve the linear system as np.linalg.inv(self.Q).dot(self.q)
+            # but the complexity increase about 3 times as much as LU factorization used by
+            # default in np.linalg.solve(self.Q, self.q) because it requires is O(2n^3) to
+            # compute the inverse of the Hessian matrix and O(2n^2) to multiply this by the q vector
+            return np.linalg.solve(self.Q, self.q)  # complexity O(2n^3/3)
+        except np.linalg.LinAlgError:  # the Hessian matrix is singular
+            return np.full(self.n, np.inf)
 
     def f_star(self):
         return self.function(self.x_star())
@@ -268,14 +278,10 @@ class LagrangianBoxConstrained(Quadratic):
             raise TypeError('f is not a box-constrained quadratic function')
         super().__init__(f.Q, f.q)
         self.primal = f
-        # compute the LDL^T Cholesky indefinite factorization of Q, this will
-        # be used at each iteration to solve the Lagrangian relaxation
-        # TODO solve the system with LDL^T Cholesky indefinite factorization or with null space method
-        # self.R = ldl(self.f.Q)
-        try:
-            self.R = np.linalg.cholesky(self.Q)
-        except np.linalg.LinAlgError:
-            raise ValueError('Q is not positive definite, this is not yet supported')
+        # Compute the LDL^T Cholesky symmetric indefinite factorization
+        # of Q because it is symmetric but could be not positive definite.
+        # This will be used at each iteration to solve the Lagrangian relaxation.
+        self.L, self.D, self.P = ldl(self.Q)
 
     def function(self, lmbda):
         """
@@ -298,11 +304,7 @@ class LagrangianBoxConstrained(Quadratic):
         """
 
         ql = -self.q + lmbda[:self.n] - lmbda[self.n:]
-        # TODO solve the systems with LDL^T Cholesky indefinite factorization or with null space method
-        z = np.linalg.solve(self.R, -ql)
-        y = np.linalg.solve(self.R.T, z)
-        # z = solve_triangular(self.R.T, -ql, lower=True)
-        # y = solve_triangular(self.R, z, lower=False)
+        y = ldl_solve((self.L, self.D, self.P), -ql)
 
         return -((0.5 * y.T.dot(self.Q) + ql.T).dot(y) - lmbda[:self.n].T.dot(self.primal.ub))
 
@@ -317,11 +319,7 @@ class LagrangianBoxConstrained(Quadratic):
         """
 
         ql = -self.q + lmbda[:self.n] - lmbda[self.n:]
-        # TODO solve the systems with LDL^T Cholesky indefinite factorization or with null space method
-        z = np.linalg.solve(self.R, -ql)
-        y = np.linalg.solve(self.R.T, z)
-        # z = solve_triangular(self.R.T, -ql, lower=True)
-        # y = solve_triangular(self.R, z, lower=False)
+        y = ldl_solve((self.L, self.D, self.P), -ql)
 
         return np.hstack((self.primal.ub - y, y))
 
