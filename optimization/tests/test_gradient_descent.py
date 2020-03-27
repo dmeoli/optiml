@@ -4,9 +4,9 @@ from optimization.optimization_function import quad1, quad2, Rosenbrock
 from optimization.unconstrained.gradient_descent import *
 
 
-def test_SteepestGradientDescentQuadratic():
-    assert np.allclose(SteepestGradientDescentQuadratic(quad1).minimize()[0], quad1.x_star())
-    assert np.allclose(SteepestGradientDescentQuadratic(quad2).minimize()[0], quad2.x_star())
+def test_QuadraticSteepestGradientDescent():
+    assert np.allclose(QuadraticSteepestGradientDescent(quad1).minimize()[0], quad1.x_star())
+    assert np.allclose(QuadraticSteepestGradientDescent(quad2).minimize()[0], quad2.x_star())
 
 
 def test_SteepestGradientDescent_quadratic():

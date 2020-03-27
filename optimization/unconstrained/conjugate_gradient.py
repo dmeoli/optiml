@@ -6,7 +6,7 @@ from optimization.optimization_function import Quadratic
 from optimization.optimizer import LineSearchOptimizer, Optimizer
 
 
-class ConjugateGradientQuadratic(Optimizer):
+class QuadraticConjugateGradient(Optimizer):
     def __init__(self, f, wrt=random_uniform, r_start=0, eps=1e-6, max_iter=1000, verbose=False, plot=False):
         super().__init__(f, wrt, eps=eps, max_iter=max_iter, verbose=verbose, plot=plot)
         if not isinstance(f, Quadratic):

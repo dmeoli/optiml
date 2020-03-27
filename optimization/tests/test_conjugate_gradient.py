@@ -2,12 +2,12 @@ import numpy as np
 import pytest
 
 from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.conjugate_gradient import NonlinearConjugateGradient, ConjugateGradientQuadratic
+from optimization.unconstrained.conjugate_gradient import NonlinearConjugateGradient, QuadraticConjugateGradient
 
 
-def test_ConjugateGradientQuadratic():
-    assert np.allclose(ConjugateGradientQuadratic(quad1).minimize()[0], quad1.x_star())
-    assert np.allclose(ConjugateGradientQuadratic(quad2).minimize()[0], quad2.x_star())
+def test_QuadraticConjugateGradient():
+    assert np.allclose(QuadraticConjugateGradient(quad1).minimize()[0], quad1.x_star())
+    assert np.allclose(QuadraticConjugateGradient(quad2).minimize()[0], quad2.x_star())
 
 
 def test_NonlinearConjugateGradient_quadratic_wf0():

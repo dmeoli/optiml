@@ -6,7 +6,7 @@ from optimization.optimization_function import Quadratic
 from optimization.optimizer import Optimizer, LineSearchOptimizer
 
 
-class SteepestGradientDescentQuadratic(Optimizer):
+class QuadraticSteepestGradientDescent(Optimizer):
     """
     Apply the Steepest Gradient Descent algorithm with exact line search to the quadratic function.
 
