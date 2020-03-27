@@ -298,9 +298,9 @@ class LagrangianBoxConstrained(BoxConstrainedQuadratic):
         :param lmbda:
         :return: the function value
         """
-        ql = -self.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
+        ql = self.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
         x = ldl_solve((self.L, self.D, self.P), -ql)
-        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.n].T.dot(self.ub)
+        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.n].dot(self.ub)
 
     def jacobian(self, lmbda):
         """
@@ -311,7 +311,7 @@ class LagrangianBoxConstrained(BoxConstrainedQuadratic):
         :param lmbda:
         :return:
         """
-        ql = -self.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
+        ql = self.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = np.hstack((self.ub - x, x))
 

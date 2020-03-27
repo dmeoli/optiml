@@ -139,8 +139,9 @@ class LagrangianDual(BoxConstrainedLineSearchOptimizer):
             phi_p0 = last_g.T.dot(d)
 
             # compute step size
+
             a, p, last_lmbda, last_g, f_eval = self.line_search.search(
-                d, self.lmbda, last_lmbda, last_g, f_eval, -p, phi_p0)
+                d, self.lmbda, last_lmbda, last_g, f_eval, p, phi_p0)
             self.wrt, v = self.f.primal_solution, self.f.primal_value
 
             if self.verbose:
