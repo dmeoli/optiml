@@ -212,7 +212,11 @@ class InteriorPoint(BoxConstrainedOptimizer):
             lp += max_t * dlp
             lm += max_t * dlm
 
-            # TODO add plotting
+            # plot the trajectory
+            if self.plot and self.n == 2:
+                p_xy = np.vstack((self.wrt - max_t * dx, self.wrt)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
 
             self.iter += 1
 

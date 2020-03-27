@@ -255,7 +255,7 @@ class BoxConstrainedQuadratic(Quadratic):
     def plot(self):
         surface_plot, surface_axes, contour_plot, contour_axes = super().plot()
         # TODO add box-constraints
-        pass
+        return surface_plot, surface_axes, contour_plot, contour_axes
 
 
 class LagrangianBoxConstrained(BoxConstrainedQuadratic):
@@ -298,7 +298,7 @@ class LagrangianBoxConstrained(BoxConstrainedQuadratic):
         :param lmbda:
         :return: the function value
         """
-        ql = self.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
+        ql = self.q.T + lmbda[:self.primal.n] - lmbda[self.primal.n:]
         x = ldl_solve((self.L, self.D, self.P), -ql)
         return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.n].dot(self.ub)
 
@@ -311,7 +311,7 @@ class LagrangianBoxConstrained(BoxConstrainedQuadratic):
         :param lmbda:
         :return:
         """
-        ql = self.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
+        ql = self.q.T + lmbda[:self.primal.n] - lmbda[self.primal.n:]
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = np.hstack((self.ub - x, x))
 

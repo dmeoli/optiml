@@ -92,7 +92,11 @@ class ProjectedGradient(BoxConstrainedOptimizer):
 
             self.wrt += t * d
 
-            # TODO add plotting
+            # plot the trajectory
+            if self.plot and self.n == 2:
+                p_xy = np.vstack((self.wrt - t * d, self.wrt)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
 
             self.iter += 1
 

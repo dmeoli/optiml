@@ -87,7 +87,7 @@ class ActiveSet(BoxConstrainedOptimizer):
 
             # use the LDL^T Cholesky symmetric indefinite factorization to solve the
             # linear system since Q_{AA} is symmetric but could be not positive definite
-            xs[A] = ldl_solve(ldl(self.f.Q[A, :][:, A]), self.f.q[A] - self.f.Q[A, :][:, U].dot(self.f.ub[U]))
+            xs[A] = ldl_solve(ldl(self.f.Q[A, :][:, A]), -(self.f.q[A] - self.f.Q[A, :][:, U].dot(self.f.ub[U])))
 
             if np.logical_and(xs[A] <= self.f.ub[A] + 1e-12, xs[A] >= -1e-12).all():
                 # the solution of the unconstrained problem is actually feasible
@@ -154,7 +154,11 @@ class ActiveSet(BoxConstrainedOptimizer):
                 if self.verbose:
                     print('I {:d}+{:d}'.format(sum(nL), sum(nU)))
 
-            # TODO add plotting
+                # plot the trajectory
+                if self.plot and self.n == 2:
+                    p_xy = np.vstack((self.wrt - max_t * d, self.wrt)).T
+                    contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
+                                        p_xy[1, 1:] - p_xy[1, :-1], scale_units='xy', angles='xy', scale=1, color='k')
 
             self.iter += 1
 

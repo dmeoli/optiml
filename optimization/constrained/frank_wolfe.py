@@ -108,14 +108,18 @@ class FrankWolfe(BoxConstrainedOptimizer):
             den = d.T.dot(self.f.Q).dot(d)
 
             if den <= 1e-16:  # d^T * Q * d = 0  ==>  f is linear along d
-                alpha = 1  # just take the maximum possible step size
+                a = 1  # just take the maximum possible step size
             else:
                 # optimal unbounded step size restricted to max feasible step
-                alpha = min(-g.T.dot(d) / den, 1)
+                a = min(-g.T.dot(d) / den, 1)
 
-            self.wrt += alpha * d
+            self.wrt += a * d
 
-            # TODO add plotting
+            # plot the trajectory
+            if self.plot and self.n == 2:
+                p_xy = np.vstack((self.wrt - a * d, self.wrt)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
 
             self.iter += 1
 

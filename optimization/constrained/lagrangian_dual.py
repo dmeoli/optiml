@@ -106,7 +106,7 @@ class LagrangianDual(BoxConstrainedLineSearchOptimizer):
         self.wrt, v = self.f.primal_solution, self.f.primal_value
 
         if self.plot and self.n == 2:
-            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
+            surface_plot, contour_plot, contour_plot, contour_axes = self.primal.plot()
 
         while True:
             # project the direction = -gradient over the active constraints
@@ -139,7 +139,6 @@ class LagrangianDual(BoxConstrainedLineSearchOptimizer):
             phi_p0 = last_g.T.dot(d)
 
             # compute step size
-
             a, p, last_lmbda, last_g, f_eval = self.line_search.search(
                 d, self.lmbda, last_lmbda, last_g, f_eval, p, phi_p0)
             self.wrt, v = self.f.primal_solution, self.f.primal_value
@@ -153,7 +152,11 @@ class LagrangianDual(BoxConstrainedLineSearchOptimizer):
 
             self.lmbda += a * d
 
-            # TODO add plotting
+            # plot the trajectory
+            if self.plot and self.n == 2:
+                p_xy = np.vstack((self.lmbda - a * d, self.lmbda)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
+                                    scale_units='xy', angles='xy', scale=1, color='k')
 
             self.iter += 1
 
