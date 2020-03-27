@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from cvxpy import Variable, Problem, Minimize
 
 from ml.initializers import random_uniform
 from optimization.optimizer import Optimizer
@@ -129,8 +130,8 @@ class ProximalBundle(Optimizer):
                     ng0 = 1  # un-scaled stopping criterion
 
             # construct the master problem
-            d = sdpvar(self.n)
-            v = sdpvar(1, 1)
+            d = Variable(self.n)
+            v = Variable(1)
 
             M = v * np.ones(np.size(G, 1), 1) >= F + G * (d + self.wrt)
 
@@ -141,16 +142,12 @@ class ProximalBundle(Optimizer):
             c = v + self.mu * np.linalg.norm(d) ** 2 / 2
 
             # solve the master problem
-            ops = sdpsettings('solver', 'QUADPROG', 'verbose', 0)
-
-            diagnostics = optimize(M, c, ops)
+            diagnostics = Problem(Minimize(c), M).solve()
 
             if diagnostics.problem != 0:
                 status = 'error'
                 break
 
-            d = value(d)
-            v = value(v)
             nd = np.linalg.norm(d)
 
             # output statistics

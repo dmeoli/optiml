@@ -3,7 +3,7 @@ import itertools
 import numpy as np
 
 from ml.initializers import random_uniform
-from optimization.optimization_function import OptimizationFunction
+from optimization.optimization_function import OptimizationFunction, BoxConstrainedQuadratic
 from optimization.line_search import ArmijoWolfeLineSearch, BacktrackingLineSearch
 from utils import iter_mini_batches
 
@@ -57,6 +57,14 @@ class Optimizer:
         raise NotImplementedError
 
 
+class BoxConstrainedOptimizer(Optimizer):
+    def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+        if not isinstance(f, BoxConstrainedQuadratic):
+            raise TypeError('f is not a box-constrained quadratic function')
+        super().__init__(f, f.ub / 2,  # start from the middle of the box
+                         eps=eps, max_iter=max_iter, verbose=verbose, plot=plot)
+
+
 class LineSearchOptimizer(Optimizer):
 
     def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01,
@@ -106,6 +114,19 @@ class LineSearchOptimizer(Optimizer):
                            if True and the function's dimension is 2, nothing otherwise.
         """
         super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
+        if not np.isscalar(m_inf):
+            raise ValueError('m_inf is not a real scalar')
+        self.m_inf = m_inf
+        if 0 < m2 < 1:
+            self.line_search = ArmijoWolfeLineSearch(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a, verbose)
+        else:
+            self.line_search = BacktrackingLineSearch(f, max_f_eval, m1, a_start, min_a, tau, verbose)
+
+
+class BoxConstrainedLineSearchOptimizer(BoxConstrainedOptimizer):
+    def __init__(self, f, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, eps, max_iter, verbose, plot)
         if not np.isscalar(m_inf):
             raise ValueError('m_inf is not a real scalar')
         self.m_inf = m_inf

@@ -261,7 +261,7 @@ class BoxConstrainedQuadratic(Quadratic):
         pass
 
 
-class LagrangianBoxConstrained(Quadratic):
+class LagrangianBoxConstrained(BoxConstrainedQuadratic):
 
     def __init__(self, f):
         """
@@ -276,7 +276,8 @@ class LagrangianBoxConstrained(Quadratic):
         """
         if not isinstance(f, BoxConstrainedQuadratic):
             raise TypeError('f is not a box-constrained quadratic function')
-        super().__init__(f.Q, f.q)
+        super().__init__(f.Q, -f.q, f.ub)
+        self.n *= 2
         self.primal = f
         # Compute the LDL^T Cholesky symmetric indefinite factorization
         # of Q because it is symmetric but could be not positive definite.
@@ -285,28 +286,22 @@ class LagrangianBoxConstrained(Quadratic):
 
     def function(self, lmbda):
         """
-        The optimal solution of the Lagrangian relaxation is the (unique)
+        The optimal solution of the Lagrangian relaxation is the unique
         solution of the linear system:
 
                         Q x = -q - lambda^+ + lambda^-
 
         Since we have saved the LDL^T Cholesky factorization of Q,
-        i.e., Q = R^T R, where R is lower triangular and therefore R^T is upper
-        triangular, we obtain this by just two triangular backsolves:
+        i.e., Q = L D L^T, we obtain this by solving:
 
-                        R z = -q - lambda^+ + lambda^-
+                     L D L^T x = -q - lambda^+ + lambda^-
 
-                                 R^T x = z
-
-        return the function value and the primal solution, respectively.
         :param lmbda:
         :return: the function value
         """
-
-        ql = -self.q + lmbda[:self.n] - lmbda[self.n:]
-        y = ldl_solve((self.L, self.D, self.P), -ql)
-
-        return -((0.5 * y.T.dot(self.Q) + ql.T).dot(y) - lmbda[:self.n].T.dot(self.primal.ub))
+        ql = -self.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
+        x = ldl_solve((self.L, self.D, self.P), -ql)
+        return -((0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.n].T.dot(self.ub))
 
     def jacobian(self, lmbda):
         """
@@ -317,11 +312,9 @@ class LagrangianBoxConstrained(Quadratic):
         :param lmbda:
         :return:
         """
-
-        ql = -self.q + lmbda[:self.n] - lmbda[self.n:]
-        y = ldl_solve((self.L, self.D, self.P), -ql)
-
-        return np.hstack((self.primal.ub - y, y))
+        ql = -self.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
+        x = ldl_solve((self.L, self.D, self.P), -ql)
+        return np.hstack((self.ub - x, x))
 
 
 class Rosenbrock(OptimizationFunction):

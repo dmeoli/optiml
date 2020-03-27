@@ -1,12 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.optimization_function import BoxConstrainedQuadratic
-from optimization.optimizer import Optimizer
+from optimization.optimizer import BoxConstrainedOptimizer
 from utils import cholesky_solve
 
 
-class InteriorPoint(Optimizer):
+class InteriorPoint(BoxConstrainedOptimizer):
     # Apply the Primal-Dual (feasible) Interior (barrier) Method to the convex
     # Box-Constrained Quadratic program:
     #
@@ -40,10 +39,7 @@ class InteriorPoint(Optimizer):
     #     necessarily the optimal one
 
     def __init__(self, f, eps=1e-10, max_iter=1000, verbose=False, plot=False):
-        if not isinstance(f, BoxConstrainedQuadratic):
-            raise TypeError('f is not a box-constrained quadratic function')
-        super().__init__(f, f.ub / 2,  # start from the middle of the box
-                         eps=eps, max_iter=max_iter, verbose=verbose, plot=plot)
+        super().__init__(f, eps, max_iter, verbose, plot)
 
     def minimize(self):
 

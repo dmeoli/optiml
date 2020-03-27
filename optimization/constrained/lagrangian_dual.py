@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.optimization_function import BoxConstrainedQuadratic, LagrangianBoxConstrained
-from optimization.optimizer import LineSearchOptimizer
+from optimization.optimization_function import LagrangianBoxConstrained
+from optimization.optimizer import BoxConstrainedLineSearchOptimizer
 
 
-class LagrangianDual(LineSearchOptimizer):
+class LagrangianDual(BoxConstrainedLineSearchOptimizer):
     # Solve the convex Box-Constrained Quadratic program:
     #
     #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
@@ -20,10 +20,6 @@ class LagrangianDual(LineSearchOptimizer):
     # A rough Lagrangian heuristic is implemented whereby the dual solution is
     # projected on the box at each iteration to provide an upper bound, which
     # is then used in the stopping criterion.
-    #
-    # - dolh (logical scalar, optional, default value 1): true if a quick
-    #   Lagrangian Heuristic is implemented whereby the current solution of the
-    #   Lagrangian subproblem is projected on the box constraints
     #
     # - eps (real scalar, optional, default value 1e-6): the accuracy in the
     #   stopping criterion. This depends on the dolh parameter, see above: if
@@ -92,50 +88,40 @@ class LagrangianDual(LineSearchOptimizer):
     # - l ([2 * n x 1] real column vector, optional): the best Lagrangian
     #   multipliers found so far (possibly the optimal ones)
 
-    def __init__(self, f, dolh=True, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+    def __init__(self, f, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
                  tau=0.95, sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
-        if not isinstance(f, BoxConstrainedQuadratic):
-            raise TypeError('f is not a box-constrained quadratic function')
+        super().__init__(LagrangianBoxConstrained(f), eps, max_iter, max_f_eval,
+                         m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         self.primal = f
-        super().__init__(LagrangianBoxConstrained(f), f.ub / 2,  # start from the middle of the box,
-                         eps=eps, max_iter=max_iter, max_f_eval=max_f_eval, m1=m1, m2=m2, a_start=a_start,
-                         tau=tau, sfgrd=sfgrd, m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
-        self.dolh = dolh
 
     def _dolh(self, v, last_g):
-        if self.dolh:
-            y = np.copy(last_g[self.primal.n:])
+        y = np.copy(last_g[self.primal.n:])
 
-            # compute an heuristic solution out of the solution y of
-            # the Lagrangian relaxation by projecting y on the box
-            y[y < 0] = 0
-            idx = y > self.primal.ub
-            y[idx] = self.primal.ub[idx]
+        # compute an heuristic solution out of the solution y of
+        # the Lagrangian relaxation by projecting y on the box
+        y[y < 0] = 0
+        idx = y > self.primal.ub
+        y[idx] = self.primal.ub[idx]
 
-            # compute cost of feasible solution
-            pv = self.primal.function(y)
+        # compute cost of feasible solution
+        pv = self.primal.function(y)
 
-            if pv < v:  # it is better than best one found so far
-                self.wrt = np.copy(y)  # y becomes the incumbent
-                v = pv
+        if pv < v:  # it is better than best one found so far
+            self.wrt = np.copy(y)  # y becomes the incumbent
+            v = pv
 
         return v
 
     def minimize(self):
-        last_lmbda = np.zeros(2 * self.f.n)  # last point visited in the line search
+        last_lmbda = np.zeros(self.f.n)  # last point visited in the line search
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         v = self.primal.function(self.wrt)
 
         if self.verbose:
-            print('iter\tf eval\t', end='')
-            if self.dolh:
-                print('ub\t\t\tf(l)\t\tgap\t\t', end='')
-            else:
-                print('f(l)\t\t\t||g(l)||', end='')
-            print('\tls\tit\ta*')
+            print('iter\tf eval\tf(x)\t\tf(l)\t\tgap\t\t\tls\tit\ta*')
 
-        lmbda = np.zeros(2 * self.f.n)
+        lmbda = np.zeros(self.f.n)
 
         p, last_g = self.f.function(lmbda), self.f.jacobian(lmbda)
         v = self._dolh(v, last_g)
@@ -148,28 +134,15 @@ class LagrangianDual(LineSearchOptimizer):
             d = -last_g
             d[np.logical_and(lmbda <= 1e-12, d < 0)] = 0
 
-            if self.dolh:
-                # compute the relative gap
-                gap = (v + p) / max(abs(v), 1)
+            # compute the relative gap
+            gap = (v + p) / max(abs(v), 1)
 
-                if self.verbose:
-                    print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, -p, gap), end='')
+            if self.verbose:
+                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, -p, gap), end='')
 
-                if gap <= self.eps:
-                    status = 'optimal'
-                    break
-            else:
-                # compute the norm of the projected gradient
-                ng = np.linalg.norm(d)
-
-                if self.verbose:
-                    print('{:4d}\t{:4d}\t{:1.8e}\t{:1.4e}'.format(self.iter, f_eval, -p, ng), end='')
-
-                if self.iter is 1:
-                    ng0 = ng
-                if ng <= self.eps * ng0:
-                    status = 'optimal'
-                    break
+            if gap <= self.eps:
+                status = 'optimal'
+                break
 
             if f_eval >= self.line_search.max_f_eval:
                 status = 'stopped'

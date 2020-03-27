@@ -1,11 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.optimization_function import BoxConstrainedQuadratic
-from optimization.optimizer import Optimizer
+from optimization.optimizer import BoxConstrainedOptimizer
 
 
-class FrankWolfe(Optimizer):
+class FrankWolfe(BoxConstrainedOptimizer):
     # Apply the (possibly, stabilized) Frank-Wolfe algorithm with exact line
     # search to the convex Box-Constrained Quadratic program:
     #
@@ -46,10 +45,7 @@ class FrankWolfe(Optimizer):
     #     necessarily the optimal one
 
     def __init__(self, f, t=0., eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        if not isinstance(f, BoxConstrainedQuadratic):
-            raise TypeError('f is not a box-constrained quadratic function')
-        super().__init__(f, f.ub / 2,  # start from the middle of the box
-                         eps=eps, max_iter=max_iter, verbose=verbose, plot=plot)
+        super().__init__(f, eps, max_iter, verbose, plot)
         if not np.isreal(t) or not np.isscalar(t):
             raise ValueError('t is not a real scalar')
         if not 0 <= t < 1:

@@ -8,7 +8,8 @@ from scipy.optimize import minimize
 
 from ml.learning import Learner
 from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel, sigmoid_kernel
-from optimization.optimization_function import BoxConstrainedQuadratic
+from optimization.optimization_function import BoxConstrainedQuadratic, LagrangianBoxConstrained
+from optimization.optimizer import BoxConstrainedOptimizer, Optimizer
 
 plt.style.use('ggplot')
 
@@ -199,10 +200,19 @@ class SVC(SVM):
 
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
-        self.alphas = (solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                       scipy_solve_qp(BoxConstrainedQuadratic(P, q, ub), G, h, A, b, max_iter, verbose)
-                       if optimizer is scipy_solve_qp else optimizer(BoxConstrainedQuadratic(P, -np.ones_like(q), ub),
-                                                                     max_iter=max_iter, verbose=verbose).minimize()[0])
+            self.alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
+        else:
+            obj_fun = BoxConstrainedQuadratic(P, q, ub)
+            if optimizer is scipy_solve_qp:
+                self.alphas = scipy_solve_qp(obj_fun, G, h, A, b, max_iter, verbose)
+            elif issubclass(optimizer, BoxConstrainedOptimizer):
+                self.alphas = optimizer(obj_fun, max_iter=max_iter, verbose=verbose).minimize()[0]
+            elif issubclass(optimizer, Optimizer):
+                dual = LagrangianBoxConstrained(obj_fun)
+                lmbda = optimizer(dual, max_iter=max_iter, verbose=verbose).minimize()[0]
+                # self.alphas =
+            else:
+                raise TypeError('unknown optimizer type {}'.format(optimizer))
 
         self.sv_idx = np.argwhere(self.alphas > 1e-5).ravel()
         self.sv, self.sv_y, self.alphas = X[self.sv_idx], y[self.sv_idx], self.alphas[self.sv_idx]
@@ -280,10 +290,19 @@ class SVR(SVM):
 
         if optimizer is solve_qp:
             qpsolvers.cvxopt_.options['show_progress'] = verbose
-        alphas = (solve_qp(P, q, G, h, A, b, solver='cvxopt') if optimizer is solve_qp else
-                  scipy_solve_qp(BoxConstrainedQuadratic(P, q, ub), G, h, A, b, max_iter, verbose)
-                  if optimizer is scipy_solve_qp else optimizer(BoxConstrainedQuadratic(P, q, ub),
-                                                                max_iter=max_iter, verbose=verbose).minimize()[0])
+            alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
+        else:
+            obj_fun = BoxConstrainedQuadratic(P, q, ub)
+            if optimizer is scipy_solve_qp:
+                alphas = scipy_solve_qp(obj_fun, G, h, A, b, max_iter, verbose)
+            elif issubclass(optimizer, BoxConstrainedOptimizer):
+                alphas = optimizer(obj_fun, max_iter=max_iter, verbose=verbose).minimize()[0]
+            elif issubclass(optimizer, Optimizer):
+                dual = LagrangianBoxConstrained(obj_fun)
+                lmbda = optimizer(dual, max_iter=max_iter, verbose=verbose).minimize()[0]
+                # alphas =
+            else:
+                raise TypeError('unknown optimizer type {}'.format(optimizer))
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 

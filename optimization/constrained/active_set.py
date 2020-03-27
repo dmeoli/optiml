@@ -2,12 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.linalg import ldl
 
-from optimization.optimization_function import BoxConstrainedQuadratic
-from optimization.optimizer import Optimizer
+from optimization.optimizer import BoxConstrainedOptimizer
 from utils import ldl_solve
 
 
-class ActiveSet(Optimizer):
+class ActiveSet(BoxConstrainedOptimizer):
     # Apply the Active Set Method to the convex Box-Constrained Quadratic
     # program:
     #
@@ -36,10 +35,7 @@ class ActiveSet(Optimizer):
     #     necessarily the optimal one
 
     def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        if not isinstance(f, BoxConstrainedQuadratic):
-            raise TypeError('f is not a box-constrained quadratic function')
-        super().__init__(f, f.ub / 2,  # start from the middle of the box
-                         eps=eps, max_iter=max_iter, verbose=verbose, plot=plot)
+        super().__init__(f, eps, max_iter, verbose, plot)
 
     def minimize(self):
 

@@ -15,8 +15,6 @@ def cholesky_solve(A, b):
 def ldl_solve(ldl_factor, b):
     """Solve a symmetric indefinite linear system
     A x = b using the LDL^T Cholesky factorization."""
-    # another strategy could be to adjust the Hessian matrix to be positive
-    # definite based on the minimum eigenvalue but this way it's very expensive
     L, D, P = ldl_factor  # complexity O(n^3/3)
     return np.linalg.solve(L.T, (np.linalg.solve(D, np.linalg.solve(L, b[P]))))
 
