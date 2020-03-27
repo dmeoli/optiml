@@ -208,9 +208,10 @@ class SVC(SVM):
             elif issubclass(optimizer, BoxConstrainedOptimizer):
                 self.alphas = optimizer(obj_fun, max_iter=max_iter, verbose=verbose).minimize()[0]
             elif issubclass(optimizer, Optimizer):
+                # dual lagrangian relaxation of the box-constrained problem
                 dual = LagrangianBoxConstrained(obj_fun)
-                lmbda = optimizer(dual, max_iter=max_iter, verbose=verbose).minimize()[0]
-                self.alphas = dual.primal_solution(lmbda)
+                optimizer(dual, max_iter=max_iter, verbose=verbose).minimize()
+                self.alphas = dual.primal_solution
             else:
                 raise TypeError('unknown optimizer type {}'.format(optimizer))
 
@@ -298,9 +299,10 @@ class SVR(SVM):
             elif issubclass(optimizer, BoxConstrainedOptimizer):
                 alphas = optimizer(obj_fun, max_iter=max_iter, verbose=verbose).minimize()[0]
             elif issubclass(optimizer, Optimizer):
+                # dual lagrangian relaxation of the box-constrained problem
                 dual = LagrangianBoxConstrained(obj_fun)
-                lmbda = optimizer(dual, max_iter=max_iter, verbose=verbose).minimize()[0]
-                alphas = dual.primal_solution(lmbda)
+                optimizer(dual, max_iter=max_iter, verbose=verbose).minimize()
+                alphas = dual.primal_solution
             else:
                 raise TypeError('unknown optimizer type {}'.format(optimizer))
         self.alphas_p = alphas[:m]

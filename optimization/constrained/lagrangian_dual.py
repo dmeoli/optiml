@@ -93,38 +93,17 @@ class LagrangianDual(BoxConstrainedLineSearchOptimizer):
         super().__init__(LagrangianBoxConstrained(f), eps, max_iter, max_f_eval,
                          m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         self.primal = f
-
-    def _dolh(self, v, last_g):
-        y = np.copy(last_g[self.primal.n:])
-
-        # compute an heuristic solution out of the solution y of
-        # the Lagrangian relaxation by projecting y on the box
-        y[y < 0] = 0
-        idx = y > self.primal.ub
-        y[idx] = self.primal.ub[idx]
-
-        # compute cost of feasible solution
-        pv = self.primal.function(y)
-
-        if pv < v:  # it is better than best one found so far
-            self.wrt = np.copy(y)  # y becomes the incumbent
-            v = pv
-
-        return v
+        self.lmbda = np.zeros(self.f.n)
 
     def minimize(self):
         last_lmbda = np.zeros(self.f.n)  # last point visited in the line search
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
-        v = self.primal.function(self.wrt)
-
         if self.verbose:
             print('iter\tf eval\tf(x)\t\tf(l)\t\tgap\t\t\tls\tit\ta*')
 
-        lmbda = np.zeros(self.f.n)
-
-        p, last_g = self.f.function(lmbda), self.f.jacobian(lmbda)
-        v = self._dolh(v, last_g)
+        p, last_g = self.f.function(self.lmbda), self.f.jacobian(self.lmbda)
+        self.wrt, v = self.f.primal_solution, self.f.primal_value
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
@@ -132,13 +111,13 @@ class LagrangianDual(BoxConstrainedLineSearchOptimizer):
         while True:
             # project the direction = -gradient over the active constraints
             d = -last_g
-            d[np.logical_and(lmbda <= 1e-12, d < 0)] = 0
+            d[np.logical_and(self.lmbda <= 1e-12, d < 0)] = 0
 
             # compute the relative gap
-            gap = (v + p) / max(abs(v), 1)
+            gap = (v - p) / max(abs(v), 1)
 
             if self.verbose:
-                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, -p, gap), end='')
+                print('{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, p, gap), end='')
 
             if gap <= self.eps:
                 status = 'optimal'
@@ -154,16 +133,15 @@ class LagrangianDual(BoxConstrainedLineSearchOptimizer):
 
             idx = d < 0  # negative gradient entries
             if any(idx):
-                max_t = min(self.line_search.a_start, min(-lmbda[idx] / d[idx]))
-            else:
-                max_t = self.line_search.a_start
+                max_t = min(self.line_search.a_start, min(-self.lmbda[idx] / d[idx]))
+                self.line_search.a_start = max_t
 
             phi_p0 = last_g.T.dot(d)
 
             # compute step size
-            self.line_search.a_start = max_t
-            a, p, last_lmbda, last_g, f_eval = self.line_search.search(d, lmbda, last_lmbda, last_g, f_eval, p, phi_p0)
-            v = self._dolh(v, last_g)
+            a, p, last_lmbda, last_g, f_eval = self.line_search.search(
+                d, self.lmbda, last_lmbda, last_g, f_eval, -p, phi_p0)
+            self.wrt, v = self.f.primal_solution, self.f.primal_value
 
             if self.verbose:
                 print('\t{:1.4e}'.format(a))
@@ -172,7 +150,7 @@ class LagrangianDual(BoxConstrainedLineSearchOptimizer):
                 status = 'error'
                 break
 
-            lmbda += a * d
+            self.lmbda += a * d
 
             # TODO add plotting
 
@@ -182,4 +160,4 @@ class LagrangianDual(BoxConstrainedLineSearchOptimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, v, status, lmbda
+        return self.wrt, v, status, self.lmbda, p
