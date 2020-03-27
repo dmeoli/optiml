@@ -51,8 +51,8 @@ class OptimizationFunction:
         surface_plot = plt.figure()
         surface_axes = Axes3D(surface_plot)
 
-        z = np.array([self.function(np.array([x, y]).reshape(-1, 1))
-                      for x, y in zip(np.ravel(X), np.ravel(Y))]).reshape(X.shape)
+        z = np.array([self.function(np.array([x, y]))
+                      for x, y in zip(X.ravel(), Y.ravel())]).reshape(X.shape)
 
         surface_axes.plot_surface(X, Y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
 
@@ -370,6 +370,5 @@ class Ackley(OptimizationFunction):
         :param x: 1D array of points at which the Ackley function is to be computed.
         :return:  the value of the Ackley function.
         """
-        x = np.array(x)
         return (-20 * np.exp(-0.2 * np.sqrt(np.sum(x ** 2) / x.size)) -
                 np.exp((np.sum(np.cos(2.0 * np.pi * x))) / x.size) + np.e + 20)

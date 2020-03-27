@@ -57,6 +57,8 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         return self.neural_net._pack(*self.neural_net.backward(y_pred - y))
 
     def plot(self):
+        surface_plot, surface_axes, contour_plot, contour_axes = super().plot()
+        # TODO add accuracy plot over iterations
         fig, loss = plt.subplots()
         loss.plot(self.loss_history[0], 'b.', alpha=0.2)
         # loss.plot(self.loss_history[1], 'r-')
