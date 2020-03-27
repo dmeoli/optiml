@@ -9,7 +9,26 @@ from optimization.constrained.frank_wolfe import FrankWolfe
 from optimization.constrained.interior_point import InteriorPoint
 from optimization.constrained.lagrangian_dual import LagrangianDual
 from optimization.constrained.projected_gradient import ProjectedGradient
+from optimization.unconstrained.accelerated_gradient import AcceleratedGradient, SteepestDescentAcceleratedGradient
+from optimization.unconstrained.adadelta import AdaDelta
+from optimization.unconstrained.adagrad import AdaGrad
+from optimization.unconstrained.adam import Adam
+from optimization.unconstrained.adamax import AdaMax
+from optimization.unconstrained.amsgrad import AMSGrad
+from optimization.unconstrained.conjugate_gradient import NonlinearConjugateGradient
+from optimization.unconstrained.gradient_descent import GradientDescent, SteepestGradientDescent
+from optimization.unconstrained.heavy_ball_gradient import HeavyBallGradient
+from optimization.unconstrained.quasi_newton import BFGS
+from optimization.unconstrained.rmsprop import RMSProp
+from optimization.unconstrained.rprop import RProp
 from utils import load_monk
+
+line_search_optimizers = [NonlinearConjugateGradient, SteepestDescentAcceleratedGradient,
+                          SteepestGradientDescent, HeavyBallGradient, BFGS]
+
+stochastic_adaptive_optimizers = [Adam, AdaMax, AMSGrad, AdaGrad, AdaDelta, RProp, RMSProp]
+
+stochastic_optimizers = [GradientDescent, AcceleratedGradient]
 
 constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint,
                           LagrangianDual, solve_qp, scipy_solve_qp]
@@ -19,7 +38,7 @@ kernels = [linear_kernel, polynomial_kernel, rbf_kernel]
 if __name__ == '__main__':
     for i in (1, 2, 3):
         X_train, X_test, y_train, y_test = load_monk(i)
-        svc = SVC(kernel=polynomial_kernel).fit(X_train, y_train, optimizer=ProjectedGradient, verbose=False)
+        svc = SVC(kernel=polynomial_kernel).fit(X_train, y_train, optimizer=Adam, verbose=False)
         print("monk #" + str(i) + " accuracy: " + str(accuracy_score(svc.predict(X_test), y_test)))
 
         X_train, X_test, y_train, y_test = load_monk(i)

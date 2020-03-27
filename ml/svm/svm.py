@@ -210,7 +210,7 @@ class SVC(SVM):
             elif issubclass(optimizer, Optimizer):
                 dual = LagrangianBoxConstrained(obj_fun)
                 lmbda = optimizer(dual, max_iter=max_iter, verbose=verbose).minimize()[0]
-                # self.alphas =
+                self.alphas = dual.primal_solution(lmbda)
             else:
                 raise TypeError('unknown optimizer type {}'.format(optimizer))
 
@@ -300,7 +300,7 @@ class SVR(SVM):
             elif issubclass(optimizer, Optimizer):
                 dual = LagrangianBoxConstrained(obj_fun)
                 lmbda = optimizer(dual, max_iter=max_iter, verbose=verbose).minimize()[0]
-                # alphas =
+                alphas = dual.primal_solution(lmbda)
             else:
                 raise TypeError('unknown optimizer type {}'.format(optimizer))
         self.alphas_p = alphas[:m]

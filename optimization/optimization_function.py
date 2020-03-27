@@ -267,7 +267,7 @@ class LagrangianBoxConstrained(BoxConstrainedQuadratic):
         """
         Construct the lagrangian relaxation of a box-constrained quadratic function defined as:
 
-                        1/2 x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x
+                       1/2 x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x
                     1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ u
 
         where lambda^+ are the first n components of lmbda, and lambda^- the last n components;
@@ -315,6 +315,15 @@ class LagrangianBoxConstrained(BoxConstrainedQuadratic):
         ql = -self.q + lmbda[:self.primal.n] - lmbda[self.primal.n:]
         x = ldl_solve((self.L, self.D, self.P), -ql)
         return np.hstack((self.ub - x, x))
+
+    def primal_solution(self, lmbda):
+        x = self.jacobian(lmbda)[self.primal.n:]
+        # compute an heuristic solution out of the solution x of
+        # the Lagrangian relaxation by projecting x on the box
+        x[x < 0] = 0
+        idx = x > self.ub
+        x[idx] = self.ub[idx]
+        return x
 
 
 class Rosenbrock(OptimizationFunction):
