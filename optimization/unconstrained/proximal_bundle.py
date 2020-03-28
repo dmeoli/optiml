@@ -101,9 +101,9 @@ class ProximalBundle(Optimizer):
 
         if self.verbose:
             if self.f.f_star() < np.inf:
-                print('iter\tf(x) - f*\t\t||d||\t\tstep', end='')
+                print('iter\tf(x) - f*\t||d||\t\tstep')
             else:
-                print('iter\tf(x)\t\t||d||\t\tstep', end='')
+                print('iter\tf(x)\t\t||d||\t\tstep')
 
         # compute first function and subgradient
         fx, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
@@ -151,9 +151,9 @@ class ProximalBundle(Optimizer):
             if self.verbose:
                 if self.f.f_star() < np.inf:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(
-                        self.iter, (fx - self.f.f_star()) / max(abs(self.f.f_star()), 1), nd))
+                        self.iter, (fx - self.f.f_star()) / max(abs(self.f.f_star()), 1), nd), end='')
                 else:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, fx, nd))
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, fx, nd), end='')
 
             # stopping criteria
             if self.mu * nd <= self.eps * ng0:
