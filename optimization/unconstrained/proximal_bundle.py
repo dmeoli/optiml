@@ -1,6 +1,7 @@
+import cvxpy
 import matplotlib.pyplot as plt
 import numpy as np
-from cvxpy import Variable, Problem, Minimize
+from cvxpy import Variable, Problem, Minimize, sum_squares
 
 from ml.initializers import random_uniform
 from optimization.optimizer import Optimizer
@@ -78,9 +79,6 @@ class ProximalBundle(Optimizer):
     #   = 'stopped': the algorithm terminated having exhausted the maximum
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
-    #
-    #   = 'error': the solver of the master QP problem solver reported
-    #     some error, which requires to stop optimization
 
     def __init__(self, f, wrt=random_uniform, batch_size=None, mu=1, m1=0.01, eps=1e-6,
                  max_iter=1000, m_inf=-np.inf, verbose=False, plot=False):
@@ -103,61 +101,61 @@ class ProximalBundle(Optimizer):
 
         if self.verbose:
             if self.f.f_star() < np.inf:
-                print('iter\tf(x) - f*\t\t|| d ||\t\tstep', end='')
+                print('iter\tf(x) - f*\t\t||d||\t\tstep', end='')
             else:
-                print('iter\tf(x)\t\t|| d ||\t\tstep', end='')
+                print('iter\tf(x)\t\t||d||\t\tstep', end='')
+
+        # compute first function and subgradient
+        fx, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+
+        G = g  # matrix of subgradients
+        F = fx - g.dot(self.wrt)  # vector of translated function values
+        # each (fxi , gi , xi) gives the constraint
+        #
+        #  v >= fxi + gi' * (x + d - xi) = gi' * (x + d) + (fi - gi' * xi)
+        #
+        # so we just keep the single constant fi - gi' * xi instead of xi
+
+        ng = np.linalg.norm(g)
+        if self.eps < 0:
+            ng0 = -ng  # norm of first subgradient
+        else:
+            ng0 = 1  # un-scaled stopping criterion
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args in self.args:
-            if self.iter == 1:
-                # compute first function and subgradient
-                fx, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
-
-                G = g.T  # matrix of subgradients
-                F = fx - g.T * self.wrt  # vector of translated function values
-                # each (fxi , gi , xi) gives the constraint
-                #
-                #  v >= fxi + gi' * (x + d - xi) = gi' * (x + d) + (fi - gi' * xi)
-                #
-                # so we just keep the single constant fi - gi' * xi instead of xi
-
-                ng = np.linalg.norm(g)
-                if self.eps < 0:
-                    ng0 = -ng  # norm of first subgradient
-                else:
-                    ng0 = 1  # un-scaled stopping criterion
+        while True:
 
             # construct the master problem
             d = Variable(self.n)
             v = Variable(1)
 
-            M = v * np.ones(np.size(G, 1), 1) >= F + G * (d + self.wrt)
+            M = [v >= F + G * (d + self.wrt)]
 
             if self.f.f_star() < np.inf:
-                # this is cheating: use information about x_star in the model
+                # cheating: use information about x_star in the model
                 M = M + [v >= self.f.f_star()]
 
-            c = v + self.mu * np.linalg.norm(d) ** 2 / 2
+            c = v + self.mu * sum_squares(d) / 2
 
             # solve the master problem
-            diagnostics = Problem(Minimize(c), M).solve()
+            Problem(Minimize(c), M).solve(solver='OSQP')
 
-            if diagnostics.problem != 0:
-                status = 'error'
-                break
+            d = d.value
+            v = v.value
 
             nd = np.linalg.norm(d)
 
             # output statistics
-            if self.f.f_star() < np.inf:
-                print('%4d\t%1.4e\t%1.4e'.format(self.iter, (fx - self.f.f_star()) / max(abs(self.f.f_star()), 1), nd))
-            else:
-                print('%4d\t%1.4e\t%1.4e'.format(self.iter, fx, nd))
+            if self.verbose:
+                if self.f.f_star() < np.inf:
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(
+                        self.iter, (fx - self.f.f_star()) / max(abs(self.f.f_star()), 1), nd))
+                else:
+                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, fx, nd))
 
             # stopping criteria
-
             if self.mu * nd <= self.eps * ng0:
                 status = 'optimal'
                 break
@@ -167,32 +165,31 @@ class ProximalBundle(Optimizer):
                 break
 
             # compute function and subgradient
-            fd, g = self.f.function(self.wrt + d, *args), self.f.jacobian(self.wrt + d, *args)
+            fd, g = self.f.function(self.wrt + d), self.f.jacobian(self.wrt + d)
 
             if fd <= self.m_inf:
                 status = 'unbounded'
                 break
 
-            G = np.vstack((G, g.T))
-            F = np.vstack([F, fd - g.T * (self.wrt + d)])
+            G = np.vstack((G, g))
+            F = np.vstack((F, fd - g.dot(self.wrt + d)))
 
             # SS / NS decision
-
-            new_x = self.wrt + d
-
             if fd <= fx + self.m1 * (v - fx):
-                print('\tSS')
+                if self.verbose:
+                    print('\tSS')
                 if self.plot and self.n == 2:
-                    p_xy = np.vstack((self.wrt, new_x)).T
+                    p_xy = np.vstack((self.wrt, self.wrt + d)).T
                     contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
                                         p_xy[1, 1:] - p_xy[1, :-1], scale_units='xy', angles='xy', scale=1, color='k')
 
-                self.wrt = new_x
+                self.wrt += d
                 fx = fd
             else:
-                print('\tNS')
+                if self.verbose:
+                    print('\tNS')
                 if self.plot and self.n == 2:
-                    p_xy = np.vstack((self.wrt, new_x)).T
+                    p_xy = np.vstack((self.wrt, self.wrt + d)).T
                     contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
                                         p_xy[1, 1:] - p_xy[1, :-1], scale_units='xy', angles='xy', scale=1, color='b')
 

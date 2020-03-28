@@ -8,8 +8,10 @@ python:
 install:
   - pip install autograd
   - pip install cvxopt
+  - pip install cvxpy
   - pip install matplotlib
   - pip install numpy
+  - pip install osqp
   - pip install pytest-cov
   - pip install qpsolvers
   - pip install scikit-learn

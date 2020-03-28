@@ -59,12 +59,12 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - Others
             - [ ] Proximal Bundle
     - Box-Constrained Optimization
-        - Exact Line Search Methods
+        - Primal
             - [x] Projected Gradient
             - [x] Frank-Wolfe or Conditional Gradient
             - [x] Active Set
             - [x] Interior Point
-        - Inexact Line Search Methods
+        - Dual
             - [x] Lagrangian Dual
         - Others
             - [ ] Sequential Minimal Optimization (SMO)

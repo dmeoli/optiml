@@ -102,7 +102,7 @@ class LagrangianDual(BoxConstrainedOptimizer, LineSearchOptimizer):
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
-            print('iter\tf eval\tf(x)\t\tf(l)\t\tgap\t\t\tls\tit\ta*')
+            print('iter\tf eval\tub\t\tp(l)\t\tgap\t\t\tls\tit\ta*')
 
         p, last_g = self.f.function(self.lmbda), self.f.jacobian(self.lmbda)
         self.wrt, v = self.f.primal_solution, self.f.primal_value

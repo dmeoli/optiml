@@ -102,11 +102,11 @@ class Quadratic(OptimizationFunction):
 
     def x_star(self):
         try:
-            # alternatively we can solve the linear system as np.linalg.inv(self.Q).dot(self.q)
+            # alternatively we can solve the linear system as np.linalg.inv(self.Q).dot(-self.q)
             # but the complexity increase about 3 times as much as LU factorization used by
-            # default in np.linalg.solve(self.Q, self.q) because it requires is O(2n^3) to
-            # compute the inverse of the Hessian matrix and O(2n^2) to multiply this by the q vector
-            return -np.linalg.solve(self.Q, self.q)  # complexity O(2n^3/3)
+            # default in np.linalg.solve(self.Q, -self.q) because it requires is O(2n^3) to
+            # compute the inverse of the Hessian matrix and O(2n^2) to multiply this by the -q vector
+            return np.linalg.solve(self.Q, -self.q)  # complexity O(2n^3/3)
         except np.linalg.LinAlgError:  # the Hessian matrix is singular
             return np.full(self.n, np.inf)
 
