@@ -258,7 +258,7 @@ class BoxConstrainedQuadratic(Quadratic):
         return surface_plot, surface_axes, contour_plot, contour_axes
 
 
-class LagrangianBoxConstrained(BoxConstrainedQuadratic):
+class LagrangianBoxConstrained(Quadratic):
 
     def __init__(self, f):
         """
@@ -273,7 +273,7 @@ class LagrangianBoxConstrained(BoxConstrainedQuadratic):
         """
         if not isinstance(f, BoxConstrainedQuadratic):
             raise TypeError('f is not a box-constrained quadratic function')
-        super().__init__(f.Q, f.q, f.ub)
+        super().__init__(f.Q, f.q)
         self.n *= 2
         # Compute the LDL^T Cholesky symmetric indefinite factorization
         # of Q because it is symmetric but could be not positive definite.
@@ -300,7 +300,7 @@ class LagrangianBoxConstrained(BoxConstrainedQuadratic):
         """
         ql = self.q.T + lmbda[:self.primal.n] - lmbda[self.primal.n:]
         x = ldl_solve((self.L, self.D, self.P), -ql)
-        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.n].dot(self.ub)
+        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.n].dot(self.primal.ub)
 
     def jacobian(self, lmbda):
         """
@@ -313,13 +313,13 @@ class LagrangianBoxConstrained(BoxConstrainedQuadratic):
         """
         ql = self.q.T + lmbda[:self.primal.n] - lmbda[self.primal.n:]
         x = ldl_solve((self.L, self.D, self.P), -ql)
-        g = np.hstack((self.ub - x, x))
+        g = np.hstack((self.primal.ub - x, x))
 
         # compute an heuristic solution out of the solution x of
         # the Lagrangian relaxation by projecting x on the box
         x[x < 0] = 0
-        idx = x > self.ub
-        x[idx] = self.ub[idx]
+        idx = x > self.primal.ub
+        x[idx] = self.primal.ub[idx]
 
         v = self.primal.function(x)
         if v < self.primal_value:

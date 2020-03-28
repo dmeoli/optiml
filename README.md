@@ -76,7 +76,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [x] Rosenbrock
         - [x] Ackley
         - [x] Quadratic
-            - [x] Lagrangian Box-Constrained Quadratic
+            - [x] Lagrangian Box-Constrained
     - Constrained
         - [x] Box-Constrained Quadratic
 

@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from optimization.optimization_function import LagrangianBoxConstrained
-from optimization.optimizer import BoxConstrainedLineSearchOptimizer
+from optimization.optimizer import LineSearchOptimizer, BoxConstrainedOptimizer
 
 
-class LagrangianDual(BoxConstrainedLineSearchOptimizer):
+class LagrangianDual(BoxConstrainedOptimizer, LineSearchOptimizer):
     # Solve the convex Box-Constrained Quadratic program:
     #
     #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
@@ -90,8 +90,10 @@ class LagrangianDual(BoxConstrainedLineSearchOptimizer):
 
     def __init__(self, f, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
                  tau=0.95, sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
-        super().__init__(LagrangianBoxConstrained(f), eps, max_iter, max_f_eval,
-                         m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        BoxConstrainedOptimizer.__init__(self, f, eps, max_iter, verbose, plot)
+        LineSearchOptimizer.__init__(self, LagrangianBoxConstrained(f), eps=eps, max_iter=max_iter,
+                                     max_f_eval=max_f_eval, m1=m1, m2=m2, a_start=a_start, tau=tau,
+                                     sfgrd=sfgrd, m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
         self.primal = f
         self.lmbda = np.zeros(self.f.n)
 
