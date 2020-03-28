@@ -1,4 +1,3 @@
-import cvxpy
 import matplotlib.pyplot as plt
 import numpy as np
 from cvxpy import Variable, Problem, Minimize, sum_squares
@@ -134,7 +133,7 @@ class ProximalBundle(Optimizer):
             M = [v >= F + G * (self.wrt.reshape((-1, 1)) + d)]
 
             if self.f.f_star() < np.inf:
-                # cheating: use information about x_star in the model
+                # cheating: use information about f_star in the model
                 M = M + [v >= self.f.f_star()]
 
             c = v + self.mu * sum_squares(d) / 2
@@ -200,4 +199,4 @@ class ProximalBundle(Optimizer):
             print()
         if self.plot and self.n == 2:
             plt.show()
-        return self.wrt, v, status
+        return self.wrt, v.item(), status

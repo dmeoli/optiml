@@ -121,3 +121,10 @@ def split_data(X1, y1, X2, y2, percent):
     y_test = np.hstack((y1_test, y2_test))
 
     return X_train, y_train, X_test, y_test
+
+
+def not_test(func):
+    """Decorator to mark a function or method as *not* a test
+    """
+    func.__test__ = False
+    return func
