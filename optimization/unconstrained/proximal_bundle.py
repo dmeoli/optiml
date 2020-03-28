@@ -128,10 +128,10 @@ class ProximalBundle(Optimizer):
         while True:
 
             # construct the master problem
-            d = Variable(self.n)
+            d = Variable((self.n, 1))
             v = Variable(1)
 
-            M = [v >= F + G * (d + self.wrt)]
+            M = [v >= F + G * (self.wrt.reshape((-1, 1)) + d)]
 
             if self.f.f_star() < np.inf:
                 # cheating: use information about x_star in the model
@@ -165,31 +165,32 @@ class ProximalBundle(Optimizer):
                 break
 
             # compute function and subgradient
-            fd, g = self.f.function(self.wrt + d), self.f.jacobian(self.wrt + d)
+            fd, g = (self.f.function(self.wrt.reshape((-1, 1)) + d).item(),
+                     self.f.jacobian(self.wrt.reshape((-1, 1)) + d))
 
             if fd <= self.m_inf:
                 status = 'unbounded'
                 break
 
             G = np.vstack((G, g))
-            F = np.vstack((F, fd - g.dot(self.wrt + d)))
+            F = np.vstack((F, fd - g.dot(self.wrt.reshape((-1, 1)) + d)))
 
             # SS / NS decision
+            last_wrt = (self.wrt.reshape((-1, 1)) + d).reshape(self.wrt.shape)
             if fd <= fx + self.m1 * (v - fx):
                 if self.verbose:
                     print('\tSS')
                 if self.plot and self.n == 2:
-                    p_xy = np.vstack((self.wrt, self.wrt + d)).T
+                    p_xy = np.vstack((self.wrt, last_wrt)).T
                     contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
                                         p_xy[1, 1:] - p_xy[1, :-1], scale_units='xy', angles='xy', scale=1, color='k')
-
-                self.wrt += d
+                self.wrt = last_wrt
                 fx = fd
             else:
                 if self.verbose:
                     print('\tNS')
                 if self.plot and self.n == 2:
-                    p_xy = np.vstack((self.wrt, self.wrt + d)).T
+                    p_xy = np.vstack((self.wrt, last_wrt)).T
                     contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
                                         p_xy[1, 1:] - p_xy[1, :-1], scale_units='xy', angles='xy', scale=1, color='b')
 
