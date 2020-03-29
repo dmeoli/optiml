@@ -193,6 +193,8 @@ class BoxConstrainedQuadratic(Quadratic):
             if u_max <= u_min:
                 raise ValueError('u_max must be > u_min')
 
+            np.random.seed(n)
+
             ub = u_min * np.ones(n) + (u_max - u_min) * np.random.rand(n)
 
             G = np.random.rand(round(rank * n), n)
