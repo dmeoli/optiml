@@ -154,7 +154,7 @@ quad5 = Quadratic([[101, -99], [-99, 101]], [10, 5])
 
 class BoxConstrainedQuadratic(Quadratic):
 
-    def __init__(self, Q=None, q=None, ub=None, n=10, actv=0.5, rank=1.1, ecc=0.99, u_min=8, u_max=12):
+    def __init__(self, Q=None, q=None, ub=None, n=2, actv=0.5, rank=1.1, ecc=0.99, u_min=8, u_max=12):
         """
         Construct a box-constrained quadratic function defined as:
 
