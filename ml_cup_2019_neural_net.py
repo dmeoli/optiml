@@ -16,6 +16,7 @@ from optimization.unconstrained.amsgrad import AMSGrad
 from optimization.unconstrained.conjugate_gradient import NonlinearConjugateGradient
 from optimization.unconstrained.gradient_descent import GradientDescent, SteepestGradientDescent
 from optimization.unconstrained.heavy_ball_gradient import HeavyBallGradient
+from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.quasi_newton import BFGS
 from optimization.unconstrained.rmsprop import RMSProp
 from optimization.unconstrained.rprop import RProp
@@ -30,6 +31,8 @@ epochs = [1000, 500, 200, 100]
 stochastic_adaptive_optimizers = [Adam, AdaMax, AMSGrad, AdaGrad, AdaDelta, RProp, RMSProp]
 
 stochastic_optimizers = [GradientDescent, AcceleratedGradient]
+
+others = [ProximalBundle]
 
 momentum = [0.5, 0.6, 0.7, 0.8, 0.9]
 

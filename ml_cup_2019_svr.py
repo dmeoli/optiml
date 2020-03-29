@@ -23,6 +23,7 @@ from optimization.unconstrained.amsgrad import AMSGrad
 from optimization.unconstrained.conjugate_gradient import NonlinearConjugateGradient
 from optimization.unconstrained.gradient_descent import GradientDescent, SteepestGradientDescent
 from optimization.unconstrained.heavy_ball_gradient import HeavyBallGradient
+from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.quasi_newton import BFGS
 from optimization.unconstrained.rmsprop import RMSProp
 from optimization.unconstrained.rprop import RProp
@@ -33,6 +34,8 @@ line_search_optimizers = [NonlinearConjugateGradient, SteepestDescentAccelerated
 stochastic_adaptive_optimizers = [Adam, AdaMax, AMSGrad, AdaGrad, AdaDelta, RProp, RMSProp]
 
 stochastic_optimizers = [GradientDescent, AcceleratedGradient]
+
+others = [ProximalBundle]
 
 constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint,
                           LagrangianDual, solve_qp, scipy_solve_qp]
@@ -46,7 +49,7 @@ if __name__ == '__main__':
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, test_size=0.2)
 
     svr = MultiTargetRegressor(SVR(kernel=rbf_kernel, eps=0.1))
-    svr.fit(X_train, y_train, optimizer=Adam, verbose=False)
+    svr.fit(X_train, y_train, optimizer=ProjectedGradient, verbose=False)
     pred = svr.predict(X_test)
     print('mse: ', mean_squared_error(pred, y_test))
     print('mee: ', mean_euclidean_error(pred, y_test))
