@@ -57,7 +57,9 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
                 - [x] standard momentum
                 - [x] Nesterov momentum
         - Others
-            - [ ] Proximal Bundle
+            - [x] Proximal Bundle
+                - [x] standard momentum
+                - [x] Nesterov momentum
     - Box-Constrained Optimization
         - Primal
             - [x] Projected Gradient
