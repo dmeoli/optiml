@@ -124,8 +124,8 @@ class LinearModelLossFunction(OptimizationFunction):
     def x_star(self):
         if self.loss is mean_squared_error:
             if not hasattr(self, 'x_opt'):
-                # or np.linalg.lstsq(self.X, self.y)[0]
-                self.x_opt = np.linalg.inv(self.X.T.dot(self.X)).dot(self.X.T).dot(self.y)
+                # or np.linalg.inv(self.X.T.dot(self.X)).dot(self.X.T).dot(self.y)
+                self.x_opt = np.linalg.lstsq(self.X, self.y)[0]
             return self.x_opt
 
     def f_star(self):

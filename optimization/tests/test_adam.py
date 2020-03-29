@@ -5,9 +5,19 @@ from optimization.optimization_function import quad1, quad2, Rosenbrock
 from optimization.unconstrained.adam import Adam
 
 
+def test_Adam_quadratic():
+    assert np.allclose(Adam(quad1).minimize()[0], quad1.x_star(), rtol=0.1)
+    assert np.allclose(Adam(quad2).minimize()[0], quad2.x_star(), rtol=0.1)
+
+
+def test_Adam_Rosenbrock():
+    obj = Rosenbrock()
+    assert np.allclose(Adam(obj, max_iter=2000).minimize()[0], obj.x_star(), rtol=0.1)
+
+
 def test_Adam_standard_momentum_quadratic():
     assert np.allclose(Adam(quad1, momentum_type='standard').minimize()[0], quad1.x_star(), rtol=0.1)
-    assert np.allclose(Adam(quad2, momentum_type='standard').minimize()[0], quad2.x_star(), rtol=0.01)
+    assert np.allclose(Adam(quad2, momentum_type='standard').minimize()[0], quad2.x_star(), rtol=0.1)
 
 
 def test_Adam_standard_momentum_Rosenbrock():

@@ -27,7 +27,6 @@ def test_RProp_standard_momentum_Rosenbrock():
 
 def test_RProp_nesterov_momentum_quadratic():
     assert np.allclose(RProp(quad1, momentum_type='nesterov').minimize()[0], quad1.x_star())
-
     assert np.allclose(RProp(quad2, momentum_type='nesterov').minimize()[0], quad2.x_star())
 
 
