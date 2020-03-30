@@ -5,8 +5,8 @@ from matplotlib.lines import Line2D
 from matplotlib.ticker import FuncFormatter, FormatStrFormatter
 from qpsolvers import solve_qp
 from scipy.optimize import minimize
+from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 
-from ml.learning import Learner
 from ml.svm.kernels import rbf_kernel, linear_kernel, polynomial_kernel, sigmoid_kernel
 from optimization.optimization_function import BoxConstrainedQuadratic, LagrangianBoxConstrained
 from optimization.optimizer import BoxConstrainedOptimizer, Optimizer
@@ -14,8 +14,9 @@ from optimization.optimizer import BoxConstrainedOptimizer, Optimizer
 plt.style.use('ggplot')
 
 
-class SVM(Learner):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., r=0.):
+class SVM(BaseEstimator):
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., r=0.,
+                 optimizer=solve_qp, epochs=1000, verbose=False):
         if kernel not in (linear_kernel, polynomial_kernel, rbf_kernel, sigmoid_kernel):
             raise ValueError('unknown kernel function {}'.format(kernel))
         self.kernel = kernel
@@ -30,8 +31,11 @@ class SVM(Learner):
         self.sv = np.zeros(0)
         self.w = None
         self.b = 0.
+        self.optimizer = optimizer
+        self.epochs = epochs
+        self.verbose = verbose
 
-    def fit(self, X, y, optimizer=solve_qp, max_iter=1000):
+    def fit(self, X, y):
         raise NotImplementedError
 
     @staticmethod
@@ -115,12 +119,10 @@ class SVM(Learner):
             _X1, _X2 = np.meshgrid(np.linspace(x1_min, x1_max, 50), np.linspace(x1_min, x1_max, 50))
             X = np.array([[x1, x2] for x1, x2 in zip(np.ravel(_X1), np.ravel(_X2))])
 
-            if isinstance(svm, SKLSVC):
+            if isinstance(svm, ClassifierMixin):
                 Z = svm.decision_function(X).reshape(_X1.shape)
-            elif isinstance(svm, SKLSVR):
+            elif isinstance(svm, RegressorMixin):
                 Z = svm.predict(X)
-            else:
-                Z = svm.predict_score(X).reshape(_X1.shape)
 
             plt.contour(_X1, _X2, Z, [0.0], colors='k', linewidths=1, origin='lower')
             plt.contour(_X1, _X2, Z + 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
@@ -158,24 +160,23 @@ def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
                              'disp': verbose}).x
 
 
-class SVC(SVM):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., r=0.):
-        super().__init__(kernel, degree, gamma, C, r)
+class SVC(ClassifierMixin, SVM):
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., r=0.,
+                 optimizer=solve_qp, epochs=1000, verbose=False):
+        super().__init__(kernel, degree, gamma, C, r, optimizer, epochs, verbose)
         self.sv_y = np.zeros(0)
         self.alphas = np.zeros(0)
 
-    def fit(self, X, y, optimizer=solve_qp, max_iter=1000, verbose=False):
+    def fit(self, X, y):
         """
         Trains the model by solving a constrained quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
-        :param optimizer:
-        :param max_iter:
-        :param verbose:
         """
         self.labels = np.unique(y)
         if self.labels.size > 2:
-            raise ValueError('use MultiClassClassifier to train a model over more than two labels')
+            raise ValueError('use OneVsOneClassifier or OneVsRestClassifier from sklearn.multiclass '
+                             'to train a model over more than two labels')
         y = np.where(y == self.labels[0], -1, 1)
 
         m = len(y)  # m = n_samples
@@ -198,22 +199,22 @@ class SVC(SVM):
         A = y.astype(np.float)  # equality matrix
         b = np.zeros(1)  # equality vector
 
-        if optimizer is solve_qp:
-            qpsolvers.cvxopt_.options['show_progress'] = verbose
+        if self.optimizer is solve_qp:
+            qpsolvers.cvxopt_.options['show_progress'] = self.verbose
             self.alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
         else:
             obj_fun = BoxConstrainedQuadratic(P, q, ub)
-            if optimizer is scipy_solve_qp:
-                self.alphas = scipy_solve_qp(obj_fun, G, h, A, b, max_iter, verbose)
-            elif issubclass(optimizer, BoxConstrainedOptimizer):
-                self.alphas = optimizer(obj_fun, max_iter=max_iter, verbose=verbose).minimize()[0]
-            elif issubclass(optimizer, Optimizer):
+            if self.optimizer is scipy_solve_qp:
+                self.alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
+            elif issubclass(self.optimizer, BoxConstrainedOptimizer):
+                self.alphas = self.optimizer(obj_fun, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
+            elif issubclass(self.optimizer, Optimizer):
                 # dual lagrangian relaxation of the box-constrained problem
                 dual = LagrangianBoxConstrained(obj_fun)
-                optimizer(dual, max_iter=max_iter, verbose=verbose).minimize()
+                self.optimizer(dual, max_iter=self.epochs, verbose=self.verbose).minimize()
                 self.alphas = dual.primal_solution
             else:
-                raise TypeError('unknown optimizer type {}'.format(optimizer))
+                raise TypeError('unknown optimizer type {}'.format(self.optimizer))
 
         self.sv_idx = np.argwhere(self.alphas > 1e-5).ravel()
         self.sv, self.sv_y, self.alphas = X[self.sv_idx], y[self.sv_idx], self.alphas[self.sv_idx]
@@ -232,7 +233,7 @@ class SVC(SVM):
                                             self.kernel(self.sv, self.sv)))  # linear kernel
         return self
 
-    def predict_score(self, X):
+    def decision_function(self, X):
         """
         Predicts the score for a given example.
         """
@@ -249,28 +250,26 @@ class SVC(SVM):
         """
         Predicts the class of a given example.
         """
-        return np.where(self.predict_score(X) >= 0, self.labels[1], self.labels[0])
+        return np.where(self.decision_function(X) >= 0, self.labels[1], self.labels[0])
 
 
-class SVR(SVM):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.1, r=0.):
-        super().__init__(kernel, degree, gamma, C, r)
+class SVR(RegressorMixin, SVM):
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.1, r=0.,
+                 optimizer=solve_qp, epochs=1000, verbose=False):
+        super().__init__(kernel, degree, gamma, C, r, optimizer, epochs, verbose)
         self.eps = eps
         self.alphas_p = np.zeros(0)
         self.alphas_n = np.zeros(0)
 
-    def fit(self, X, y, optimizer=solve_qp, max_iter=1000, verbose=False):
+    def fit(self, X, y):
         """
         Trains the model by solving a constrained quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
-        :param optimizer:
-        :param max_iter:
-        :param verbose:
         """
         self.targets = y.shape[1] if y.ndim > 1 else 1
         if self.targets > 1:
-            raise ValueError('use MultiTargetRegressor to train a model over more than one target')
+            raise ValueError('use sklearn.multioutput.MultiOutputRegressor to train a model over more than one target')
 
         m = len(y)  # m = n_samples
         K = (self.kernel(X, X, self.r, self.degree)
@@ -293,22 +292,22 @@ class SVR(SVM):
         A = np.hstack((np.ones(m), -np.ones(m)))  # equality matrix
         b = np.zeros(1)  # equality vector
 
-        if optimizer is solve_qp:
-            qpsolvers.cvxopt_.options['show_progress'] = verbose
+        if self.optimizer is solve_qp:
+            qpsolvers.cvxopt_.options['show_progress'] = self.verbose
             alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
         else:
             obj_fun = BoxConstrainedQuadratic(P, q, ub)
-            if optimizer is scipy_solve_qp:
-                alphas = scipy_solve_qp(obj_fun, G, h, A, b, max_iter, verbose)
-            elif issubclass(optimizer, BoxConstrainedOptimizer):
-                alphas = optimizer(obj_fun, max_iter=max_iter, verbose=verbose).minimize()[0]
-            elif issubclass(optimizer, Optimizer):
+            if self.optimizer is scipy_solve_qp:
+                alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
+            elif issubclass(self.optimizer, BoxConstrainedOptimizer):
+                alphas = self.optimizer(obj_fun, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
+            elif issubclass(self.optimizer, Optimizer):
                 # dual lagrangian relaxation of the box-constrained problem
                 dual = LagrangianBoxConstrained(obj_fun)
-                optimizer(dual, max_iter=max_iter, verbose=verbose).minimize()
+                self.optimizer(dual, max_iter=self.epochs, verbose=self.verbose).minimize()
                 alphas = dual.primal_solution
             else:
-                raise TypeError('unknown optimizer type {}'.format(optimizer))
+                raise TypeError('unknown optimizer type {}'.format(self.optimizer))
         self.alphas_p = alphas[:m]
         self.alphas_n = alphas[m:]
 

@@ -2,10 +2,10 @@ import inspect
 
 import autograd.numpy as np
 from matplotlib import pyplot as plt
+from sklearn.base import BaseEstimator
 from sklearn.preprocessing import OneHotEncoder
 
 from ml.initializers import compute_fans
-from ml.learning import Learner
 from ml.neural_network.activations import Linear
 from ml.neural_network.layers import Layer, ParamLayer
 from optimization.optimization_function import OptimizationFunction
@@ -57,7 +57,6 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         return self.neural_net._pack(*self.neural_net.backward(y_pred - y))
 
     def plot(self):
-        surface_plot, surface_axes, contour_plot, contour_axes = super().plot()
         # TODO add accuracy plot over iterations
         fig, loss = plt.subplots()
         loss.plot(self.loss_history[0], 'b.', alpha=0.2)
@@ -78,7 +77,7 @@ class NeuralNetworkLossFunction(OptimizationFunction):
             plt.show()
 
 
-class NeuralNetwork(Layer, Learner):
+class NeuralNetwork(BaseEstimator, Layer):
 
     def __init__(self, *layers):
         assert isinstance(layers, (list, tuple))

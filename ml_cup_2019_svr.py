@@ -1,10 +1,8 @@
-import numpy as np
 from qpsolvers import solve_qp
 from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.svm import SVR as SKLSVR
 
-from ml.learning import MultiTargetRegressor
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error
 from ml.svm.kernels import linear_kernel, polynomial_kernel, rbf_kernel
@@ -48,14 +46,14 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
-    svr = MultiTargetRegressor(SVR(kernel=rbf_kernel, eps=0.1))
-    svr.fit(X_train, y_train, optimizer=ProjectedGradient, verbose=False)
+    svr = MultiOutputRegressor(SVR(kernel=rbf_kernel, eps=0.1, optimizer=ProjectedGradient, verbose=False))
+    svr.fit(X_train, y_train)
     pred = svr.predict(X_test)
     print('mse: ', mean_squared_error(pred, y_test))
     print('mee: ', mean_euclidean_error(pred, y_test))
     print()
 
-    svr = MultiOutputRegressor(SKLSVR(kernel='rbf', epsilon=0.1)).fit(X_train, y_train)
-    pred = svr.predict(X_test)
+    sklsvr = MultiOutputRegressor(SKLSVR(kernel='rbf', epsilon=0.1)).fit(X_train, y_train)
+    pred = sklsvr.predict(X_test)
     print('sklearn mse: ', mean_squared_error(pred, y_test))
     print('sklearn mee: ', mean_euclidean_error(pred, y_test))

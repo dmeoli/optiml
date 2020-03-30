@@ -1,6 +1,3 @@
-import numpy as np
-
-from ml.initializers import glorot_uniform
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error
 from ml.neural_network.activations import sigmoid, tanh, relu, linear
@@ -57,15 +54,12 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
-    net = NeuralNetwork(
-        FullyConnected(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True),
-        FullyConnected(20, 20, sigmoid, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True),
-        FullyConnected(20, 2, linear, w_init=glorot_uniform, w_reg=L1(0.1), b_reg=L1(0.1), use_bias=True))
+    net = NeuralNetwork(FullyConnected(20, 20, sigmoid),
+                        FullyConnected(20, 20, sigmoid),
+                        FullyConnected(20, 2, linear))
 
     net.fit(X_train, y_train, loss=mean_squared_error, optimizer=BFGS, learning_rate=0.01, momentum_type='nesterov',
-            momentum=0.9, epochs=1000, batch_size=None, max_f_eval=25000, verbose=True, plot=True)
+            momentum=0.9, epochs=1000, batch_size=300, max_f_eval=15000, verbose=True, plot=True)
     pred = net.predict(X_test)
     print(mean_squared_error(pred, y_test))
     print(mean_euclidean_error(pred, y_test))
-
-    ml_cup_blind = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TS.csv', delimiter=','), 0, 1)
