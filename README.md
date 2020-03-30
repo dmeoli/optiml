@@ -24,7 +24,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Newton
             - [x] BFGS quasi-Newton
             - [ ] L-BFGS quasi-Newton
-        - Very Inexact Line Search or Fixed Step Size Methods
+        - Fixed Step Size Methods
             - [x] Gradient Descent
                 - [x] standard momentum
                 - [x] Nesterov momentum
@@ -56,21 +56,19 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] RMSProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
-        - Others
-            - [x] Proximal Bundle
-                - [x] standard momentum
-                - [x] Nesterov momentum
+        - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface
+             - [x] standard momentum
+             - [x] Nesterov momentum
     - Box-Constrained Optimization
-        - Primal
+        - Primal Formulation
             - [x] Projected Gradient
             - [x] Frank-Wolfe or Conditional Gradient
             - [x] Active Set
             - [x] Interior Point
-        - Dual
+            - [x] [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
+        - Dual Formulation
             - [x] Lagrangian Dual
-        - Others
             - [ ] Sequential Minimal Optimization (SMO)
-            - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
             - [x] [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
 
 - Optimization Functions
