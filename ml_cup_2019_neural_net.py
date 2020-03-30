@@ -20,6 +20,7 @@ from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.quasi_newton import BFGS
 from optimization.unconstrained.rmsprop import RMSProp
 from optimization.unconstrained.rprop import RProp
+from utils import load_ml_cup
 
 line_search_optimizers = [NonlinearConjugateGradient, SteepestDescentAcceleratedGradient,
                           SteepestGradientDescent, HeavyBallGradient, BFGS]
@@ -50,8 +51,7 @@ regularizers = [L1(0.01), L1(0.1), L2(0.01), L2(0.1)]
 k_folds = [3, 5]
 
 if __name__ == '__main__':
-    ml_cup_train = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
-    X, y = ml_cup_train[:, :-2], ml_cup_train[:, -2:]
+    X, y = load_ml_cup()
 
     from sklearn.model_selection import train_test_split
 

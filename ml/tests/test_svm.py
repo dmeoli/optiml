@@ -1,18 +1,19 @@
 import pytest
-from sklearn.datasets import load_iris, load_boston
+from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 
-from ml.learning import MultiClassClassifier
-from ml.metrics import accuracy_score, r2_score
-from ml.svm.kernels import linear_kernel
+from ml.learning import MultiClassClassifier, MultiTargetRegressor
+from ml.metrics import accuracy_score, mean_euclidean_error
+from ml.svm.kernels import rbf_kernel
 from ml.svm.svm import SVC, SVR
+from utils import load_ml_cup
 
 
 def test_svr():
-    X, y = load_boston(return_X_y=True)
+    X, y = load_ml_cup()
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
-    svr = SVR(kernel=linear_kernel).fit(X_train, y_train)
-    assert r2_score(svr.predict(X_test), y_test) >= 0.45
+    svr = MultiTargetRegressor(SVR(kernel=rbf_kernel)).fit(X_train, y_train)
+    assert mean_euclidean_error(svr.predict(X_test), y_test) <= 1.3
 
 
 def test_svc():

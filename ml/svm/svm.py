@@ -268,6 +268,10 @@ class SVR(SVM):
         :param max_iter:
         :param verbose:
         """
+        self.targets = y.shape[1] if y.ndim > 1 else 1
+        if self.targets > 1:
+            raise ValueError('use MultiTargetRegressor to train a model over more than one target')
+
         m = len(y)  # m = n_samples
         K = (self.kernel(X, X, self.r, self.degree)
              if self.kernel is polynomial_kernel else

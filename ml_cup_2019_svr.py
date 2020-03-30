@@ -27,6 +27,7 @@ from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.quasi_newton import BFGS
 from optimization.unconstrained.rmsprop import RMSProp
 from optimization.unconstrained.rprop import RProp
+from utils import load_ml_cup
 
 line_search_optimizers = [NonlinearConjugateGradient, SteepestDescentAcceleratedGradient,
                           SteepestGradientDescent, HeavyBallGradient, BFGS]
@@ -43,8 +44,7 @@ constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoin
 kernels = [linear_kernel, polynomial_kernel, rbf_kernel]
 
 if __name__ == '__main__':
-    ml_cup_train = np.delete(np.genfromtxt('./ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), 0, 1)
-    X, y = ml_cup_train[:, :-2], ml_cup_train[:, -2:]
+    X, y = load_ml_cup()
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
