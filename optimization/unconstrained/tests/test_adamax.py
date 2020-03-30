@@ -15,7 +15,7 @@ def test_AdaMax_Rosenbrock():
     assert np.allclose(AdaMax(obj).minimize()[0], obj.x_star(), rtol=0.2)
 
 
-def test_AdaMax_quadratic():
+def test_AdaMax_standard_momentum_quadratic():
     assert np.allclose(AdaMax(quad1, momentum_type='standard').minimize()[0], quad1.x_star(), rtol=0.1)
     assert np.allclose(AdaMax(quad2, momentum_type='standard').minimize()[0], quad2.x_star(), rtol=0.1)
 
