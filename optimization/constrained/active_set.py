@@ -87,16 +87,16 @@ class ActiveSet(BoxConstrainedOptimizer):
 
             # use the LDL^T Cholesky symmetric indefinite factorization to solve the
             # linear system since Q_{AA} is symmetric but could be not positive definite
-            xs[A] = ldl_solve(ldl(self.f.Q[A, :][:, A]), -(self.f.q[A] - self.f.Q[A, :][:, U].dot(self.f.ub[U])))
+            xs[A] = ldl_solve(ldl(self.f.Q[A, :][:, A]), -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.f.ub[U])))
 
             if np.logical_and(xs[A] <= self.f.ub[A] + 1e-12, xs[A] >= -1e-12).all():
                 # the solution of the unconstrained problem is actually feasible
 
                 # move the current point right there
-                self.wrt = np.copy(xs)
+                last_wrt = xs
 
                 # compute function value and gradient
-                v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+                v, g = self.f.function(last_wrt), self.f.jacobian(last_wrt)
 
                 h = np.nonzero(np.logical_and(L, g < -1e-12))[0]
                 if h.size > 0:
@@ -105,7 +105,7 @@ class ActiveSet(BoxConstrainedOptimizer):
                     h = np.nonzero(np.logical_and(U, g > 1e-12))[0]
                     uppr = True
 
-                if not h.size > 0:
+                if h.size is 0:
                     status = 'optimal'
                     break
                 else:
@@ -118,7 +118,7 @@ class ActiveSet(BoxConstrainedOptimizer):
                     else:
                         L[h] = False
                         if self.verbose:
-                            print('O {:d}(L)\n'.format(h))
+                            print('O {:d}(L)'.format(h))
             else:
                 # the solution of the unconstrained problem is not feasible
                 # this means that d = xs - self.wrt is a descent direction, use it
@@ -137,28 +137,30 @@ class ActiveSet(BoxConstrainedOptimizer):
 
                 # it is useless to compute the optimal t, because we know already
                 # that it is 1, whereas max_t necessarily is < 1
-                self.wrt += max_t * d
+                last_wrt = self.wrt + max_t * d
 
                 # compute function value
-                v = self.f.function(self.wrt)
+                v = self.f.function(last_wrt)
 
                 # update the active set(s)
-                nL = np.logical_and(A, self.wrt <= 1e-12)
+                nL = np.logical_and(A, last_wrt <= 1e-12)
                 L[nL] = True
                 A[nL] = False
 
-                nU = np.logical_and(A, self.wrt >= self.f.ub - 1e-12)
+                nU = np.logical_and(A, last_wrt >= self.f.ub - 1e-12)
                 U[nU] = True
                 A[nU] = False
 
                 if self.verbose:
                     print('I {:d}+{:d}'.format(sum(nL), sum(nU)))
 
-                # plot the trajectory
-                if self.plot and self.n == 2:
-                    p_xy = np.vstack((self.wrt - max_t * d, self.wrt)).T
-                    contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
-                                        p_xy[1, 1:] - p_xy[1, :-1], scale_units='xy', angles='xy', scale=1, color='k')
+            # plot the trajectory
+            if self.plot and self.n == 2:
+                p_xy = np.vstack((self.wrt, last_wrt)).T
+                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
+                                    p_xy[1, 1:] - p_xy[1, :-1], scale_units='xy', angles='xy', scale=1, color='k')
+
+            self.wrt = last_wrt
 
             self.iter += 1
 
