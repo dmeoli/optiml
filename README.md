@@ -37,13 +37,13 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
                 - [ ] momentum decay
             - [x] Adam
                 - [x] standard momentum
-                - [x] Nadam (Nesterov momentum)
+                - [x] Nadam
             - [x] AMSGrad
                 - [x] standard momentum
                 - [x] Nesterov momentum
             - [x] AdaMax
                 - [x] standard momentum
-                - [x] NadaMax (Nesterov momentum)
+                - [x] NadaMax
             - [x] AdaGrad
                 - [x] standard momentum
                 - [x] Nesterov momentum
@@ -62,13 +62,13 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
     - Box-Constrained Optimization
         - Primal Formulation
             - [x] Projected Gradient
-            - [x] Frank-Wolfe or Conditional Gradient
+            - [x] Frank-Wolfe
             - [x] Active Set
             - [x] Interior Point
             - [x] [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
         - Dual Formulation
             - [x] Lagrangian Dual
-            - [ ] Sequential Minimal Optimization (SMO)
+            - [ ] Sequential Minimal Optimization
             - [x] [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
 
 - Optimization Functions
@@ -89,9 +89,9 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - Regularizers
             - [x] L1 or Lasso
             - [x] L2 or Ridge or Tikhonov
-    - [x] Support Vector Machines (SVM)
-        - [x] Support Vector Classifier (SVC)
-        - [x] Support Vector Regression (SVR)
+    - [x] Support Vector Machines
+        - [x] Support Vector Classifier
+        - [x] Support Vector Regression
         - Kernels
             - [x] linear kernel
             - [x] polynomial kernel
@@ -100,8 +100,8 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - Losses
             - [x] Mean Squared Error
             - [x] Mean Absolute Error
-            - [x] Cross Entropy or Log Loss
-            - [x] Binary Cross Entropy or Binary Log Loss
+            - [x] Cross Entropy
+            - [x] Binary Cross Entropy
         - Regularizers
             - [x] L1 or Lasso
             - [x] L2 or Ridge or Tikhonov

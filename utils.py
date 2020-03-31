@@ -81,10 +81,10 @@ def generate_linearly_separable_data():
     y1 = np.ones(len(X1))
     X2 = np.random.multivariate_normal(mean2, cov, 100)
     y2 = -np.ones(len(X2))
-    return X1, y1, X2, y2
+    return np.vstack((X1, X2)), np.hstack((y1, y2))
 
 
-def gen_non_linearly_separable_data():
+def generate_non_linearly_separable_data():
     mean1 = [-1, 2]
     mean2 = [1, -1]
     mean3 = [4, -4]
@@ -96,10 +96,10 @@ def gen_non_linearly_separable_data():
     X2 = np.random.multivariate_normal(mean2, cov, 50)
     X2 = np.vstack((X2, np.random.multivariate_normal(mean4, cov, 50)))
     y2 = -np.ones(len(X2))
-    return X1, y1, X2, y2
+    return np.vstack((X1, X2)), np.hstack((y1, y2))
 
 
-def gen_lin_separable_overlap_data():
+def generate_linearly_separable_overlap_data():
     mean1 = np.array([0, 2])
     mean2 = np.array([2, 0])
     cov = np.array([[1.5, 1.0], [1.0, 1.5]])
@@ -107,28 +107,11 @@ def gen_lin_separable_overlap_data():
     y1 = np.ones(len(X1))
     X2 = np.random.multivariate_normal(mean2, cov, 100)
     y2 = -np.ones(len(X2))
-    return X1, y1, X2, y2
+    return np.vstack((X1, X2)), np.hstack((y1, y2))
 
 
-def split_data(X1, y1, X2, y2, percent):
-    cut_off = int(len(X1) * percent)
-
-    # training data
-    X1_train = X1[:cut_off]
-    y1_train = y1[:cut_off]
-    X2_train = X2[:cut_off]
-    y2_train = y2[:cut_off]
-
-    X_train = np.vstack((X1_train, X2_train))
-    y_train = np.hstack((y1_train, y2_train))
-
-    # test data
-    X1_test = X1[cut_off:]
-    y1_test = y1[cut_off:]
-    X2_test = X2[cut_off:]
-    y2_test = y2[cut_off:]
-
-    X_test = np.vstack((X1_test, X2_test))
-    y_test = np.hstack((y1_test, y2_test))
-
-    return X_train, y_train, X_test, y_test
+def generate_regression_data():
+    X = np.sort(5 * np.random.rand(100, 1), axis=0)
+    y = np.sin(X).ravel()
+    y[::5] += 3 * (0.5 - np.random.rand())  # add noise to targets
+    return X, y

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import qpsolvers
+import sklearn
 from matplotlib.lines import Line2D
 from matplotlib.ticker import FuncFormatter, FormatStrFormatter
 from qpsolvers import solve_qp
@@ -28,7 +29,6 @@ class SVM(BaseEstimator):
         self.r = r
         self.n_sv = -1
         self.sv_idx = np.zeros(0)
-        self.sv = np.zeros(0)
         self.w = None
         self.b = 0.
         self.optimizer = optimizer
@@ -40,27 +40,26 @@ class SVM(BaseEstimator):
 
     @staticmethod
     def plot(svm, X1, X2):
-        from sklearn.svm import SVC as SKLSVC
-        from sklearn.svm import SVR as SKLSVR
-
-        def f(x, w, b, c=0):
-            return (-w[0] * x - b + c) / w[1]
 
         ax = plt.axes()
         ax.set_axisbelow(True)
         plt.grid(color='w', linestyle='solid')
+
         # hide axis spines
         for spine in ax.spines.values():
             spine.set_visible(False)
+
         # hide top and right ticks
         ax.xaxis.tick_bottom()
         ax.yaxis.tick_left()
+
         # lighten ticks and labels
         ax.tick_params(colors='gray', direction='out')
         for tick in ax.get_xticklabels():
             tick.set_color('gray')
         for tick in ax.get_yticklabels():
             tick.set_color('gray')
+
         # format axis
         ax.get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x), ',')))  # separate 000 with ,
         ax.get_yaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x), ',')))  # separate 000 with ,
@@ -68,83 +67,66 @@ class SVM(BaseEstimator):
         ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))  # 2dp for y axis.
         ax.xaxis.set_tick_params(labelsize=8)  # tick label size
         ax.yaxis.set_tick_params(labelsize=8)  # tick label size
+
         # axis limits
         x1_min, x1_max = X1.min(), X1.max()
         x2_min, x2_max = X2.min(), X2.max()
         ax.set(xlim=(x1_min, x1_max), ylim=(x2_min, x2_max))
+
         # axis labels
         plt.xlabel('$x_1$', fontsize=9)
         plt.ylabel('$x_2$', fontsize=9)
-        plt.title('{0} SVM using {1}'.format('sklearn' if isinstance(svm, SKLSVC) or isinstance(svm, SKLSVR)
-                                             else 'custom', svm.kernel.__name__ if callable(svm.kernel)
+        plt.title('{0} SVM using {1}'.format('sklearn' if isinstance(svm, sklearn.svm.SVC) or
+                                                          isinstance(svm, sklearn.svm.SVR) else
+                                             'custom', svm.kernel.__name__.replace('_', ' ') if callable(svm.kernel)
                                              else svm.kernel + ' kernel'), fontsize=9)
         # set the legend
-        legend = [
-            Line2D([0], [0], linestyle='none', marker='x', color='lightblue', markerfacecolor='lightblue',
-                   markersize=9),
-            Line2D([0], [0], linestyle='none', marker='o', color='darkorange', markerfacecolor='darkorange',
-                   markersize=9),
-            Line2D([0], [0], linestyle='-', marker='.', color='black', markerfacecolor='darkorange', markersize=0),
-            Line2D([0], [0], linestyle='--', marker='.', color='black', markerfacecolor='darkorange', markersize=0),
-            Line2D([0], [0], linestyle='none', marker='.', color='blue', markerfacecolor='blue', markersize=9)]
-
-        if 'linear' not in str(svm.kernel):
-            # place the legend in a nicer position
-            legend = plt.legend(legend,
-                                ['negative -1', 'positive +1', 'decision boundary', 'margin', 'support vectors'],
-                                fontsize='7', shadow=True, loc='lower left', bbox_to_anchor=(0.03, 0.03))
-        else:
-            legend = plt.legend(legend,
-                                ['negative -1', 'positive +1', 'decision boundary', 'margin', 'support vectors'],
-                                fontsize='7', shadow=True, bbox_to_anchor=(0.3, 0.98))
-        legend.get_frame().set_linewidth(0.3)
+        if isinstance(svm, ClassifierMixin):
+            plt.legend([Line2D([0], [0], linestyle='none', marker='x', color='lightblue',
+                               markerfacecolor='lightblue', markersize=9),
+                        Line2D([0], [0], linestyle='none', marker='o', color='darkorange',
+                               markerfacecolor='darkorange', markersize=9),
+                        Line2D([0], [0], linestyle='-', marker='.', color='black',
+                               markerfacecolor='darkorange', markersize=0),
+                        Line2D([0], [0], linestyle='--', marker='.', color='black',
+                               markerfacecolor='darkorange', markersize=0),
+                        Line2D([0], [0], linestyle='none', marker='.', color='blue',
+                               markerfacecolor='blue', markersize=9)],
+                       ['negative -1', 'positive +1', 'decision boundary', 'margin', 'support vectors'],
+                       fontsize='7', shadow=True).get_frame().set_linewidth(0.3)
+        elif isinstance(svm, RegressorMixin):
+            plt.legend([Line2D([0], [0], linestyle='none', marker='o', color='darkorange',
+                               markerfacecolor='darkorange', markersize=9),
+                        Line2D([0], [0], linestyle='-', marker='.', color='black',
+                               markerfacecolor='darkorange', markersize=0),
+                        Line2D([0], [0], linestyle='--', marker='.', color='black',
+                               markerfacecolor='darkorange', markersize=0),
+                        Line2D([0], [0], linestyle='none', marker='.', color='blue',
+                               markerfacecolor='blue', markersize=9)],
+                       ['training data', 'decision boundary', '$\epsilon$-insensitive tube', 'support vectors'],
+                       fontsize='7', shadow=True).get_frame().set_linewidth(0.3)
 
         # add the plots
-        if isinstance(svm, SVC) or isinstance(svm, SKLSVC):
+        if isinstance(svm, ClassifierMixin):
             plt.plot(X1[:, 0], X1[:, 1], marker='x', markersize=5, color='lightblue', linestyle='none')
             plt.plot(X2[:, 0], X2[:, 1], marker='o', markersize=4, color='darkorange', linestyle='none')
         else:
             plt.plot(X1, svm.fit(X1, X2).predict(X1), label='decision boundary')
         # the points designating the support vectors
-        if isinstance(svm, SKLSVC):
+        if isinstance(svm, ClassifierMixin):
             plt.scatter(svm.support_vectors_[:, 0], svm.support_vectors_[:, 1], s=60, color='blue')
-        elif isinstance(svm, SKLSVR):
+        elif isinstance(svm, RegressorMixin):
             plt.scatter(X1[svm.support_], X2[svm.support_], s=60, color='blue')
-        else:
-            plt.scatter(svm.sv[:, 0], svm.sv[:, 1], s=60, color='blue')
 
-        if (isinstance(svm, SKLSVC) or isinstance(svm, SKLSVR)
-                or 'polynomial' in str(svm.kernel) or 'rbf' in str(svm.kernel)):
-            # non-linear margin line needs to be generated
+        if isinstance(svm, ClassifierMixin):
             _X1, _X2 = np.meshgrid(np.linspace(x1_min, x1_max, 50), np.linspace(x1_min, x1_max, 50))
             X = np.array([[x1, x2] for x1, x2 in zip(np.ravel(_X1), np.ravel(_X2))])
-
-            if isinstance(svm, ClassifierMixin):
-                Z = svm.decision_function(X).reshape(_X1.shape)
-            elif isinstance(svm, RegressorMixin):
-                Z = svm.predict(X)
-
+            Z = svm.decision_function(X).reshape(_X1.shape)
             plt.contour(_X1, _X2, Z, [0.0], colors='k', linewidths=1, origin='lower')
             plt.contour(_X1, _X2, Z + 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
             plt.contour(_X1, _X2, Z - 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
-        else:
-            # linear margin line needs to be generated
-            # this can be done by the above code and use plt.contour
-            # decision Boundary:  w.x + b = 0
-            _y1 = f(x1_min, svm.w, svm.b)
-            _y2 = f(x1_max, svm.w, svm.b)
-            plt.plot([x1_min, x1_max], [_y1, _y2], 'k')
-
-            # margin Upper: w.x + b = 1
-            _y3 = f(x1_min, svm.w, svm.b, 1)
-            _y4 = f(x1_max, svm.w, svm.b, 1)
-            plt.plot([x1_min, x1_max], [_y3, _y4], 'k--')
-
-            # margin Lower: w.x + b = -1
-            _y5 = f(x1_min, svm.w, svm.b, -1)
-            _y6 = f(x1_max, svm.w, svm.b, -1)
-            plt.plot([x1_min, x1_max], [_y5, _y6], 'k--')
-
+        elif isinstance(svm, RegressorMixin):
+            plt.show()
         plt.show()
 
 
@@ -164,6 +146,7 @@ class SVC(ClassifierMixin, SVM):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., r=0.,
                  optimizer=solve_qp, epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, C, r, optimizer, epochs, verbose)
+        self.support_vectors_ = np.zeros(0)
         self.sv_y = np.zeros(0)
         self.alphas = np.zeros(0)
 
@@ -217,20 +200,22 @@ class SVC(ClassifierMixin, SVM):
                 raise TypeError('unknown optimizer type {}'.format(self.optimizer))
 
         self.sv_idx = np.argwhere(self.alphas > 1e-5).ravel()
-        self.sv, self.sv_y, self.alphas = X[self.sv_idx], y[self.sv_idx], self.alphas[self.sv_idx]
+        self.support_vectors_, self.sv_y, self.alphas = X[self.sv_idx], y[self.sv_idx], self.alphas[self.sv_idx]
         self.n_sv = len(self.alphas)
 
         if self.kernel is linear_kernel:
-            self.w = np.dot(self.alphas * self.sv_y, self.sv)
+            self.w = np.dot(self.alphas * self.sv_y, self.support_vectors_)
 
         self.b = np.mean(self.sv_y - np.dot(self.alphas * self.sv_y,
-                                            self.kernel(self.sv, self.sv, self.r, self.degree)
+                                            self.kernel(self.support_vectors_, self.support_vectors_, self.r,
+                                                        self.degree)
                                             if self.kernel is polynomial_kernel else
-                                            self.kernel(self.sv, self.sv, self.gamma)
+                                            self.kernel(self.support_vectors_, self.support_vectors_, self.gamma)
                                             if self.kernel is rbf_kernel else
-                                            self.kernel(self.sv, self.sv, self.r, self.gamma)
+                                            self.kernel(self.support_vectors_, self.support_vectors_, self.r,
+                                                        self.gamma)
                                             if self.kernel is sigmoid_kernel else
-                                            self.kernel(self.sv, self.sv)))  # linear kernel
+                                            self.kernel(self.support_vectors_, self.support_vectors_)))  # linear kernel
         return self
 
     def decision_function(self, X):
@@ -239,11 +224,11 @@ class SVC(ClassifierMixin, SVM):
         """
         if self.kernel is not linear_kernel:
             return np.dot(self.alphas * self.sv_y,
-                          self.kernel(self.sv, X, self.r, self.degree)
+                          self.kernel(self.support_vectors_, X, self.r, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(self.sv, X, self.gamma)
+                          self.kernel(self.support_vectors_, X, self.gamma)
                           if self.kernel is rbf_kernel else
-                          self.kernel(self.sv, X, self.r, self.gamma)) + self.b  # sigmoid kernel
+                          self.kernel(self.support_vectors_, X, self.r, self.gamma)) + self.b  # sigmoid kernel
         return np.dot(X, self.w) + self.b
 
     def predict(self, X):
@@ -257,6 +242,7 @@ class SVR(RegressorMixin, SVM):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.1, r=0.,
                  optimizer=solve_qp, epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, C, r, optimizer, epochs, verbose)
+        self.support_ = np.zeros(0)
         self.eps = eps
         self.alphas_p = np.zeros(0)
         self.alphas_n = np.zeros(0)
@@ -312,20 +298,20 @@ class SVR(RegressorMixin, SVM):
         self.alphas_n = alphas[m:]
 
         self.sv_idx = np.argwhere(alphas > 1e-5).ravel()
-        self.sv, alphas = X, alphas[self.sv_idx]
+        self.support_, alphas = X, alphas[self.sv_idx]
         self.n_sv = len(alphas)
 
         if self.kernel is linear_kernel:
             self.w = np.dot(self.alphas_p - self.alphas_n, X)
 
         self.b = np.mean(y - self.eps - np.dot(self.alphas_p - self.alphas_n,
-                                               self.kernel(self.sv, X, self.r, self.degree)
+                                               self.kernel(self.support_, X, self.r, self.degree)
                                                if self.kernel is polynomial_kernel else
-                                               self.kernel(self.sv, X, self.gamma)
+                                               self.kernel(self.support_, X, self.gamma)
                                                if self.kernel is rbf_kernel else
-                                               self.kernel(self.sv, X, self.r, self.gamma)
+                                               self.kernel(self.support_, X, self.r, self.gamma)
                                                if self.kernel is sigmoid_kernel else
-                                               self.kernel(self.sv, X)))  # linear kernel
+                                               self.kernel(self.support_, X)))  # linear kernel
         return self
 
     def predict(self, X):
@@ -334,10 +320,10 @@ class SVR(RegressorMixin, SVM):
         """
         if self.kernel is not linear_kernel:
             return np.dot(self.alphas_p - self.alphas_n,
-                          self.kernel(self.sv, X, self.r, self.degree)
+                          self.kernel(self.support_, X, self.r, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(self.sv, X, self.gamma)
+                          self.kernel(self.support_, X, self.gamma)
                           if self.kernel is rbf_kernel else
-                          self.kernel(self.sv, X, self.r, self.gamma)) + self.b  # sigmoid kernel
+                          self.kernel(self.support_, X, self.r, self.gamma)) + self.b  # sigmoid kernel
 
         return np.dot(X, self.w) + self.b
