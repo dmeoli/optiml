@@ -5,8 +5,8 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.multioutput import MultiOutputRegressor
 
 from ml.metrics import accuracy_score, mean_euclidean_error
-from ml.svm.kernels import rbf_kernel
-from ml.svm.svm import SVC, SVR
+from ml.kernels import rbf_kernel
+from ml.svm import SVC, SVR
 from utils import load_ml_cup
 
 

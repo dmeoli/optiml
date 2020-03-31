@@ -5,8 +5,8 @@ from sklearn.svm import SVR as SKLSVR
 
 from ml.losses import mean_squared_error
 from ml.metrics import mean_euclidean_error
-from ml.svm.kernels import linear_kernel, polynomial_kernel, rbf_kernel
-from ml.svm.svm import SVR, scipy_solve_qp
+from ml.kernels import linear_kernel, polynomial_kernel, rbf_kernel
+from ml.svm import SVR, scipy_solve_qp
 from optimization.constrained.active_set import ActiveSet
 from optimization.constrained.frank_wolfe import FrankWolfe
 from optimization.constrained.interior_point import InteriorPoint

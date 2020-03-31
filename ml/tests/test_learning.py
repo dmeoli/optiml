@@ -4,7 +4,7 @@ from sklearn.datasets import load_iris, load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.multiclass import OneVsRestClassifier
 
-from ml.learning import LinearRegression, LogisticRegression, LinearModelLossFunction
+from ml.linear_model import LinearRegression, LogisticRegression, LinearModelLossFunction
 from ml.losses import mean_squared_error
 from ml.metrics import accuracy_score
 from optimization.unconstrained.quasi_newton import BFGS
