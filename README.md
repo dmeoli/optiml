@@ -129,7 +129,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] He normal and uniform
 
 - Jupyters
-    - [x] support_vector_machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/support_vector_machines.ipynb)
+    - [x] Support Vector Machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/SupportVectorMachines.ipynb)
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
