@@ -128,6 +128,9 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Xavier or Glorot normal and uniform
             - [x] He normal and uniform
 
+- Jupyters
+    - [x] support_vector_machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/support_vector_machines.ipynb)
+
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This software is released under the MIT License. See the [LICENSE](LICENSE) file for details.
