@@ -84,6 +84,17 @@ def generate_linearly_separable_data():
     return np.vstack((X1, X2)), np.hstack((y1, y2))
 
 
+def generate_linearly_separable_overlap_data():
+    mean1 = np.array([0, 2])
+    mean2 = np.array([2, 0])
+    cov = np.array([[1.5, 1.0], [1.0, 1.5]])
+    X1 = np.random.multivariate_normal(mean1, cov, 100)
+    y1 = np.ones(len(X1))
+    X2 = np.random.multivariate_normal(mean2, cov, 100)
+    y2 = -np.ones(len(X2))
+    return np.vstack((X1, X2)), np.hstack((y1, y2))
+
+
 def generate_non_linearly_separable_data():
     mean1 = [-1, 2]
     mean2 = [1, -1]
@@ -99,19 +110,8 @@ def generate_non_linearly_separable_data():
     return np.vstack((X1, X2)), np.hstack((y1, y2))
 
 
-def generate_linearly_separable_overlap_data():
-    mean1 = np.array([0, 2])
-    mean2 = np.array([2, 0])
-    cov = np.array([[1.5, 1.0], [1.0, 1.5]])
-    X1 = np.random.multivariate_normal(mean1, cov, 100)
-    y1 = np.ones(len(X1))
-    X2 = np.random.multivariate_normal(mean2, cov, 100)
-    y2 = -np.ones(len(X2))
-    return np.vstack((X1, X2)), np.hstack((y1, y2))
-
-
-def generate_regression_data():
-    X = np.sort(5 * np.random.rand(100, 1), axis=0)
-    y = np.sin(X).ravel()
-    y[::5] += 3 * (0.5 - np.random.rand())  # add noise to targets
-    return X, y
+def generate_non_linearly_regression_data():
+    X = np.sort(4 * np.pi * np.random.rand(100)) - 2 * np.pi
+    y = np.sinc(X)
+    y += 0.25 * (0.5 - np.random.rand(100))  # noise
+    return X.reshape((-1, 1)), y
