@@ -73,16 +73,14 @@ class SVM(BaseEstimator):
             X1, X2 = X, y
 
         # axis limits
-        x1_min, x1_max = X1.min(), X1.max()
-        x2_min, x2_max = X2.min(), X2.max()
-        ax.set(xlim=(x1_min, x1_max), ylim=(x2_min, x2_max))
+        ax.set(xlim=(X1.min(), X1.max()), ylim=(X2.min(), X2.max()))
 
         # axis labels
         plt.xlabel('$x_1$', fontsize=9)
         plt.ylabel('$x_2$', fontsize=9)
-        plt.title('{0} SVM using {1}'.format('custom' if isinstance(svm, SVM) else 'sklearn',
-                                             svm.kernel.__name__.replace('_', ' ') if callable(svm.kernel)
-                                             else svm.kernel + ' kernel'), fontsize=9)
+        plt.title('{} {} using {}'.format('custom' if isinstance(svm, SVM) else 'sklearn', type(svm).__name__,
+                                          svm.kernel.__name__.replace('_', ' ') if callable(svm.kernel)
+                                          else svm.kernel + ' kernel'), fontsize=9)
         # set the legend
         if isinstance(svm, ClassifierMixin):
             plt.legend([Line2D([0], [0], linestyle='none', marker='x', color='lightblue',
@@ -109,12 +107,13 @@ class SVM(BaseEstimator):
                        ['training data', 'decision boundary', '$\epsilon$-insensitive tube', 'support vectors'],
                        fontsize='7', shadow=True).get_frame().set_facecolor('white')
 
-        # decision boundary
+        # training data
         if isinstance(svm, ClassifierMixin):
             plt.plot(X1[:, 0], X1[:, 1], marker='x', markersize=5, color='lightblue', linestyle='none')
             plt.plot(X2[:, 0], X2[:, 1], marker='o', markersize=4, color='darkorange', linestyle='none')
         else:
-            plt.plot(X1, svm.fit(X1, X2).predict(X1), label='decision boundary')
+            ax.scatter(X[np.setdiff1d(np.arange(len(X)), svm.support_)],
+                       y[np.setdiff1d(np.arange(len(X)), svm.support_)], edgecolor='darkorange', s=50)
 
         # support vectors
         if isinstance(svm, ClassifierMixin):
@@ -122,15 +121,17 @@ class SVM(BaseEstimator):
         elif isinstance(svm, RegressorMixin):
             plt.scatter(X1[svm.support_], X2[svm.support_], s=60, color='blue')
 
-        if isinstance(svm, ClassifierMixin):  # margin
-            _X1, _X2 = np.meshgrid(np.linspace(x1_min, x1_max, 50), np.linspace(x1_min, x1_max, 50))
+        if isinstance(svm, ClassifierMixin):
+            _X1, _X2 = np.meshgrid(np.linspace(X1.min(), X1.max(), 50), np.linspace(X1.min(), X1.max(), 50))
             X = np.array([[x1, x2] for x1, x2 in zip(np.ravel(_X1), np.ravel(_X2))])
             Z = svm.decision_function(X).reshape(_X1.shape)
             plt.contour(_X1, _X2, Z, [0.0], colors='k', linewidths=1, origin='lower')
             plt.contour(_X1, _X2, Z + 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
             plt.contour(_X1, _X2, Z - 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
-        elif isinstance(svm, RegressorMixin):  # epsilon-insensitive tube
-            pass
+        elif isinstance(svm, RegressorMixin):
+            ax.plot(X1, svm.predict(X), color='grey', lw=1)
+            ax.plot(X1, X2 + svm.epsilon, '--')
+            ax.plot(X1, X2 - svm.epsilon, '--')
 
         plt.show()
 
@@ -244,11 +245,11 @@ class SVC(ClassifierMixin, SVM):
 
 
 class SVR(RegressorMixin, SVM):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., eps=0.1, r=0.,
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., epsilon=0.1, r=0.,
                  optimizer=solve_qp, epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, C, r, optimizer, epochs, verbose)
         self.support_ = np.zeros(0)
-        self.eps = eps
+        self.eps = epsilon
         self.alphas_p = np.zeros(0)
         self.alphas_n = np.zeros(0)
 

@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
-    svr = MultiOutputRegressor(SVR(kernel=rbf_kernel, eps=0.1, optimizer=ProjectedGradient, verbose=False))
+    svr = MultiOutputRegressor(SVR(kernel=rbf_kernel, epsilon=0.1, optimizer=ProjectedGradient, verbose=False))
     svr.fit(X_train, y_train)
     pred = svr.predict(X_test)
     print('mse: ', mean_squared_error(pred, y_test))
