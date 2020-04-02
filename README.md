@@ -38,24 +38,38 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Adam
                 - [x] standard momentum
                 - [x] Nadam
+                - [ ] learning rate decay
+                - [ ] momentum decay
             - [x] AMSGrad
                 - [x] standard momentum
                 - [x] Nesterov momentum
+                - [ ] learning rate decay
+                - [ ] momentum decay
             - [x] AdaMax
                 - [x] standard momentum
                 - [x] NadaMax
+                - [ ] learning rate decay
+                - [ ] momentum decay
             - [x] AdaGrad
                 - [x] standard momentum
                 - [x] Nesterov momentum
+                - [ ] learning rate decay
+                - [ ] momentum decay
             - [x] AdaDelta
                 - [x] standard momentum
                 - [x] Nesterov momentum
+                - [ ] learning rate decay
+                - [ ] momentum decay
             - [x] RProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
+                - [ ] learning rate decay
+                - [ ] momentum decay
             - [x] RMSProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
+                - [ ] learning rate decay
+                - [ ] momentum decay
         - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface
              - [x] standard momentum
              - [x] Nesterov momentum
@@ -128,7 +142,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Xavier or Glorot normal and uniform
             - [x] He normal and uniform
 
-- Jupyters
+- Notebooks
     - [x] Support Vector Machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/SupportVectorMachines.ipynb)
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

@@ -197,11 +197,11 @@ class SVC(ClassifierMixin, SVM):
     def decision_function(self, X):
         if self.kernel is not linear_kernel:
             return np.dot(self.alphas * self.sv_y,
-                          self.kernel(X, self.support_vectors_, self.r, self.degree)
+                          self.kernel(self.support_vectors_, X, self.r, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(X, self.support_vectors_, self.gamma)
+                          self.kernel(self.support_vectors_, X, self.gamma)
                           if self.kernel is rbf_kernel else  # sigmoid kernel
-                          self.kernel(X, self.support_vectors_, self.r, self.gamma)) + self.intercept_
+                          self.kernel(self.support_vectors_, X, self.r, self.gamma)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_
 
     def predict(self, X):
@@ -284,9 +284,9 @@ class SVR(RegressorMixin, SVM):
     def predict(self, X):
         if self.kernel is not linear_kernel:
             return np.dot(self.alphas_p - self.alphas_n,
-                          self.kernel(X, self.support_vectors_, self.r, self.degree)
+                          self.kernel(self.support_vectors_, X, self.r, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(X, self.support_vectors_, self.gamma)
+                          self.kernel(self.support_vectors_, X, self.gamma)
                           if self.kernel is rbf_kernel else  # sigmoid kernel
-                          self.kernel(X, self.support_vectors_, self.r, self.gamma)) + self.intercept_
+                          self.kernel(self.support_vectors_, X, self.r, self.gamma)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_
