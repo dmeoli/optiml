@@ -110,6 +110,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] linear kernel
             - [x] polynomial kernel
             - [x] rbf kernel
+            - [x] sigmoid kernel
     - [x] Neural Networks
         - Losses
             - [x] Mean Squared Error

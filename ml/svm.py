@@ -14,7 +14,7 @@ plt.style.use('ggplot')
 
 
 class SVM(BaseEstimator):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., r=0.,
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., coef0=0.,
                  optimizer=solve_qp, epochs=1000, verbose=False):
         if kernel not in (linear_kernel, polynomial_kernel, rbf_kernel, sigmoid_kernel):
             raise ValueError('unknown kernel function {}'.format(kernel))
@@ -24,7 +24,8 @@ class SVM(BaseEstimator):
             raise ValueError('unknown gamma type {}'.format(gamma))
         self.gamma = gamma
         self.C = C
-        self.r = r
+        # polynomial, rbf and sigmoid coef0 for sklearn compatibility
+        self.coef0 = coef0
         # support vectors for sklearn compatibility
         self.support_vectors_ = np.zeros(0)
         self.sv_y = np.zeros(0)
@@ -126,9 +127,9 @@ def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
 
 
 class SVC(ClassifierMixin, SVM):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., r=0.,
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., coef0=0.,
                  optimizer=solve_qp, epochs=1000, verbose=False):
-        super().__init__(kernel, degree, gamma, C, r, optimizer, epochs, verbose)
+        super().__init__(kernel, degree, gamma, C, coef0, optimizer, epochs, verbose)
         self.alphas = np.zeros(0)
 
     def fit(self, X, y):
@@ -144,11 +145,11 @@ class SVC(ClassifierMixin, SVM):
 
         n_samples = len(y)
         # gram matrix
-        K = (self.kernel(X, X, self.r, self.degree)
+        K = (self.kernel(X, X, self.coef0, self.degree, self.gamma)
              if self.kernel is polynomial_kernel else
              self.kernel(X, X, self.gamma)
              if self.kernel is rbf_kernel else
-             self.kernel(X, X, self.r, self.gamma)
+             self.kernel(X, X, self.coef0, self.gamma)
              if self.kernel is sigmoid_kernel else
              self.kernel(X, X))  # linear kernel
         P = K * np.outer(y, y)
@@ -197,11 +198,11 @@ class SVC(ClassifierMixin, SVM):
     def decision_function(self, X):
         if self.kernel is not linear_kernel:
             return np.dot(self.alphas * self.sv_y,
-                          self.kernel(self.support_vectors_, X, self.r, self.degree)
+                          self.kernel(self.support_vectors_, X, self.coef0, self.degree, self.gamma)
                           if self.kernel is polynomial_kernel else
                           self.kernel(self.support_vectors_, X, self.gamma)
                           if self.kernel is rbf_kernel else  # sigmoid kernel
-                          self.kernel(self.support_vectors_, X, self.r, self.gamma)) + self.intercept_
+                          self.kernel(self.support_vectors_, X, self.coef0, self.gamma)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_
 
     def predict(self, X):
@@ -209,9 +210,9 @@ class SVC(ClassifierMixin, SVM):
 
 
 class SVR(RegressorMixin, SVM):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., epsilon=0.1, r=0.,
+    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., epsilon=0.1, coef0=0.,
                  optimizer=solve_qp, epochs=1000, verbose=False):
-        super().__init__(kernel, degree, gamma, C, r, optimizer, epochs, verbose)
+        super().__init__(kernel, degree, gamma, C, coef0, optimizer, epochs, verbose)
         self.epsilon = epsilon
         self.alphas_p = np.zeros(0)
         self.alphas_n = np.zeros(0)
@@ -228,11 +229,11 @@ class SVR(RegressorMixin, SVM):
 
         n_samples = len(y)
         # gram matrix
-        K = (self.kernel(X, X, self.r, self.degree)
+        K = (self.kernel(X, X, self.coef0, self.degree, self.gamma)
              if self.kernel is polynomial_kernel else
              self.kernel(X, X, self.gamma)
              if self.kernel is rbf_kernel else
-             self.kernel(X, X, self.r, self.gamma)
+             self.kernel(X, X, self.coef0, self.gamma)
              if self.kernel is sigmoid_kernel else
              self.kernel(X, X))  # linear kernel
         P = np.vstack((np.hstack((K, -K)),  # alphas_p, alphas_n
@@ -284,9 +285,9 @@ class SVR(RegressorMixin, SVM):
     def predict(self, X):
         if self.kernel is not linear_kernel:
             return np.dot(self.alphas_p - self.alphas_n,
-                          self.kernel(self.support_vectors_, X, self.r, self.degree)
+                          self.kernel(self.support_vectors_, X, self.coef0, self.degree, self.gamma)
                           if self.kernel is polynomial_kernel else
                           self.kernel(self.support_vectors_, X, self.gamma)
                           if self.kernel is rbf_kernel else  # sigmoid kernel
-                          self.kernel(self.support_vectors_, X, self.r, self.gamma)) + self.intercept_
+                          self.kernel(self.support_vectors_, X, self.coef0, self.gamma)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_
