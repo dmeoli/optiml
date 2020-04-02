@@ -1,8 +1,11 @@
+import numpy as np
+from sklearn.metrics import make_scorer
+from sklearn.model_selection import train_test_split, GridSearchCV
+
 from ml.losses import mean_squared_error
-from ml.neural_network.activations import sigmoid, tanh, relu, linear
+from ml.neural_network.activations import sigmoid, tanh, linear
 from ml.neural_network.layers import FullyConnected
 from ml.neural_network.neural_network import NeuralNetworkRegressor
-from ml.regularizers import L2, L1
 from optimization.unconstrained.accelerated_gradient import AcceleratedGradient, SteepestDescentAcceleratedGradient
 from optimization.unconstrained.adadelta import AdaDelta
 from optimization.unconstrained.adagrad import AdaGrad
@@ -16,14 +19,10 @@ from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.quasi_newton import BFGS
 from optimization.unconstrained.rmsprop import RMSProp
 from optimization.unconstrained.rprop import RProp
-from utils import load_ml_cup, mean_euclidean_error
+from utils import load_ml_cup, mean_euclidean_error, load_ml_cup_blind
 
 line_search_optimizers = [NonlinearConjugateGradient, SteepestDescentAcceleratedGradient,
                           SteepestGradientDescent, HeavyBallGradient, BFGS]
-
-max_f_eval = [10000, 15000, 20000, 25000, 30000]
-
-epochs = [1000, 500, 200, 100]
 
 stochastic_adaptive_optimizers = [Adam, AdaMax, AMSGrad, AdaGrad, AdaDelta, RProp, RMSProp]
 
@@ -31,32 +30,59 @@ stochastic_optimizers = [GradientDescent, AcceleratedGradient]
 
 others = [ProximalBundle]
 
-momentum = [0.5, 0.6, 0.7, 0.8, 0.9]
-
-activations = [sigmoid, tanh, relu]
-
-learning_rate = [0.001, 0.003, 0.006, 0.009, 0.01, 0.03, 0.06, 0.09, 0.1, 0.3, 0.6, 0.9]
-
-learning_rate_epochs = {1000: 0.001,
-                        500: 0.01,
-                        200: 0.05,
-                        100: 0.1}
-
-regularizers = [L1(0.01), L1(0.1), L2(0.01), L2(0.1)]
-
 if __name__ == '__main__':
     X, y = load_ml_cup()
 
-    from sklearn.model_selection import train_test_split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
+    tuned_parameters = [{'layers': [(FullyConnected(20, 20, sigmoid),
+                                     FullyConnected(20, 20, sigmoid),
+                                     FullyConnected(20, 2, linear)),
+                                    (FullyConnected(20, 20, tanh),
+                                     FullyConnected(20, 20, tanh),
+                                     FullyConnected(20, 2, linear))],
+                         'loss': [mean_squared_error],
+                         'optimizer': line_search_optimizers,
+                         'epochs': [1000, 500, 200, 100],
+                         'max_f_eval': [10000, 15000, 20000, 25000, 30000],
+                         'batch_size': [300, 500, 700]},
+                        {'layers': [(FullyConnected(20, 20, sigmoid),
+                                     FullyConnected(20, 20, sigmoid),
+                                     FullyConnected(20, 2, linear)),
+                                    (FullyConnected(20, 20, tanh),
+                                     FullyConnected(20, 20, tanh),
+                                     FullyConnected(20, 2, tanh))],
+                         'loss': [mean_squared_error],
+                         'optimizer': stochastic_optimizers + stochastic_adaptive_optimizers + others,
+                         'learning_rate': [0.001, 0.01, 0.1],
+                         'momentum_type': ['standard', 'nesterov'],
+                         'momentum': [0.9, 0.8],
+                         'epochs': [1000, 500, 200, 100],
+                         'batch_size': [300, 500, 700]}]
 
-    net = NeuralNetworkRegressor(FullyConnected(20, 20, sigmoid),
-                                 FullyConnected(20, 20, sigmoid),
-                                 FullyConnected(20, 2, linear))
+    net = GridSearchCV(NeuralNetworkRegressor(),
+                       param_grid=tuned_parameters,
+                       scoring=make_scorer(mean_euclidean_error, greater_is_better=False),
+                       cv=5).fit(X_train, y_train)
 
-    net.fit(X_train, y_train, loss=mean_squared_error, optimizer=BFGS, learning_rate=0.01, momentum_type='nesterov',
-            momentum=0.9, epochs=1000, batch_size=300, max_f_eval=15000, verbose=True, plot=True)
-    pred = net.predict(X_test)
-    print(mean_squared_error(pred, y_test))
-    print(mean_euclidean_error(pred, y_test))
+    print('best parameters set found on development set:')
+    print()
+    print(net.best_params_)
+    print()
+    print('grid scores on development set:')
+    print()
+    means = net.cv_results_['mean_test_score']
+    stds = net.cv_results_['std_test_score']
+    for mean, std, params in zip(means, stds, net.cv_results_['params']):
+        print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
+    print()
+    # print(svr.cv_results_)
+    # print()
+    print('the model is trained on the full development set.')
+    print('the scores are computed on the full evaluation set.')
+    print()
+    print(mean_euclidean_error(y_test, net.predict(X_test)))
+
+    X_blind_test = load_ml_cup_blind()
+    net.fit(X, y)
+    np.savetxt('./ml/data/ML-CUP19/dmeoli-svr.csv', net.predict(X_blind_test), delimiter=',')

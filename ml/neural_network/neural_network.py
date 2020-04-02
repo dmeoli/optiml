@@ -6,6 +6,7 @@ from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.preprocessing import OneHotEncoder
 
 from ml.initializers import compute_fans
+from ml.losses import mean_squared_error
 from ml.neural_network.layers import Layer, ParamLayer
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
@@ -16,13 +17,11 @@ plt.style.use('ggplot')
 
 class NeuralNetworkLossFunction(OptimizationFunction):
 
-    def __init__(self, X, y, neural_net, loss, verbose):
+    def __init__(self, X, y, neural_net):
         super().__init__(X.shape[1])
         self.X = X
         self.y = y
         self.neural_net = neural_net
-        self.loss = loss
-        self.verbose = verbose
         self.loss_history = ([], [])  # training loss history, validation loss history
         if isinstance(self.neural_net, NeuralNetworkClassifier):
             self.accuracy_history = ([], [])  # training accuracy history, validation loss history
@@ -32,13 +31,14 @@ class NeuralNetworkLossFunction(OptimizationFunction):
 
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
-        loss = (self.loss(self.neural_net.forward(X), y) +
+        loss = (self.neural_net.loss(self.neural_net.forward(X), y) +
                 np.sum(np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
                               if isinstance(layer, ParamLayer)) +
                        np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
                               if isinstance(layer, ParamLayer) and layer.use_bias)) / X.shape[0])
         if inspect.stack()[1].function is 'minimize':  # caller's method name
-            if self.verbose and self.loss_history[0] and isinstance(self.neural_net, NeuralNetworkClassifier):
+            if (self.neural_net.verbose and self.loss_history[0]
+                    and isinstance(self.neural_net, NeuralNetworkClassifier)):
                 print('\t accuracy: {:4f}'.format(0.), end='')
             self.loss_history[0].append(loss)
         return loss
@@ -78,9 +78,19 @@ class NeuralNetworkLossFunction(OptimizationFunction):
 
 class NeuralNetwork(BaseEstimator, Layer):
 
-    def __init__(self, *layers):
-        assert isinstance(layers, (list, tuple))
+    def __init__(self, layers=(), loss=mean_squared_error, optimizer=GradientDescent, learning_rate=0.01, epochs=100,
+                 momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, verbose=False, plot=False):
         self.layers = layers
+        self.loss = loss
+        self.optimizer = optimizer
+        self.learning_rate = learning_rate
+        self.momentum_type = momentum_type
+        self.momentum = momentum
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.max_f_eval = max_f_eval
+        self.verbose = verbose
+        self.plot = plot
 
     def forward(self, X):
         for layer in self.layers:
@@ -141,8 +151,7 @@ class NeuralNetwork(BaseEstimator, Layer):
                 self.biases_idx.append((start, end))
                 start = end
 
-    def fit(self, X, y, loss, optimizer=GradientDescent, learning_rate=0.01, momentum_type='none',
-            momentum=0.9, epochs=100, batch_size=None, max_f_eval=1000, verbose=False, plot=False):
+    def fit(self, X, y):
         if y.ndim is 1:
             y = y.reshape((-1, 1))
 
@@ -150,20 +159,21 @@ class NeuralNetwork(BaseEstimator, Layer):
 
         packed_weights_biases = self._pack(*self.params)
 
-        loss = NeuralNetworkLossFunction(X, y, self, loss, verbose)
-        if issubclass(optimizer, LineSearchOptimizer):
-            opt = optimizer(f=loss, wrt=packed_weights_biases, batch_size=batch_size,
-                            max_iter=epochs, max_f_eval=max_f_eval, verbose=verbose).minimize()
+        loss = NeuralNetworkLossFunction(X, y, self)
+        if issubclass(self.optimizer, LineSearchOptimizer):
+            opt = self.optimizer(f=loss, wrt=packed_weights_biases, batch_size=self.batch_size, max_iter=self.epochs,
+                                 max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
             # if opt[2] is not 'optimal':
             #     warnings.warn("max_iter or max_f_eval reached and the optimization hasn't converged yet")
         else:
-            opt = optimizer(f=loss, wrt=packed_weights_biases, step_rate=learning_rate, momentum_type=momentum_type,
-                            momentum=momentum, batch_size=batch_size, max_iter=epochs, verbose=verbose).minimize()
+            opt = self.optimizer(f=loss, wrt=packed_weights_biases, step_rate=self.learning_rate,
+                                 momentum_type=self.momentum_type, momentum=self.momentum, batch_size=self.batch_size,
+                                 max_iter=self.epochs, verbose=self.verbose).minimize()
             # if opt[2] is not 'optimal':
             #     warnings.warn("max_iter reached and the optimization hasn't converged yet")
         self._unpack(opt[0])
 
-        if plot:
+        if self.plot:
             loss.plot()
 
         return self
@@ -171,13 +181,11 @@ class NeuralNetwork(BaseEstimator, Layer):
 
 class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
-    def fit(self, X, y, loss, optimizer=GradientDescent, learning_rate=0.01, momentum_type='none',
-            momentum=0.9, epochs=100, batch_size=None, max_f_eval=1000, verbose=False, plot=False):
+    def fit(self, X, y):
         if y.ndim is 1:
             y = y.reshape((-1, 1))
         y = OneHotEncoder().fit_transform(y).toarray()
-        return super().fit(X, y, loss, optimizer, learning_rate, momentum_type, momentum,
-                           epochs, batch_size, max_f_eval, verbose, plot)
+        return super().fit(X, y)
 
     def predict(self, X):
         return np.argmax(self.forward(X), axis=1)
