@@ -41,31 +41,6 @@ class SVM(BaseEstimator):
     def plot(svm, X, y):
 
         ax = plt.axes()
-        # ax.set_axisbelow(True)
-        # plt.grid(color='w', linestyle='solid')
-
-        # # hide axis spines
-        # for spine in ax.spines.values():
-        #     spine.set_visible(False)
-
-        # hide top and right ticks
-        # ax.xaxis.tick_bottom()
-        # ax.yaxis.tick_left()
-
-        # lighten ticks and labels
-        # ax.tick_params(colors='gray', direction='out')
-        # for tick in ax.get_xticklabels():
-        #     tick.set_color('gray')
-        # for tick in ax.get_yticklabels():
-        #     tick.set_color('gray')
-
-        # format axis
-        # ax.get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x), ',')))  # separate 000 with ,
-        # ax.get_yaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x), ',')))  # separate 000 with ,
-        # ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))  # 2dp for x axis.
-        # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))  # 2dp for y axis.
-        # ax.xaxis.set_tick_params(labelsize=8)  # tick label size
-        # ax.yaxis.set_tick_params(labelsize=8)  # tick label size
 
         # axis labels and limits
         if isinstance(svm, ClassifierMixin):
@@ -112,7 +87,7 @@ class SVM(BaseEstimator):
             plt.plot(X1[:, 0], X1[:, 1], marker='x', markersize=5, color='lightblue', linestyle='none')
             plt.plot(X2[:, 0], X2[:, 1], marker='o', markersize=4, color='darkorange', linestyle='none')
         else:
-            plt.scatter(X, y, edgecolor='darkorange')
+            plt.plot(X, y, marker='o', markersize=4, color='darkorange', linestyle='none')
 
         # support vectors
         if isinstance(svm, ClassifierMixin):
@@ -130,9 +105,9 @@ class SVM(BaseEstimator):
         elif isinstance(svm, RegressorMixin):
             _X = np.linspace(-2 * np.pi, 2 * np.pi, 10000).reshape((-1, 1))
             Z = svm.predict(_X)
-            ax.plot(_X, Z, color='k', lw=1)
-            ax.plot(_X, Z + svm.epsilon, '--', c='grey', lw=1)
-            ax.plot(_X, Z - svm.epsilon, '--', c='grey', lw=1)
+            ax.plot(_X, Z, color='k', linewidth=1)
+            ax.plot(_X, Z + svm.epsilon, color='grey', linestyle='--', linewidth=1)
+            ax.plot(_X, Z - svm.epsilon, color='grey', linestyle='--', linewidth=1)
 
         plt.show()
 
