@@ -2,11 +2,10 @@ import inspect
 
 import autograd.numpy as np
 from matplotlib import pyplot as plt
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.preprocessing import OneHotEncoder
 
 from ml.initializers import compute_fans
-from ml.neural_network.activations import Linear
 from ml.neural_network.layers import Layer, ParamLayer
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
@@ -25,7 +24,7 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         self.loss = loss
         self.verbose = verbose
         self.loss_history = ([], [])  # training loss history, validation loss history
-        if not isinstance(self.neural_net.layers[-1]._a, Linear):  # classification
+        if isinstance(self.neural_net, NeuralNetworkClassifier):
             self.accuracy_history = ([], [])  # training accuracy history, validation loss history
 
     def args(self):
@@ -39,7 +38,7 @@ class NeuralNetworkLossFunction(OptimizationFunction):
                        np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
                               if isinstance(layer, ParamLayer) and layer.use_bias)) / X.shape[0])
         if inspect.stack()[1].function is 'minimize':  # caller's method name
-            if self.verbose and self.loss_history[0] and not isinstance(self.neural_net.layers[-1]._a, Linear):
+            if self.verbose and self.loss_history[0] and isinstance(self.neural_net, NeuralNetworkClassifier):
                 print('\t accuracy: {:4f}'.format(0.), end='')
             self.loss_history[0].append(loss)
         return loss
@@ -66,7 +65,7 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         loss.set_ylabel('loss')
         loss.legend(['training', 'validation'])
         plt.show()
-        if not isinstance(self.neural_net.layers[-1]._a, Linear):  # classification
+        if isinstance(self.neural_net, NeuralNetworkClassifier):
             fig, accuracy = plt.subplots()
             accuracy.plot(self.accuracy_history[0], 'b.', alpha=0.2)
             accuracy.plot(self.accuracy_history[1], 'r-')
@@ -142,12 +141,10 @@ class NeuralNetwork(BaseEstimator, Layer):
                 self.biases_idx.append((start, end))
                 start = end
 
-    def fit(self, X, y, loss, optimizer=GradientDescent, learning_rate=0.01, momentum_type='none', momentum=0.9,
-            epochs=100, batch_size=None, k_folds=0, max_f_eval=1000, early_stopping=True, verbose=False, plot=False):
+    def fit(self, X, y, loss, optimizer=GradientDescent, learning_rate=0.01, momentum_type='none',
+            momentum=0.9, epochs=100, batch_size=None, max_f_eval=1000, verbose=False, plot=False):
         if y.ndim is 1:
             y = y.reshape((-1, 1))
-        if not isinstance(self.layers[-1]._a, Linear):  # classification
-            y = OneHotEncoder().fit_transform(y).toarray()
 
         self._store_meta_info()
 
@@ -171,11 +168,25 @@ class NeuralNetwork(BaseEstimator, Layer):
 
         return self
 
+
+class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
+
+    def fit(self, X, y, loss, optimizer=GradientDescent, learning_rate=0.01, momentum_type='none',
+            momentum=0.9, epochs=100, batch_size=None, max_f_eval=1000, verbose=False, plot=False):
+        if y.ndim is 1:
+            y = y.reshape((-1, 1))
+        y = OneHotEncoder().fit_transform(y).toarray()
+        return super().fit(X, y, loss, optimizer, learning_rate, momentum_type, momentum,
+                           epochs, batch_size, max_f_eval, verbose, plot)
+
     def predict(self, X):
-        if isinstance(self.layers[-1]._a, Linear):  # regression
-            if self.layers[-1].fan_out is 1:  # one target
-                return self.forward(X).ravel()
-            else:  # multi target
-                return self.forward(X)
-        else:  # classification
-            return np.argmax(self.forward(X), axis=1)
+        return np.argmax(self.forward(X), axis=1)
+
+
+class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
+
+    def predict(self, X):
+        if self.layers[-1].fan_out is 1:  # one target
+            return self.forward(X).ravel()
+        else:  # multi target
+            return self.forward(X)

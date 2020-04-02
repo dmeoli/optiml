@@ -73,6 +73,11 @@ def iter_mini_batches(Xy, batch_size):
                 yield [param[slice(start, stop)] for param in Xy]
 
 
+def mean_euclidean_error(y_true, y_pred):
+    assert y_true.shape == y_pred.shape
+    return np.mean(np.linalg.norm(y_pred - y_true, axis=y_true.ndim - 1))  # for multi-target compatibility
+
+
 def generate_linearly_separable_data():
     mean1 = np.array([0, 2])
     mean2 = np.array([2, 0])

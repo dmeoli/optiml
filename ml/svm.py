@@ -142,6 +142,7 @@ class SVC(ClassifierMixin, SVM):
         if self.labels.size > 2:
             raise ValueError('use OneVsOneClassifier or OneVsRestClassifier from sklearn.multiclass '
                              'to train a model over more than two labels')
+        y = np.where(y == self.labels[0], -1, 1)
 
         n_samples = len(y)
         # gram matrix
@@ -206,7 +207,7 @@ class SVC(ClassifierMixin, SVM):
         return np.dot(X, self.coef_) + self.intercept_
 
     def predict(self, X):
-        return np.sign(self.decision_function(X))
+        return np.where(self.decision_function(X) >= 0, self.labels[1], self.labels[0])
 
 
 class SVR(RegressorMixin, SVM):

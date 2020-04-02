@@ -1,8 +1,7 @@
 from ml.losses import mean_squared_error
-from ml.metrics import mean_euclidean_error
 from ml.neural_network.activations import sigmoid, tanh, relu, linear
 from ml.neural_network.layers import FullyConnected
-from ml.neural_network.neural_network import NeuralNetwork
+from ml.neural_network.neural_network import NeuralNetworkRegressor
 from ml.regularizers import L2, L1
 from optimization.unconstrained.accelerated_gradient import AcceleratedGradient, SteepestDescentAcceleratedGradient
 from optimization.unconstrained.adadelta import AdaDelta
@@ -17,7 +16,7 @@ from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.quasi_newton import BFGS
 from optimization.unconstrained.rmsprop import RMSProp
 from optimization.unconstrained.rprop import RProp
-from utils import load_ml_cup
+from utils import load_ml_cup, mean_euclidean_error
 
 line_search_optimizers = [NonlinearConjugateGradient, SteepestDescentAcceleratedGradient,
                           SteepestGradientDescent, HeavyBallGradient, BFGS]
@@ -45,8 +44,6 @@ learning_rate_epochs = {1000: 0.001,
 
 regularizers = [L1(0.01), L1(0.1), L2(0.01), L2(0.1)]
 
-k_folds = [3, 5]
-
 if __name__ == '__main__':
     X, y = load_ml_cup()
 
@@ -54,9 +51,9 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, test_size=0.25)
 
-    net = NeuralNetwork(FullyConnected(20, 20, sigmoid),
-                        FullyConnected(20, 20, sigmoid),
-                        FullyConnected(20, 2, linear))
+    net = NeuralNetworkRegressor(FullyConnected(20, 20, sigmoid),
+                                 FullyConnected(20, 20, sigmoid),
+                                 FullyConnected(20, 2, linear))
 
     net.fit(X_train, y_train, loss=mean_squared_error, optimizer=BFGS, learning_rate=0.01, momentum_type='nesterov',
             momentum=0.9, epochs=1000, batch_size=300, max_f_eval=15000, verbose=True, plot=True)
