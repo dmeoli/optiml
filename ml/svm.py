@@ -27,6 +27,7 @@ class SVM(BaseEstimator):
         self.r = r
         # support vectors for sklearn compatibility
         self.support_vectors_ = np.zeros(0)
+        self.sv_y = np.zeros(0)
         # support vectors indices for sklearn compatibility
         self.support_ = np.zeros(0)
         # w vector for sklearn compatibility
@@ -128,7 +129,6 @@ class SVC(ClassifierMixin, SVM):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., r=0.,
                  optimizer=solve_qp, epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, C, r, optimizer, epochs, verbose)
-        self.sv_y = np.zeros(0)
         self.alphas = np.zeros(0)
 
     def fit(self, X, y):
@@ -197,11 +197,11 @@ class SVC(ClassifierMixin, SVM):
     def decision_function(self, X):
         if self.kernel is not linear_kernel:
             return np.dot(self.alphas * self.sv_y,
-                          self.kernel(self.support_vectors_, X, self.r, self.degree)
+                          self.kernel(X, self.support_vectors_, self.r, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(self.support_vectors_, X, self.gamma)
+                          self.kernel(X, self.support_vectors_, self.gamma)
                           if self.kernel is rbf_kernel else  # sigmoid kernel
-                          self.kernel(self.support_vectors_, X, self.r, self.gamma)) + self.intercept_
+                          self.kernel(X, self.support_vectors_, self.r, self.gamma)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_
 
     def predict(self, X):
@@ -269,14 +269,14 @@ class SVR(RegressorMixin, SVM):
 
         sv = np.logical_or(alphas_p > 1e-5, alphas_n > 1e-5)
         self.support_ = np.arange(len(alphas_p))[sv]
-        self.support_vectors_, self.alphas_p, self.alphas_n = X[sv], alphas_p[sv], alphas_n[sv]
+        self.support_vectors_, self.sv_y, self.alphas_p, self.alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
 
         if self.kernel is linear_kernel:
             self.coef_ = np.dot(self.alphas_p - self.alphas_n, self.support_vectors_)
 
         for n in range(len(self.alphas_p)):
-            self.intercept_ += y[sv][n] - self.epsilon
-            self.intercept_ -= np.sum((self.alphas_p - self.alphas_n) * K[self.support_[n], self.support_[n]])
+            self.intercept_ += self.sv_y[n] - self.epsilon
+            self.intercept_ -= np.sum((self.alphas_p - self.alphas_n) * K[self.support_[n], sv])
         self.intercept_ /= len(self.alphas_p)
 
         return self
@@ -284,9 +284,9 @@ class SVR(RegressorMixin, SVM):
     def predict(self, X):
         if self.kernel is not linear_kernel:
             return np.dot(self.alphas_p - self.alphas_n,
-                          self.kernel(self.support_vectors_, X, self.r, self.degree)
+                          self.kernel(X, self.support_vectors_, self.r, self.degree)
                           if self.kernel is polynomial_kernel else
-                          self.kernel(self.support_vectors_, X, self.gamma)
+                          self.kernel(X, self.support_vectors_, self.gamma)
                           if self.kernel is rbf_kernel else  # sigmoid kernel
-                          self.kernel(self.support_vectors_, X, self.r, self.gamma)) + self.intercept_
+                          self.kernel(X, self.support_vectors_, self.r, self.gamma)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_
