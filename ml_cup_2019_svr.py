@@ -38,8 +38,6 @@ others = [ProximalBundle]
 constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint,
                           LagrangianDual, solve_qp, scipy_solve_qp]
 
-kernels = [linear_kernel, polynomial_kernel, rbf_kernel]
-
 if __name__ == '__main__':
     X, y = load_ml_cup()
 
@@ -52,7 +50,8 @@ if __name__ == '__main__':
     svr = GridSearchCV(MultiOutputRegressor(SVR()),
                        param_grid=tuned_parameters,
                        scoring=make_scorer(mean_euclidean_error, greater_is_better=False),
-                       cv=5).fit(X_train, y_train)
+                       cv=5)
+    svr.fit(X_train, y_train)
 
     print('best parameters set found on development set:')
     print()

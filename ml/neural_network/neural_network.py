@@ -152,9 +152,6 @@ class NeuralNetwork(BaseEstimator, Layer):
                 start = end
 
     def fit(self, X, y):
-        if y.ndim is 1:
-            y = y.reshape((-1, 1))
-
         self._store_meta_info()
 
         packed_weights_biases = self._pack(*self.params)
@@ -192,6 +189,11 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
 
 class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
+
+    def fit(self, X, y):
+        if y.ndim is 1:
+            y = y.reshape((-1, 1))
+        return super().fit(X, y)
 
     def predict(self, X):
         if self.layers[-1].fan_out is 1:  # one target

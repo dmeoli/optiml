@@ -63,7 +63,8 @@ if __name__ == '__main__':
     net = GridSearchCV(NeuralNetworkRegressor(),
                        param_grid=tuned_parameters,
                        scoring=make_scorer(mean_euclidean_error, greater_is_better=False),
-                       cv=5).fit(X_train, y_train)
+                       cv=5)
+    net.fit(X_train, y_train)
 
     print('best parameters set found on development set:')
     print()
