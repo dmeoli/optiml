@@ -277,8 +277,9 @@ class SVR(RegressorMixin, SVM):
             self.coef_ = np.dot(self.alphas_p - self.alphas_n, self.support_vectors_)
 
         for n in range(len(self.alphas_p)):
-            self.intercept_ += self.sv_y[n] - self.epsilon
+            self.intercept_ += self.sv_y[n]
             self.intercept_ -= np.sum((self.alphas_p - self.alphas_n) * K[self.support_[n], sv])
+        self.intercept_ -= self.epsilon
         self.intercept_ /= len(self.alphas_p)
 
         return self
