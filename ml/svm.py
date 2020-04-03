@@ -24,35 +24,24 @@ class SVM(BaseEstimator):
             raise ValueError('unknown gamma type {}'.format(gamma))
         self.gamma = gamma
         self.C = C
-        # polynomial, rbf and sigmoid coef0 for sklearn compatibility
-        self.coef0 = coef0
-        # support vectors for sklearn compatibility
-        self.support_vectors_ = np.zeros(0)
-        self.sv_y = np.zeros(0)
-        # support vectors indices for sklearn compatibility
-        self.support_ = np.zeros(0)
-        # w vector for sklearn compatibility
-        self.coef_ = None
-        # b value for sklearn compatibility
-        self.intercept_ = 0.
         self.optimizer = optimizer
         self.epochs = epochs
         self.verbose = verbose
 
     @staticmethod
     def plot(svm, X, y):
-
         ax = plt.axes()
 
         # axis labels and limits
         if isinstance(svm, ClassifierMixin):
-            X1, X2 = X[y == 1], X[y == -1]
+            labels = np.unique(y)
+            X1, X2 = X[y == labels[0]], X[y == labels[1]]
             plt.xlabel('$x_1$', fontsize=9)
             plt.ylabel('$x_2$', fontsize=9)
             ax.set(xlim=(X1.min(), X1.max()), ylim=(X2.min(), X2.max()))
         elif isinstance(svm, RegressorMixin):
-            plt.xlabel('X', fontsize=9)
-            plt.ylabel('y', fontsize=9)
+            plt.xlabel('$X$', fontsize=9)
+            plt.ylabel('$y$', fontsize=9)
 
         plt.title('{} {} using {}'.format('custom' if isinstance(svm, SVM) else 'sklearn', type(svm).__name__,
                                           svm.kernel.__name__.replace('_', ' ') if callable(svm.kernel)
@@ -185,20 +174,22 @@ class SVC(ClassifierMixin, SVM):
         sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
         self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], alphas[sv]
+        self.dual_coef_ = self.alphas * self.sv_y
 
         if self.kernel is linear_kernel:
-            self.coef_ = np.dot(self.alphas * self.sv_y, self.support_vectors_)
+            self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
 
+        self.intercept_ = 0
         for n in range(len(self.alphas)):
             self.intercept_ += self.sv_y[n]
-            self.intercept_ -= np.sum(self.alphas * self.sv_y * K[self.support_[n], sv])
+            self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
         self.intercept_ /= len(self.alphas)
 
         return self
 
     def decision_function(self, X):
         if self.kernel is not linear_kernel:
-            return np.dot(self.alphas * self.sv_y,
+            return np.dot(self.dual_coef_,
                           self.kernel(self.support_vectors_, X, self.coef0, self.degree, self.gamma)
                           if self.kernel is polynomial_kernel else
                           self.kernel(self.support_vectors_, X, self.gamma)
@@ -272,13 +263,15 @@ class SVR(RegressorMixin, SVM):
         sv = np.logical_or(alphas_p > 1e-5, alphas_n > 1e-5)
         self.support_ = np.arange(len(alphas_p))[sv]
         self.support_vectors_, self.sv_y, self.alphas_p, self.alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
+        self.dual_coef = self.alphas_p - self.alphas_n
 
         if self.kernel is linear_kernel:
-            self.coef_ = np.dot(self.alphas_p - self.alphas_n, self.support_vectors_)
+            self.coef_ = np.dot(self.dual_coef, self.support_vectors_)
 
+        self.intercept_ = 0
         for n in range(len(self.alphas_p)):
             self.intercept_ += self.sv_y[n]
-            self.intercept_ -= np.sum((self.alphas_p - self.alphas_n) * K[self.support_[n], sv])
+            self.intercept_ -= np.sum(self.dual_coef * K[self.support_[n], sv])
         self.intercept_ -= self.epsilon
         self.intercept_ /= len(self.alphas_p)
 
@@ -286,7 +279,7 @@ class SVR(RegressorMixin, SVM):
 
     def predict(self, X):
         if self.kernel is not linear_kernel:
-            return np.dot(self.alphas_p - self.alphas_n,
+            return np.dot(self.dual_coef,
                           self.kernel(self.support_vectors_, X, self.coef0, self.degree, self.gamma)
                           if self.kernel is polynomial_kernel else
                           self.kernel(self.support_vectors_, X, self.gamma)
