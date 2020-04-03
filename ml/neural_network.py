@@ -7,7 +7,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 from ml.initializers import compute_fans
 from ml.losses import mean_squared_error
-from ml.neural_network.layers import Layer, ParamLayer
+from ml.layers import Layer, ParamLayer
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GradientDescent

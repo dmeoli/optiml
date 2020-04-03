@@ -3,7 +3,7 @@ from sklearn.base import MultiOutputMixin, RegressorMixin, BaseEstimator
 from sklearn.linear_model._base import LinearClassifierMixin
 
 from ml.losses import mean_squared_error, cross_entropy
-from ml.neural_network.activations import Sigmoid
+from ml.activations import Sigmoid
 from ml.regularizers import l1, l2
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer

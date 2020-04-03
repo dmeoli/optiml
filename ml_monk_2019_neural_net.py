@@ -1,7 +1,7 @@
 from ml.losses import cross_entropy
-from ml.neural_network.activations import sigmoid, softmax
-from ml.neural_network.layers import FullyConnected
-from ml.neural_network.neural_network import NeuralNetworkClassifier
+from ml.activations import sigmoid, softmax
+from ml.layers import FullyConnected
+from ml.neural_network import NeuralNetworkClassifier
 from optimization.unconstrained.quasi_newton import BFGS
 from utils import load_monk
 

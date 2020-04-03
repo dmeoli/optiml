@@ -6,7 +6,6 @@ from qpsolvers import solve_qp
 from scipy.optimize import minimize
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 
-from ml.kernels import rbf_kernel, linear_kernel, polynomial_kernel, sigmoid_kernel
 from optimization.optimization_function import BoxConstrainedQuadratic, LagrangianBoxConstrained
 from optimization.optimizer import BoxConstrainedOptimizer, Optimizer
 
@@ -14,20 +13,148 @@ plt.style.use('ggplot')
 
 
 class SVM(BaseEstimator):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., coef0=0.,
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
                  optimizer=solve_qp, epochs=1000, verbose=False):
-        if kernel not in (linear_kernel, polynomial_kernel, rbf_kernel, sigmoid_kernel):
-            raise ValueError('unknown kernel function {}'.format(kernel))
-        self.kernel = kernel
+        kernels = {'linear': self.linear,
+                   'poly': self.poly,
+                   'rbf': self.rbf,
+                   'sigmoid': self.sigmoid}
+        if kernel not in kernels.keys():
+            raise ValueError(f'unknown kernel function {kernel}')
+        self.kernel_type = kernel
+        self.kernel = kernels[kernel]
         self.degree = degree
         if gamma not in ('scale', 'auto'):
-            raise ValueError('unknown gamma type {}'.format(gamma))
+            raise ValueError(f'unknown gamma type {gamma}')
         self.gamma = gamma
         self.C = C
         self.coef0 = coef0
         self.optimizer = optimizer
         self.epochs = epochs
         self.verbose = verbose
+
+    def linear(self, X, y):
+        return np.dot(X, y.T)
+
+    def poly(self, X, y):
+        """A non-stationary kernel well suited for problems
+        where all the training data is normalized"""
+        gamma = 1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else 1. / X.shape[1]  # auto
+        return (gamma * np.dot(X, y.T) + self.coef0) ** self.degree
+
+    def rbf(self, X, y):
+        """Radial-basis function kernel (aka squared-exponential kernel)."""
+        gamma = 1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else 1. / X.shape[1]  # auto
+        # according to: https://stats.stackexchange.com/questions/239008/rbf-kernel-algorithm-python
+        return np.exp(-gamma * (np.dot(X ** 2, np.ones((X.shape[1], y.shape[0]))) +
+                                np.dot(np.ones((X.shape[0], X.shape[1])), y.T ** 2) - 2. * np.dot(X, y.T)))
+
+    def sigmoid(self, X, y):
+        gamma = 1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else 1. / X.shape[1]  # auto
+        return np.tanh(gamma * np.dot(X, y.T) + self.coef0)
+
+    def take_step(self, X, y, K, i1, i2):
+        n_samples = len(y)
+
+        alpha1 = self.alphas[i1]
+        y1 = y[i1]
+        if 0 < alpha1 < self.C:
+            E1 = self.e_cache[i1]
+        else:
+            E1 = X[i1] * self.coef_ + self.intercept_ - y[i1]
+        alpha2 = self.alphas[i2]
+        y2 = y[i2]
+        E2 = self.e_cache[i2]
+        s = y1 * y2
+        if y1 == y2:
+            L = max(0, alpha1 + alpha2 - self.C)
+            H = min(self.C, alpha1 + alpha2)
+        else:
+            L = max(0, alpha2 - alpha1)
+            H = min(self.C, self.C + alpha2 - alpha1)
+        if L == H:
+            return False
+        eta = K[i1, i1] + K[i2, i2] - 2 * K[i1, i2]
+        if eta > 0:
+            a2 = alpha2 + y2 * (E1 - E2) / eta
+            if a2 < L:
+                a2 = L
+            elif a2 > H:
+                a2 = H
+        else:
+            c1 = eta / 2.
+            c2 = y2 * (E1 - E2) - eta * alpha2
+            Lobj = c1 * L * L + c2 * L
+            Hobj = c1 * H * H + c2 * H
+            if Lobj > Hobj + self.eps:
+                a2 = L
+            elif Lobj < Hobj - self.eps:
+                a2 = H
+            else:
+                a2 = alpha2
+        if abs(a2 - alpha2) < self.eps:
+            return False
+        a1 = alpha1 - s * (a2 - alpha2)
+        if 0 < a1 < self.C:
+            bnew = self.intercept_ - E1 - y1 * (a1 - alpha1) * K[i1, i1] - y2 * (a2 - alpha2) * K[i1, i2]
+        elif 0 < a2 < self.C:
+            bnew = self.intercept_ - E2 - y1 * (a1 - alpha1) * K[i1, i2] - y2 * (a2 - alpha2) * K[i2, i2]
+        else:
+            b1 = self.intercept_ - E1 - y1 * (a1 - alpha1) * K[i1, i1] - y2 * (a2 - alpha2) * K[i1, i2]
+            b2 = self.intercept_ - E2 - y1 * (a1 - alpha1) * K[i1, i2] - y2 * (a2 - alpha2) * K[i2, i2]
+            bnew = (b1 + b2) / 2.0
+        self.intercept_ = bnew
+        self.alphas[i1] = a1
+        self.alphas[i2] = a2
+        self.coef_ = X.T * np.multiply(self.alphas, y)
+        for i in range(n_samples):
+            if (self.alphas[i] > 0) and (self.alphas[i] < self.C):
+                self.e_cache[i] = X[i] * self.coef_ + self.intercept_ - y[i]
+        return True
+
+    def examine_example(self, X, y, K, i2):
+        n_samples = len(y)
+
+        y2 = y[i2]
+        alpha2 = self.alphas[i2]
+        if 0 < alpha2 < self.C:
+            E2 = self.e_cache[i2]
+        else:
+            E2 = X[i2] * self.coef_ + self.intercept_ - y[i2]
+            self.e_cache[i2] = E2
+        r2 = E2 * y2
+        if (r2 < -self.eps and self.alphas[i2] < self.C) or (r2 > self.eps and self.alphas[i2] > 0):
+            # heuristic 1: find the max deltaE
+            max_delta_E = 0
+            i1 = -1
+            for i in range(n_samples):
+                if 0 < self.alphas[i] < self.C:
+                    if i == i2:
+                        continue
+                    E1 = self.e_cache[i]
+                    delta_E = abs(E1 - E2)
+                    if delta_E > max_delta_E:
+                        max_delta_E = delta_E
+                        i1 = i
+            if i1 >= 0:
+                if self.take_step(X, y, K, i1, i2):
+                    return True
+            # heuristic 2: find the suitable i1 on border at random
+            random_index = np.random.permutation(n_samples)
+            for i in random_index:
+                if 0 < self.alphas[i] < self.C:
+                    if i == i2:
+                        continue
+                    if self.take_step(X, y, K, i, i2):
+                        return True
+            # heuristic 3: find the suitable i1 at random on all alphas
+            random_index = np.random.permutation(n_samples)
+            for i in random_index:
+                if i == i2:
+                    continue
+                if self.take_step(X, y, K, i1, i2):
+                    return True
+        return False
 
     @staticmethod
     def plot(svm, X, y):
@@ -44,9 +171,10 @@ class SVM(BaseEstimator):
             plt.xlabel('$X$', fontsize=9)
             plt.ylabel('$y$', fontsize=9)
 
-        plt.title('{} {} using {}'.format('custom' if isinstance(svm, SVM) else 'sklearn', type(svm).__name__,
-                                          svm.kernel.__name__.replace('_', ' ') if callable(svm.kernel)
-                                          else svm.kernel + ' kernel'), fontsize=9)
+        if isinstance(svm, SVM):
+            plt.title(f'custom {type(svm).__name__} using {svm.kernel_type} kernel', fontsize=9)
+        else:
+            plt.title(f'sklearn {type(svm).__name__} using {svm.kernel} kernel', fontsize=9)
 
         # set the legend
         if isinstance(svm, ClassifierMixin):
@@ -117,9 +245,9 @@ def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
 
 
 class SVC(ClassifierMixin, SVM):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., coef0=0.,
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
                  optimizer=solve_qp, epochs=1000, verbose=False):
-        super().__init__(kernel, degree, gamma, C, coef0, optimizer, epochs, verbose)
+        super().__init__(kernel, degree, gamma, coef0, C, optimizer, epochs, verbose)
 
     def fit(self, X, y):
         """
@@ -134,49 +262,62 @@ class SVC(ClassifierMixin, SVM):
         y = np.where(y == self.labels[0], -1, 1)
 
         n_samples = len(y)
-        # gram matrix
-        K = (self.kernel(X, X, self.coef0, self.degree, self.gamma)
-             if self.kernel is polynomial_kernel else
-             self.kernel(X, X, self.gamma)
-             if self.kernel is rbf_kernel else
-             self.kernel(X, X, self.coef0, self.gamma)
-             if self.kernel is sigmoid_kernel else
-             self.kernel(X, X))  # linear kernel
-        P = K * np.outer(y, y)
-        P = (P + P.T) / 2  # ensure P is symmetric
-        q = -np.ones(n_samples)
 
-        G = np.vstack((-np.identity(n_samples), np.identity(n_samples)))  # inequality matrix
-        lb = np.zeros(n_samples)  # lower bounds
-        ub = np.ones(n_samples) * self.C  # upper bounds
-        h = np.hstack((lb, ub))  # inequality vector
+        # kernel matrix
+        K = self.kernel(X, X)
 
-        A = y.astype(np.float)  # equality matrix
-        b = np.zeros(1)  # equality vector
-
-        if self.optimizer is solve_qp:
-            qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-            alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
+        if self.optimizer is None:  # default Platt's SMO algorithm
+            num_changed = 0
+            examine_all = True
+            while num_changed > 0 or examine_all:
+                num_changed = 0
+                if examine_all:
+                    for i in range(n_samples):
+                        num_changed += self.examine_example(i)
+                else:
+                    for i in range(n_samples):
+                        if 0 < self.alphas[i] < self.C:
+                            num_changed += self.examine_example(i)
+                if examine_all:
+                    examine_all = False
+                elif num_changed is 0:
+                    examine_all = True
         else:
-            obj_fun = BoxConstrainedQuadratic(P, q, ub)
-            if self.optimizer is scipy_solve_qp:
-                alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
-            elif issubclass(self.optimizer, BoxConstrainedOptimizer):
-                alphas = self.optimizer(obj_fun, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
-            elif issubclass(self.optimizer, Optimizer):
-                # dual lagrangian relaxation of the box-constrained problem
-                dual = LagrangianBoxConstrained(obj_fun)
-                self.optimizer(dual, max_iter=self.epochs, verbose=self.verbose).minimize()
-                alphas = dual.primal_solution
+            P = K * np.outer(y, y)
+            P = (P + P.T) / 2  # ensure P is symmetric
+            q = -np.ones(n_samples)
+
+            G = np.vstack((-np.identity(n_samples), np.identity(n_samples)))  # inequality matrix
+            lb = np.zeros(n_samples)  # lower bounds
+            ub = np.ones(n_samples) * self.C  # upper bounds
+            h = np.hstack((lb, ub))  # inequality vector
+
+            A = y.astype(np.float)  # equality matrix
+            b = np.zeros(1)  # equality vector
+
+            if self.optimizer is solve_qp:
+                qpsolvers.cvxopt_.options['show_progress'] = self.verbose
+                alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
             else:
-                raise TypeError('unknown optimizer type {}'.format(self.optimizer))
+                obj_fun = BoxConstrainedQuadratic(P, q, ub)
+                if self.optimizer is scipy_solve_qp:
+                    alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
+                elif issubclass(self.optimizer, BoxConstrainedOptimizer):
+                    alphas = self.optimizer(obj_fun, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
+                elif issubclass(self.optimizer, Optimizer):
+                    # dual lagrangian relaxation of the box-constrained problem
+                    dual = LagrangianBoxConstrained(obj_fun)
+                    self.optimizer(dual, max_iter=self.epochs, verbose=self.verbose).minimize()
+                    alphas = dual.primal_solution
+                else:
+                    raise TypeError(f'unknown optimizer type {self.optimizer}')
 
         sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
         self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], alphas[sv]
         self.dual_coef_ = self.alphas * self.sv_y
 
-        if self.kernel is linear_kernel:
+        if self.kernel_type is 'linear':
             self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
 
         self.intercept_ = 0
@@ -188,13 +329,8 @@ class SVC(ClassifierMixin, SVM):
         return self
 
     def decision_function(self, X):
-        if self.kernel is not linear_kernel:
-            return np.dot(self.dual_coef_,
-                          self.kernel(self.support_vectors_, X, self.coef0, self.degree, self.gamma)
-                          if self.kernel is polynomial_kernel else
-                          self.kernel(self.support_vectors_, X, self.gamma)
-                          if self.kernel is rbf_kernel else  # sigmoid kernel
-                          self.kernel(self.support_vectors_, X, self.coef0, self.gamma)) + self.intercept_
+        if self.kernel_type is not 'linear':
+            return np.dot(self.dual_coef_, self.kernel(self.support_vectors_, X)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_
 
     def predict(self, X):
@@ -202,9 +338,9 @@ class SVC(ClassifierMixin, SVM):
 
 
 class SVR(RegressorMixin, SVM):
-    def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., epsilon=0.1, coef0=0.,
-                 optimizer=solve_qp, epochs=1000, verbose=False):
-        super().__init__(kernel, degree, gamma, C, coef0, optimizer, epochs, verbose)
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
+                 epsilon=0.1, optimizer=solve_qp, epochs=1000, verbose=False):
+        super().__init__(kernel, degree, gamma, coef0, C, optimizer, epochs, verbose)
         self.epsilon = epsilon
 
     def fit(self, X, y):
@@ -218,43 +354,57 @@ class SVR(RegressorMixin, SVM):
             raise ValueError('use sklearn.multioutput.MultiOutputRegressor to train a model over more than one target')
 
         n_samples = len(y)
-        # gram matrix
-        K = (self.kernel(X, X, self.coef0, self.degree, self.gamma)
-             if self.kernel is polynomial_kernel else
-             self.kernel(X, X, self.gamma)
-             if self.kernel is rbf_kernel else
-             self.kernel(X, X, self.coef0, self.gamma)
-             if self.kernel is sigmoid_kernel else
-             self.kernel(X, X))  # linear kernel
-        P = np.vstack((np.hstack((K, -K)),  # alphas_p, alphas_n
-                       np.hstack((-K, K))))  # alphas_n, alphas_p
-        P = (P + P.T) / 2  # ensure P is symmetric
-        q = np.hstack((-y, y)) + self.epsilon
 
-        G = np.vstack((-np.identity(2 * n_samples), np.identity(2 * n_samples)))  # inequality matrix
-        lb = np.zeros(2 * n_samples)  # lower bounds
-        ub = np.ones(2 * n_samples) * self.C  # upper bounds
-        h = np.hstack((lb, ub))  # inequality vector
+        # kernel matrix
+        K = self.kernel(X, X)
 
-        A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
-        b = np.zeros(1)  # equality vector
-
-        if self.optimizer is solve_qp:
-            qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-            alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
+        if self.optimizer is None:  # default Platt's SMO algorithm
+            num_changed = 0
+            examine_all = True
+            while num_changed > 0 or examine_all:
+                num_changed = 0
+                if examine_all:
+                    for i in range(n_samples):
+                        num_changed += self.examine_example(i)
+                else:
+                    for i in range(n_samples):
+                        if 0 < self.alphas[i] < self.C:
+                            num_changed += self.examine_example(i)
+                if examine_all:
+                    examine_all = False
+                elif num_changed is 0:
+                    examine_all = True
         else:
-            obj_fun = BoxConstrainedQuadratic(P, q, ub)
-            if self.optimizer is scipy_solve_qp:
-                alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
-            elif issubclass(self.optimizer, BoxConstrainedOptimizer):
-                alphas = self.optimizer(obj_fun, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
-            elif issubclass(self.optimizer, Optimizer):
-                # dual lagrangian relaxation of the box-constrained problem
-                dual = LagrangianBoxConstrained(obj_fun)
-                self.optimizer(dual, max_iter=self.epochs, verbose=self.verbose).minimize()
-                alphas = dual.primal_solution
+            P = np.vstack((np.hstack((K, -K)),  # alphas_p, alphas_n
+                           np.hstack((-K, K))))  # alphas_n, alphas_p
+            P = (P + P.T) / 2  # ensure P is symmetric
+            q = np.hstack((-y, y)) + self.epsilon
+
+            G = np.vstack((-np.identity(2 * n_samples), np.identity(2 * n_samples)))  # inequality matrix
+            lb = np.zeros(2 * n_samples)  # lower bounds
+            ub = np.ones(2 * n_samples) * self.C  # upper bounds
+            h = np.hstack((lb, ub))  # inequality vector
+
+            A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
+            b = np.zeros(1)  # equality vector
+
+            if self.optimizer is solve_qp:
+                qpsolvers.cvxopt_.options['show_progress'] = self.verbose
+                alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
             else:
-                raise TypeError('unknown optimizer type {}'.format(self.optimizer))
+                obj_fun = BoxConstrainedQuadratic(P, q, ub)
+                if self.optimizer is scipy_solve_qp:
+                    alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
+                elif issubclass(self.optimizer, BoxConstrainedOptimizer):
+                    alphas = self.optimizer(obj_fun, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
+                elif issubclass(self.optimizer, Optimizer):
+                    # dual lagrangian relaxation of the box-constrained problem
+                    dual = LagrangianBoxConstrained(obj_fun)
+                    self.optimizer(dual, max_iter=self.epochs, verbose=self.verbose).minimize()
+                    alphas = dual.primal_solution
+                else:
+                    raise TypeError(f'unknown optimizer type {self.optimizer}')
+
         alphas_p = alphas[:n_samples]
         alphas_n = alphas[n_samples:]
 
@@ -263,7 +413,7 @@ class SVR(RegressorMixin, SVM):
         self.support_vectors_, self.sv_y, self.alphas_p, self.alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
         self.dual_coef = self.alphas_p - self.alphas_n
 
-        if self.kernel is linear_kernel:
+        if self.kernel_type is 'linear':
             self.coef_ = np.dot(self.dual_coef, self.support_vectors_)
 
         self.intercept_ = 0
@@ -276,11 +426,6 @@ class SVR(RegressorMixin, SVM):
         return self
 
     def predict(self, X):
-        if self.kernel is not linear_kernel:
-            return np.dot(self.dual_coef,
-                          self.kernel(self.support_vectors_, X, self.coef0, self.degree, self.gamma)
-                          if self.kernel is polynomial_kernel else
-                          self.kernel(self.support_vectors_, X, self.gamma)
-                          if self.kernel is rbf_kernel else  # sigmoid kernel
-                          self.kernel(self.support_vectors_, X, self.coef0, self.gamma)) + self.intercept_
+        if self.kernel_type is not 'linear':
+            return np.dot(self.dual_coef, self.kernel(self.support_vectors_, X)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_

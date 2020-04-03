@@ -3,9 +3,9 @@ from sklearn.metrics import make_scorer
 from sklearn.model_selection import train_test_split, GridSearchCV
 
 from ml.losses import mean_squared_error
-from ml.neural_network.activations import sigmoid, tanh, linear
-from ml.neural_network.layers import FullyConnected
-from ml.neural_network.neural_network import NeuralNetworkRegressor
+from ml.activations import sigmoid, tanh, linear
+from ml.layers import FullyConnected
+from ml.neural_network import NeuralNetworkRegressor
 from optimization.unconstrained.accelerated_gradient import AcceleratedGradient, SteepestDescentAcceleratedGradient
 from optimization.unconstrained.adadelta import AdaDelta
 from optimization.unconstrained.adagrad import AdaGrad

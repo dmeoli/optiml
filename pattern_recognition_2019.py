@@ -1,9 +1,9 @@
 import numpy as np
 
 from ml.losses import cross_entropy
-from ml.neural_network.activations import softmax, relu
-from ml.neural_network.layers import FullyConnected, Conv2D, MaxPool2D, Flatten
-from ml.neural_network.neural_network import NeuralNetworkClassifier
+from ml.activations import softmax, relu
+from ml.layers import FullyConnected, Conv2D, MaxPool2D, Flatten
+from ml.neural_network import NeuralNetworkClassifier
 from optimization.unconstrained.adam import Adam
 
 if __name__ == '__main__':

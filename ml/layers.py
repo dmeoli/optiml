@@ -1,7 +1,7 @@
 import numpy as np
 
 from ml.initializers import glorot_uniform, zeros
-from ml.neural_network.activations import Activation
+from ml.activations import Activation
 from ml.regularizers import l2
 
 
@@ -84,7 +84,7 @@ class Conv2D(ParamLayer):
         self.strides = strides
         self.padding = padding.lower()
         if padding not in ('valid', 'same'):
-            raise ValueError('unknown padding type {}'.format(padding))
+            raise ValueError(f'unknown padding type {padding}')
         self.channels_last = channels_last
 
     def convolution(self, x, flt, conved):
@@ -152,7 +152,7 @@ class Pool(Layer):
         self.strides = strides
         self.padding = padding.lower()
         if padding not in ('valid', 'same'):
-            ValueError('unknown padding type {}'.format(padding))
+            ValueError(f'unknown padding type {padding}')
         self.channels_last = channels_last
 
     def agg_func(self, x):
