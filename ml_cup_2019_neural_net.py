@@ -28,7 +28,7 @@ stochastic_adaptive_optimizers = [Adam, AdaMax, AMSGrad, AdaGrad, AdaDelta, RPro
 
 stochastic_optimizers = [GradientDescent, AcceleratedGradient]
 
-others = [ProximalBundle]
+other_optimizers = [ProximalBundle]
 
 if __name__ == '__main__':
     X, y = load_ml_cup()
@@ -53,7 +53,7 @@ if __name__ == '__main__':
                                      FullyConnected(20, 20, tanh),
                                      FullyConnected(20, 2, tanh))],
                          'loss': [mean_squared_error],
-                         'optimizer': stochastic_optimizers + stochastic_adaptive_optimizers + others,
+                         'optimizer': stochastic_optimizers + stochastic_adaptive_optimizers + other_optimizers,
                          'learning_rate': [0.001, 0.01, 0.1],
                          'momentum_type': ['standard', 'nesterov'],
                          'momentum': [0.9, 0.8],
@@ -75,15 +75,18 @@ if __name__ == '__main__':
     means = net.cv_results_['mean_test_score']
     stds = net.cv_results_['std_test_score']
     for mean, std, params in zip(means, stds, net.cv_results_['params']):
-        print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
+        print('%0.3f (+/-%0.03f) for %r' % (mean, std * 2, params))
     print()
-    # print(svr.cv_results_)
-    # print()
     print('the model is trained on the full development set.')
     print('the scores are computed on the full evaluation set.')
+    print()
+    print('mean euclidean error on the tes set:')
     print()
     print(mean_euclidean_error(y_test, net.predict(X_test)))
 
     X_blind_test = load_ml_cup_blind()
+
+    # now retrain the best model on the full dataset
     net.fit(X, y)
-    np.savetxt('./ml/data/ML-CUP19/dmeoli-svr.csv', net.predict(X_blind_test), delimiter=',')
+    # and then save predictions on the blind test set
+    np.savetxt('./ml/data/ML-CUP19/dmeoli_ML-CUP19-TS_nn.csv', net.predict(X_blind_test), delimiter=',')

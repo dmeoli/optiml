@@ -33,19 +33,36 @@ stochastic_adaptive_optimizers = [Adam, AdaMax, AMSGrad, AdaGrad, AdaDelta, RPro
 
 stochastic_optimizers = [GradientDescent, AcceleratedGradient]
 
-others = [ProximalBundle]
+other_optimizers = [ProximalBundle]
 
-constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint,
-                          LagrangianDual, solve_qp, scipy_solve_qp]
+constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint, LagrangianDual]
+
+other_constrained_optimizers = [solve_qp, scipy_solve_qp]
 
 if __name__ == '__main__':
     X, y = load_ml_cup()
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8)
 
-    tuned_parameters = [{'estimator__kernel': [linear_kernel, polynomial_kernel, rbf_kernel],
-                         'estimator__optimizer': [ProjectedGradient, FrankWolfe, InteriorPoint],
-                         'estimator__gamma': ['auto', 'scale']}]
+    tuned_parameters = [{'estimator__kernel': [linear_kernel],
+                         'estimator__C': [1, 10, 100],
+                         'estimator__epsilon': [0.1, 0.01, 0.001],
+                         'estimator__optimizer': constrained_optimizers,
+                         'estimator__epochs': [1000, 1500, 2000]},
+                        {'estimator__kernel': [polynomial_kernel],
+                         'estimator__degree': [3., 4., 5.],
+                         'estimator__gamma': ['auto', 'scale'],
+                         'estimator__C': [1, 10, 100],
+                         'estimator__epsilon': [0.1, 0.01, 0.001],
+                         'estimator__coef0': [1, 10, 100, 1000],
+                         'estimator__optimizer': constrained_optimizers,
+                         'estimator__epochs': [1000, 1500, 2000]},
+                        {'estimator__kernel': [rbf_kernel],
+                         'estimator__gamma': ['auto', 'scale'],
+                         'estimator__C': [1, 10, 100],
+                         'estimator__epsilon': [0.1, 0.01, 0.001],
+                         'estimator__optimizer': constrained_optimizers,
+                         'estimator__epochs': [1000, 1500, 2000]}]
 
     svr = GridSearchCV(MultiOutputRegressor(SVR()),
                        param_grid=tuned_parameters,
@@ -62,15 +79,18 @@ if __name__ == '__main__':
     means = svr.cv_results_['mean_test_score']
     stds = svr.cv_results_['std_test_score']
     for mean, std, params in zip(means, stds, svr.cv_results_['params']):
-        print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
+        print('%0.3f (+/-%0.03f) for %r' % (mean, std * 2, params))
     print()
-    # print(svr.cv_results_)
-    # print()
     print('the model is trained on the full development set.')
     print('the scores are computed on the full evaluation set.')
+    print()
+    print('mean euclidean error on the tes set:')
     print()
     print(mean_euclidean_error(y_test, svr.predict(X_test)))
 
     X_blind_test = load_ml_cup_blind()
+
+    # now retrain the best model on the full dataset
     svr.fit(X, y)
-    np.savetxt('./ml/data/ML-CUP19/dmeoli-svr.csv', svr.predict(X_blind_test), delimiter=',')
+    # and then save predictions on the blind test set
+    np.savetxt('./ml/data/ML-CUP19/dmeoli_ML-CUP19-TS_svr.csv', svr.predict(X_blind_test), delimiter=',')

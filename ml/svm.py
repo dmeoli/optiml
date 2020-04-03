@@ -24,6 +24,7 @@ class SVM(BaseEstimator):
             raise ValueError('unknown gamma type {}'.format(gamma))
         self.gamma = gamma
         self.C = C
+        self.coef0 = coef0
         self.optimizer = optimizer
         self.epochs = epochs
         self.verbose = verbose
@@ -119,7 +120,6 @@ class SVC(ClassifierMixin, SVM):
     def __init__(self, kernel=rbf_kernel, degree=3., gamma='scale', C=1., coef0=0.,
                  optimizer=solve_qp, epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, C, coef0, optimizer, epochs, verbose)
-        self.alphas = np.zeros(0)
 
     def fit(self, X, y):
         """
@@ -206,8 +206,6 @@ class SVR(RegressorMixin, SVM):
                  optimizer=solve_qp, epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, C, coef0, optimizer, epochs, verbose)
         self.epsilon = epsilon
-        self.alphas_p = np.zeros(0)
-        self.alphas_n = np.zeros(0)
 
     def fit(self, X, y):
         """
