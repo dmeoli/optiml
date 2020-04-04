@@ -15,14 +15,13 @@ plt.style.use('ggplot')
 class SVM(BaseEstimator):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
                  optimizer=solve_qp, epochs=1000, verbose=False):
-        kernels = {'linear': self.linear,
-                   'poly': self.poly,
-                   'rbf': self.rbf,
-                   'sigmoid': self.sigmoid}
-        if kernel not in kernels.keys():
+        self.kernels = {'linear': self.linear,
+                        'poly': self.poly,
+                        'rbf': self.rbf,
+                        'sigmoid': self.sigmoid}
+        if kernel not in self.kernels.keys():
             raise ValueError(f'unknown kernel function {kernel}')
-        self.kernel_type = kernel
-        self.kernel = kernels[kernel]
+        self.kernel = kernel
         self.degree = degree
         if gamma not in ('scale', 'auto'):
             raise ValueError(f'unknown gamma type {gamma}')
@@ -171,10 +170,8 @@ class SVM(BaseEstimator):
             plt.xlabel('$X$', fontsize=9)
             plt.ylabel('$y$', fontsize=9)
 
-        if isinstance(svm, SVM):
-            plt.title(f'custom {type(svm).__name__} using {svm.kernel_type} kernel', fontsize=9)
-        else:
-            plt.title(f'sklearn {type(svm).__name__} using {svm.kernel} kernel', fontsize=9)
+        plt.title(f'{"custom" if isinstance(svm, SVM) else "sklearn"} '
+                  f'{type(svm).__name__} using {svm.kernel} kernel', fontsize=9)
 
         # set the legend
         if isinstance(svm, ClassifierMixin):
@@ -264,7 +261,7 @@ class SVC(ClassifierMixin, SVM):
         n_samples = len(y)
 
         # kernel matrix
-        K = self.kernel(X, X)
+        K = self.kernels[self.kernel](X, X)
 
         if self.optimizer is None:  # default Platt's SMO algorithm
             num_changed = 0
@@ -273,11 +270,11 @@ class SVC(ClassifierMixin, SVM):
                 num_changed = 0
                 if examine_all:
                     for i in range(n_samples):
-                        num_changed += self.examine_example(i)
+                        num_changed += self.examine_example(X, y, K, i)
                 else:
                     for i in range(n_samples):
                         if 0 < self.alphas[i] < self.C:
-                            num_changed += self.examine_example(i)
+                            num_changed += self.examine_example(X, y, K, i)
                 if examine_all:
                     examine_all = False
                 elif num_changed is 0:
@@ -317,7 +314,7 @@ class SVC(ClassifierMixin, SVM):
         self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], alphas[sv]
         self.dual_coef_ = self.alphas * self.sv_y
 
-        if self.kernel_type is 'linear':
+        if self.kernel is 'linear':
             self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
 
         self.intercept_ = 0
@@ -329,8 +326,8 @@ class SVC(ClassifierMixin, SVM):
         return self
 
     def decision_function(self, X):
-        if self.kernel_type is not 'linear':
-            return np.dot(self.dual_coef_, self.kernel(self.support_vectors_, X)) + self.intercept_
+        if self.kernel is not 'linear':
+            return np.dot(self.dual_coef_, self.kernels[self.kernel](self.support_vectors_, X)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_
 
     def predict(self, X):
@@ -356,7 +353,7 @@ class SVR(RegressorMixin, SVM):
         n_samples = len(y)
 
         # kernel matrix
-        K = self.kernel(X, X)
+        K = self.kernels[self.kernel](X, X)
 
         if self.optimizer is None:  # default Platt's SMO algorithm
             num_changed = 0
@@ -365,11 +362,11 @@ class SVR(RegressorMixin, SVM):
                 num_changed = 0
                 if examine_all:
                     for i in range(n_samples):
-                        num_changed += self.examine_example(i)
+                        num_changed += self.examine_example(X, y, K, i)
                 else:
                     for i in range(n_samples):
                         if 0 < self.alphas[i] < self.C:
-                            num_changed += self.examine_example(i)
+                            num_changed += self.examine_example(X, y, K, i)
                 if examine_all:
                     examine_all = False
                 elif num_changed is 0:
@@ -413,7 +410,7 @@ class SVR(RegressorMixin, SVM):
         self.support_vectors_, self.sv_y, self.alphas_p, self.alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
         self.dual_coef = self.alphas_p - self.alphas_n
 
-        if self.kernel_type is 'linear':
+        if self.kernel is 'linear':
             self.coef_ = np.dot(self.dual_coef, self.support_vectors_)
 
         self.intercept_ = 0
@@ -426,6 +423,6 @@ class SVR(RegressorMixin, SVM):
         return self
 
     def predict(self, X):
-        if self.kernel_type is not 'linear':
-            return np.dot(self.dual_coef, self.kernel(self.support_vectors_, X)) + self.intercept_
+        if self.kernel is not 'linear':
+            return np.dot(self.dual_coef, self.kernels[self.kernel](self.support_vectors_, X)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_
