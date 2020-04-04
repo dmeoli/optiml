@@ -4,7 +4,6 @@ from sklearn.metrics import make_scorer
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.multioutput import MultiOutputRegressor
 
-from ml.kernels import linear_kernel, polynomial_kernel, rbf_kernel
 from ml.svm import SVR, scipy_solve_qp
 from optimization.constrained.active_set import ActiveSet
 from optimization.constrained.frank_wolfe import FrankWolfe
@@ -44,12 +43,12 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8)
 
-    tuned_parameters = [{'estimator__kernel': [linear_kernel],
+    tuned_parameters = [{'estimator__kernel': ['linear'],
                          'estimator__C': [1, 10, 100],
                          'estimator__epsilon': [0.1, 0.01, 0.001],
                          'estimator__optimizer': constrained_optimizers,
                          'estimator__epochs': [1000, 1500, 2000]},
-                        {'estimator__kernel': [polynomial_kernel],
+                        {'estimator__kernel': ['poly'],
                          'estimator__degree': [3., 4., 5.],
                          'estimator__gamma': ['auto', 'scale'],
                          'estimator__C': [1, 10, 100],
@@ -57,7 +56,7 @@ if __name__ == '__main__':
                          'estimator__coef0': [1, 10, 100, 1000],
                          'estimator__optimizer': constrained_optimizers,
                          'estimator__epochs': [1000, 1500, 2000]},
-                        {'estimator__kernel': [rbf_kernel],
+                        {'estimator__kernel': ['rbf'],
                          'estimator__gamma': ['auto', 'scale'],
                          'estimator__C': [1, 10, 100],
                          'estimator__epsilon': [0.1, 0.01, 0.001],
