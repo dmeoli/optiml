@@ -121,7 +121,7 @@ class ConjugateGradient(LineSearchOptimizer):
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if wf < 0 or wf > 4:
-            raise ValueError('unknown NCG formula {}'.format(wf))
+            raise ValueError(f'unknown NCG formula {wf}')
         self.wf = wf
         if not np.isscalar(r_start):
             raise ValueError('r_start is not an integer scalar')
@@ -251,7 +251,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if not 0 <= wf <= 3:
-            raise ValueError('unknown NCG formula {}'.format(wf))
+            raise ValueError(f'unknown NCG formula {wf}')
         self.wf = wf
         if not np.isscalar(r_start):
             raise ValueError('r_start is not an integer scalar')

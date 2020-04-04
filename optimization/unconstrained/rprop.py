@@ -28,7 +28,7 @@ class RProp(Optimizer):
             raise ValueError('momentum must be > 0')
         self.momentum = momentum
         if momentum_type not in ('standard', 'nesterov', 'none'):
-            raise ValueError('unknown momentum type {}'.format(momentum_type))
+            raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type
         self.step = 0
 

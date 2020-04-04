@@ -124,7 +124,7 @@ class SteepestDescentAcceleratedGradient(LineSearchOptimizer):
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if not 0 <= wf <= 3:
-            raise ValueError('unknown fast gradient formula {}'.format(wf))
+            raise ValueError(f'unknown fast gradient formula {wf}')
         self.wf = wf
 
     def minimize(self):
@@ -331,7 +331,7 @@ class AcceleratedGradient(Optimizer):
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if not 0 <= wf <= 3:
-            raise ValueError('unknown fast gradient formula {}'.format(wf))
+            raise ValueError(f'unknown fast gradient formula {wf}')
         self.wf = wf
         if not np.isscalar(momentum):
             raise ValueError('momentum is not a real scalar')
@@ -339,7 +339,7 @@ class AcceleratedGradient(Optimizer):
             raise ValueError('momentum must be > 0')
         self.momentum = momentum
         if momentum_type not in ('standard', 'nesterov', 'none'):
-            raise ValueError('unknown momentum type {}'.format(momentum_type))
+            raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type
 
     def minimize(self):
