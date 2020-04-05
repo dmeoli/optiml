@@ -14,7 +14,7 @@ plt.style.use('ggplot')
 
 class SVM(BaseEstimator):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
-                 optimizer=solve_qp, epochs=1000, verbose=False):
+                 tol=1e-3, optimizer=None, epochs=1000, verbose=False):
         self.kernels = {'linear': self.linear,
                         'poly': self.poly,
                         'rbf': self.rbf,
@@ -26,8 +26,9 @@ class SVM(BaseEstimator):
         if gamma not in ('scale', 'auto'):
             raise ValueError(f'unknown gamma type {gamma}')
         self.gamma = gamma
-        self.C = C
         self.coef0 = coef0
+        self.C = C
+        self.tol = tol
         self.optimizer = optimizer
         self.epochs = epochs
         self.verbose = verbose
@@ -85,13 +86,13 @@ class SVM(BaseEstimator):
             c2 = y2 * (E1 - E2) - eta * alpha2
             Lobj = c1 * L * L + c2 * L
             Hobj = c1 * H * H + c2 * H
-            if Lobj > Hobj + self.eps:
+            if Lobj > Hobj + self.tol:
                 a2 = L
-            elif Lobj < Hobj - self.eps:
+            elif Lobj < Hobj - self.tol:
                 a2 = H
             else:
                 a2 = alpha2
-        if abs(a2 - alpha2) < self.eps:
+        if abs(a2 - alpha2) < self.tol:
             return False
         a1 = alpha1 - s * (a2 - alpha2)
         if 0 < a1 < self.C:
@@ -107,7 +108,7 @@ class SVM(BaseEstimator):
         self.alphas[i2] = a2
         self.coef_ = X.T * np.multiply(self.alphas, y)
         for i in range(n_samples):
-            if (self.alphas[i] > 0) and (self.alphas[i] < self.C):
+            if 0 < self.alphas[i] < self.C:
                 self.e_cache[i] = X[i] * self.coef_ + self.intercept_ - y[i]
         return True
 
@@ -122,7 +123,7 @@ class SVM(BaseEstimator):
             E2 = X[i2] * self.coef_ + self.intercept_ - y[i2]
             self.e_cache[i2] = E2
         r2 = E2 * y2
-        if (r2 < -self.eps and self.alphas[i2] < self.C) or (r2 > self.eps and self.alphas[i2] > 0):
+        if (r2 < -self.tol and self.alphas[i2] < self.C) or (r2 > self.tol and self.alphas[i2] > 0):
             # heuristic 1: find the max deltaE
             max_delta_E = 0
             i1 = -1
@@ -243,8 +244,8 @@ def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
 
 class SVC(ClassifierMixin, SVM):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
-                 optimizer=solve_qp, epochs=1000, verbose=False):
-        super().__init__(kernel, degree, gamma, coef0, C, optimizer, epochs, verbose)
+                 tol=1e-3, optimizer=None, epochs=1000, verbose=False):
+        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, verbose)
 
     def fit(self, X, y):
         """
@@ -309,7 +310,7 @@ class SVC(ClassifierMixin, SVM):
                 else:
                     raise TypeError(f'unknown optimizer type {self.optimizer}')
 
-        sv = alphas > 1e-5
+        sv = alphas > self.tol
         self.support_ = np.arange(len(alphas))[sv]
         self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], alphas[sv]
         self.dual_coef_ = self.alphas * self.sv_y
@@ -335,9 +336,9 @@ class SVC(ClassifierMixin, SVM):
 
 
 class SVR(RegressorMixin, SVM):
-    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
-                 epsilon=0.1, optimizer=solve_qp, epochs=1000, verbose=False):
-        super().__init__(kernel, degree, gamma, coef0, C, optimizer, epochs, verbose)
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3,
+                 epsilon=0.1, optimizer=None, epochs=1000, verbose=False):
+        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, verbose)
         self.epsilon = epsilon
 
     def fit(self, X, y):
@@ -405,7 +406,7 @@ class SVR(RegressorMixin, SVM):
         alphas_p = alphas[:n_samples]
         alphas_n = alphas[n_samples:]
 
-        sv = np.logical_or(alphas_p > 1e-5, alphas_n > 1e-5)
+        sv = np.logical_or(alphas_p > self.tol, alphas_n > self.tol)
         self.support_ = np.arange(len(alphas_p))[sv]
         self.support_vectors_, self.sv_y, self.alphas_p, self.alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
         self.dual_coef = self.alphas_p - self.alphas_n

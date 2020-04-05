@@ -31,8 +31,6 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
                 - [ ] learning rate decay
                 - [ ] momentum decay
             - [x] Accelerated Gradient
-                - [ ] standard momentum
-                - [ ] Nesterov momentum
                 - [ ] learning rate decay
                 - [ ] momentum decay
             - [x] Adam
@@ -82,7 +80,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
         - Dual Formulation
             - [x] Lagrangian Dual
-            - [ ] Sequential Minimal Optimization
+            - [ ] Sequential Minimal Optimization (ad hoc for SVMs)
             - [x] [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
 
 - Optimization Functions
