@@ -23,8 +23,13 @@ class SVM(BaseEstimator):
             raise ValueError(f'unknown kernel function {kernel}')
         self.kernel = kernel
         self.degree = degree
-        if gamma not in ('scale', 'auto'):
+        if isinstance(gamma, str) and gamma not in ('scale', 'auto'):
             raise ValueError(f'unknown gamma type {gamma}')
+        else:
+            if not np.isscalar(gamma):
+                raise ValueError('gamma is not a real scalar')
+            if not gamma > 0:
+                raise ValueError('gamma must be > 0')
         self.gamma = gamma
         self.coef0 = coef0
         self.C = C
@@ -37,20 +42,18 @@ class SVM(BaseEstimator):
         return np.dot(X, y.T)
 
     def poly(self, X, y):
-        """A non-stationary kernel well suited for problems
-        where all the training data is normalized"""
-        gamma = 1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else 1. / X.shape[1]  # auto
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale'  # auto
+                 else 1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
         return (gamma * np.dot(X, y.T) + self.coef0) ** self.degree
 
     def rbf(self, X, y):
-        """Radial-basis function kernel (aka squared-exponential kernel)."""
-        gamma = 1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else 1. / X.shape[1]  # auto
-        # according to: https://stats.stackexchange.com/questions/239008/rbf-kernel-algorithm-python
-        return np.exp(-gamma * (np.dot(X ** 2, np.ones((X.shape[1], y.shape[0]))) +
-                                np.dot(np.ones((X.shape[0], X.shape[1])), y.T ** 2) - 2. * np.dot(X, y.T)))
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale'  # auto
+                 else 1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
+        return np.exp(-gamma * np.linalg.norm(X[:, np.newaxis] - y[np.newaxis, :], axis=2) ** 2)
 
     def sigmoid(self, X, y):
-        gamma = 1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else 1. / X.shape[1]  # auto
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale'  # auto
+                 else 1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
         return np.tanh(gamma * np.dot(X, y.T) + self.coef0)
 
     def take_step(self, X, y, K, i1, i2):
