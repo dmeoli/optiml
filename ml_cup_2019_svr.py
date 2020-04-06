@@ -34,7 +34,7 @@ stochastic_optimizers = [GradientDescent, AcceleratedGradient]
 
 other_optimizers = [ProximalBundle]
 
-constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint, LagrangianDual]
+constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint, LagrangianDual, 'SMO']
 
 other_constrained_optimizers = [solve_qp, scipy_solve_qp]
 
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     svr = GridSearchCV(MultiOutputRegressor(SVR()),
                        param_grid=tuned_parameters,
                        scoring=make_scorer(mean_euclidean_error, greater_is_better=False),
-                       cv=5)
+                       cv=5, n_jobs=-1)  # use all processors
     svr.fit(X_train, y_train)
 
     print('best parameters set found on development set:')

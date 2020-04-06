@@ -51,9 +51,9 @@ if __name__ == '__main__':
                                      FullyConnected(20, 2, linear)),
                                     (FullyConnected(20, 20, tanh),
                                      FullyConnected(20, 20, tanh),
-                                     FullyConnected(20, 2, tanh))],
+                                     FullyConnected(20, 2, linear))],
                          'loss': [mean_squared_error],
-                         'optimizer': stochastic_optimizers + stochastic_adaptive_optimizers + other_optimizers,
+                         'optimizer': stochastic_optimizers + stochastic_adaptive_optimizers,
                          'learning_rate': [0.001, 0.01, 0.1],
                          'momentum_type': ['standard', 'nesterov'],
                          'momentum': [0.9, 0.8],
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     net = GridSearchCV(NeuralNetworkRegressor(),
                        param_grid=tuned_parameters,
                        scoring=make_scorer(mean_euclidean_error, greater_is_better=False),
-                       cv=5)
+                       cv=5, n_jobs=-1)  # use all processors
     net.fit(X_train, y_train)
 
     print('best parameters set found on development set:')
