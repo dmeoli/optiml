@@ -83,7 +83,7 @@ class SVM(BaseEstimator):
 
     # Platt's SMO algorithm
 
-    def _take_step(self, f, K, y, alphas, errors, i1, i2):
+    def _take_step(self, f, K, X, y, alphas, errors, i1, i2):
         # skip if chosen alphas are the same
         if i1 == i2:
             return False, alphas, errors
@@ -112,7 +112,8 @@ class SVM(BaseEstimator):
         # based on equation 15 in Platt's paper
         eta = K[i1, i1] + K[i2, i2] - 2 * K[i1, i2]
 
-        # compute new alpha2 if eta is positive based on equation 16 in Platt's paper
+        # compute new alpha2 if eta is positive
+        # based on equation 16 in Platt's paper
         if eta > 0:
             a2 = alpha2 + y2 * (E1 - E2) / eta
             # clip a2 based on bounds L and H based
@@ -140,7 +141,7 @@ class SVM(BaseEstimator):
         if np.abs(a2 - alpha2) < self.tol * (a2 + alpha2 + self.tol):
             return False, alphas, errors
 
-        # calculate new alpha1
+        # calculate new alpha1 based on equation 18 in Platt's paper
         s = y1 * y2
         a1 = alpha1 + s * (alpha2 - a2)
 
@@ -158,14 +159,14 @@ class SVM(BaseEstimator):
         else:  # average thresholds if both are bound
             b_new = (b1 + b2) / 2
 
-        # update error cache: for optimized alphas is set to 0 if they're unbound
-        for idx, alpha in zip([i1, i2], [a1, a2]):
-            if 0 < alpha < self.C:
-                errors[idx] = 0.
-        # set non-optimized errors
-        non_opt = [n for n in range(len(alphas)) if n != i1 and n != i2]
-        errors[non_opt] += (y1 * (a1 - alpha1) * K[i1, non_opt] +
-                            y2 * (a2 - alpha2) * K[i2, non_opt] + self.intercept_ - b_new)
+        # update weight vector to reflect change in a1 and a2, if
+        # kernel is linear, based on equation 22 in Platt's paper
+        if self.kernel is 'linear':
+            self.coef_ += y1 * (a1 - alpha1) * X[i1] + y2 * (a2 - alpha2) * X[i2]
+
+        # update error cache using new alphas
+        errors += (y1 * (a1 - alpha1) * K[i1] +
+                   y2 * (a2 - alpha2) * K[i2] + self.intercept_ - b_new)
 
         # update model object with new alphas
         alphas[i1] = a1
@@ -176,7 +177,7 @@ class SVM(BaseEstimator):
 
         return True, alphas, errors
 
-    def _examine_example(self, f, K, y, alphas, errors, i2):
+    def _examine_example(self, f, K, X, y, alphas, errors, i2):
         y2 = y[i2]
         alpha2 = alphas[i2]
         E2 = errors[i2]
@@ -192,26 +193,26 @@ class SVM(BaseEstimator):
                     i1 = np.argmin(errors)
                 elif errors[i2] <= 0:
                     i1 = np.argmax(errors)
-                step_result, alphas, errors = self._take_step(f, K, y, alphas, errors, i1, i2)
+                step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
                 if step_result:
                     return True, alphas, errors
 
             # loop over all non-zero and non-C alphas, starting at a random point
             for i1 in np.roll(np.where((alphas != 0) & (alphas != self.C))[0],
                               np.random.choice(np.arange(len(alphas)))):
-                step_result, alphas, errors = self._take_step(f, K, y, alphas, errors, i1, i2)
+                step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
                 if step_result:
                     return True, alphas, errors
 
             # loop over all possible alphas, starting at a random point
             for i1 in np.roll(np.arange(len(alphas)), np.random.choice(np.arange(len(alphas)))):
-                step_result, alphas, errors = self._take_step(f, K, y, alphas, errors, i1, i2)
+                step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
                 if step_result:
                     return True, alphas, errors
 
         return False, alphas, errors
 
-    def smo(self, f, K, y, alphas, errors):
+    def smo(self, f, K, X, y, alphas, errors):
         it = 0
         if self.verbose:
             print('iter\tf(x)')
@@ -223,7 +224,7 @@ class SVM(BaseEstimator):
             # loop over all training examples
             if examine_all:
                 for i in range(len(y)):
-                    examine_result, alphas, errors = self._examine_example(f, K, y, alphas, errors, i)
+                    examine_result, alphas, errors = self._examine_example(f, K, X, y, alphas, errors, i)
                     num_changed += examine_result
                     if examine_result and self.verbose:
                         it += 1
@@ -231,7 +232,7 @@ class SVM(BaseEstimator):
             else:
                 # loop over examples where alphas are not already at their limits
                 for i in np.where((alphas != 0) & (alphas != self.C))[0]:
-                    examine_result, alphas, errors = self._examine_example(f, K, y, alphas, errors, i)
+                    examine_result, alphas, errors = self._examine_example(f, K, X, y, alphas, errors, i)
                     num_changed += examine_result
                     if examine_result and self.verbose:
                         it += 1
@@ -321,6 +322,8 @@ class SVC(ClassifierMixin, SVM):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
                  tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, verbose)
+        if kernel is 'linear':
+            self.coef_ = np.zeros(2)
         self.intercept_ = 0.
 
     def fit(self, X, y):
@@ -333,7 +336,7 @@ class SVC(ClassifierMixin, SVM):
         if self.labels.size > 2:
             raise ValueError('use OneVsOneClassifier or OneVsRestClassifier from sklearn.multiclass '
                              'to train a model over more than two labels')
-        y = np.where(y == self.labels[0], -1, 1)
+        y = np.where(y == self.labels[0], -1., 1.)
 
         n_samples = len(y)
 
@@ -347,8 +350,10 @@ class SVC(ClassifierMixin, SVM):
         if self.optimizer is 'SMO':
             obj_fun = Quadratic(P, q)
             alphas = np.zeros(n_samples)
-            errors = (alphas * y).dot(K) - self.intercept_ - y
-            alphas = self.smo(obj_fun, K, y, alphas, errors)
+            # initial error is equal to SVC output (the decision function) - y
+            errors = (alphas * y).dot(K) + self.intercept_ - y
+            alphas = self.smo(obj_fun, K, X, y, alphas, errors)
+            self.intercept_ = -self.intercept_
 
         else:
             ub = np.ones(n_samples) * self.C  # upper bounds
@@ -382,10 +387,11 @@ class SVC(ClassifierMixin, SVM):
         self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], alphas[sv]
         self.dual_coef_ = self.alphas * self.sv_y
 
-        if self.kernel is 'linear':
-            self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
-
         if self.optimizer is not 'SMO':
+
+            if self.kernel is 'linear':
+                self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
+
             for n in range(len(self.alphas)):
                 self.intercept_ += self.sv_y[n]
                 self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
@@ -407,6 +413,8 @@ class SVR(RegressorMixin, SVM):
                  epsilon=0.1, optimizer='SMO', epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, verbose)
         self.epsilon = epsilon
+        if kernel is 'linear':
+            self.coef_ = np.zeros(1)
         self.intercept_ = -epsilon
 
     def fit(self, X, y):
@@ -432,8 +440,9 @@ class SVR(RegressorMixin, SVM):
         if self.optimizer is 'SMO':
             obj_fun = Quadratic(P, q)
             alphas = np.zeros(2 * n_samples)
-            errors = (alphas[:n_samples] - alphas[n_samples:]).dot(K) - self.intercept_ - y
-            alphas = self.smo(obj_fun, K, y, alphas, errors)
+            # initial error is equal to SVR output (the predict function) - y
+            errors = (alphas[:n_samples] - alphas[n_samples:]).dot(K) + self.intercept_ - y
+            alphas = self.smo(obj_fun, K, X, y, alphas, errors)
 
         else:
             ub = np.ones(2 * n_samples) * self.C  # upper bounds
@@ -468,20 +477,21 @@ class SVR(RegressorMixin, SVM):
         sv = np.logical_or(alphas_p > self.tol, alphas_n > self.tol)
         self.support_ = np.arange(len(alphas_p))[sv]
         self.support_vectors_, self.sv_y, self.alphas_p, self.alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
-        self.dual_coef = self.alphas_p - self.alphas_n
-
-        if self.kernel is 'linear':
-            self.coef_ = np.dot(self.dual_coef, self.support_vectors_)
+        self.dual_coef_ = self.alphas_p - self.alphas_n
 
         if self.optimizer is not 'SMO':
+
+            if self.kernel is 'linear':
+                self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
+
             for n in range(len(self.alphas_p)):
                 self.intercept_ += self.sv_y[n]
-                self.intercept_ -= np.sum(self.dual_coef * K[self.support_[n], sv])
+                self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
             self.intercept_ /= len(self.alphas_p)
 
         return self
 
     def predict(self, X):
         if self.kernel is not 'linear':
-            return np.dot(self.dual_coef, self.kernels[self.kernel](self.support_vectors_, X)) + self.intercept_
+            return np.dot(self.dual_coef_, self.kernels[self.kernel](self.support_vectors_, X)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_
