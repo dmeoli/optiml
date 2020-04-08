@@ -1,3 +1,5 @@
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
 import qpsolvers
@@ -81,169 +83,6 @@ class SVM(BaseEstimator):
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
         return np.tanh(gamma * np.dot(X, y.T) + self.coef0)
 
-    # Platt's SMO algorithm
-
-    def _take_step(self, f, K, X, y, alphas, errors, i1, i2):
-        # skip if chosen alphas are the same
-        if i1 == i2:
-            return False, alphas, errors
-
-        alpha1 = alphas[i1]
-        y1 = y[i1]
-        E1 = errors[i1]
-
-        alpha2 = alphas[i2]
-        y2 = y[i2]
-        E2 = errors[i2]
-
-        # compute L and H, the bounds on new possible alpha values
-        # based on equations 13 and 14 in Platt's paper
-        if y1 != y2:
-            L = max(0, alpha2 - alpha1)
-            H = min(self.C, self.C + alpha2 - alpha1)
-        else:
-            L = max(0, alpha1 + alpha2 - self.C)
-            H = min(self.C, alpha1 + alpha2)
-
-        if L == H:
-            return False, alphas, errors
-
-        # compute kernel and 2nd derivative eta
-        # based on equation 15 in Platt's paper
-        eta = K[i1, i1] + K[i2, i2] - 2 * K[i1, i2]
-
-        # compute new alpha2 if eta is positive
-        # based on equation 16 in Platt's paper
-        if eta > 0:
-            a2 = alpha2 + y2 * (E1 - E2) / eta
-            # clip a2 based on bounds L and H based
-            # on equation 17 in Platt's paper
-            if a2 <= L:
-                a2 = L
-            elif a2 >= H:
-                a2 = H
-        else:  # else move new a2 to bound with greater objective function value
-            alphas_adj = alphas.copy()
-            alphas_adj[i2] = L
-            # objective function output with a2 = L
-            Lobj = f.function(alphas_adj)
-            alphas_adj[i2] = H
-            # objective function output with a2 = H
-            Hobj = f.function(alphas_adj)
-            if Lobj < (Hobj - self.tol):
-                a2 = L
-            elif Lobj > (Hobj + self.tol):
-                a2 = H
-            else:
-                a2 = alpha2
-
-        # if examples can't be optimized within tol, skip this pair
-        if np.abs(a2 - alpha2) < self.tol * (a2 + alpha2 + self.tol):
-            return False, alphas, errors
-
-        # calculate new alpha1 based on equation 18 in Platt's paper
-        s = y1 * y2
-        a1 = alpha1 + s * (alpha2 - a2)
-
-        # update threshold b to reflect change in alphas
-        # based on equations 20 and 21 in Platt's paper
-        # calculate both possible thresholds
-        b1 = E1 + y1 * (a1 - alpha1) * K[i1, i1] + y2 * (a2 - alpha2) * K[i1, i2] + self.intercept_
-        b2 = E2 + y1 * (a1 - alpha1) * K[i1, i2] + y2 * (a2 - alpha2) * K[i2, i2] + self.intercept_
-
-        # set new threshold based on if a1 or a2 is bound by L and/or H
-        if 0 < a1 < self.C:
-            b_new = b1
-        elif 0 < a2 < self.C:
-            b_new = b2
-        else:  # average thresholds if both are bound
-            b_new = (b1 + b2) / 2
-
-        # update weight vector to reflect change in a1 and a2, if
-        # kernel is linear, based on equation 22 in Platt's paper
-        if self.kernel is 'linear':
-            self.coef_ += y1 * (a1 - alpha1) * X[i1] + y2 * (a2 - alpha2) * X[i2]
-
-        # update error cache using new alphas
-        errors += (y1 * (a1 - alpha1) * K[i1] +
-                   y2 * (a2 - alpha2) * K[i2] + self.intercept_ - b_new)
-
-        # update model object with new alphas
-        alphas[i1] = a1
-        alphas[i2] = a2
-
-        # update model threshold
-        self.intercept_ = b_new
-
-        return True, alphas, errors
-
-    def _examine_example(self, f, K, X, y, alphas, errors, i2):
-        y2 = y[i2]
-        alpha2 = alphas[i2]
-        E2 = errors[i2]
-        r2 = E2 * y2
-
-        # proceed if error is within specified tol
-        if (r2 < -self.tol and alpha2 < self.C) or (r2 > self.tol and alpha2 > 0):
-
-            # if the number of non-zero and non-C alphas is greater than 1
-            if len(alphas[(alphas != 0) & (alphas != self.C)]) > 1:
-                # use 2nd choice heuristic: choose max difference in error (section 2.2 of the Platt's paper)
-                if errors[i2] > 0:
-                    i1 = np.argmin(errors)
-                elif errors[i2] <= 0:
-                    i1 = np.argmax(errors)
-                step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
-                if step_result:
-                    return True, alphas, errors
-
-            # loop over all non-zero and non-C alphas, starting at a random point
-            for i1 in np.roll(np.where((alphas != 0) & (alphas != self.C))[0],
-                              np.random.choice(np.arange(len(alphas)))):
-                step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
-                if step_result:
-                    return True, alphas, errors
-
-            # loop over all possible alphas, starting at a random point
-            for i1 in np.roll(np.arange(len(alphas)), np.random.choice(np.arange(len(alphas)))):
-                step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
-                if step_result:
-                    return True, alphas, errors
-
-        return False, alphas, errors
-
-    def smo(self, f, K, X, y, alphas, errors):
-        it = 0
-        if self.verbose:
-            print('iter\tf(x)')
-
-        num_changed = 0
-        examine_all = True
-        while num_changed > 0 or examine_all:
-            num_changed = 0
-            # loop over all training examples
-            if examine_all:
-                for i in range(len(y)):
-                    examine_result, alphas, errors = self._examine_example(f, K, X, y, alphas, errors, i)
-                    num_changed += examine_result
-                    if examine_result and self.verbose:
-                        it += 1
-                        print('{:4d}\t{:1.4e}'.format(it, f.function(alphas)))
-            else:
-                # loop over examples where alphas are not already at their limits
-                for i in np.where((alphas != 0) & (alphas != self.C))[0]:
-                    examine_result, alphas, errors = self._examine_example(f, K, X, y, alphas, errors, i)
-                    num_changed += examine_result
-                    if examine_result and self.verbose:
-                        it += 1
-                        print('{:4d}\t{:1.4e}'.format(it, f.function(alphas)))
-            if examine_all:
-                examine_all = False
-            elif num_changed == 0:
-                examine_all = True
-
-        return alphas
-
     @staticmethod
     def plot(svm, X, y):
         ax = plt.axes()
@@ -326,6 +165,168 @@ class SVC(ClassifierMixin, SVM):
             self.coef_ = np.zeros(2)
         self.intercept_ = 0.
 
+    # Platt's SMO algorithm for SVC
+
+    def _take_step(self, f, K, X, y, alphas, errors, i1, i2):
+        # skip if chosen alphas are the same
+        if i1 == i2:
+            return False, alphas, errors
+
+        alpha1 = alphas[i1]
+        y1 = y[i1]
+        E1 = errors[i1]
+
+        alpha2 = alphas[i2]
+        y2 = y[i2]
+        E2 = errors[i2]
+
+        # compute L and H, the bounds on new possible alpha values
+        # based on equations 13 and 14 in Platt's paper
+        if y1 != y2:
+            L = max(0, alpha2 - alpha1)
+            H = min(self.C, self.C + alpha2 - alpha1)
+        else:
+            L = max(0, alpha1 + alpha2 - self.C)
+            H = min(self.C, alpha1 + alpha2)
+
+        if L == H:
+            return False, alphas, errors
+
+        # compute kernel and 2nd derivative eta
+        # based on equation 15 in Platt's paper
+        eta = K[i1, i1] + K[i2, i2] - 2 * K[i1, i2]
+
+        # compute new alpha2 if eta is positive
+        # based on equation 16 in Platt's paper
+        if eta > 0:
+            a2 = alpha2 + y2 * (E1 - E2) / eta
+            # clip a2 based on bounds L and H based
+            # on equation 17 in Platt's paper
+            if a2 < L:
+                a2 = L
+            elif a2 > H:
+                a2 = H
+        else:  # else move new a2 to bound with greater objective function value
+            alphas_adj = alphas.copy()
+            alphas_adj[i2] = L
+            # objective function output with a2 = L
+            Lobj = f.function(alphas_adj)
+            alphas_adj[i2] = H
+            # objective function output with a2 = H
+            Hobj = f.function(alphas_adj)
+            if Lobj < (Hobj - self.tol):
+                a2 = L
+            elif Lobj > (Hobj + self.tol):
+                a2 = H
+            else:
+                a2 = alpha2
+
+        # if examples can't be optimized within tol, skip this pair
+        if abs(a2 - alpha2) < self.tol * (a2 + alpha2 + self.tol):
+            return False, alphas, errors
+
+        # calculate new alpha1 based on equation 18 in Platt's paper
+        s = y1 * y2
+        a1 = alpha1 + s * (alpha2 - a2)
+
+        # update threshold b to reflect change in alphas
+        # based on equations 20 and 21 in Platt's paper
+        # calculate both possible thresholds
+        b1 = E1 + y1 * (a1 - alpha1) * K[i1, i1] + y2 * (a2 - alpha2) * K[i1, i2] + self.intercept_
+        b2 = E2 + y1 * (a1 - alpha1) * K[i1, i2] + y2 * (a2 - alpha2) * K[i2, i2] + self.intercept_
+
+        # set new threshold based on if a1 or a2 is bound by L and/or H
+        if 0 < a1 < self.C:
+            b_new = b1
+        elif 0 < a2 < self.C:
+            b_new = b2
+        else:  # average thresholds if both are bound
+            b_new = (b1 + b2) / 2
+
+        # update weight vector to reflect change in a1 and a2, if
+        # kernel is linear, based on equation 22 in Platt's paper
+        if self.kernel is 'linear':
+            self.coef_ += y1 * (a1 - alpha1) * X[i1] + y2 * (a2 - alpha2) * X[i2]
+
+        # update error cache using new alphas
+        errors += y1 * (a1 - alpha1) * K[i1] + y2 * (a2 - alpha2) * K[i2] + self.intercept_ - b_new
+
+        # update model object with new alphas
+        alphas[i1] = a1
+        alphas[i2] = a2
+
+        # update model threshold
+        self.intercept_ = b_new
+
+        return True, alphas, errors
+
+    def _examine_example(self, f, K, X, y, alphas, errors, i2):
+        y2 = y[i2]
+        alpha2 = alphas[i2]
+        E2 = errors[i2]
+        r2 = E2 * y2
+
+        # proceed if error is within specified tol
+        if (r2 < -self.tol and alpha2 < self.C) or (r2 > self.tol and alpha2 > 0):
+
+            # if the number of non-zero and non-C alphas is greater than 1
+            if len(alphas[(alphas != 0) & (alphas != self.C)]) > 1:
+                # use 2nd choice heuristic: choose max difference in error (section 2.2 of the Platt's paper)
+                if errors[i2] > 0:
+                    i1 = np.argmin(errors)
+                elif errors[i2] <= 0:
+                    i1 = np.argmax(errors)
+                step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
+                if step_result:
+                    return True, alphas, errors
+
+            # loop over all non-zero and non-C alphas, starting at a random point
+            for i1 in np.roll(np.where((alphas != 0) & (alphas != self.C))[0],
+                              np.random.choice(np.arange(len(alphas)))):
+                step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
+                if step_result:
+                    return True, alphas, errors
+
+            # loop over all possible alphas, starting at a random point
+            for i1 in np.roll(np.arange(len(alphas)), np.random.choice(np.arange(len(alphas)))):
+                step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
+                if step_result:
+                    return True, alphas, errors
+
+        return False, alphas, errors
+
+    def smo(self, f, K, X, y, alphas, errors):
+        it = 0
+        if self.verbose:
+            print('iter\tf(x)')
+
+        num_changed = 0
+        examine_all = True
+        while num_changed > 0 or examine_all:
+            num_changed = 0
+            # loop over all training examples
+            if examine_all:
+                for i in range(len(y)):
+                    examine_result, alphas, errors = self._examine_example(f, K, X, y, alphas, errors, i)
+                    num_changed += examine_result
+                    if examine_result and self.verbose:
+                        it += 1
+                        print('{:4d}\t{:1.4e}'.format(it, f.function(alphas)))
+            else:
+                # loop over examples where alphas are not already at their limits
+                for i in np.where((alphas != 0) & (alphas != self.C))[0]:
+                    examine_result, alphas, errors = self._examine_example(f, K, X, y, alphas, errors, i)
+                    num_changed += examine_result
+                    if examine_result and self.verbose:
+                        it += 1
+                        print('{:4d}\t{:1.4e}'.format(it, f.function(alphas)))
+            if examine_all:
+                examine_all = False
+            elif num_changed == 0:
+                examine_all = True
+
+        return alphas
+
     def fit(self, X, y):
         """
         Trains the model by solving a constrained quadratic programming problem.
@@ -353,7 +354,7 @@ class SVC(ClassifierMixin, SVM):
             # initial error is equal to SVC output (the decision function) - y
             errors = (alphas * y).dot(K) + self.intercept_ - y
             alphas = self.smo(obj_fun, K, X, y, alphas, errors)
-            self.intercept_ = -self.intercept_
+            self.intercept_ = -self.intercept_  # TODO to fix
 
         else:
             ub = np.ones(n_samples) * self.C  # upper bounds
@@ -417,6 +418,267 @@ class SVR(RegressorMixin, SVM):
             self.coef_ = np.zeros(1)
         self.intercept_ = -epsilon
 
+    # Platt's SMO algorithm for SVR
+
+    def _take_step(self, f, K, X, y, alphas, errors, i1, i2):
+        # skip if chosen alphas are the same
+        if i1 == i2:
+            return False, alphas, errors
+
+        alphas_p, alphas_n = np.split(alphas, 2)
+
+        alpha1_p, alpha1_n = alphas_p[i1], alphas_n[i1]
+        E1 = errors[i1]
+
+        alpha2_p, alpha2_n = alphas_p[i2], alphas_n[i2]
+        E2 = errors[i2]
+
+        # compute kernel and 2nd derivative eta
+        # based on equation 15 in Platt's paper
+        eta = K[i1, i1] + K[i2, i2] - 2 * K[i1, i2]
+        gamma = alpha1_p - alpha1_n + alpha2_p - alpha2_n
+
+        case1 = case2 = case3 = case4 = False
+        changed = finished = False
+
+        delta_E = E1 - E2
+
+        while not finished:
+            if (not case1 and
+                    (alpha1_p > 0 or (alpha1_n == 0 and delta_E > 0)) and
+                    (alpha2_p > 0 or (alpha2_n == 0 and delta_E < 0))):
+                # compute L and H wrt alpha1_p, alpha2_p
+                L = max(0, gamma - self.C)
+                H = min(self.C, gamma)
+                if L < H:
+                    if eta > 0:
+                        a2 = alpha2_p - delta_E / eta
+                        if a2 > H:
+                            a2 = H
+                        elif a2 < L:
+                            a2 = L
+                    else:
+                        Lobj = -L * delta_E
+                        Hobj = -H * delta_E
+                        if Lobj > Hobj:
+                            a2 = L
+                        else:
+                            a2 = H
+                    a1 = alpha1_p - (a2 - alpha2_p)
+                    # update alpha1_p, alpha2_p if change is larger than tol
+                    if abs(a1 - alpha1_p) > self.tol or abs(a2 - alpha2_p) > self.tol:
+                        alpha1_p = a1
+                        alpha2_p = a2
+                        changed = True
+                else:
+                    finished = True
+                case1 = True
+            elif (not case2 and
+                  (alpha1_p > 0 or (alpha1_n == 0 and delta_E > 2 * self.epsilon)) and
+                  (alpha2_p > 0 or (alpha2_n == 0 and delta_E < 2 * self.epsilon))):
+                # compute L and H wrt alpha1_p, alpha2_n
+                L = max(0, gamma)
+                H = min(self.C, self.C + gamma)
+                if L < H:
+                    if eta > 0:
+                        a2 = alpha2_n + (delta_E - 2 * self.epsilon) / eta
+                        if a2 > H:
+                            a2 = H
+                        elif a2 < L:
+                            a2 = L
+                    else:
+                        Lobj = L * (-2 * self.epsilon + delta_E)
+                        Hobj = H * (-2 * self.epsilon + delta_E)
+                        if Lobj > Hobj:
+                            a2 = L
+                        else:
+                            a2 = H
+                    a1 = alpha1_p + (a2 - alpha2_n)
+                    # update alpha1_p, alpha2_n if change is larger than tol
+                    if abs(a1 - alpha1_p) > self.tol or abs(a2 - alpha2_n) > self.tol:
+                        alpha1_p = a1
+                        alpha2_n = a2
+                        changed = True
+                else:
+                    finished = True
+                case2 = True
+            elif (not case3 and
+                  (alpha1_n > 0 or (alpha1_p == 0 and delta_E < -2 * self.epsilon)) and
+                  (alpha2_p > 0 or (alpha2_n == 0 and delta_E < -2 * self.epsilon))):
+                # computer L and H wrt alpha1_n, alpha2_p
+                L = max(0, -gamma)
+                H = min(self.C, -gamma + self.C)
+                if L < H:
+                    if eta > 0:
+                        a2 = alpha2_p - (delta_E + 2 * self.epsilon) / eta
+                        if a2 > H:
+                            a2 = H
+                        elif a2 < L:
+                            a2 = L
+                    else:
+                        Lobj = -L * (2 * self.epsilon + delta_E)
+                        Hobj = -H * (2 * self.epsilon + delta_E)
+                        if Lobj > Hobj:
+                            a2 = L
+                        else:
+                            a2 = H
+                    a1 = alpha1_n + (a2 - alpha2_p)
+                    # update alpha1_n, alpha2_p if change is larger than tol
+                    if abs(a1 - alpha1_n) > self.tol or abs(a2 - alpha2_p) > self.tol:
+                        alpha1_n = a1
+                        alpha2_p = a2
+                        changed = True
+                else:
+                    finished = True
+                case3 = True
+            elif (not case4 and
+                  (alpha1_n > 0 or (alpha1_p == 0 and delta_E < -2 * self.epsilon)) and
+                  (alpha2_p > 0 or (alpha2_n == 0 and delta_E < -2 * self.epsilon))):
+                # compute L and H wrt alpha1_n, alpha2_n
+                L = max(0, -gamma - self.C)
+                H = min(self.C, -gamma)
+                if L < H:
+                    if eta > 0:
+                        a2 = alpha2_n + delta_E / eta
+                        if a2 > H:
+                            a2 = H
+                        elif a2 > L:
+                            a2 = L
+                    else:
+                        Lobj = L * delta_E
+                        Hobj = H * delta_E
+                        if Lobj > Hobj:
+                            a2 = L
+                        else:
+                            a2 = H
+                    a1 = alpha1_n - (a2 - alpha2_n)
+                    # update alpha1_n, alpha2_n if change is larger than tol
+                    if abs(a1 - alpha1_n) > self.tol or abs(a2 - alpha2_n) > self.tol:
+                        alpha1_n = a1
+                        alpha2_n = a2
+                        changed = True
+                else:
+                    finished = True
+                case4 = True
+            else:
+                finished = True
+            delta_E += eta + ((alpha2_p - alpha2_n) - (alphas_p[i2] - alphas_n[i2]))
+        if not changed:
+            return False, alphas, errors
+
+        # update error cache using new alphas
+        for i in range(len(alphas_p)):
+            if i != i1 and i != i2:
+                errors[i] += (((alphas_p[i1] - alphas_n[i1]) - (alpha1_p - alpha1_n)) * K[i1, i] +
+                              ((alphas_p[i2] - alphas_n[i2]) - (alpha2_p - alpha2_n)) * K[i2, i])
+
+        # update error cache using new alphas for i1 and i2
+        errors[i1] = (((alphas_p[i1] - alphas_n[i1]) - (alpha1_p - alpha1_n)) * K[i1, i1] +
+                      ((alphas_p[i2] - alphas_n[i2]) - (alpha2_p - alpha2_n)) * K[i1, i2])
+        errors[i2] = (((alphas_p[i1] - alphas_n[i1]) - (alpha1_p - alpha1_n)) * K[i1, i2] +
+                      ((alphas_p[i2] - alphas_n[i2]) - (alpha2_p - alpha2_n)) * K[i2, i2])
+
+        # update model object with new alphas
+        alphas_p[i1] = alpha1_p
+        alphas_n[i1] = alpha1_n
+        alphas_p[i2] = alpha2_p
+        alphas_n[i2] = alpha2_n
+
+        # update threshold b to reflect change in alphas
+        bias_lower = sys.float_info.min
+        bias_upper = sys.float_info.max
+
+        for i in range(len(alphas_p)):
+            if 0 < alphas_n[i] < self.C and errors[i] + self.epsilon > bias_lower:
+                bias_lower = errors[i] + self.epsilon
+            elif 0 < alphas_p[i] < self.C and errors[i] - self.epsilon > bias_lower:
+                bias_lower = errors[i] - self.epsilon
+            elif 0 < alphas_p[i] < self.C and errors[i] - self.epsilon < bias_upper:
+                bias_upper = errors[i] - self.epsilon
+            elif 0 < alphas_n[i] < self.C and errors[i] + self.epsilon < bias_upper:
+                bias_upper = errors[i] + self.epsilon
+
+        return True, np.hstack((alphas_p, alphas_n)), errors
+
+    def _examine_example(self, f, K, X, y, alphas, errors, i2):
+        alphas_p, alphas_n = np.split(alphas, 2)
+
+        y2 = y[i2]
+        alpha2_p, alpha2_n = alphas_p[i2], alphas_n[i2]
+        E2 = errors[i2]
+        r2 = E2 * y2
+
+        # proceed if error is within specified tol
+        if ((r2 > self.tol and alpha2_n < self.C) or
+                (r2 < self.tol and alpha2_n > 0) or
+                (-r2 > self.tol and alpha2_p < self.C) or
+                (-r2 > self.tol and alpha2_p > 0)):
+
+            # if the number of non-zero and non-C alphas is greater than 1
+            if len(alphas[(alphas != 0) & (alphas != self.C)]) > 1:
+                # use 2nd choice heuristic: choose max difference in error (section 2.2 of the Platt's paper)
+                if errors[i2] > 0:
+                    i1 = np.argmin(errors)
+                elif errors[i2] <= 0:
+                    i1 = np.argmax(errors)
+                step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
+                if step_result:
+                    return True, alphas, errors
+
+            # loop over all non-zero and non-C alphas, starting at a random point
+            for i1 in np.roll(np.where((alphas_p != 0) & (alphas_p != self.C))[0],
+                              np.random.choice(np.arange(len(alphas_p)))):
+                step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
+                if step_result:
+                    return True, alphas, errors
+
+            # loop over all possible alphas, starting at a random point
+            for i1 in np.roll(np.arange(len(alphas_p)), np.random.choice(np.arange(len(alphas_p)))):
+                step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
+                if step_result:
+                    return True, alphas, errors
+
+        return False, alphas, errors
+
+    def smo(self, f, K, X, y, alphas, errors):
+        it = 0
+        if self.verbose:
+            print('iter\tf(x)')
+
+        num_changed = 0
+        examine_all = True
+        sig_fig = -100
+        loop_counter = 0
+        while (num_changed > 0 or examine_all) or sig_fig < 3:
+            loop_counter += 1
+            num_changed = 0
+            # loop over all training examples
+            if examine_all:
+                for i in range(len(y)):
+                    examine_result, alphas, errors = self._examine_example(f, K, X, y, alphas, errors, i)
+                    num_changed += examine_result
+                    if examine_result and self.verbose:
+                        it += 1
+                        print('{:4d}\t{:1.4e}'.format(it, f.function(alphas)))
+            else:
+                # loop over examples where alphas are not already at their limits
+                for i in np.where((alphas != 0) & (alphas != self.C))[0]:
+                    examine_result, alphas, errors = self._examine_example(f, K, X, y, alphas, errors, i)
+                    num_changed += examine_result
+                    if examine_result and self.verbose:
+                        it += 1
+                        print('{:4d}\t{:1.4e}'.format(it, f.function(alphas)))
+            if loop_counter % 2 == 0:
+                min_num_changed = max(1, 0.1 * len(alphas))
+            else:
+                min_num_changed = 1
+            if examine_all:
+                examine_all = False
+            elif num_changed < min_num_changed:
+                examine_all = True
+
+        return alphas
+
     def fit(self, X, y):
         """
         Trains the model by solving a constrained quadratic programming problem.
@@ -479,15 +741,13 @@ class SVR(RegressorMixin, SVM):
         self.support_vectors_, self.sv_y, self.alphas_p, self.alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
         self.dual_coef_ = self.alphas_p - self.alphas_n
 
-        if self.optimizer is not 'SMO':
+        if self.kernel is 'linear':
+            self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
 
-            if self.kernel is 'linear':
-                self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
-
-            for n in range(len(self.alphas_p)):
-                self.intercept_ += self.sv_y[n]
-                self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
-            self.intercept_ /= len(self.alphas_p)
+        for n in range(len(self.alphas_p)):
+            self.intercept_ += self.sv_y[n]
+            self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
+        self.intercept_ /= len(self.alphas_p)
 
         return self
 
