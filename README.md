@@ -75,17 +75,19 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface
              - [x] standard momentum
              - [x] Nesterov momentum
-    - Box-Constrained Optimization
-        - Primal Formulation
-            - [x] Projected Gradient
-            - [x] Frank-Wolfe
-            - [x] Active Set
-            - [x] Interior Point
-            - [x] [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
-        - Dual Formulation
-            - [x] Lagrangian Dual
-            - [x] Sequential Minimal Optimization (ad hoc for SVMs)
-            - [x] [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
+    - Constrained Optimization
+        - Box-Constrained Optimization
+            - Primal Formulation
+                - [x] Projected Gradient
+                - [x] Frank-Wolfe
+                - [x] Active Set
+                - [x] Interior Point
+            - Dual Formulation
+                - [x] Lagrangian Dual
+                - [x] Sequential Minimal Optimization (ad hoc for SVMs)
+                - [x] SVMs solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
+        - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
+        - [x] QP solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
 
 - Optimization Functions
     - Unconstrained

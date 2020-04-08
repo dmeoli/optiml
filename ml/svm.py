@@ -9,14 +9,14 @@ from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 
 from optimization.optimization_function import BoxConstrainedQuadratic, LagrangianBoxConstrained, Quadratic
 from optimization.optimizer import BoxConstrainedOptimizer, Optimizer
-from utils import scipy_solve_qp
+from utils import scipy_solve_qp, scipy_solve_svm
 
 plt.style.use('ggplot')
 
 
 class SVM(BaseEstimator):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
-                 tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
+                 eps=1e-7, tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
         self.kernels = {'linear': self.linear,
                         'poly': self.poly,
                         'rbf': self.rbf,
@@ -51,7 +51,13 @@ class SVM(BaseEstimator):
         if not tol > 0:
             raise ValueError('tol must be > 0')
         self.tol = tol
-        if optimizer not in (solve_qp, scipy_solve_qp, 'SMO') and not issubclass(optimizer, Optimizer):
+        if not np.isscalar(eps):
+            raise ValueError('eps is not a real scalar')
+        if not eps > 0:
+            raise ValueError('eps must be > 0')
+        self.eps = eps
+        if (optimizer not in (solve_qp, scipy_solve_qp, scipy_solve_svm, 'SMO')
+                and not issubclass(optimizer, Optimizer)):
             raise TypeError('optimizer is not an allowed optimizer')
         self.optimizer = optimizer
         if not np.isscalar(epochs):
@@ -159,8 +165,8 @@ class SVM(BaseEstimator):
 
 class SVC(ClassifierMixin, SVM):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
-                 tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
-        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, verbose)
+                 eps=1e-7, tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
+        super().__init__(kernel, degree, gamma, coef0, C, eps, tol, optimizer, epochs, verbose)
         if kernel is 'linear':
             self.coef_ = np.zeros(2)
         self.intercept_ = 0.
@@ -180,6 +186,8 @@ class SVC(ClassifierMixin, SVM):
         y2 = y[i2]
         E2 = errors[i2]
 
+        s = y1 * y2
+
         # compute L and H, the bounds on new possible alpha values
         # based on equations 13 and 14 in Platt's paper
         if y1 != y2:
@@ -194,12 +202,12 @@ class SVC(ClassifierMixin, SVM):
 
         # compute kernel and 2nd derivative eta
         # based on equation 15 in Platt's paper
-        eta = K[i1, i1] + K[i2, i2] - 2 * K[i1, i2]
+        eta = 2 * K[i1, i2] - K[i1, i1] - K[i2, i2]
 
         # compute new alpha2 if eta is positive
         # based on equation 16 in Platt's paper
-        if eta > 0:
-            a2 = alpha2 + y2 * (E1 - E2) / eta
+        if eta < 0:
+            a2 = alpha2 - y2 * (E1 - E2) / eta
             # clip a2 based on bounds L and H based
             # on equation 17 in Platt's paper
             if a2 < L:
@@ -207,26 +215,36 @@ class SVC(ClassifierMixin, SVM):
             elif a2 > H:
                 a2 = H
         else:  # else move new a2 to bound with greater objective function value
+            L1 = alpha1 + s * (alpha2 - L)
+            H1 = alpha1 + s * (alpha2 - H)
+            f1 = y1 * E1 - alpha1 * K[i1, i1] - s * alpha2 * K[i1, i2]
+            f2 = y2 * E2 - alpha2 * K[i2, i2] - s * alpha1 * K[i1, i2]
+            Lobj = -0.5 * L1 * L1 * K[i1, i1] - 0.5 * L * L * K[i2, i2] - s * L * L1 * K[i1, i2] - L1 * f1 - L * f2
+            Hobj = -0.5 * H1 * H1 * K[i1, i1] - 0.5 * H * H * K[i2, i2] - s * H * H1 * K[i1, i2] - H1 * f1 - H * f2
+
             alphas_adj = alphas.copy()
             alphas_adj[i2] = L
             # objective function output with a2 = L
-            Lobj = f.function(alphas_adj)
+            Lobj_ = f.function(alphas_adj)
             alphas_adj[i2] = H
             # objective function output with a2 = H
-            Hobj = f.function(alphas_adj)
-            if Lobj < (Hobj - self.tol):
+            Hobj_ = f.function(alphas_adj)
+
+            assert Lobj == Lobj_
+            assert Hobj == Hobj_
+
+            if Lobj > Hobj + self.eps:
                 a2 = L
-            elif Lobj > (Hobj + self.tol):
+            elif Lobj < Hobj - self.eps:
                 a2 = H
             else:
                 a2 = alpha2
 
         # if examples can't be optimized within tol, skip this pair
-        if abs(a2 - alpha2) < self.tol * (a2 + alpha2 + self.tol):
+        if abs(a2 - alpha2) < self.eps * (a2 + alpha2 + self.eps):
             return False, alphas, errors
 
         # calculate new alpha1 based on equation 18 in Platt's paper
-        s = y1 * y2
         a1 = alpha1 + s * (alpha2 - a2)
 
         # update threshold b to reflect change in alphas
@@ -348,16 +366,21 @@ class SVC(ClassifierMixin, SVM):
         P = (P + P.T) / 2  # ensure P is symmetric
         q = -np.ones(n_samples)
 
-        if self.optimizer is 'SMO':
+        ub = np.ones(n_samples) * self.C  # upper bounds
+
+        if self.optimizer in ('SMO', scipy_solve_svm):
             obj_fun = Quadratic(P, q)
-            alphas = np.zeros(n_samples)
-            # initial error is equal to SVC output (the decision function) - y
-            errors = (alphas * y).dot(K) + self.intercept_ - y
-            alphas = self.smo(obj_fun, K, X, y, alphas, errors)
-            self.intercept_ = -self.intercept_  # TODO to fix
+
+            if self.optimizer is 'SMO':
+                alphas = np.zeros(obj_fun.n)
+                # initial error is equal to SVC output (the decision function) - y
+                errors = (alphas * y).dot(K) + self.intercept_ - y
+                alphas = self.smo(obj_fun, K, X, y, alphas, errors)
+
+            else:
+                alphas = scipy_solve_svm(obj_fun, y, ub, self.epochs, self.verbose)
 
         else:
-            ub = np.ones(n_samples) * self.C  # upper bounds
             obj_fun = BoxConstrainedQuadratic(P, q, ub)
 
             if self.optimizer in (solve_qp, scipy_solve_qp):
@@ -371,6 +394,7 @@ class SVC(ClassifierMixin, SVM):
                 if self.optimizer is solve_qp:
                     qpsolvers.cvxopt_.options['show_progress'] = self.verbose
                     alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
+
                 else:
                     alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
 
@@ -388,15 +412,13 @@ class SVC(ClassifierMixin, SVM):
         self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], alphas[sv]
         self.dual_coef_ = self.alphas * self.sv_y
 
-        if self.optimizer is not 'SMO':
+        if self.kernel is 'linear':
+            self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
 
-            if self.kernel is 'linear':
-                self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
-
-            for n in range(len(self.alphas)):
-                self.intercept_ += self.sv_y[n]
-                self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
-            self.intercept_ /= len(self.alphas)
+        for n in range(len(self.alphas)):
+            self.intercept_ += self.sv_y[n]
+            self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
+        self.intercept_ /= len(self.alphas)
 
         return self
 
@@ -410,10 +432,10 @@ class SVC(ClassifierMixin, SVM):
 
 
 class SVR(RegressorMixin, SVM):
-    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3,
-                 epsilon=0.1, optimizer='SMO', epochs=1000, verbose=False):
-        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, verbose)
-        self.epsilon = epsilon
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., eps=1e-7,
+                 tol=1e-3, epsilon=0.1, optimizer='SMO', epochs=1000, verbose=False):
+        super().__init__(kernel, degree, gamma, coef0, C, eps, tol, optimizer, epochs, verbose)
+        self.epsilon = epsilon  # epsilon insensitive loss value
         if kernel is 'linear':
             self.coef_ = np.zeros(1)
         self.intercept_ = -epsilon
@@ -425,180 +447,160 @@ class SVR(RegressorMixin, SVM):
         if i1 == i2:
             return False, alphas, errors
 
-        alphas_p, alphas_n = np.split(alphas, 2)
+        alphas, alphas_S = np.split(alphas, 2)
 
-        alpha1_p, alpha1_n = alphas_p[i1], alphas_n[i1]
+        alpha1, alpha1_S = alphas[i1], alphas_S[i1]
         E1 = errors[i1]
 
-        alpha2_p, alpha2_n = alphas_p[i2], alphas_n[i2]
+        alpha2, alpha2_S = alphas[i2], alphas_S[i2]
         E2 = errors[i2]
 
         # compute kernel and 2nd derivative eta
         # based on equation 15 in Platt's paper
-        eta = K[i1, i1] + K[i2, i2] - 2 * K[i1, i2]
-        gamma = alpha1_p - alpha1_n + alpha2_p - alpha2_n
+        eta = -2 * K[i1, i2] + K[i1, i1] + K[i2, i2]
 
-        case1 = case2 = case3 = case4 = False
-        changed = finished = False
+        if eta < 0:
+            eta = 0
+
+        gamma = alpha1 - alpha1_S + alpha2 - alpha2_S
+
+        case1 = case2 = case3 = case4 = finished = False
+        alpha1_old, alpha1_oldS = alpha1, alpha1_S
+        alpha2_old, alpha2_oldS = alpha2, alpha2_S
 
         delta_E = E1 - E2
 
-        while not finished:
+        while not finished:  # occurs at most 3 times
             if (not case1 and
-                    (alpha1_p > 0 or (alpha1_n == 0 and delta_E > 0)) and
-                    (alpha2_p > 0 or (alpha2_n == 0 and delta_E < 0))):
-                # compute L and H wrt alpha1_p, alpha2_p
+                    (alpha1 > 0 or (alpha1_S == 0 and delta_E > 0)) and
+                    (alpha2 > 0 or (alpha2_S == 0 and delta_E < 0))):
+                # compute L and H wrt alpha1, alpha2_p
                 L = max(0, gamma - self.C)
                 H = min(self.C, gamma)
                 if L < H:
-                    if eta > 0:
-                        a2 = alpha2_p - delta_E / eta
-                        if a2 > H:
-                            a2 = H
-                        elif a2 < L:
-                            a2 = L
-                    else:
-                        Lobj = -L * delta_E
-                        Hobj = -H * delta_E
-                        if Lobj > Hobj:
-                            a2 = L
-                        else:
-                            a2 = H
-                    a1 = alpha1_p - (a2 - alpha2_p)
-                    # update alpha1_p, alpha2_p if change is larger than tol
-                    if abs(a1 - alpha1_p) > self.tol or abs(a2 - alpha2_p) > self.tol:
-                        alpha1_p = a1
-                        alpha2_p = a2
-                        changed = True
+                    a2 = max(L, min(alpha2 - delta_E / eta, H))
+                    a1 = alpha1 - (a2 - alpha2)
+                    # update alpha1, alpha2_p if change is larger than some eps
+                    if abs(alpha1 - a1) > 1e-10 or abs(a2 - alpha2) > 1e-10:
+                        delta_E += (a2 - alpha2) * eta
+                        alpha1 = a1
+                        alpha2 = a2
                 else:
                     finished = True
                 case1 = True
             elif (not case2 and
-                  (alpha1_p > 0 or (alpha1_n == 0 and delta_E > 2 * self.epsilon)) and
-                  (alpha2_p > 0 or (alpha2_n == 0 and delta_E < 2 * self.epsilon))):
-                # compute L and H wrt alpha1_p, alpha2_n
-                L = max(0, gamma)
-                H = min(self.C, self.C + gamma)
+                  (alpha1 > 0 or (alpha1_S == 0 and delta_E > 2 * self.epsilon)) and
+                  (alpha2_S > 0 or (alpha2_S == 0 and delta_E < 2 * self.epsilon))):
+                # compute L and H wrt alpha1, alpha2_n
+                L = max(0, -gamma)
+                H = min(self.C, -gamma + self.C)
                 if L < H:
-                    if eta > 0:
-                        a2 = alpha2_n + (delta_E - 2 * self.epsilon) / eta
-                        if a2 > H:
-                            a2 = H
-                        elif a2 < L:
-                            a2 = L
-                    else:
-                        Lobj = L * (-2 * self.epsilon + delta_E)
-                        Hobj = H * (-2 * self.epsilon + delta_E)
-                        if Lobj > Hobj:
-                            a2 = L
-                        else:
-                            a2 = H
-                    a1 = alpha1_p + (a2 - alpha2_n)
-                    # update alpha1_p, alpha2_n if change is larger than tol
-                    if abs(a1 - alpha1_p) > self.tol or abs(a2 - alpha2_n) > self.tol:
-                        alpha1_p = a1
-                        alpha2_n = a2
-                        changed = True
+                    a2 = max(L, min(alpha2_S + (delta_E - 2 * self.epsilon) / eta, H))
+                    a1 = alpha1 + (a2 - alpha2_S)
+                    # update alpha1, alpha2_n if change is larger than tol
+                    if abs(alpha1 - a1) > 1e-10 or abs(alpha2_S - a2) > 1e-10:
+                        delta_E += (a2 - alpha2) * eta
+                        alpha1 = a1
+                        alpha2_S = a2
                 else:
                     finished = True
                 case2 = True
             elif (not case3 and
-                  (alpha1_n > 0 or (alpha1_p == 0 and delta_E < -2 * self.epsilon)) and
-                  (alpha2_p > 0 or (alpha2_n == 0 and delta_E < -2 * self.epsilon))):
+                  (alpha1_S > 0 or (alpha1 == 0 and delta_E < -2 * self.epsilon)) and
+                  (alpha2 > 0 or (alpha2_S == 0 and delta_E < -2 * self.epsilon))):
                 # computer L and H wrt alpha1_n, alpha2_p
-                L = max(0, -gamma)
-                H = min(self.C, -gamma + self.C)
+                L = max(0, gamma)
+                H = min(self.C, self.C + gamma)
                 if L < H:
-                    if eta > 0:
-                        a2 = alpha2_p - (delta_E + 2 * self.epsilon) / eta
-                        if a2 > H:
-                            a2 = H
-                        elif a2 < L:
-                            a2 = L
-                    else:
-                        Lobj = -L * (2 * self.epsilon + delta_E)
-                        Hobj = -H * (2 * self.epsilon + delta_E)
-                        if Lobj > Hobj:
-                            a2 = L
-                        else:
-                            a2 = H
-                    a1 = alpha1_n + (a2 - alpha2_p)
+                    a2 = max(L, min(alpha2 - (delta_E + 2 * self.epsilon) / eta, H))
+                    a1 = alpha1_S + (a2 - alpha2)
                     # update alpha1_n, alpha2_p if change is larger than tol
-                    if abs(a1 - alpha1_n) > self.tol or abs(a2 - alpha2_p) > self.tol:
-                        alpha1_n = a1
-                        alpha2_p = a2
-                        changed = True
+                    if abs(alpha1_S - a1) > 1e-10 or abs(alpha2 - a2) > 1e-10:
+                        delta_E += (alpha2_S - a2) * eta
+                        alpha1_S = a1
+                        alpha2 = a2
                 else:
                     finished = True
                 case3 = True
             elif (not case4 and
-                  (alpha1_n > 0 or (alpha1_p == 0 and delta_E < -2 * self.epsilon)) and
-                  (alpha2_p > 0 or (alpha2_n == 0 and delta_E < -2 * self.epsilon))):
+                  (alpha1_S > 0 or (alpha1 == 0 and delta_E < 0)) and
+                  (alpha2_S > 0 or (alpha2 == 0 and delta_E > 0))):
                 # compute L and H wrt alpha1_n, alpha2_n
                 L = max(0, -gamma - self.C)
                 H = min(self.C, -gamma)
                 if L < H:
-                    if eta > 0:
-                        a2 = alpha2_n + delta_E / eta
-                        if a2 > H:
-                            a2 = H
-                        elif a2 > L:
-                            a2 = L
-                    else:
-                        Lobj = L * delta_E
-                        Hobj = H * delta_E
-                        if Lobj > Hobj:
-                            a2 = L
-                        else:
-                            a2 = H
-                    a1 = alpha1_n - (a2 - alpha2_n)
+                    a2 = max(L, min(alpha2_S + delta_E / eta, H))
+                    a1 = alpha1_S - (a2 - alpha2_S)
                     # update alpha1_n, alpha2_n if change is larger than tol
-                    if abs(a1 - alpha1_n) > self.tol or abs(a2 - alpha2_n) > self.tol:
-                        alpha1_n = a1
-                        alpha2_n = a2
-                        changed = True
+                    if abs(alpha1_S - a1) > 1e-10 or abs(alpha2_S - a2) > 1e-10:
+                        delta_E += (alpha2_S - a2) * eta
+                        alpha1_S = a1
+                        alpha2_S = a2
                 else:
                     finished = True
                 case4 = True
             else:
                 finished = True
-            delta_E += eta + ((alpha2_p - alpha2_n) - (alphas_p[i2] - alphas_n[i2]))
-        if not changed:
+            delta_E += eta + ((alpha2 - alpha2_S) - (alphas[i2] - alphas_S[i2]))
+        if (alpha1 == alpha1_old and alpha1_S == alpha1_oldS and
+                alpha2 == alpha2_old and alpha2_S == alpha2_oldS):
             return False, alphas, errors
 
-        # update error cache using new alphas
-        for i in range(len(alphas_p)):
-            if i != i1 and i != i2:
-                errors[i] += (((alphas_p[i1] - alphas_n[i1]) - (alpha1_p - alpha1_n)) * K[i1, i] +
-                              ((alphas_p[i2] - alphas_n[i2]) - (alpha2_p - alpha2_n)) * K[i2, i])
-
-        # update error cache using new alphas for i1 and i2
-        errors[i1] = (((alphas_p[i1] - alphas_n[i1]) - (alpha1_p - alpha1_n)) * K[i1, i1] +
-                      ((alphas_p[i2] - alphas_n[i2]) - (alpha2_p - alpha2_n)) * K[i1, i2])
-        errors[i2] = (((alphas_p[i1] - alphas_n[i1]) - (alpha1_p - alpha1_n)) * K[i1, i2] +
-                      ((alphas_p[i2] - alphas_n[i2]) - (alpha2_p - alpha2_n)) * K[i2, i2])
-
         # update model object with new alphas
-        alphas_p[i1] = alpha1_p
-        alphas_n[i1] = alpha1_n
-        alphas_p[i2] = alpha2_p
-        alphas_n[i2] = alpha2_n
+        alphas[i1] = alpha1
+        alphas[i2] = alpha2
+        alphas_S[i1] = alpha1_S
+        alphas_S[i2] = alpha2_S
+
+        # update error cache using new alphas
+        ceof1 = alpha1 - alpha1_old - (alpha1_S - alpha1_oldS)
+        ceof2 = alpha2 - alpha2_old - (alpha2_S - alpha2_oldS)
+
+        for i in range(len(self.IO)):
+            if self.I0[i] and i != i1 and i != i2:
+                errors[i] -= ceof1 * K[i1, i] + ceof2 * K[i2, i]
+        errors[i1] -= ceof1 * K[i1, i1] + ceof2 * K[i1, i2]
+        errors[i2] -= ceof1 * K[i1, i2] + ceof2 * K[i2, i2]
 
         # update threshold b to reflect change in alphas
-        bias_lower = sys.float_info.min
-        bias_upper = sys.float_info.max
+        self.b_low = sys.float_info.min
+        self.b_up = sys.float_info.max
+        self.i_low = -1
+        self.i_up = -1
 
-        for i in range(len(alphas_p)):
-            if 0 < alphas_n[i] < self.C and errors[i] + self.epsilon > bias_lower:
-                bias_lower = errors[i] + self.epsilon
-            elif 0 < alphas_p[i] < self.C and errors[i] - self.epsilon > bias_lower:
-                bias_lower = errors[i] - self.epsilon
-            elif 0 < alphas_p[i] < self.C and errors[i] - self.epsilon < bias_upper:
-                bias_upper = errors[i] - self.epsilon
-            elif 0 < alphas_n[i] < self.C and errors[i] + self.epsilon < bias_upper:
-                bias_upper = errors[i] + self.epsilon
+        for i in range(len(self.IO)):
+            if self.IO[i]:
+                self._update_threshold(errors, i)
+        self._update_threshold(errors, i1)
+        self._update_threshold(errors, i2)
 
-        return True, np.hstack((alphas_p, alphas_n)), errors
+        if self.i_low == -1 or self.i_up == -1:
+            raise Exception
+
+        return True, np.hstack((alphas, alphas_S)), errors
+
+    def _update_threshold(self, errors, i):
+        Ei = errors[i]
+        F_tilde_i = self.b_low
+
+        if self.IO_b or self.I2[i]:
+            F_tilde_i = Ei + self.epsilon
+        elif self.IO_a[i] or self.I1[i]:
+            F_tilde_i = Ei - self.epsilon
+
+        F_bar_i = self.b_up
+        if self.IO_a[i] or self.I3[i]:
+            F_bar_i = Ei - self.epsilon
+        elif self.IO_b[i] or self.I1[1]:
+            F_bar_i = Ei + self.epsilon
+
+        if self.b_low < F_tilde_i:
+            self.b_low = F_tilde_i
+            self.i_low = i
+
+        if self.b_up > F_bar_i:
+            self.b_up = F_bar_i
+            self.i_up = i
 
     def _examine_example(self, f, K, X, y, alphas, errors, i2):
         alphas_p, alphas_n = np.split(alphas, 2)
@@ -699,15 +701,21 @@ class SVR(RegressorMixin, SVM):
         P = (P + P.T) / 2  # ensure P is symmetric
         q = np.hstack((-y, y)) + self.epsilon
 
-        if self.optimizer is 'SMO':
+        ub = np.ones(2 * n_samples) * self.C  # upper bounds
+
+        if self.optimizer in ('SMO', scipy_solve_svm):
             obj_fun = Quadratic(P, q)
-            alphas = np.zeros(2 * n_samples)
-            # initial error is equal to SVR output (the predict function) - y
-            errors = (alphas[:n_samples] - alphas[n_samples:]).dot(K) + self.intercept_ - y
-            alphas = self.smo(obj_fun, K, X, y, alphas, errors)
+
+            if self.optimizer is 'SMO':
+                alphas = np.zeros(2 * n_samples)
+                # initial error is equal to SVR output (the predict function) - y
+                errors = (alphas[:n_samples] - alphas[n_samples:]).dot(K) + self.intercept_ - y
+                alphas = self.smo(obj_fun, K, X, y, alphas, errors)
+
+            else:
+                alphas = scipy_solve_svm(obj_fun, y, ub, self.epochs, self.verbose)
 
         else:
-            ub = np.ones(2 * n_samples) * self.C  # upper bounds
             obj_fun = BoxConstrainedQuadratic(P, q, ub)
 
             if self.optimizer in (solve_qp, scipy_solve_qp):

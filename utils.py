@@ -26,13 +26,25 @@ def mean_euclidean_error(y_true, y_pred):
 
 
 def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
-    return minimize(fun=f.function, jac=f.jacobian, method='slsqp', x0=np.random.rand(f.n),
+    return minimize(fun=f.function, jac=f.jacobian,
+                    method='slsqp', x0=np.zeros(f.n),
                     constraints=({'type': 'ineq',
                                   'fun': lambda x: h - np.dot(G, x),
                                   'jac': lambda x: -G},
                                  {'type': 'eq',
                                   'fun': lambda x: np.dot(A, x) - b,
                                   'jac': lambda x: A}),
+                    options={'maxiter': max_iter,
+                             'disp': verbose}).x
+
+
+def scipy_solve_svm(f, y, ub, max_iter, verbose):
+    return minimize(fun=f.function, jac=f.jacobian,
+                    method='slsqp', x0=np.zeros(f.n),
+                    constraints={'type': 'eq',
+                                 'fun': lambda x: np.dot(y, x),
+                                 'jac': lambda x: y},
+                    bounds=[(0, u) for u in ub],
                     options={'maxiter': max_iter,
                              'disp': verbose}).x
 
