@@ -366,6 +366,7 @@ class SVC(ClassifierMixin, SVM):
         P = (P + P.T) / 2  # ensure P is symmetric
         q = -np.ones(n_samples)
 
+        A = y.astype(np.float)  # equality matrix
         ub = np.ones(n_samples) * self.C  # upper bounds
 
         if self.optimizer in ('SMO', scipy_solve_svm):
@@ -378,7 +379,7 @@ class SVC(ClassifierMixin, SVM):
                 alphas = self.smo(obj_fun, K, X, y, alphas, errors)
 
             else:
-                alphas = scipy_solve_svm(obj_fun, y, ub, self.epochs, self.verbose)
+                alphas = scipy_solve_svm(obj_fun, A, ub, self.epochs, self.verbose)
 
         else:
             obj_fun = BoxConstrainedQuadratic(P, q, ub)
@@ -388,7 +389,6 @@ class SVC(ClassifierMixin, SVM):
                 lb = np.zeros(n_samples)  # lower bounds
                 h = np.hstack((lb, ub))  # inequality vector
 
-                A = y.astype(np.float)  # equality matrix
                 b = np.zeros(1)  # equality vector
 
                 if self.optimizer is solve_qp:
@@ -701,6 +701,7 @@ class SVR(RegressorMixin, SVM):
         P = (P + P.T) / 2  # ensure P is symmetric
         q = np.hstack((-y, y)) + self.epsilon
 
+        A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
         if self.optimizer in ('SMO', scipy_solve_svm):
@@ -713,7 +714,7 @@ class SVR(RegressorMixin, SVM):
                 alphas = self.smo(obj_fun, K, X, y, alphas, errors)
 
             else:
-                alphas = scipy_solve_svm(obj_fun, y, ub, self.epochs, self.verbose)
+                alphas = scipy_solve_svm(obj_fun, A, ub, self.epochs, self.verbose)
 
         else:
             obj_fun = BoxConstrainedQuadratic(P, q, ub)
@@ -723,7 +724,6 @@ class SVR(RegressorMixin, SVM):
                 lb = np.zeros(2 * n_samples)  # lower bounds
                 h = np.hstack((lb, ub))  # inequality vector
 
-                A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
                 b = np.zeros(1)  # equality vector
 
                 if self.optimizer is solve_qp:

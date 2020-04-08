@@ -23,7 +23,7 @@ from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.quasi_newton import BFGS
 from optimization.unconstrained.rmsprop import RMSProp
 from optimization.unconstrained.rprop import RProp
-from utils import load_ml_cup, load_ml_cup_blind, mean_euclidean_error
+from utils import load_ml_cup, load_ml_cup_blind, mean_euclidean_error, scipy_solve_svm
 
 line_search_optimizers = [NonlinearConjugateGradient, SteepestDescentAcceleratedGradient,
                           SteepestGradientDescent, HeavyBallGradient, BFGS]
@@ -36,7 +36,7 @@ other_optimizers = [ProximalBundle]
 
 constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint, LagrangianDual, 'SMO']
 
-other_constrained_optimizers = [solve_qp, scipy_solve_qp]
+other_constrained_optimizers = [solve_qp, scipy_solve_qp, scipy_solve_svm]
 
 if __name__ == '__main__':
     X, y = load_ml_cup()
