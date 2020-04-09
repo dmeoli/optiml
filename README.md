@@ -77,15 +77,13 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
              - [x] Nesterov momentum
     - Constrained Optimization
         - Box-Constrained Optimization
-            - Primal Formulation
-                - [x] Projected Gradient
-                - [x] Frank-Wolfe
-                - [x] Active Set
-                - [x] Interior Point
-            - Dual Formulation
-                - [x] Lagrangian Dual
-                - [x] Sequential Minimal Optimization (ad hoc for SVMs)
-                - [x] SVMs solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
+            - [x] Projected Gradient
+            - [x] Frank-Wolfe
+            - [x] Active Set
+            - [x] Interior Point
+            - [x] Lagrangian Dual
+            - [x] Sequential Minimal Optimization (ad hoc for SVMs)
+            - [x] BCQP solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
         - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
         - [x] QP solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
 

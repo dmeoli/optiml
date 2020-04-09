@@ -16,7 +16,7 @@ plt.style.use('ggplot')
 
 class SVM(BaseEstimator):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
-                 eps=1e-7, tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
+                 eps=1e-3, tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
         self.kernels = {'linear': self.linear,
                         'poly': self.poly,
                         'rbf': self.rbf,
@@ -165,7 +165,7 @@ class SVM(BaseEstimator):
 
 class SVC(ClassifierMixin, SVM):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
-                 eps=1e-7, tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
+                 eps=1e-3, tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, coef0, C, eps, tol, optimizer, epochs, verbose)
         if kernel is 'linear':
             self.coef_ = np.zeros(2)
@@ -188,32 +188,30 @@ class SVC(ClassifierMixin, SVM):
 
         s = y1 * y2
 
+        gamma = s * alpha1 + alpha2
+
         # compute L and H, the bounds on new possible alpha values
         # based on equations 13 and 14 in Platt's paper
         if y1 != y2:
-            L = max(0, alpha2 - alpha1)
-            H = min(self.C, self.C + alpha2 - alpha1)
+            L = max(0, gamma)
+            H = min(self.C, gamma + self.C)
         else:
-            L = max(0, alpha1 + alpha2 - self.C)
-            H = min(self.C, alpha1 + alpha2)
+            L = max(0, gamma - self.C)
+            H = min(self.C, gamma)
 
         if L == H:
             return False, alphas, errors
 
         # compute kernel and 2nd derivative eta
         # based on equation 15 in Platt's paper
-        eta = 2 * K[i1, i2] - K[i1, i1] - K[i2, i2]
+        eta = K[i1, i1] + K[i2, i2] - 2 * K[i1, i2]
 
         # compute new alpha2 if eta is positive
         # based on equation 16 in Platt's paper
-        if eta < 0:
-            a2 = alpha2 - y2 * (E1 - E2) / eta
+        if eta > 0:
             # clip a2 based on bounds L and H based
             # on equation 17 in Platt's paper
-            if a2 < L:
-                a2 = L
-            elif a2 > H:
-                a2 = H
+            a2 = np.clip(alpha2 + y2 * (E1 - E2) / eta, L, H)
         else:  # else move new a2 to bound with greater objective function value
             L1 = alpha1 + s * (alpha2 - L)
             H1 = alpha1 + s * (alpha2 - H)
@@ -249,17 +247,14 @@ class SVC(ClassifierMixin, SVM):
 
         # update threshold b to reflect change in alphas
         # based on equations 20 and 21 in Platt's paper
-        # calculate both possible thresholds
-        b1 = E1 + y1 * (a1 - alpha1) * K[i1, i1] + y2 * (a2 - alpha2) * K[i1, i2] + self.intercept_
-        b2 = E2 + y1 * (a1 - alpha1) * K[i1, i2] + y2 * (a2 - alpha2) * K[i2, i2] + self.intercept_
-
         # set new threshold based on if a1 or a2 is bound by L and/or H
-        if 0 < a1 < self.C:
-            b_new = b1
-        elif 0 < a2 < self.C:
-            b_new = b2
+        if self.eps < a1 < self.C - self.eps:
+            b_new = E1 + y1 * (a1 - alpha1) * K[i1, i1] + y2 * (a2 - alpha2) * K[i1, i2] + self.intercept_
+        elif self.eps < a2 < self.C - self.eps:
+            b_new = E2 + y1 * (a1 - alpha1) * K[i1, i2] + y2 * (a2 - alpha2) * K[i2, i2] + self.intercept_
         else:  # average thresholds if both are bound
-            b_new = (b1 + b2) / 2
+            b_new = (E1 + y1 * (a1 - alpha1) * K[i1, i1] + y2 * (a2 - alpha2) * K[i1, i2] + self.intercept_ +
+                     E2 + y1 * (a1 - alpha1) * K[i1, i2] + y2 * (a2 - alpha2) * K[i2, i2] + self.intercept_) / 2
 
         # update weight vector to reflect change in a1 and a2, if
         # kernel is linear, based on equation 22 in Platt's paper
@@ -412,13 +407,15 @@ class SVC(ClassifierMixin, SVM):
         self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], alphas[sv]
         self.dual_coef_ = self.alphas * self.sv_y
 
-        if self.kernel is 'linear':
-            self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
+        if self.optimizer is not 'SMO':
 
-        for n in range(len(self.alphas)):
-            self.intercept_ += self.sv_y[n]
-            self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
-        self.intercept_ /= len(self.alphas)
+            if self.kernel is 'linear':
+                self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
+
+            for n in range(len(self.alphas)):
+                self.intercept_ += self.sv_y[n]
+                self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
+            self.intercept_ /= len(self.alphas)
 
         return self
 
@@ -432,7 +429,7 @@ class SVC(ClassifierMixin, SVM):
 
 
 class SVR(RegressorMixin, SVM):
-    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., eps=1e-7,
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., eps=1e-3,
                  tol=1e-3, epsilon=0.1, optimizer='SMO', epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, coef0, C, eps, tol, optimizer, epochs, verbose)
         self.epsilon = epsilon  # epsilon insensitive loss value
@@ -447,160 +444,118 @@ class SVR(RegressorMixin, SVM):
         if i1 == i2:
             return False, alphas, errors
 
-        alphas, alphas_S = np.split(alphas, 2)
+        alphas_p, alphas_n = np.split(alphas, 2)
 
-        alpha1, alpha1_S = alphas[i1], alphas_S[i1]
+        alpha1_p, alpha1_n = alphas_p[i1], alphas_n[i1]
         E1 = errors[i1]
 
-        alpha2, alpha2_S = alphas[i2], alphas_S[i2]
+        alpha2_p, alpha2_n = alphas_p[i2], alphas_n[i2]
         E2 = errors[i2]
 
         # compute kernel and 2nd derivative eta
         # based on equation 15 in Platt's paper
-        eta = -2 * K[i1, i2] + K[i1, i1] + K[i2, i2]
+        eta = K[i1, i1] + K[i2, i2] - 2 * K[i1, i2]
 
         if eta < 0:
             eta = 0
 
-        gamma = alpha1 - alpha1_S + alpha2 - alpha2_S
+        gamma = alpha1_p - alpha1_n + alpha2_p - alpha2_n
 
         case1 = case2 = case3 = case4 = finished = False
-        alpha1_old, alpha1_oldS = alpha1, alpha1_S
-        alpha2_old, alpha2_oldS = alpha2, alpha2_S
+        alpha1_p_old, alpha1_n_old = alpha1_p, alpha1_n
+        alpha2_p_old, alpha2_n_old = alpha2_p, alpha2_n
 
         delta_E = E1 - E2
 
-        while not finished:  # occurs at most 3 times
+        while not finished:  # occurs at most three times
             if (not case1 and
-                    (alpha1 > 0 or (alpha1_S == 0 and delta_E > 0)) and
-                    (alpha2 > 0 or (alpha2_S == 0 and delta_E < 0))):
-                # compute L and H wrt alpha1, alpha2_p
+                    (alpha1_p > 0 or (alpha1_n == 0 and delta_E > 0)) and
+                    (alpha2_p > 0 or (alpha2_n == 0 and delta_E < 0))):
+                # compute L and H wrt alpha1_p, alpha2_p
                 L = max(0, gamma - self.C)
                 H = min(self.C, gamma)
                 if L < H:
-                    a2 = max(L, min(alpha2 - delta_E / eta, H))
-                    a1 = alpha1 - (a2 - alpha2)
+                    a2 = np.clip(alpha2_p - delta_E / eta, L, H)
+                    a1 = alpha1_p - (a2 - alpha2_p)
                     # update alpha1, alpha2_p if change is larger than some eps
-                    if abs(alpha1 - a1) > 1e-10 or abs(a2 - alpha2) > 1e-10:
-                        delta_E += (a2 - alpha2) * eta
-                        alpha1 = a1
-                        alpha2 = a2
+                    if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
+                        alpha1_p = a1
+                        alpha2_p = a2
                 else:
                     finished = True
                 case1 = True
             elif (not case2 and
-                  (alpha1 > 0 or (alpha1_S == 0 and delta_E > 2 * self.epsilon)) and
-                  (alpha2_S > 0 or (alpha2_S == 0 and delta_E < 2 * self.epsilon))):
-                # compute L and H wrt alpha1, alpha2_n
+                  (alpha1_p > 0 or (alpha1_n == 0 and delta_E > 2 * self.epsilon)) and
+                  (alpha2_n > 0 or (alpha2_p == 0 and delta_E > 2 * self.epsilon))):
+                # compute L and H wrt alpha1_p, alpha2_n
                 L = max(0, -gamma)
                 H = min(self.C, -gamma + self.C)
                 if L < H:
-                    a2 = max(L, min(alpha2_S + (delta_E - 2 * self.epsilon) / eta, H))
-                    a1 = alpha1 + (a2 - alpha2_S)
-                    # update alpha1, alpha2_n if change is larger than tol
-                    if abs(alpha1 - a1) > 1e-10 or abs(alpha2_S - a2) > 1e-10:
-                        delta_E += (a2 - alpha2) * eta
-                        alpha1 = a1
-                        alpha2_S = a2
+                    a2 = np.clip(alpha2_n + (delta_E - 2 * self.epsilon) / eta, L, H)
+                    a1 = alpha1_p + (a2 - alpha2_n)
+                    # update alpha1, alpha2_n if change is larger than some eps
+                    if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
+                        alpha1_p = a1
+                        alpha2_n = a2
                 else:
                     finished = True
                 case2 = True
             elif (not case3 and
-                  (alpha1_S > 0 or (alpha1 == 0 and delta_E < -2 * self.epsilon)) and
-                  (alpha2 > 0 or (alpha2_S == 0 and delta_E < -2 * self.epsilon))):
+                  (alpha1_n > 0 or (alpha1_p == 0 and delta_E < 2 * self.epsilon)) and
+                  (alpha2_p > 0 or (alpha2_n == 0 and delta_E < 2 * self.epsilon))):
                 # computer L and H wrt alpha1_n, alpha2_p
                 L = max(0, gamma)
                 H = min(self.C, self.C + gamma)
                 if L < H:
-                    a2 = max(L, min(alpha2 - (delta_E + 2 * self.epsilon) / eta, H))
-                    a1 = alpha1_S + (a2 - alpha2)
-                    # update alpha1_n, alpha2_p if change is larger than tol
-                    if abs(alpha1_S - a1) > 1e-10 or abs(alpha2 - a2) > 1e-10:
-                        delta_E += (alpha2_S - a2) * eta
-                        alpha1_S = a1
-                        alpha2 = a2
+                    a2 = np.clip(alpha2_p - (delta_E + 2 * self.epsilon) / eta, L, H)
+                    a1 = alpha1_n + (a2 - alpha2_p)
+                    # update alpha1_n, alpha2_p if change is larger than some eps
+                    if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
+                        alpha1_n = a1
+                        alpha2_p = a2
                 else:
                     finished = True
                 case3 = True
             elif (not case4 and
-                  (alpha1_S > 0 or (alpha1 == 0 and delta_E < 0)) and
-                  (alpha2_S > 0 or (alpha2 == 0 and delta_E > 0))):
+                  (alpha1_n > 0 or (alpha1_p == 0 and delta_E < 0)) and
+                  (alpha2_n > 0 or (alpha2_p == 0 and delta_E > 0))):
                 # compute L and H wrt alpha1_n, alpha2_n
                 L = max(0, -gamma - self.C)
                 H = min(self.C, -gamma)
                 if L < H:
-                    a2 = max(L, min(alpha2_S + delta_E / eta, H))
-                    a1 = alpha1_S - (a2 - alpha2_S)
-                    # update alpha1_n, alpha2_n if change is larger than tol
-                    if abs(alpha1_S - a1) > 1e-10 or abs(alpha2_S - a2) > 1e-10:
-                        delta_E += (alpha2_S - a2) * eta
-                        alpha1_S = a1
-                        alpha2_S = a2
+                    a2 = np.clip(alpha2_n + delta_E / eta, L, H)
+                    a1 = alpha1_n - (a2 - alpha2_n)
+                    # update alpha1_n, alpha2_n if change is larger than some eps
+                    if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
+                        alpha1_n = a1
+                        alpha2_n = a2
                 else:
                     finished = True
                 case4 = True
             else:
                 finished = True
-            delta_E += eta + ((alpha2 - alpha2_S) - (alphas[i2] - alphas_S[i2]))
-        if (alpha1 == alpha1_old and alpha1_S == alpha1_oldS and
-                alpha2 == alpha2_old and alpha2_S == alpha2_oldS):
+
+            delta_E += eta * ((alpha2_p - alpha2_n) - (alphas_p[i2] - alphas_n[i2]))
+
+        if (alpha1_p == alpha1_p_old and alpha1_n == alpha1_n_old and
+                alpha2_p == alpha2_p_old and alpha2_n == alpha2_n_old):
             return False, alphas, errors
 
         # update model object with new alphas
-        alphas[i1] = alpha1
-        alphas[i2] = alpha2
-        alphas_S[i1] = alpha1_S
-        alphas_S[i2] = alpha2_S
+        alphas_p[i1], alphas_p[i2] = alpha1_p, alpha2_p
+        alphas_n[i1], alphas_n[i2] = alpha1_n, alpha2_n
 
         # update error cache using new alphas
-        ceof1 = alpha1 - alpha1_old - (alpha1_S - alpha1_oldS)
-        ceof2 = alpha2 - alpha2_old - (alpha2_S - alpha2_oldS)
+        ceof1 = alpha1_p - alpha1_p_old - (alpha1_n - alpha1_n_old)
+        ceof2 = alpha2_p - alpha2_p_old - (alpha2_n - alpha2_n_old)
 
-        for i in range(len(self.IO)):
-            if self.I0[i] and i != i1 and i != i2:
+        for i in range(len(alphas_p)):
+            if i != i1 and i != i2:
                 errors[i] -= ceof1 * K[i1, i] + ceof2 * K[i2, i]
         errors[i1] -= ceof1 * K[i1, i1] + ceof2 * K[i1, i2]
         errors[i2] -= ceof1 * K[i1, i2] + ceof2 * K[i2, i2]
 
-        # update threshold b to reflect change in alphas
-        self.b_low = sys.float_info.min
-        self.b_up = sys.float_info.max
-        self.i_low = -1
-        self.i_up = -1
-
-        for i in range(len(self.IO)):
-            if self.IO[i]:
-                self._update_threshold(errors, i)
-        self._update_threshold(errors, i1)
-        self._update_threshold(errors, i2)
-
-        if self.i_low == -1 or self.i_up == -1:
-            raise Exception
-
-        return True, np.hstack((alphas, alphas_S)), errors
-
-    def _update_threshold(self, errors, i):
-        Ei = errors[i]
-        F_tilde_i = self.b_low
-
-        if self.IO_b or self.I2[i]:
-            F_tilde_i = Ei + self.epsilon
-        elif self.IO_a[i] or self.I1[i]:
-            F_tilde_i = Ei - self.epsilon
-
-        F_bar_i = self.b_up
-        if self.IO_a[i] or self.I3[i]:
-            F_bar_i = Ei - self.epsilon
-        elif self.IO_b[i] or self.I1[1]:
-            F_bar_i = Ei + self.epsilon
-
-        if self.b_low < F_tilde_i:
-            self.b_low = F_tilde_i
-            self.i_low = i
-
-        if self.b_up > F_bar_i:
-            self.b_up = F_bar_i
-            self.i_up = i
+        return True, np.hstack((alphas_p, alphas_n)), errors
 
     def _examine_example(self, f, K, X, y, alphas, errors, i2):
         alphas_p, alphas_n = np.split(alphas, 2)
@@ -611,10 +566,10 @@ class SVR(RegressorMixin, SVM):
         r2 = E2 * y2
 
         # proceed if error is within specified tol
-        if ((r2 > self.tol and alpha2_n < self.C) or
-                (r2 < self.tol and alpha2_n > 0) or
-                (-r2 > self.tol and alpha2_p < self.C) or
-                (-r2 > self.tol and alpha2_p > 0)):
+        if ((r2 > self.eps and alpha2_n < self.C) or
+                (r2 < self.eps and alpha2_n > 0) or
+                (-r2 > self.eps and alpha2_p < self.C) or
+                (-r2 > self.eps and alpha2_p > 0)):
 
             # if the number of non-zero and non-C alphas is greater than 1
             if len(alphas[(alphas != 0) & (alphas != self.C)]) > 1:
