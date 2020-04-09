@@ -461,9 +461,8 @@ class SVR(RegressorMixin, SVM):
 
         gamma = alpha1_p - alpha1_n + alpha2_p - alpha2_n
 
-        case1 = case2 = case3 = case4 = finished = False
-        alpha1_p_old, alpha1_n_old = alpha1_p, alpha1_n
-        alpha2_p_old, alpha2_n_old = alpha2_p, alpha2_n
+        case1 = case2 = case3 = case4 = False
+        changed = finished = False
 
         delta_E = E1 - E2
 
@@ -481,6 +480,7 @@ class SVR(RegressorMixin, SVM):
                     if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
                         alpha1_p = a1
                         alpha2_p = a2
+                        changed = True
                 else:
                     finished = True
                 case1 = True
@@ -497,12 +497,13 @@ class SVR(RegressorMixin, SVM):
                     if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
                         alpha1_p = a1
                         alpha2_n = a2
+                        changed = True
                 else:
                     finished = True
                 case2 = True
             elif (not case3 and
-                  (alpha1_n > 0 or (alpha1_p == 0 and delta_E < 2 * self.epsilon)) and
-                  (alpha2_p > 0 or (alpha2_n == 0 and delta_E < 2 * self.epsilon))):
+                  (alpha1_n > 0 or (alpha1_p == 0 and delta_E < -2 * self.epsilon)) and
+                  (alpha2_p > 0 or (alpha2_n == 0 and delta_E < -2 * self.epsilon))):
                 # computer L and H wrt alpha1_n, alpha2_p
                 L = max(0, gamma)
                 H = min(self.C, self.C + gamma)
@@ -513,6 +514,7 @@ class SVR(RegressorMixin, SVM):
                     if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
                         alpha1_n = a1
                         alpha2_p = a2
+                        changed = True
                 else:
                     finished = True
                 case3 = True
@@ -529,6 +531,7 @@ class SVR(RegressorMixin, SVM):
                     if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
                         alpha1_n = a1
                         alpha2_n = a2
+                        changed = True
                 else:
                     finished = True
                 case4 = True
@@ -537,23 +540,23 @@ class SVR(RegressorMixin, SVM):
 
             delta_E += eta * ((alpha2_p - alpha2_n) - (alphas_p[i2] - alphas_n[i2]))
 
-        if (alpha1_p == alpha1_p_old and alpha1_n == alpha1_n_old and
-                alpha2_p == alpha2_p_old and alpha2_n == alpha2_n_old):
+        if not changed:
             return False, alphas, errors
+
+        # update error cache using new alphas
+        for i in range(len(alphas)):
+            if i != i1 and i != i2:
+                errors[i] += (((alphas_p[i1] - alphas_n[i1]) - (alpha1_p - alpha1_n)) * K[i1, i] +
+                              ((alphas_p[i2] - alphas_n[i2]) - (alpha2_p - alpha2_n)) * K[i2, i])
+        # update error cache using new alphas for i1 and i2
+        errors[i1] += (((alphas_p[i1] - alphas_n[i1]) - (alpha1_p - alpha1_n)) * K[i1, i1] +
+                       ((alphas_p[i2] - alphas_n[i2]) - (alpha2_p - alpha2_n)) * K[i1, i2])
+        errors[i2] += (((alphas_p[i1] - alphas_n[i1]) - (alpha1_p - alpha1_n)) * K[i1, i2] +
+                       ((alphas_p[i2] - alphas_n[i2]) - (alpha2_p - alpha2_n)) * K[i2, i2])
 
         # update model object with new alphas
         alphas_p[i1], alphas_p[i2] = alpha1_p, alpha2_p
         alphas_n[i1], alphas_n[i2] = alpha1_n, alpha2_n
-
-        # update error cache using new alphas
-        ceof1 = alpha1_p - alpha1_p_old - (alpha1_n - alpha1_n_old)
-        ceof2 = alpha2_p - alpha2_p_old - (alpha2_n - alpha2_n_old)
-
-        for i in range(len(alphas_p)):
-            if i != i1 and i != i2:
-                errors[i] -= ceof1 * K[i1, i] + ceof2 * K[i2, i]
-        errors[i1] -= ceof1 * K[i1, i1] + ceof2 * K[i1, i2]
-        errors[i2] -= ceof1 * K[i1, i2] + ceof2 * K[i2, i2]
 
         return True, np.hstack((alphas_p, alphas_n)), errors
 
