@@ -1,4 +1,4 @@
-import sys
+import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,12 +45,12 @@ class SVM(BaseEstimator):
             raise ValueError('C is not a real scalar')
         if not C >= 0:
             raise ValueError('C must be >= 0')
-        self.C = C
+        self.C = C  # penalty or regularization term
         if not np.isscalar(tol):
             raise ValueError('tol is not a real scalar')
         if not tol > 0:
             raise ValueError('tol must be > 0')
-        self.tol = tol
+        self.tol = tol  # tolerance for KKT conditions
         if not np.isscalar(eps):
             raise ValueError('eps is not a real scalar')
         if not eps > 0:
@@ -88,6 +88,17 @@ class SVM(BaseEstimator):
         gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
         return np.tanh(gamma * np.dot(X, y.T) + self.coef0)
+
+    # Platt's SMO algorithm
+
+    def _take_step(self):
+        raise NotImplementedError
+
+    def _examine_example(self):
+        raise NotImplementedError
+
+    def smo(self):
+        raise NotImplementedError
 
     @staticmethod
     def plot(svm, X, y):
@@ -188,16 +199,20 @@ class SVC(ClassifierMixin, SVM):
 
         s = y1 * y2
 
-        gamma = s * alpha1 + alpha2
+        # gamma = s * alpha1 + alpha2
 
         # compute L and H, the bounds on new possible alpha values
         # based on equations 13 and 14 in Platt's paper
         if y1 != y2:
-            L = max(0, gamma)
-            H = min(self.C, gamma + self.C)
+            # L = max(0, gamma)
+            # H = min(self.C, gamma + self.C)
+            L = max(0, alpha2 - alpha1)
+            H = min(self.C, self.C + alpha2 - alpha1)
         else:
-            L = max(0, gamma - self.C)
-            H = min(self.C, gamma)
+            # L = max(0, gamma - self.C)
+            # H = min(self.C, gamma)
+            L = max(0, alpha2 + alpha1 - self.C)
+            H = min(self.C, alpha2 + alpha1)
 
         if L == H:
             return False, alphas, errors
@@ -211,14 +226,28 @@ class SVC(ClassifierMixin, SVM):
         if eta > 0:
             # clip a2 based on bounds L and H based
             # on equation 17 in Platt's paper
-            a2 = np.clip(alpha2 + y2 * (E1 - E2) / eta, L, H)
+            # a2 = np.clip(alpha2 + y2 * (E1 - E2) / eta, L, H)
+            a2 = alpha2 + y2 * (E1 - E2) / eta
+            if a2 < L:
+                a2 = L
+            elif a2 > H:
+                a2 = H
         else:  # else move new a2 to bound with greater objective function value
-            L1 = alpha1 + s * (alpha2 - L)
-            H1 = alpha1 + s * (alpha2 - H)
-            f1 = y1 * E1 - alpha1 * K[i1, i1] - s * alpha2 * K[i1, i2]
-            f2 = y2 * E2 - alpha2 * K[i2, i2] - s * alpha1 * K[i1, i2]
-            Lobj = -0.5 * L1 * L1 * K[i1, i1] - 0.5 * L * L * K[i2, i2] - s * L * L1 * K[i1, i2] - L1 * f1 - L * f2
-            Hobj = -0.5 * H1 * H1 * K[i1, i1] - 0.5 * H * H * K[i2, i2] - s * H * H1 * K[i1, i2] - H1 * f1 - H * f2
+            # under unusual circumstances, eta will not be positive. A negative eta will occur if the kernel K does
+            # not obey Mercer’s condition, which can cause the objective function to become indefinite. A zero eta
+            # can occur even with a correct kernel, if more than one training example has the same input vector.
+            # In any event, SMO will work even when eta is not positive, in which case the objective function should
+            # be evaluated at each end of the line segment:
+
+            # f1 = y1 * E1 - alpha1 * K[i1, i1] - s * alpha2 * K[i1, i2]
+            # f2 = y2 * E2 - alpha2 * K[i2, i2] - s * alpha1 * K[i1, i2]
+            # L1 = alpha1 + s * (alpha2 - L)
+            # H1 = alpha1 + s * (alpha2 - H)
+            # Lobj = -0.5 * L1 * L1 * K[i1, i1] - 0.5 * L * L * K[i2, i2] - s * L * L1 * K[i1, i2] - L1 * f1 - L * f2
+            # Hobj = -0.5 * H1 * H1 * K[i1, i1] - 0.5 * H * H * K[i2, i2] - s * H * H1 * K[i1, i2] - H1 * f1 - H * f2
+
+            Lobj = y2 * (E1 - E2) * L
+            Hobj = y2 * (E1 - E2) * H
 
             alphas_adj = alphas.copy()
             alphas_adj[i2] = L
@@ -238,6 +267,8 @@ class SVC(ClassifierMixin, SVM):
             else:
                 a2 = alpha2
 
+            warnings.warn('eta is zero')
+
         # if examples can't be optimized within tol, skip this pair
         if abs(a2 - alpha2) < self.eps * (a2 + alpha2 + self.eps):
             return False, alphas, errors
@@ -245,31 +276,39 @@ class SVC(ClassifierMixin, SVM):
         # calculate new alpha1 based on equation 18 in Platt's paper
         a1 = alpha1 + s * (alpha2 - a2)
 
+        b = self.intercept_
+
         # update threshold b to reflect change in alphas
         # based on equations 20 and 21 in Platt's paper
         # set new threshold based on if a1 or a2 is bound by L and/or H
-        if self.eps < a1 < self.C - self.eps:
-            b_new = E1 + y1 * (a1 - alpha1) * K[i1, i1] + y2 * (a2 - alpha2) * K[i1, i2] + self.intercept_
-        elif self.eps < a2 < self.C - self.eps:
-            b_new = E2 + y1 * (a1 - alpha1) * K[i1, i2] + y2 * (a2 - alpha2) * K[i2, i2] + self.intercept_
+        if 0 < a1 < self.C:
+            self.intercept_ += E1 + y1 * (a1 - alpha1) * K[i1, i1] + y2 * (a2 - alpha2) * K[i1, i2]
+        elif 0 < a2 < self.C:
+            self.intercept_ += E2 + y1 * (a1 - alpha1) * K[i1, i2] + y2 * (a2 - alpha2) * K[i2, i2]
         else:  # average thresholds if both are bound
-            b_new = (E1 + y1 * (a1 - alpha1) * K[i1, i1] + y2 * (a2 - alpha2) * K[i1, i2] + self.intercept_ +
-                     E2 + y1 * (a1 - alpha1) * K[i1, i2] + y2 * (a2 - alpha2) * K[i2, i2] + self.intercept_) / 2
+            self.intercept_ += (E1 + y1 * (a1 - alpha1) * K[i1, i1] + y2 * (a2 - alpha2) * K[i1, i2] +
+                                E2 + y1 * (a1 - alpha1) * K[i1, i2] + y2 * (a2 - alpha2) * K[i2, i2]) / 2
 
         # update weight vector to reflect change in a1 and a2, if
         # kernel is linear, based on equation 22 in Platt's paper
         if self.kernel is 'linear':
             self.coef_ += y1 * (a1 - alpha1) * X[i1] + y2 * (a2 - alpha2) * X[i2]
 
+        # # update error cache using new alphas
+        # for i in range(len(alphas)):
+        #     if 0 < alphas[i] < self.C:
+        #         if i != i1 and i != i2:
+        #             errors[i] += y1 * (a1 - alpha1) * K[i1, i] + y2 * (a2 - alpha2) * K[i2, i]
+        # # update error cache using new alphas for i1 and i2
+        # errors[i1] = y1 * (a1 - alpha1) * K[i1, i1] + y2 * (a2 - alpha2) * K[i1, i2]
+        # errors[i2] = y1 * (a1 - alpha1) * K[i1, i2] + y2 * (a2 - alpha2) * K[i2, i2]
+
         # update error cache using new alphas
-        errors += y1 * (a1 - alpha1) * K[i1] + y2 * (a2 - alpha2) * K[i2] + self.intercept_ - b_new
+        errors += y1 * (a1 - alpha1) * K[i1] + y2 * (a2 - alpha2) * K[i2] + b - self.intercept_
 
         # update model object with new alphas
         alphas[i1] = a1
         alphas[i2] = a2
-
-        # update model threshold
-        self.intercept_ = b_new
 
         return True, alphas, errors
 
@@ -402,7 +441,7 @@ class SVC(ClassifierMixin, SVM):
                 self.optimizer(dual, max_iter=self.epochs, verbose=self.verbose).minimize()
                 alphas = dual.primal_solution
 
-        sv = alphas > self.tol
+        sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
         self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], alphas[sv]
         self.dual_coef_ = self.alphas * self.sv_y
@@ -474,7 +513,21 @@ class SVR(RegressorMixin, SVM):
                 L = max(0, gamma - self.C)
                 H = min(self.C, gamma)
                 if L < H:
-                    a2 = np.clip(alpha2_p - delta_E / eta, L, H)
+                    if eta > 0:
+                        # a2 = np.clip(alpha2_p - delta_E / eta, L, H)
+                        a2 = alpha2_p - delta_E / eta
+                        if a2 < L:
+                            a2 = L
+                        elif a2 > H:
+                            a2 = H
+                    else:
+                        Lobj = -L * delta_E
+                        Hobj = -H * delta_E
+                        if Lobj > Hobj:
+                            a2 = L
+                        else:
+                            a2 = H
+                        warnings.warn('eta is zero')
                     a1 = alpha1_p - (a2 - alpha2_p)
                     # update alpha1, alpha2_p if change is larger than some eps
                     if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
@@ -491,7 +544,21 @@ class SVR(RegressorMixin, SVM):
                 L = max(0, -gamma)
                 H = min(self.C, -gamma + self.C)
                 if L < H:
-                    a2 = np.clip(alpha2_n + (delta_E - 2 * self.epsilon) / eta, L, H)
+                    if eta > 0:
+                        # a2 = np.clip(alpha2_n + (delta_E - 2 * self.epsilon) / eta, L, H)
+                        a2 = alpha2_n + (delta_E - 2 * self.epsilon) / eta
+                        if a2 < L:
+                            a2 = L
+                        elif a2 > H:
+                            a2 = H
+                    else:
+                        Lobj = L * (-2 * self.epsilon + delta_E)
+                        Hobj = H * (-2 * self.epsilon + delta_E)
+                        if Lobj > Hobj:
+                            a2 = L
+                        else:
+                            a2 = H
+                        warnings.warn('eta is zero')
                     a1 = alpha1_p + (a2 - alpha2_n)
                     # update alpha1, alpha2_n if change is larger than some eps
                     if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
@@ -508,7 +575,21 @@ class SVR(RegressorMixin, SVM):
                 L = max(0, gamma)
                 H = min(self.C, self.C + gamma)
                 if L < H:
-                    a2 = np.clip(alpha2_p - (delta_E + 2 * self.epsilon) / eta, L, H)
+                    if eta > 0:
+                        # a2 = np.clip(alpha2_p - (delta_E + 2 * self.epsilon) / eta, L, H)
+                        a2 = alpha2_p - (delta_E + 2 * self.epsilon) / eta
+                        if a2 < L:
+                            a2 = L
+                        elif a2 > H:
+                            a2 = H
+                    else:
+                        Lobj = -L * (2 * self.epsilon + delta_E)
+                        Hobj = -H * (2 * self.epsilon + delta_E)
+                        if Lobj > Hobj:
+                            a2 = L
+                        else:
+                            a2 = H
+                        warnings.warn('eta is zero')
                     a1 = alpha1_n + (a2 - alpha2_p)
                     # update alpha1_n, alpha2_p if change is larger than some eps
                     if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
@@ -525,7 +606,21 @@ class SVR(RegressorMixin, SVM):
                 L = max(0, -gamma - self.C)
                 H = min(self.C, -gamma)
                 if L < H:
-                    a2 = np.clip(alpha2_n + delta_E / eta, L, H)
+                    if eta > 0:
+                        # a2 = np.clip(alpha2_n + delta_E / eta, L, H)
+                        a2 = alpha2_n + delta_E / eta
+                        if a2 < L:
+                            a2 = L
+                        elif a2 > H:
+                            a2 = H
+                    else:
+                        Lobj = L * delta_E
+                        Hobj = H * delta_E
+                        if Lobj > Hobj:
+                            a2 = L
+                        else:
+                            a2 = H
+                        warnings.warn('eta is zero')
                     a1 = alpha1_n - (a2 - alpha2_n)
                     # update alpha1_n, alpha2_n if change is larger than some eps
                     if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
@@ -569,10 +664,10 @@ class SVR(RegressorMixin, SVM):
         r2 = E2 * y2
 
         # proceed if error is within specified tol
-        if ((r2 > self.eps and alpha2_n < self.C) or
-                (r2 < self.eps and alpha2_n > 0) or
-                (-r2 > self.eps and alpha2_p < self.C) or
-                (-r2 > self.eps and alpha2_p > 0)):
+        if ((r2 > self.tol and alpha2_n < self.C) or
+                (r2 < self.tol and alpha2_n > 0) or
+                (-r2 > self.tol and alpha2_p < self.C) or
+                (-r2 > self.tol and alpha2_p > 0)):
 
             # if the number of non-zero and non-C alphas is greater than 1
             if len(alphas[(alphas != 0) & (alphas != self.C)]) > 1:
@@ -702,7 +797,7 @@ class SVR(RegressorMixin, SVM):
         alphas_p = alphas[:n_samples]
         alphas_n = alphas[n_samples:]
 
-        sv = np.logical_or(alphas_p > self.tol, alphas_n > self.tol)
+        sv = np.logical_or(alphas_p > 1e-5, alphas_n > 1e-5)
         self.support_ = np.arange(len(alphas_p))[sv]
         self.support_vectors_, self.sv_y, self.alphas_p, self.alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
         self.dual_coef_ = self.alphas_p - self.alphas_n
