@@ -91,13 +91,16 @@ class SVM(BaseEstimator):
 
     # Platt's SMO algorithm
 
-    def _take_step(self):
+    def _take_step(self, f, K, X, y, alphas, errors, i1, i2):
         raise NotImplementedError
 
-    def _examine_example(self):
+    def _violate_KKT_conditions(self, y, alphas, errors, i):
         raise NotImplementedError
 
-    def smo(self):
+    def _examine_example(self, f, K, X, y, alphas, errors, i2):
+        raise NotImplementedError
+
+    def smo(self, f, K, X, y, alphas, errors):
         raise NotImplementedError
 
     @staticmethod
@@ -312,21 +315,21 @@ class SVC(ClassifierMixin, SVM):
 
         return True, alphas, errors
 
-    def _examine_example(self, f, K, X, y, alphas, errors, i2):
-        y2 = y[i2]
-        alpha2 = alphas[i2]
-        E2 = errors[i2]
-        r2 = E2 * y2
+    def _violate_KKT_conditions(self, y, alphas, errors, i):
+        alpha_i = alphas[i]
+        r_i = errors[i] * y[i]
+        return (r_i < -self.tol and alpha_i < self.C) or (r_i > self.tol and alpha_i > 0)
 
-        # proceed if error is within specified tol
-        if (r2 < -self.tol and alpha2 < self.C) or (r2 > self.tol and alpha2 > 0):
+    def _examine_example(self, f, K, X, y, alphas, errors, i2):
+
+        if self._violate_KKT_conditions(y, alphas, errors, i2):
 
             # if the number of non-zero and non-C alphas is greater than 1
             if len(alphas[(alphas != 0) & (alphas != self.C)]) > 1:
                 # use 2nd choice heuristic: choose max difference in error (section 2.2 of the Platt's paper)
                 if errors[i2] > 0:
                     i1 = np.argmin(errors)
-                elif errors[i2] <= 0:
+                else:  # elif errors[i2] <= 0:
                     i1 = np.argmax(errors)
                 step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
                 if step_result:
@@ -358,7 +361,7 @@ class SVC(ClassifierMixin, SVM):
             num_changed = 0
             # loop over all training examples
             if examine_all:
-                for i in range(len(y)):
+                for i in range(len(X)):
                     examine_result, alphas, errors = self._examine_example(f, K, X, y, alphas, errors, i)
                     num_changed += examine_result
                     if examine_result and self.verbose:
@@ -655,19 +658,21 @@ class SVR(RegressorMixin, SVM):
 
         return True, np.hstack((alphas_p, alphas_n)), errors
 
+    def _violate_KKT_conditions(self, y, alphas, errors, i):
+        alphas_p, alphas_n = np.split(alphas, 2)
+        alpha_p, alpha_n = alphas_p[i], alphas_n[i]
+        r2 = errors[i] * y[i]
+
+        return ((r2 > self.tol and alpha_n < self.C) or
+                (r2 < self.tol and alpha_n > 0) or
+                (-r2 > self.tol and alpha_p < self.C) or
+                (-r2 > self.tol and alpha_p > 0))
+
     def _examine_example(self, f, K, X, y, alphas, errors, i2):
         alphas_p, alphas_n = np.split(alphas, 2)
 
-        y2 = y[i2]
-        alpha2_p, alpha2_n = alphas_p[i2], alphas_n[i2]
-        E2 = errors[i2]
-        r2 = E2 * y2
-
         # proceed if error is within specified tol
-        if ((r2 > self.tol and alpha2_n < self.C) or
-                (r2 < self.tol and alpha2_n > 0) or
-                (-r2 > self.tol and alpha2_p < self.C) or
-                (-r2 > self.tol and alpha2_p > 0)):
+        if self._violate_KKT_conditions(y, alphas, errors, i2):
 
             # if the number of non-zero and non-C alphas is greater than 1
             if len(alphas[(alphas != 0) & (alphas != self.C)]) > 1:
@@ -709,7 +714,7 @@ class SVR(RegressorMixin, SVM):
             num_changed = 0
             # loop over all training examples
             if examine_all:
-                for i in range(len(y)):
+                for i in range(len(X)):
                     examine_result, alphas, errors = self._examine_example(f, K, X, y, alphas, errors, i)
                     num_changed += examine_result
                     if examine_result and self.verbose:
