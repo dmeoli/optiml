@@ -242,22 +242,21 @@ class SVC(ClassifierMixin, SVM):
             # In any event, SMO will work even when eta is not positive, in which case the objective function should
             # be evaluated at each end of the line segment:
 
-            # f1 = y1 * E1 - alpha1 * K[i1, i1] - s * alpha2 * K[i1, i2]
-            # f2 = y2 * E2 - alpha2 * K[i2, i2] - s * alpha1 * K[i1, i2]
-            # L1 = alpha1 + s * (alpha2 - L)
-            # H1 = alpha1 + s * (alpha2 - H)
-            # Lobj = -0.5 * L1 * L1 * K[i1, i1] - 0.5 * L * L * K[i2, i2] - s * L * L1 * K[i1, i2] - L1 * f1 - L * f2
-            # Hobj = -0.5 * H1 * H1 * K[i1, i1] - 0.5 * H * H * K[i2, i2] - s * H * H1 * K[i1, i2] - H1 * f1 - H * f2
+            f1 = y1 * (E1 + self.intercept_) - alpha1 * K[i1, i1] - s * alpha2 * K[i1, i2]
+            f2 = y2 * (E2 + self.intercept_) - alpha2 * K[i2, i2] - s * alpha1 * K[i1, i2]
+            L1 = alpha1 + s * (alpha2 - L)
+            H1 = alpha1 + s * (alpha2 - H)
+            Lobj = L1 * f1 + L * f2 + 0.5 * L1 ** 2 * K[i1, i1] + 0.5 * L ** 2 * K[i2, i2] + s * L * L1 * K[i1, i2]
+            Hobj = H1 * f1 + H * f2 + 0.5 * H1 ** 2 * K[i1, i1] + 0.5 * H ** 2 * K[i2, i2] + s * H * H1 * K[i1, i2]
 
-            Lobj = y2 * (E1 - E2) * L
-            Hobj = y2 * (E1 - E2) * H
+            # or, in our case, just by calling the objective function:
 
             alphas_adj = alphas.copy()
             alphas_adj[i2] = L
-            # objective function output with a2 = L
+            # objective function output at a2 = L
             Lobj_ = f.function(alphas_adj)
             alphas_adj[i2] = H
-            # objective function output with a2 = H
+            # objective function output at a2 = H
             Hobj_ = f.function(alphas_adj)
 
             assert Lobj == Lobj_
