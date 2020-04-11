@@ -326,6 +326,7 @@ class SVC(ClassifierMixin, SVM):
 
             # if the number of non-zero and non-C alphas is greater than 1
             if len(alphas[np.logical_and(alphas != 0, alphas != self.C)]) > 1:
+                # 1st heuristic is not implemented since it makes training slower
                 # use 2nd choice heuristic: choose max difference in error (section 2.2 of the Platt's paper)
                 if errors[i2] > 0:
                     i1 = np.argmin(errors)
@@ -412,6 +413,9 @@ class SVC(ClassifierMixin, SVM):
                 # initial error is equal to SVC output (the decision function) - y
                 errors = (alphas * y).dot(K) + self.intercept_ - y
                 alphas = self.smo(obj_fun, K, X, y, alphas, errors)
+                # Platt’s paper uses the convention that the linear classifier is of the form f(x) = w.T x − b
+                # rather than the convention we use in this repo, that f(x) = w.T x + b
+                self.intercept_ = -self.intercept_
 
             else:
                 alphas = scipy_solve_svm(obj_fun, A, ub, self.epochs, self.verbose)
@@ -674,10 +678,11 @@ class SVR(RegressorMixin, SVM):
 
             # if the number of non-zero and non-C alphas is greater than 1
             if len(alphas[np.logical_and(alphas != 0, alphas != self.C)]) > 1:
+                # 1st heuristic is not implemented since it makes training slower
                 # use 2nd choice heuristic: choose max difference in error (section 2.2 of the Platt's paper)
                 if errors[i2] > 0:
                     i1 = np.argmin(errors)
-                elif errors[i2] <= 0:
+                else:  # elif errors[i2] <= 0:
                     i1 = np.argmax(errors)
                 step_result, alphas, errors = self._take_step(f, K, X, y, alphas, errors, i1, i2)
                 if step_result:
@@ -720,7 +725,7 @@ class SVR(RegressorMixin, SVM):
                     examine_result, alphas, errors = self._examine_example(f, K, X, y, alphas, errors, i)
                     num_changed += examine_result
             if loop_counter % 2 == 0:
-                min_num_changed = max(1, 0.1 * len(alphas))
+                min_num_changed = max(1, 0.1 * len(X))
             else:
                 min_num_changed = 1
             if examine_all:
