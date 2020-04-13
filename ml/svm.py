@@ -98,7 +98,8 @@ class SVM(BaseEstimator):
                 self.w = np.zeros(2)
             self.b = 0.
             self.C = C
-            # initial error is equal to SVM output - y
+            # error cache to speed up computation
+            # is initialized to SVM output - y
             self.errors = self._svm_output() - y
             self.tol = tol
             self.verbose = verbose
@@ -202,6 +203,23 @@ class SVC(ClassifierMixin, SVM):
         def __init__(self, f, X, y, K, kernel='rbf', C=1., tol=1e-3, verbose=False):
             self.alphas = np.zeros(len(X))
             super().__init__(f, X, y, K, kernel, C, tol, verbose)
+
+            # initialize variables and structures to implement improvements
+            # on the original Platt's SMO algorithm described in Keerthi et
+            # al. for better performance ed efficiency
+
+            # set of indices
+            self.I0 = set()  # { i : 0 < alphas[i] < C }
+            self.I1 = set(range(len(X)))  # { i : y[i] = +1, alphas[i] = 0 }
+            self.I2 = set()  # { i : y[i] = -1, alphas[i] = C }
+            self.I3 = set()  # { i : y[i] = +1, alphas[i] = C }
+            self.I4 = set()  # { i : y[i] = -1, alphas[i] = 0 }
+
+            # multiple thresholds
+            self.b_up_idx = 0
+            self.b_low_idx = 0
+            self.b_up = y[self.b_up_idx]
+            self.b_low = y[self.b_low_idx]
 
         def _svm_output(self, i=None):
             return (self.alphas * self.y if i is None else self.y[i]).dot(self.K if i is None else self.K[i]) + self.b
@@ -506,11 +524,17 @@ class SVR(RegressorMixin, SVM):
             super().__init__(f, X, y, K, kernel, C, tol, verbose)
             self.epsilon = epsilon
 
+            # initialize variables and structures to implement improvements
+            # on the original Platt's SMO algorithm described in Shevade et
+            # al. for better performance ed efficiency
+
+            # set of indices
             self.I0 = set()
             self.I1 = set(range(len(X)))
             self.I2 = set()
             self.I3 = set()
 
+            # multiple thresholds
             self.b_up_idx = 0
             self.b_low_idx = 0
             self.b_up = y[self.b_up_idx] + self.epsilon
@@ -736,7 +760,7 @@ class SVR(RegressorMixin, SVM):
                 self.I3.discard(i1)
 
             # update the sets of indices for i2
-            if 0 < alpha2_p < self.C and 0 < alpha2_n < self.C:
+            if 0 < alpha2_p < self.C or 0 < alpha2_n < self.C:
                 self.I0.add(i2)
             else:
                 self.I0.discard(i2)
@@ -760,7 +784,7 @@ class SVR(RegressorMixin, SVM):
             self.b_up_idx = -1
             self.b_low_idx = -1
             self.b_up = sys.float_info.max
-            self.b_low = sys.float_info.min
+            self.b_low = -sys.float_info.max
 
             for i in self.I0:
                 if 0 < self.alphas_n[i] < self.C and self.errors[i] + self.epsilon > self.b_low:
@@ -807,7 +831,7 @@ class SVR(RegressorMixin, SVM):
                     self.b_up = self.errors[i2] + self.epsilon
                     self.b_up_idx = i2
 
-            if self.b_low_idx == -1 and self.b_up_idx == -1:
+            if self.b_low_idx == -1 or self.b_up_idx == -1:
                 raise Exception('unexpected status')
 
             return True
@@ -915,6 +939,8 @@ class SVR(RegressorMixin, SVM):
                     print('{:4d}\t{:1.4e}'.format(
                         loop_counter, self.f.function(np.hstack((self.alphas_p, self.alphas_n)))))
 
+            self.b = (self.b_low + self.b_up) / 2
+
             return self
 
     def fit(self, X, y):
@@ -949,9 +975,7 @@ class SVR(RegressorMixin, SVM):
                 alphas_p, alphas_n = smo.alphas_p, smo.alphas_n
                 if self.kernel is 'linear':
                     self.coef_ = smo.w
-                # Platt’s paper uses the convention that the linear classifier is of the form
-                # w.T x − b rather than the convention we use in this repo, that w.T x + b
-                self.intercept_ = -smo.b
+                self.intercept_ = smo.b
 
             else:
                 alphas = scipy_solve_svm(obj_fun, A, ub, self.epochs, self.verbose)
@@ -994,11 +1018,12 @@ class SVR(RegressorMixin, SVM):
         if self.kernel is 'linear':
             self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
 
-        for n in range(len(self.alphas_p)):
-            self.intercept_ += self.sv_y[n]
-            self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
-        self.intercept_ -= self.epsilon
-        self.intercept_ /= len(self.alphas_p)
+        if self.optimizer is not 'SMO':
+            for n in range(len(self.alphas_p)):
+                self.intercept_ += self.sv_y[n]
+                self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
+            self.intercept_ -= self.epsilon
+            self.intercept_ /= len(self.alphas_p)
 
         return self
 
