@@ -64,6 +64,8 @@ class SVM(BaseEstimator):
         if not isinstance(verbose, bool) or verbose not in (0, 1):
             raise ValueError('verbose is not a boolean value')
         self.verbose = verbose
+        if kernel is 'linear':
+            self.coef_ = 0.
         self.intercept_ = 0.
 
     # kernels
@@ -95,7 +97,7 @@ class SVM(BaseEstimator):
             self.K = K
             self.kernel = kernel
             if kernel is 'linear':
-                self.w = np.zeros(2)
+                self.w = 0.
             self.b = 0.
             self.C = C
             # error cache to speed up computation
@@ -194,8 +196,6 @@ class SVC(ClassifierMixin, SVM):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
                  tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, verbose)
-        if kernel is 'linear':
-            self.coef_ = np.zeros(2)
 
     # Platt's SMO algorithm for SVC
     class SMOClassifier(SVM.SMO):
@@ -216,10 +216,10 @@ class SVC(ClassifierMixin, SVM):
             self.I4 = set()  # { i : y[i] = -1, alphas[i] = 0 }
 
             # multiple thresholds
-            self.b_up_idx = 0
-            self.b_low_idx = 0
-            self.b_up = y[self.b_up_idx]
-            self.b_low = y[self.b_low_idx]
+            self.b_up_idx = -1
+            self.b_low_idx = -1
+            self.b_up = -1.
+            self.b_low = 1.
 
         def _svm_output(self, i=None):
             return (self.alphas * self.y if i is None else self.y[i]).dot(self.K if i is None else self.K[i]) + self.b
@@ -319,6 +319,17 @@ class SVC(ClassifierMixin, SVM):
             # calculate new alpha1 based on equation 18 in Platt's paper
             a1 = alpha1 + s * (alpha2 - a2)
 
+            # to prevent precision problems
+            if a2 > self.C - self.C * 1e-8:
+                a2 = self.C
+            elif a2 < self.C * 1e-8:
+                a2 = 0.
+
+            if a1 > self.C - self.C * 1e-8:
+                a1 = self.C
+            elif a1 < self.C * 1e-8:
+                a1 = 0.
+
             old_b = self.b
 
             # update threshold b to reflect change in alphas based on
@@ -414,6 +425,8 @@ class SVC(ClassifierMixin, SVM):
                 if self.verbose:
                     print('{:4d}\t{:1.4e}'.format(loop_counter, self.f.function(self.alphas)))
 
+            self.b = (self.b_low + self.b_up) / 2
+
             return self
 
     def fit(self, X, y):
@@ -448,9 +461,7 @@ class SVC(ClassifierMixin, SVM):
                 alphas = smo.alphas
                 if self.kernel is 'linear':
                     self.coef_ = smo.w
-                # Platt’s paper uses the convention that the linear classifier is of the form
-                # w.T x − b rather than the convention we use in this repo, that w.T x + b
-                self.intercept_ = -smo.b
+                self.intercept_ = smo.b
 
             else:
                 alphas = scipy_solve_svm(obj_fun, A, ub, self.epochs, self.verbose)
@@ -512,8 +523,6 @@ class SVR(RegressorMixin, SVM):
                  epsilon=0.1, optimizer='SMO', epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, verbose)
         self.epsilon = epsilon  # epsilon insensitive loss value
-        if kernel is 'linear':
-            self.coef_ = np.zeros(1)
 
     # Platt's SMO algorithm for SVR
     class SMORegression(SVM.SMO):
