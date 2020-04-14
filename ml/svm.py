@@ -197,6 +197,19 @@ class SVC(ClassifierMixin, SVM):
 
     # Platt's SMO algorithm for SVC
     class SMOClassifier(SVM.SMO):
+        """
+        Implements John Platt's sequential minimal optimization
+        algorithm for training a support vector classifier.
+
+        For more information on the SMO algorithm, see:
+
+        J. Platt: Fast Training of Support Vector Machines using Sequential Minimal Optimization.
+        In B. Schoelkopf and C. Burges and A. Smola, editors, Advances in Kernel Methods -
+        Support Vector Learning, 1998.
+
+        S.S. Keerthi, S.K. Shevade, C. Bhattacharyya, K.R.K. Murthy (2001). Improvements to Platt's
+        SMO Algorithm for SVM Classifier Design. Neural Computation. 13(3):637-649.
+        """
 
         def __init__(self, f, X, y, K, kernel='rbf', C=1., tol=1e-3, verbose=False):
             self.alphas = np.zeros(len(X))
@@ -222,12 +235,12 @@ class SVC(ClassifierMixin, SVM):
             self.b_up = -1
             self.b_low = 1
             # initialize b_up_idx to any one index of class -1
-            self.b_up_idx = next(i for i in reversed(range(len(X))) if y[i] == 1)
+            self.b_up_idx = next(i for i in range(len(X)) if y[i] == 1)
             # initialize b_low_idx to any one index of class +1
-            self.b_low_idx = next(i for i in reversed(range(len(X))) if y[i] == -1)
+            self.b_low_idx = next(i for i in range(len(X)) if y[i] == -1)
 
-            self.errors[self.b_up_idx] = -1
-            self.errors[self.b_low_idx] = 1
+            self.errors[self.b_up_idx] = self.b_up
+            self.errors[self.b_low_idx] = self.b_low
 
         def _svm_output(self, i2):
             return (self.alphas * self.y).dot(self.K[i2]) + self.b
@@ -613,6 +626,17 @@ class SVR(RegressorMixin, SVM):
 
     # Platt's SMO algorithm for SVR
     class SMORegression(SVM.SMO):
+        """
+        Implements Smola and Scholkopf sequential minimal optimization
+        algorithm for training a support vector regression.
+
+        For more information on the SMO algorithm, see:
+
+        A.J. Smola, B. Schoelkopf (1998). A tutorial on support vector regression.
+
+        S.K. Shevade, S.S. Keerthi, C. Bhattacharyya, K.R.K. Murthy: Improvements to the
+        SMO Algorithm for SVM Regression. In: IEEE Transactions on Neural Networks, 1999.
+        """
 
         def __init__(self, f, X, y, K, kernel='rbf', C=1., epsilon=0.1, tol=1e-3, verbose=False):
             self.alphas_p = np.zeros(len(X))
