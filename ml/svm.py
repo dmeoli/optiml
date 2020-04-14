@@ -100,13 +100,11 @@ class SVM(BaseEstimator):
                 self.w = 0.
             self.b = 0.
             self.C = C
-            # error cache to speed up computation
-            # is initialized to SVM output - y
-            self.errors = self._svm_output() - y
+            self.errors = np.zeros(len(X))
             self.tol = tol
             self.verbose = verbose
 
-        def _svm_output(self):
+        def _svm_output(self, i2):
             raise NotImplementedError
 
         def _take_step(self, i1, i2):
@@ -209,20 +207,30 @@ class SVC(ClassifierMixin, SVM):
             # al. for better performance ed efficiency
 
             # set of indices
-            self.I0 = set()  # { i : 0 < alphas[i] < C }
-            self.I1 = set(range(len(X)))  # { i : y[i] = +1, alphas[i] = 0 }
-            self.I2 = set()  # { i : y[i] = -1, alphas[i] = C }
-            self.I3 = set()  # { i : y[i] = +1, alphas[i] = C }
-            self.I4 = set()  # { i : y[i] = -1, alphas[i] = 0 }
+            # { i : 0 < alphas[i] < C }
+            self.I0 = set()
+            # { i : y[i] = +1, alphas[i] = 0 }
+            self.I1 = set(i for i in range(len(X)) if y[i] == 1)
+            # { i : y[i] = -1, alphas[i] = C }
+            self.I2 = set()
+            # { i : y[i] = +1, alphas[i] = C }
+            self.I3 = set()
+            # { i : y[i] = -1, alphas[i] = 0 }
+            self.I4 = set(i for i in range(len(X)) if y[i] == -1)
 
             # multiple thresholds
-            self.b_up_idx = -1
-            self.b_low_idx = -1
-            self.b_up = -1.
-            self.b_low = 1.
+            self.b_up = -1
+            self.b_low = 1
+            # initialize b_up_idx to any one index of class -1
+            self.b_up_idx = next(i for i in reversed(range(len(X))) if y[i] == 1)
+            # initialize b_low_idx to any one index of class +1
+            self.b_low_idx = next(i for i in reversed(range(len(X))) if y[i] == -1)
 
-        def _svm_output(self, i=None):
-            return (self.alphas * self.y if i is None else self.y[i]).dot(self.K if i is None else self.K[i]) + self.b
+            self.errors[self.b_up_idx] = -1
+            self.errors[self.b_low_idx] = 1
+
+        def _svm_output(self, i2):
+            return (self.alphas * self.y[i2]).dot(self.K[i2]) + self.b
 
         def _take_step(self, i1, i2):
             # skip if chosen alphas are the same
@@ -319,85 +327,159 @@ class SVC(ClassifierMixin, SVM):
             # calculate new alpha1 based on equation 18 in Platt's paper
             a1 = alpha1 + s * (alpha2 - a2)
 
-            # to prevent precision problems
-            if a2 > self.C - self.C * 1e-8:
-                a2 = self.C
-            elif a2 < self.C * 1e-8:
-                a2 = 0.
-
-            if a1 > self.C - self.C * 1e-8:
-                a1 = self.C
-            elif a1 < self.C * 1e-8:
-                a1 = 0.
-
-            old_b = self.b
-
-            # update threshold b to reflect change in alphas based on
-            # equations 20 and 21 in Platt's paper set new threshold
-            # based on if a1 or a2 is bound by L and/or H
-            if 0 < a1 < self.C:
-                self.b += E1 + y1 * (a1 - alpha1) * self.K[i1, i1] + y2 * (a2 - alpha2) * self.K[i1, i2]
-            elif 0 < a2 < self.C:
-                self.b += E2 + y1 * (a1 - alpha1) * self.K[i1, i2] + y2 * (a2 - alpha2) * self.K[i2, i2]
-            else:  # average thresholds if both are bound
-                self.b += (E1 + y1 * (a1 - alpha1) * self.K[i1, i1] + y2 * (a2 - alpha2) * self.K[i1, i2] +
-                           E2 + y1 * (a1 - alpha1) * self.K[i1, i2] + y2 * (a2 - alpha2) * self.K[i2, i2]) / 2
-
             # update weight vector to reflect change in a1 and a2, if
             # kernel is linear, based on equation 22 in Platt's paper
             if self.kernel is 'linear':
                 self.w += y1 * (a1 - alpha1) * self.X[i1] + y2 * (a2 - alpha2) * self.X[i2]
 
-            # # update error cache using new alphas
-            # for i in range(len(alphas)):
-            #     if 0 < alphas[i] < self.C:
-            #         if i != i1 and i != i2:
-            #             errors[i] += y1 * (a1 - alpha1) * K[i1, i] + y2 * (a2 - alpha2) * K[i2, i]
-            # # update error cache using new alphas for i1 and i2
-            # errors[i1] = y1 * (a1 - alpha1) * K[i1, i1] + y2 * (a2 - alpha2) * K[i1, i2]
-            # errors[i2] = y1 * (a1 - alpha1) * K[i1, i2] + y2 * (a2 - alpha2) * K[i2, i2]
-
             # update error cache using new alphas
-            self.errors += y1 * (a1 - alpha1) * self.K[i1] + y2 * (a2 - alpha2) * self.K[i2] + old_b - self.b
+            for i in self.I0:
+                if i != i1 and i != i2:
+                    self.errors[i] += y1 * (a1 - alpha1) * self.K[i1, i] + y2 * (a2 - alpha2) * self.K[i2, i]
+            # update error cache using new alphas for i1 and i2
+            self.errors[i1] += y1 * (a1 - alpha1) * self.K[i1, i1] + y2 * (a2 - alpha2) * self.K[i1, i2]
+            self.errors[i2] += y1 * (a1 - alpha1) * self.K[i1, i2] + y2 * (a2 - alpha2) * self.K[i2, i2]
 
             # update model object with new alphas
             self.alphas[i1] = a1
             self.alphas[i2] = a2
 
+            # to prevent precision problems
+            if a2 > self.C - 1e-8 * self.C:
+                a2 = self.C
+            elif a2 < 1e-8 * self.C:
+                a2 = 0.
+
+            if a1 > self.C - 1e-8 * self.C:
+                a1 = self.C
+            elif a1 < 1e-8 * self.C:
+                a1 = 0.
+
+            # update the sets of indices for i1
+            if 0 < a1 < self.C:
+                self.I0.add(i1)
+            else:
+                self.I0.discard(i1)
+            if y1 == 1 and a1 == 0:
+                self.I1.add(i1)
+            else:
+                self.I1.discard(i1)
+            if y1 == -1 and a1 == self.C:
+                self.I2.add(i1)
+            else:
+                self.I2.discard(i1)
+            if y1 == 1 and a1 == self.C:
+                self.I3.add(i1)
+            else:
+                self.I3.discard(i1)
+            if y1 == -1 and a1 == 0:
+                self.I4.add(i1)
+            else:
+                self.I4.discard(i1)
+
+            # update the sets of indices for i2
+            if 0 < a2 < self.C:
+                self.I0.add(i2)
+            else:
+                self.I0.discard(i2)
+            if y2 == 1 and a2 == 0:
+                self.I1.add(i2)
+            else:
+                self.I1.discard(i2)
+            if y2 == -1 and a2 == self.C:
+                self.I2.add(i2)
+            else:
+                self.I2.discard(i2)
+            if y2 == 1 and a2 == self.C:
+                self.I3.add(i2)
+            else:
+                self.I3.discard(i2)
+            if y2 == -1 and a2 == 0:
+                self.I4.add(i2)
+            else:
+                self.I4.discard(i2)
+
+            # update thresholds (b_up, b_up_idx) and (b_low, b_low_idx)
+            # by applying equations 11a and 11b, using only i1, i2 and
+            # indices in I0 as suggested in item 3 of section 5 in
+            # Keerthi et al. Technical Report CD-99-14
+            self.b_up_idx = -1
+            self.b_low_idx = -1
+            self.b_up = sys.float_info.max
+            self.b_low = -sys.float_info.max
+
+            for i in self.I0:
+                if self.errors[i] < self.b_up:
+                    self.b_up = self.errors[i]
+                    self.b_up_idx = i
+                if self.errors[i] > self.b_low:
+                    self.b_low = self.errors[i]
+                    self.b_low_idx = i
+            if i1 not in self.I0:
+                if i1 in self.I3 or i1 in self.I4:
+                    if self.errors[i1] > self.b_low:
+                        self.b_low = self.errors[i1]
+                        self.b_low_idx = i1
+                elif self.errors[i1] < self.b_up:
+                    self.b_up = self.errors[i1]
+                    self.b_up_idx = i1
+            if i2 not in self.I0:
+                if i2 in self.I3 or i2 in self.I4:
+                    if self.errors[i2] > self.b_low:
+                        self.b_low = self.errors[i2]
+                        self.b_low_idx = i2
+                elif self.errors[i2] < self.b_up:
+                    self.b_up = self.errors[i2]
+                    self.b_up_idx = i2
+
+            if self.b_low_idx == -1 or self.b_up_idx == -1:
+                raise Exception('unexpected status')
+
             return True
 
         def _examine_example(self, i2):
-            alpha2 = self.alphas[i2]
-            r2 = self.errors[i2] * self.y[i2]
+            i1 = -1
 
-            if (r2 < -self.tol and alpha2 < self.C) or (r2 > self.tol and alpha2 > 0):
+            if i2 in self.I0:
+                E2 = self.errors[i2]
+            else:
+                E2 = self._svm_output(i2) - self.y[i2]
+                self.errors[i2] = E2
 
-                # if the number of non-zero and non-C alphas is greater than 1
-                if len(self.alphas[np.logical_and(self.alphas != 0, self.alphas != self.C)]) > 1:
-                    # 1st heuristic is not implemented since it makes training slower
-                    # use 2nd choice heuristic: choose max difference in error (section 2.2 of the Platt's paper)
-                    if self.errors[i2] > 0:
-                        i1 = np.argmin(self.errors)
-                    else:  # elif errors[i2] <= 0:
-                        i1 = np.argmax(self.errors)
-                    step_result = self._take_step(i1, i2)
-                    if step_result:
-                        return True
+                # update (b_up, b_up_idx) or (b_low, b_low_idx) using E2 and i2
+                if (i2 in self.I1 or i2 in self.I2) and E2 < self.b_up:
+                    self.b_up = E2
+                    self.b_up_idx = i2
+                elif (i2 in self.I3 or i2 in self.I4) and E2 > self.b_low:
+                    self.b_low = E2
+                    self.b_low_idx = i2
 
-                # loop over all non-zero and non-C alphas, starting at a random point
-                for i1 in np.roll(np.where(np.logical_and(self.alphas != 0, self.alphas != self.C))[0],
-                                  np.random.choice(np.arange(len(self.alphas)))):
-                    step_result = self._take_step(i1, i2)
-                    if step_result:
-                        return True
+            # check optimality using current b_up and b_low and, if violated,
+            # find another index i1 to do joint optimization with i2
+            optimal = True
+            if i2 in self.I0 or i2 in self.I1 or i2 in self.I2:
+                if self.b_low - E2 > 2 * self.tol:
+                    optimal = False
+                    i1 = self.b_low_idx
+            if i2 in self.I0 or i2 in self.I3 or i2 in self.I4:
+                if E2 - self.b_up > 2 * self.tol:
+                    optimal = False
+                    i1 = self.b_up_idx
 
-                # loop over all possible alphas, starting at a random point
-                for i1 in np.roll(np.arange(len(self.alphas)), np.random.choice(np.arange(len(self.alphas)))):
-                    step_result = self._take_step(i1, i2)
-                    if step_result:
-                        return True
+            if optimal:
+                return False
 
-            return False
+            # for i2 in I0 choose the better i1
+            if i2 in self.I0:
+                if self.b_low - E2 > E2 - self.b_up:
+                    i1 = self.b_low_idx
+                else:
+                    i1 = self.b_up_idx
+
+            if i1 == -1:
+                raise Exception('the index could not be found')
+
+            return self._take_step(i1, i2)
 
         def smo(self):
             if self.verbose:
@@ -415,8 +497,13 @@ class SVC(ClassifierMixin, SVM):
                         num_changed += self._examine_example(i)
                 else:
                     # loop over examples where alphas are not already at their limits
-                    for i in np.where(np.logical_and(self.alphas != 0, self.alphas != self.C))[0]:
-                        num_changed += self._examine_example(i)
+                    for i in range(len(self.X)):
+                        if 0 < self.alphas[i] < self.C:
+                            num_changed += self._examine_example(i)
+                            # check if optimality on I0 is attained
+                            if self.b_up > self.b_low - 2 * self.tol:
+                                num_changed = 0
+                                break
                 if examine_all:
                     examine_all = False
                 elif num_changed == 0:
@@ -549,8 +636,8 @@ class SVR(RegressorMixin, SVM):
             self.b_up = y[self.b_up_idx] + self.epsilon
             self.b_low = y[self.b_low_idx] - self.epsilon
 
-        def _svm_output(self, i=None):
-            return (self.alphas_p - self.alphas_n).dot(self.K if i is None else self.K[i]) + self.b
+        def _svm_output(self, i2):
+            return (self.alphas_p - self.alphas_n).dot(self.K[i2]) + self.b
 
         def _take_step(self, i1, i2):
             # skip if chosen alphas are the same
@@ -710,6 +797,12 @@ class SVR(RegressorMixin, SVM):
             if not changed:
                 return False
 
+            # if kernel is liner update weight vector
+            # to reflect change in a1 and a2
+            if self.kernel is 'linear':
+                self.w += (((self.alphas_p[i1] - self.alphas_n[i1]) - (alpha1_p - alpha1_n)) * self.X[i1] +
+                           ((self.alphas_p[i2] - self.alphas_n[i2]) - (alpha2_p - alpha2_n)) * self.X[i2])
+
             # update error cache using new alphas
             for i in self.I0:
                 if i != i1 and i != i2:
@@ -721,6 +814,10 @@ class SVR(RegressorMixin, SVM):
                                 ((self.alphas_p[i2] - self.alphas_n[i2]) - (alpha2_p - alpha2_n)) * self.K[i1, i2])
             self.errors[i2] += (((self.alphas_p[i1] - self.alphas_n[i1]) - (alpha1_p - alpha1_n)) * self.K[i1, i2] +
                                 ((self.alphas_p[i2] - self.alphas_n[i2]) - (alpha2_p - alpha2_n)) * self.K[i2, i2])
+
+            # update model object with new alphas
+            self.alphas_p[i1], self.alphas_p[i2] = alpha1_p, alpha2_p
+            self.alphas_n[i1], self.alphas_n[i2] = alpha1_n, alpha2_n
 
             # to prevent precision problems
             if alpha1_p > self.C - 1e-10 * self.C:
@@ -743,26 +840,19 @@ class SVR(RegressorMixin, SVM):
             elif alpha2_n <= 1e-10 * self.C:
                 alpha2_n = 0
 
-            # update model object with new alphas
-            self.alphas_p[i1], self.alphas_p[i2] = alpha1_p, alpha2_p
-            self.alphas_n[i1], self.alphas_n[i2] = alpha1_n, alpha2_n
-
             # update the sets of indices for i1
             if 0 < alpha1_p < self.C or 0 < alpha1_n < self.C:
                 self.I0.add(i1)
             else:
                 self.I0.discard(i1)
-
             if alpha1_p == 0 and alpha1_n == 0:
                 self.I1.add(i1)
             else:
                 self.I1.discard(i1)
-
             if alpha1_p == 0 and alpha1_n == self.C:
                 self.I2.add(i1)
             else:
                 self.I2.discard(i1)
-
             if alpha1_p == self.C and alpha1_n == 0:
                 self.I3.add(i1)
             else:
@@ -773,23 +863,20 @@ class SVR(RegressorMixin, SVM):
                 self.I0.add(i2)
             else:
                 self.I0.discard(i2)
-
             if alpha2_p == 0 and alpha2_n == 0:
                 self.I1.add(i1)
             else:
                 self.I1.discard(i2)
-
             if alpha2_p == 0 and alpha2_n == self.C:
                 self.I2.add(i2)
             else:
                 self.I2.discard(i2)
-
             if alpha2_p == self.C and alpha2_n == 0:
                 self.I3.add(i2)
             else:
                 self.I3.discard(i2)
 
-            # compute new thresholds
+            # update thresholds
             self.b_up_idx = -1
             self.b_low_idx = -1
             self.b_up = sys.float_info.max
@@ -851,7 +938,8 @@ class SVR(RegressorMixin, SVM):
             if i2 in self.I0:
                 E2 = self.errors[i2]
             else:
-                E2 = self.errors[i2] = self.y[i2] - self._svm_output(i2)
+                E2 = self.y[i2] - self._svm_output(i2)
+                self.errors[i2] = E2
                 if i2 in self.I1:
                     if E2 + self.epsilon < self.b_up:
                         self.b_up = E2 + self.epsilon
@@ -869,34 +957,34 @@ class SVR(RegressorMixin, SVM):
             optimal = True
             if i2 in self.I0:
                 if 0 < alpha2_p < self.C:
-                    if self.b_low - (E2 - self.epsilon) > 2. * self.tol:
+                    if self.b_low - (E2 - self.epsilon) > 2 * self.tol:
                         optimal = False
                         i1 = self.b_low_idx
                         if (E2 - self.epsilon) - self.b_up > self.b_low - (E2 - self.epsilon):
                             i1 = self.b_up_idx
-                    elif (E2 - self.epsilon) - self.b_up > 2. * self.tol:
+                    elif (E2 - self.epsilon) - self.b_up > 2 * self.tol:
                         optimal = False
                         i1 = self.b_up_idx
                         if self.b_low - (E2 - self.epsilon) > (E2 - self.epsilon) - self.b_up:
                             i1 = self.b_low_idx
                 elif 0 < alpha2_n < self.C:
-                    if self.b_low - (E2 + self.epsilon) > 2. * self.tol:
+                    if self.b_low - (E2 + self.epsilon) > 2 * self.tol:
                         optimal = False
                         i1 = self.b_low_idx
                         if (E2 + self.epsilon) - self.b_up > self.b_low - (E2 + self.epsilon):
                             i1 = self.b_up_idx
-                    elif (E2 + self.epsilon) - self.b_up > 2. * self.tol:
+                    elif (E2 + self.epsilon) - self.b_up > 2 * self.tol:
                         optimal = False
                         i1 = self.b_up_idx
                         if self.b_low - (E2 + self.epsilon) > (E2 + self.epsilon) - self.b_up:
                             i1 = self.b_low_idx
             elif i2 in self.I1:
-                if self.b_low - (E2 + self.epsilon) > 2. * self.tol:
+                if self.b_low - (E2 + self.epsilon) > 2 * self.tol:
                     optimal = False
                     i1 = self.b_low_idx
                     if (E2 + self.epsilon) - self.b_up > self.b_low - (E2 + self.epsilon):
                         i1 = self.b_up_idx
-                elif (E2 - self.epsilon) - self.b_up > 2. * self.tol:
+                elif (E2 - self.epsilon) - self.b_up > 2 * self.tol:
                     optimal = False
                     i1 = self.b_up_idx
                     if self.b_low - (E2 - self.epsilon) > (E2 - self.epsilon) - self.b_up:
@@ -906,7 +994,7 @@ class SVR(RegressorMixin, SVM):
                     optimal = False
                     i1 = self.b_up_idx
             elif i2 in self.I3:
-                if self.b_low - (E2 - self.epsilon) > 2. * self.tol:
+                if self.b_low - (E2 - self.epsilon) > 2 * self.tol:
                     optimal = False
                     i1 = self.b_low_idx
             else:
@@ -914,6 +1002,7 @@ class SVR(RegressorMixin, SVM):
 
             if optimal:
                 return False
+
             return self._take_step(i1, i2)
 
         def smo(self):
@@ -934,8 +1023,8 @@ class SVR(RegressorMixin, SVM):
                     # loop over examples where alphas are not already at their limits
                     for i in range(len(self.X)):
                         if 0 < self.alphas_p[i] < self.C or 0 < self.alphas_n[i] < self.C:
-                            # for i in np.where(np.logical_and(alphas_p != 0, alphas_n != self.C))[0]:
                             num_changed += self._examine_example(i)
+                            # check if optimality on I0 is attained
                             if self.b_up > self.b_low - 2 * self.tol:
                                 num_changed = 0
                                 break
@@ -983,7 +1072,7 @@ class SVR(RegressorMixin, SVM):
                     obj_fun, X, y, K, self.kernel, self.C, self.epsilon, self.tol, self.verbose).smo()
                 alphas_p, alphas_n = smo.alphas_p, smo.alphas_n
                 if self.kernel is 'linear':
-                    self.coef_ = smo.w
+                    self.coef_ = -smo.w
                 self.intercept_ = smo.b
 
             else:
@@ -1024,10 +1113,11 @@ class SVR(RegressorMixin, SVM):
         self.support_vectors_, self.sv_y, self.alphas_p, self.alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
         self.dual_coef_ = self.alphas_p - self.alphas_n
 
-        if self.kernel is 'linear':
-            self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
-
         if self.optimizer is not 'SMO':
+
+            if self.kernel is 'linear':
+                self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
+
             for n in range(len(self.alphas_p)):
                 self.intercept_ += self.sv_y[n]
                 self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
