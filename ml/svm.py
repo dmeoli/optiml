@@ -10,7 +10,7 @@ from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 
 from optimization.optimization_function import BoxConstrainedQuadratic, LagrangianBoxConstrained, Quadratic
 from optimization.optimizer import BoxConstrainedOptimizer, Optimizer
-from utils import scipy_solve_qp, scipy_solve_svm
+from utils import scipy_solve_qp, scipy_solve_svm, clip
 
 plt.style.use('ggplot')
 
@@ -289,11 +289,7 @@ class SVC(ClassifierMixin, SVM):
             if eta > 0:
                 # clip a2 based on bounds L and H based
                 # on equation 17 in Platt's paper
-                a2 = alpha2 + y2 * (E1 - E2) / eta
-                if a2 < L:
-                    a2 = L
-                elif a2 > H:
-                    a2 = H
+                a2 = clip(alpha2 + y2 * (E1 - E2) / eta, L, H)
             else:
                 # under unusual circumstances, eta will not be positive. A negative eta
                 # will occur if the kernel K does not obey Mercer’s condition, which can
@@ -696,19 +692,11 @@ class SVR(RegressorMixin, SVM):
                     H = min(self.C, gamma)
                     if L < H:
                         if eta > 0:
-                            # a2 = np.clip(alpha2_p - delta_E / eta, L, H)
-                            a2 = alpha2_p - delta_E / eta
-                            if a2 < L:
-                                a2 = L
-                            elif a2 > H:
-                                a2 = H
+                            a2 = clip(alpha2_p - delta_E / eta, L, H)
                         else:
                             Lobj = -L * delta_E
                             Hobj = -H * delta_E
-                            if Lobj > Hobj:
-                                a2 = L
-                            else:
-                                a2 = H
+                            a2 = L if Lobj > Hobj else H
                             warnings.warn('eta is zero')
                         a1 = alpha1_p - (a2 - alpha2_p)
                         # update alpha1, alpha2_p if change is larger than some eps
@@ -727,19 +715,11 @@ class SVR(RegressorMixin, SVM):
                     H = min(self.C, -gamma + self.C)
                     if L < H:
                         if eta > 0:
-                            # a2 = np.clip(alpha2_n + (delta_E - 2 * self.epsilon) / eta, L, H)
-                            a2 = alpha2_n + (delta_E - 2 * self.epsilon) / eta
-                            if a2 < L:
-                                a2 = L
-                            elif a2 > H:
-                                a2 = H
+                            a2 = clip(alpha2_n + (delta_E - 2 * self.epsilon) / eta, L, H)
                         else:
                             Lobj = L * (-2 * self.epsilon + delta_E)
                             Hobj = H * (-2 * self.epsilon + delta_E)
-                            if Lobj > Hobj:
-                                a2 = L
-                            else:
-                                a2 = H
+                            a2 = L if Lobj > Hobj else H
                             warnings.warn('eta is zero')
                         a1 = alpha1_p + (a2 - alpha2_n)
                         # update alpha1, alpha2_n if change is larger than some eps
@@ -758,19 +738,11 @@ class SVR(RegressorMixin, SVM):
                     H = min(self.C, self.C + gamma)
                     if L < H:
                         if eta > 0:
-                            # a2 = np.clip(alpha2_p - (delta_E + 2 * self.epsilon) / eta, L, H)
-                            a2 = alpha2_p - (delta_E + 2 * self.epsilon) / eta
-                            if a2 < L:
-                                a2 = L
-                            elif a2 > H:
-                                a2 = H
+                            a2 = clip(alpha2_p - (delta_E + 2 * self.epsilon) / eta, L, H)
                         else:
                             Lobj = -L * (2 * self.epsilon + delta_E)
                             Hobj = -H * (2 * self.epsilon + delta_E)
-                            if Lobj > Hobj:
-                                a2 = L
-                            else:
-                                a2 = H
+                            a2 = L if Lobj > Hobj else H
                             warnings.warn('eta is zero')
                         a1 = alpha1_n + (a2 - alpha2_p)
                         # update alpha1_n, alpha2_p if change is larger than some eps
@@ -789,19 +761,11 @@ class SVR(RegressorMixin, SVM):
                     H = min(self.C, -gamma)
                     if L < H:
                         if eta > 0:
-                            # a2 = np.clip(alpha2_n + delta_E / eta, L, H)
-                            a2 = alpha2_n + delta_E / eta
-                            if a2 < L:
-                                a2 = L
-                            elif a2 > H:
-                                a2 = H
+                            a2 = clip(alpha2_n + delta_E / eta, L, H)
                         else:
                             Lobj = L * delta_E
                             Hobj = H * delta_E
-                            if Lobj > Hobj:
-                                a2 = L
-                            else:
-                                a2 = H
+                            a2 = L if Lobj > Hobj else H
                             warnings.warn('eta is zero')
                         a1 = alpha1_n - (a2 - alpha2_n)
                         # update alpha1_n, alpha2_n if change is larger than some eps
@@ -1063,7 +1027,7 @@ class SVR(RegressorMixin, SVM):
                     print('{:4d}\t{:1.4e}'.format(
                         loop_counter, self.f.function(np.hstack((self.alphas_p, self.alphas_n)))))
 
-            self.b = -(self.b_low + self.b_up) / 2
+            self.b = (self.b_low + self.b_up) / 2
 
             return self
 

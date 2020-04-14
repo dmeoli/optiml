@@ -56,7 +56,7 @@ def iter_mini_batches(Xy, batch_size):
     Because different containers might require slicing over different
     dimensions, the dimension of each container has to be givens as a list
     dims.
-    :param: Xy: arrays to be sliced into mini batches in alignment with the others
+    :param: Xy: tuple of arrays to be sliced into mini batches in alignment with the others
     :param: batch_size: size of each batch
     :return: infinite iterator of mini batches in random order (without replacement)
     """
@@ -79,6 +79,10 @@ def iter_mini_batches(Xy, batch_size):
                 start = i * batch_size
                 stop = (i + 1) * batch_size
                 yield [param[slice(start, stop)] for param in Xy]
+
+
+def clip(x, l, h):
+    return max(l, min(x, h))
 
 
 path = os.path.dirname(os.path.abspath(__file__))
