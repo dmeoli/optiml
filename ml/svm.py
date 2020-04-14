@@ -243,7 +243,7 @@ class SVC(ClassifierMixin, SVM):
 
             alpha2 = self.alphas[i2]
             y2 = self.y[i2]
-            E2 = self.errors[i2]
+            F2 = self.errors[i2]
 
             s = y1 * y2
 
@@ -276,8 +276,8 @@ class SVC(ClassifierMixin, SVM):
             if eta > 0:
                 # clip a2 based on bounds L and H based
                 # on equation 17 in Platt's paper
-                # a2 = np.clip(alpha2 + y2 * (E1 - E2) / eta, L, H)
-                a2 = alpha2 + y2 * (E1 - E2) / eta
+                # a2 = np.clip(alpha2 + y2 * (E1 - F2) / eta, L, H)
+                a2 = alpha2 + y2 * (E1 - F2) / eta
                 if a2 < L:
                     a2 = L
                 elif a2 > H:
@@ -292,7 +292,7 @@ class SVC(ClassifierMixin, SVM):
                 # each end of the line segment based on equations 19 in Platt's paper
 
                 f1 = y1 * (E1 + self.b) - alpha1 * self.K[i1, i1] - s * alpha2 * self.K[i1, i2]
-                f2 = y2 * (E2 + self.b) - alpha2 * self.K[i2, i2] - s * alpha1 * self.K[i1, i2]
+                f2 = y2 * (F2 + self.b) - alpha2 * self.K[i2, i2] - s * alpha1 * self.K[i1, i2]
                 L1 = alpha1 + s * (alpha2 - L)
                 H1 = alpha1 + s * (alpha2 - H)
                 Lobj = (L1 * f1 + L * f2 + 0.5 * L1 ** 2 * self.K[i1, i1] +
@@ -441,28 +441,28 @@ class SVC(ClassifierMixin, SVM):
             i1 = -1
 
             if i2 in self.I0:
-                E2 = self.errors[i2]
+                F2 = self.errors[i2]
             else:
-                E2 = self._svm_output(i2) - self.y[i2]
-                self.errors[i2] = E2
+                F2 = self._svm_output(i2) - self.y[i2]
+                self.errors[i2] = F2
 
-                # update (b_up, b_up_idx) or (b_low, b_low_idx) using E2 and i2
-                if (i2 in self.I1 or i2 in self.I2) and E2 < self.b_up:
-                    self.b_up = E2
+                # update (b_up, b_up_idx) or (b_low, b_low_idx) using F2 and i2
+                if (i2 in self.I1 or i2 in self.I2) and F2 < self.b_up:
+                    self.b_up = F2
                     self.b_up_idx = i2
-                elif (i2 in self.I3 or i2 in self.I4) and E2 > self.b_low:
-                    self.b_low = E2
+                elif (i2 in self.I3 or i2 in self.I4) and F2 > self.b_low:
+                    self.b_low = F2
                     self.b_low_idx = i2
 
             # check optimality using current b_up and b_low and, if violated,
             # find another index i1 to do joint optimization with i2
             optimal = True
             if i2 in self.I0 or i2 in self.I1 or i2 in self.I2:
-                if self.b_low - E2 > 2 * self.tol:
+                if self.b_low - F2 > 2 * self.tol:
                     optimal = False
                     i1 = self.b_low_idx
             if i2 in self.I0 or i2 in self.I3 or i2 in self.I4:
-                if E2 - self.b_up > 2 * self.tol:
+                if F2 - self.b_up > 2 * self.tol:
                     optimal = False
                     i1 = self.b_up_idx
 
@@ -471,7 +471,7 @@ class SVC(ClassifierMixin, SVM):
 
             # for i2 in I0 choose the better i1
             if i2 in self.I0:
-                if self.b_low - E2 > E2 - self.b_up:
+                if self.b_low - F2 > F2 - self.b_up:
                     i1 = self.b_low_idx
                 else:
                     i1 = self.b_up_idx
@@ -648,7 +648,7 @@ class SVR(RegressorMixin, SVM):
             E1 = self.errors[i1]
 
             alpha2_p, alpha2_n = self.alphas_p[i2], self.alphas_n[i2]
-            E2 = self.errors[i2]
+            F2 = self.errors[i2]
 
             # compute kernel and 2nd derivative eta
             # based on equation 15 in Platt's paper
@@ -662,7 +662,7 @@ class SVR(RegressorMixin, SVM):
             case1 = case2 = case3 = case4 = False
             changed = finished = False
 
-            delta_E = E1 - E2
+            delta_E = E1 - F2
 
             while not finished:  # occurs at most three times
                 if (not case1 and
@@ -936,65 +936,65 @@ class SVR(RegressorMixin, SVM):
             alpha2_p, alpha2_n = self.alphas_p[i2], self.alphas_n[i2]
 
             if i2 in self.I0:
-                E2 = self.errors[i2]
+                F2 = self.errors[i2]
             else:
-                E2 = self.y[i2] - self._svm_output(i2)
-                self.errors[i2] = E2
+                F2 = self.y[i2] - self._svm_output(i2)
+                self.errors[i2] = F2
                 if i2 in self.I1:
-                    if E2 + self.epsilon < self.b_up:
-                        self.b_up = E2 + self.epsilon
+                    if F2 + self.epsilon < self.b_up:
+                        self.b_up = F2 + self.epsilon
                         self.b_up_idx = i2
-                    elif E2 - self.epsilon > self.b_low:
-                        self.b_low = E2 - self.epsilon
+                    elif F2 - self.epsilon > self.b_low:
+                        self.b_low = F2 - self.epsilon
                         self.b_low_idx = i2
-                elif i2 in self.I2 and E2 + self.epsilon > self.b_low:
-                    self.b_low = E2 + self.epsilon
+                elif i2 in self.I2 and F2 + self.epsilon > self.b_low:
+                    self.b_low = F2 + self.epsilon
                     self.b_low_idx = i2
-                elif i2 in self.I3 and E2 - self.epsilon < self.b_up:
-                    self.b_up = E2 - self.epsilon
+                elif i2 in self.I3 and F2 - self.epsilon < self.b_up:
+                    self.b_up = F2 - self.epsilon
                     self.b_up_idx = i2
             i1 = -1
             optimal = True
             if i2 in self.I0:
                 if 0 < alpha2_p < self.C:
-                    if self.b_low - (E2 - self.epsilon) > 2 * self.tol:
+                    if self.b_low - (F2 - self.epsilon) > 2 * self.tol:
                         optimal = False
                         i1 = self.b_low_idx
-                        if (E2 - self.epsilon) - self.b_up > self.b_low - (E2 - self.epsilon):
+                        if (F2 - self.epsilon) - self.b_up > self.b_low - (F2 - self.epsilon):
                             i1 = self.b_up_idx
-                    elif (E2 - self.epsilon) - self.b_up > 2 * self.tol:
+                    elif (F2 - self.epsilon) - self.b_up > 2 * self.tol:
                         optimal = False
                         i1 = self.b_up_idx
-                        if self.b_low - (E2 - self.epsilon) > (E2 - self.epsilon) - self.b_up:
+                        if self.b_low - (F2 - self.epsilon) > (F2 - self.epsilon) - self.b_up:
                             i1 = self.b_low_idx
                 elif 0 < alpha2_n < self.C:
-                    if self.b_low - (E2 + self.epsilon) > 2 * self.tol:
+                    if self.b_low - (F2 + self.epsilon) > 2 * self.tol:
                         optimal = False
                         i1 = self.b_low_idx
-                        if (E2 + self.epsilon) - self.b_up > self.b_low - (E2 + self.epsilon):
+                        if (F2 + self.epsilon) - self.b_up > self.b_low - (F2 + self.epsilon):
                             i1 = self.b_up_idx
-                    elif (E2 + self.epsilon) - self.b_up > 2 * self.tol:
+                    elif (F2 + self.epsilon) - self.b_up > 2 * self.tol:
                         optimal = False
                         i1 = self.b_up_idx
-                        if self.b_low - (E2 + self.epsilon) > (E2 + self.epsilon) - self.b_up:
+                        if self.b_low - (F2 + self.epsilon) > (F2 + self.epsilon) - self.b_up:
                             i1 = self.b_low_idx
             elif i2 in self.I1:
-                if self.b_low - (E2 + self.epsilon) > 2 * self.tol:
+                if self.b_low - (F2 + self.epsilon) > 2 * self.tol:
                     optimal = False
                     i1 = self.b_low_idx
-                    if (E2 + self.epsilon) - self.b_up > self.b_low - (E2 + self.epsilon):
+                    if (F2 + self.epsilon) - self.b_up > self.b_low - (F2 + self.epsilon):
                         i1 = self.b_up_idx
-                elif (E2 - self.epsilon) - self.b_up > 2 * self.tol:
+                elif (F2 - self.epsilon) - self.b_up > 2 * self.tol:
                     optimal = False
                     i1 = self.b_up_idx
-                    if self.b_low - (E2 - self.epsilon) > (E2 - self.epsilon) - self.b_up:
+                    if self.b_low - (F2 - self.epsilon) > (F2 - self.epsilon) - self.b_up:
                         i1 = self.b_low_idx
             elif i2 in self.I2:
-                if (E2 + self.epsilon) - self.b_up > 2 * self.tol:
+                if (F2 + self.epsilon) - self.b_up > 2 * self.tol:
                     optimal = False
                     i1 = self.b_up_idx
             elif i2 in self.I3:
-                if self.b_low - (E2 - self.epsilon) > 2 * self.tol:
+                if self.b_low - (F2 - self.epsilon) > 2 * self.tol:
                     optimal = False
                     i1 = self.b_low_idx
             else:
