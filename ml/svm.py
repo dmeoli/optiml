@@ -220,27 +220,27 @@ class SVC(ClassifierMixin, SVM):
             # al. for better performance ed efficiency
 
             # set of indices
-            # { i : 0 < alphas[i] < C }
+            # {i : 0 < alphas[i] < C}
             self.I0 = set()
-            # { i : y[i] = +1, alphas[i] = 0 }
+            # {i : y[i] = +1, alphas[i] = 0}
             self.I1 = set(i for i in range(len(X)) if y[i] == 1)
-            # { i : y[i] = -1, alphas[i] = C }
+            # {i : y[i] = -1, alphas[i] = C}
             self.I2 = set()
-            # { i : y[i] = +1, alphas[i] = C }
+            # {i : y[i] = +1, alphas[i] = C}
             self.I3 = set()
-            # { i : y[i] = -1, alphas[i] = 0 }
+            # {i : y[i] = -1, alphas[i] = 0}
             self.I4 = set(i for i in range(len(X)) if y[i] == -1)
 
             # multiple thresholds
             self.b_up = -1
             self.b_low = 1
-            # initialize b_up_idx to any one index of class -1
+            # initialize b_up_idx to any one index of class +1
             self.b_up_idx = next(i for i in range(len(X)) if y[i] == 1)
-            # initialize b_low_idx to any one index of class +1
+            # initialize b_low_idx to any one index of class -1
             self.b_low_idx = next(i for i in range(len(X)) if y[i] == -1)
 
-            self.errors[self.b_up_idx] = self.b_up
-            self.errors[self.b_low_idx] = self.b_low
+            self.errors[self.b_up_idx] = -1
+            self.errors[self.b_low_idx] = 1
 
         def _svm_output(self, i2):
             return (self.alphas * self.y).dot(self.K[i2]) + self.b
