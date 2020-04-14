@@ -230,7 +230,7 @@ class SVC(ClassifierMixin, SVM):
             self.errors[self.b_low_idx] = 1
 
         def _svm_output(self, i2):
-            return (self.alphas * self.y[i2]).dot(self.K[i2]) + self.b
+            return (self.alphas * self.y).dot(self.K[i2]) + self.b
 
         def _take_step(self, i1, i2):
             # skip if chosen alphas are the same
