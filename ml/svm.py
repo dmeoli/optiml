@@ -548,7 +548,7 @@ class SVC(ClassifierMixin, SVM):
                 alphas = smo.alphas
                 if self.kernel is 'linear':
                     self.coef_ = smo.w
-                self.intercept_ = smo.b
+                self.intercept_ = -smo.b
 
             else:
                 alphas = scipy_solve_svm(obj_fun, A, ub, self.epochs, self.verbose)
