@@ -524,7 +524,7 @@ class SVC(ClassifierMixin, SVM):
                 if self.verbose:
                     print('{:4d}\t{:1.4e}'.format(loop_counter, self.f.function(self.alphas)))
 
-            self.b = (self.b_low + self.b_up) / 2
+            self.b = -(self.b_low + self.b_up) / 2
 
             return self
 
@@ -560,7 +560,7 @@ class SVC(ClassifierMixin, SVM):
                 alphas = smo.alphas
                 if self.kernel is 'linear':
                     self.coef_ = smo.w
-                self.intercept_ = -smo.b
+                self.intercept_ = smo.b
 
             else:
                 alphas = scipy_solve_svm(obj_fun, A, ub, self.epochs, self.verbose)
@@ -1063,7 +1063,7 @@ class SVR(RegressorMixin, SVM):
                     print('{:4d}\t{:1.4e}'.format(
                         loop_counter, self.f.function(np.hstack((self.alphas_p, self.alphas_n)))))
 
-            self.b = (self.b_low + self.b_up) / 2
+            self.b = -(self.b_low + self.b_up) / 2
 
             return self
 
@@ -1098,7 +1098,7 @@ class SVR(RegressorMixin, SVM):
                     obj_fun, X, y, K, self.kernel, self.C, self.epsilon, self.tol, self.verbose).smo()
                 alphas_p, alphas_n = smo.alphas_p, smo.alphas_n
                 if self.kernel is 'linear':
-                    self.coef_ = -smo.w
+                    self.coef_ = smo.w
                 self.intercept_ = smo.b
 
             else:
