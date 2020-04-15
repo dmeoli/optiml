@@ -348,10 +348,6 @@ class SVC(ClassifierMixin, SVM):
             self.errors[i1] += y1 * (a1 - alpha1) * self.K[i1, i1] + y2 * (a2 - alpha2) * self.K[i1, i2]
             self.errors[i2] += y1 * (a1 - alpha1) * self.K[i1, i2] + y2 * (a2 - alpha2) * self.K[i2, i2]
 
-            # update model object with new alphas
-            self.alphas[i1] = a1
-            self.alphas[i2] = a2
-
             # to prevent precision problems
             if a2 > self.C - 1e-8 * self.C:
                 a2 = self.C
@@ -362,6 +358,10 @@ class SVC(ClassifierMixin, SVM):
                 a1 = self.C
             elif a1 < 1e-8 * self.C:
                 a1 = 0.
+
+            # update model object with new alphas
+            self.alphas[i1] = a1
+            self.alphas[i2] = a2
 
             # update the sets of indices for i1
             if 0 < a1 < self.C:
@@ -787,7 +787,7 @@ class SVR(RegressorMixin, SVM):
             # if kernel is liner update weight vector
             # to reflect change in a1 and a2
             if self.kernel is 'linear':
-                self.w += (((self.alphas_p[i1] - self.alphas_n[i1]) - (alpha1_p - alpha1_n)) * self.X[i1] +
+                self.w -= (((self.alphas_p[i1] - self.alphas_n[i1]) - (alpha1_p - alpha1_n)) * self.X[i1] +
                            ((self.alphas_p[i2] - self.alphas_n[i2]) - (alpha2_p - alpha2_n)) * self.X[i2])
 
             # update error cache using new alphas
@@ -801,10 +801,6 @@ class SVR(RegressorMixin, SVM):
                                 ((self.alphas_p[i2] - self.alphas_n[i2]) - (alpha2_p - alpha2_n)) * self.K[i1, i2])
             self.errors[i2] += (((self.alphas_p[i1] - self.alphas_n[i1]) - (alpha1_p - alpha1_n)) * self.K[i1, i2] +
                                 ((self.alphas_p[i2] - self.alphas_n[i2]) - (alpha2_p - alpha2_n)) * self.K[i2, i2])
-
-            # update model object with new alphas
-            self.alphas_p[i1], self.alphas_p[i2] = alpha1_p, alpha2_p
-            self.alphas_n[i1], self.alphas_n[i2] = alpha1_n, alpha2_n
 
             # to prevent precision problems
             if alpha1_p > self.C - 1e-10 * self.C:
@@ -826,6 +822,10 @@ class SVR(RegressorMixin, SVM):
                 alpha2_n = self.C
             elif alpha2_n <= 1e-10 * self.C:
                 alpha2_n = 0
+
+            # update model object with new alphas
+            self.alphas_p[i1], self.alphas_p[i2] = alpha1_p, alpha2_p
+            self.alphas_n[i1], self.alphas_n[i2] = alpha1_n, alpha2_n
 
             # update the sets of indices for i1
             if 0 < alpha1_p < self.C or 0 < alpha1_n < self.C:
@@ -1012,7 +1012,7 @@ class SVR(RegressorMixin, SVM):
                 else:
                     # loop over examples where alphas are not already at their limits
                     for i in range(len(self.X)):
-                        if 0 < self.alphas_p[i] < self.C or 0 < self.alphas_n[i] < self.C:
+                        if 0 < self.alphas_p[i] < self.C and 0 < self.alphas_n[i] < self.C:
                             num_changed += self._examine_example(i)
                             # check if optimality on I0 is attained
                             if self.b_up > self.b_low - 2 * self.tol:
