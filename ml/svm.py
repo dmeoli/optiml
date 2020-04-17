@@ -70,23 +70,31 @@ class SVM(BaseEstimator):
 
     # kernels
 
-    def linear(self, X, y):
-        return np.dot(X, y.T)
+    def linear(self, X, Y=None):
+        if Y is None:
+            Y = X
+        return np.dot(X, Y.T)
 
-    def poly(self, X, y):
+    def poly(self, X, Y=None):
+        if Y is None:
+            Y = X
         gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
-        return (gamma * np.dot(X, y.T) + self.coef0) ** self.degree
+        return (gamma * np.dot(X, Y.T) + self.coef0) ** self.degree
 
-    def rbf(self, X, y):
+    def rbf(self, X, Y=None):
+        if Y is None:
+            Y = X
         gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
-        return np.exp(-gamma * np.linalg.norm(X[:, np.newaxis] - y[np.newaxis, :], axis=2) ** 2)
+        return np.exp(-gamma * np.linalg.norm(X[:, np.newaxis] - Y[np.newaxis, :], axis=2) ** 2)
 
-    def sigmoid(self, X, y):
+    def sigmoid(self, X, Y=None):
+        if Y is None:
+            Y = X
         gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
-        return np.tanh(gamma * np.dot(X, y.T) + self.coef0)
+        return np.tanh(gamma * np.dot(X, Y.T) + self.coef0)
 
     class SMO:
         def __init__(self, f, X, y, K, kernel='rbf', C=1., tol=1e-3, verbose=False):
@@ -517,7 +525,7 @@ class SVC(ClassifierMixin, SVM):
         n_samples = len(y)
 
         # kernel matrix
-        K = self.kernels[self.kernel](X, X)
+        K = self.kernels[self.kernel](X)
 
         P = K * np.outer(y, y)
         P = (P + P.T) / 2  # ensure P is symmetric
@@ -1003,7 +1011,7 @@ class SVR(RegressorMixin, SVM):
         n_samples = len(y)
 
         # kernel matrix
-        K = self.kernels[self.kernel](X, X)
+        K = self.kernels[self.kernel](X)
 
         P = np.vstack((np.hstack((K, -K)),  # alphas_p, alphas_n
                        np.hstack((-K, K))))  # alphas_n, alphas_p
