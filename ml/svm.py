@@ -9,15 +9,15 @@ from qpsolvers import solve_qp
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 
 from optimization.optimization_function import BoxConstrainedQuadratic, LagrangianBoxConstrained, Quadratic
-from optimization.optimizer import BoxConstrainedOptimizer, Optimizer
+from optimization.optimizer import BoxConstrainedOptimizer, Optimizer, LineSearchOptimizer
 from utils import scipy_solve_qp, scipy_solve_svm, clip
 
 plt.style.use('ggplot')
 
 
 class SVM(BaseEstimator):
-    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
-                 tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer='SMO',
+                 epochs=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, verbose=False):
         self.kernels = {'linear': self.linear,
                         'poly': self.poly,
                         'rbf': self.rbf,
@@ -64,6 +64,9 @@ class SVM(BaseEstimator):
         self.epochs = epochs
         if not isinstance(verbose, bool) or verbose not in (0, 1):
             raise ValueError('verbose is not a boolean value')
+        self.learning_rate = learning_rate
+        self.momentum_type = momentum_type
+        self.momentum = momentum
         self.verbose = verbose
         if kernel is 'linear':
             self.coef_ = 0.
@@ -228,9 +231,10 @@ class SVM(BaseEstimator):
 
 
 class SVC(ClassifierMixin, SVM):
-    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1.,
-                 tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
-        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, verbose)
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer='SMO',
+                 epochs=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, verbose=False):
+        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs,
+                         learning_rate, momentum_type, momentum, verbose)
 
     class SMOClassifier(SVM.SMO):
         """
@@ -603,7 +607,14 @@ class SVC(ClassifierMixin, SVM):
             elif issubclass(self.optimizer, Optimizer):
                 # dual lagrangian relaxation of the box-constrained problem
                 dual = LagrangianBoxConstrained(obj_fun)
-                self.optimizer(dual, max_iter=self.epochs, verbose=self.verbose).minimize()
+
+                if issubclass(self.optimizer, LineSearchOptimizer):
+                    self.optimizer(dual, max_iter=self.epochs, max_f_eval=self.max_f_eval,
+                                   verbose=self.verbose).minimize()
+                else:
+                    self.optimizer(dual, momentum_type=self.momentum_type, momentum=self.momentum,
+                                   step_rate=self.learning_rate, max_iter=self.epochs, verbose=self.verbose).minimize()
+
                 alphas = dual.primal_solution
 
         sv = alphas > 1e-5
@@ -633,9 +644,10 @@ class SVC(ClassifierMixin, SVM):
 
 
 class SVR(RegressorMixin, SVM):
-    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3,
-                 epsilon=0.1, optimizer='SMO', epochs=1000, verbose=False):
-        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, verbose)
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, epsilon=0.1, optimizer='SMO',
+                 epochs=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, verbose=False):
+        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs,
+                         learning_rate, momentum_type, momentum, verbose)
         self.epsilon = epsilon  # epsilon insensitive loss value
 
     class SMORegression(SVM.SMO):
@@ -1092,7 +1104,14 @@ class SVR(RegressorMixin, SVM):
             elif issubclass(self.optimizer, Optimizer):
                 # dual lagrangian relaxation of the box-constrained problem
                 dual = LagrangianBoxConstrained(obj_fun)
-                self.optimizer(dual, max_iter=self.epochs, verbose=self.verbose).minimize()
+
+                if issubclass(self.optimizer, LineSearchOptimizer):
+                    self.optimizer(dual, max_iter=self.epochs, max_f_eval=self.max_f_eval,
+                                   verbose=self.verbose).minimize()
+                else:
+                    self.optimizer(dual, momentum_type=self.momentum_type, momentum=self.momentum,
+                                   step_rate=self.learning_rate, max_iter=self.epochs, verbose=self.verbose).minimize()
+
                 alphas = dual.primal_solution
 
             alphas_p = alphas[:n_samples]

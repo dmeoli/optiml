@@ -13,6 +13,4 @@ if __name__ == '__main__':
 
         svc = SKLSVC(kernel=k)
         svc.fit(X_train, y_train)
-        print(f'sklearn monk #{i} accuracy: {svc.score(X_test, y_test)}')
-
-        print()
+        print(f'sklearn monk #{i} accuracy: {svc.score(X_test, y_test)}\n')

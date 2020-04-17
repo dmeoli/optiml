@@ -47,9 +47,11 @@ class LinearModelLossFunction(OptimizationFunction):
 
 class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
 
-    def __init__(self, optimizer, learning_rate=0.01, epochs=1000, batch_size=None,
-                 max_f_eval=1000, regularization=l1, lmbda=0.01, verbose=False):
+    def __init__(self, optimizer, learning_rate=0.01, momentum_type='none', momentum=0.9, epochs=1000,
+                 batch_size=None, max_f_eval=1000, regularization=l1, lmbda=0.01, verbose=False):
         self.learning_rate = learning_rate
+        self.momentum_type = momentum_type
+        self.momentum = momentum
         self.epochs = epochs
         self.batch_size = batch_size
         self.optimizer = optimizer
@@ -69,6 +71,7 @@ class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
                                     max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()[0]
         else:
             self.w = self.optimizer(f=loss, batch_size=self.batch_size, step_rate=self.learning_rate,
+                                    momentum_type=self.momentum_type, momentum=self.momentum,
                                     max_iter=self.epochs, verbose=self.verbose).minimize()[0]
         return self
 
