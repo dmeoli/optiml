@@ -21,7 +21,8 @@ class SVM(BaseEstimator):
         self.kernels = {'linear': self.linear,
                         'poly': self.poly,
                         'rbf': self.rbf,
-                        'sigmoid': self.sigmoid}
+                        'sigmoid': self.sigmoid,
+                        'laplacian': self.laplacian}
         if kernel not in self.kernels.keys():
             raise ValueError(f'unknown kernel type {kernel}')
         self.kernel = kernel
@@ -71,11 +72,21 @@ class SVM(BaseEstimator):
     # kernels
 
     def linear(self, X, Y=None):
+        """
+        Compute the linear kernel between X and Y:
+
+            K(X, Y) = <X, Y>
+        """
         if Y is None:
             Y = X
         return np.dot(X, Y.T)
 
     def poly(self, X, Y=None):
+        """
+        Compute the polynomial kernel between X and Y:
+
+            K(X, Y) = (gamma <X, Y> + coef0)^degree
+        """
         if Y is None:
             Y = X
         gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
@@ -83,6 +94,11 @@ class SVM(BaseEstimator):
         return (gamma * np.dot(X, Y.T) + self.coef0) ** self.degree
 
     def rbf(self, X, Y=None):
+        """
+        Compute the rbf (gaussian) kernel between X and Y:
+
+            K(x, y) = exp(-gamma ||x-y||_2^2)
+        """
         if Y is None:
             Y = X
         gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
@@ -90,11 +106,28 @@ class SVM(BaseEstimator):
         return np.exp(-gamma * np.linalg.norm(X[:, np.newaxis] - Y[np.newaxis, :], axis=2) ** 2)
 
     def sigmoid(self, X, Y=None):
+        """
+        Compute the sigmoid kernel between X and Y:
+
+            K(X, Y) = tanh(gamma <X, Y> + coef0)
+        """
         if Y is None:
             Y = X
         gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
         return np.tanh(gamma * np.dot(X, Y.T) + self.coef0)
+
+    def laplacian(self, X, Y=None):
+        """
+        Compute the laplacian kernel between X and Y:
+
+            K(x, y) = exp(-gamma ||x-y||_1)
+        """
+        if Y is None:
+            Y = X
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
+                 1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
+        return np.exp(-gamma * np.linalg.norm(X[:, np.newaxis] - Y[np.newaxis, :], ord=1, axis=2))
 
     class SMO:
         def __init__(self, f, X, y, K, kernel='rbf', C=1., tol=1e-3, verbose=False):
