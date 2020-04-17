@@ -88,7 +88,6 @@ class SVM(BaseEstimator):
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
         return np.tanh(gamma * np.dot(X, y.T) + self.coef0)
 
-    # SMO algorithm
     class SMO:
         def __init__(self, f, X, y, K, kernel='rbf', C=1., tol=1e-3, verbose=False):
             self.f = f
@@ -104,10 +103,13 @@ class SVM(BaseEstimator):
             self.tol = tol
             self.verbose = verbose
 
-        def _svm_output(self, i2):
+        def _svm_output_no_bias(self, i2):
             raise NotImplementedError
 
         def _take_step(self, i1, i2):
+            raise NotImplementedError
+
+        def _update_index_sets(self, i):
             raise NotImplementedError
 
         def _examine_example(self, i2):
@@ -195,20 +197,25 @@ class SVC(ClassifierMixin, SVM):
                  tol=1e-3, optimizer='SMO', epochs=1000, verbose=False):
         super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, verbose)
 
-    # Platt's SMO algorithm for SVC
     class SMOClassifier(SVM.SMO):
         """
         Implements John Platt's sequential minimal optimization
         algorithm for training a support vector classifier.
 
+        The SMO algorithm is an algorithm for solving large quadratic programming (QP)
+        optimization problems, widely used for the training of support vector machines.
+        First developed by John C. Platt in 1998, SMO breaks up large QP problems into a
+        series of smallest possible QP problems, which are then solved analytically.
+
+        This class follows the original algorithm by Platt with additional modifications
+        by Keerthi et al.
+
         References
 
-        J. Platt: Fast Training of Support Vector Machines using Sequential Minimal Optimization.
-        In B. Schoelkopf and C. Burges and A. Smola, editors, Advances in Kernel Methods -
-        Support Vector Learning, 1998.
+        John C. Platt. Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector Machines.
 
-        S.S. Keerthi, S.K. Shevade, C. Bhattacharyya, K.R.K. Murthy (2001). Improvements to Platt's
-        SMO Algorithm for SVM Classifier Design. Neural Computation. 13(3):637-649.
+        S.S. Keerthi, S.K. Shevade, C. Bhattacharyya, K.R.K. Murthy. Improvements to Platt's SMO
+        Algorithm for SVM Classifier Design. Technical Report CD-99-14.
         """
 
         def __init__(self, f, X, y, K, kernel='rbf', C=1., tol=1e-3, verbose=False):
@@ -242,7 +249,7 @@ class SVC(ClassifierMixin, SVM):
             self.errors[self.b_up_idx] = -1
             self.errors[self.b_low_idx] = 1
 
-        def _svm_output(self, i2):
+        def _svm_output_no_bias(self, i2):
             return (self.alphas * self.y).dot(self.K[i2])
 
         def _take_step(self, i1, i2):
@@ -299,25 +306,27 @@ class SVC(ClassifierMixin, SVM):
                 # positive, in which case the objective function should be evaluated at
                 # each end of the line segment based on equations 19 in Platt's paper
 
-                f1 = y1 * (E1 + self.b) - alpha1 * self.K[i1, i1] - s * alpha2 * self.K[i1, i2]
-                f2 = y2 * (E2 + self.b) - alpha2 * self.K[i2, i2] - s * alpha1 * self.K[i1, i2]
+                f1 = y1 * E1 - alpha1 * self.K[i1, i1] - s * alpha2 * self.K[i1, i2]
+                f2 = y2 * E2 - alpha2 * self.K[i2, i2] - s * alpha1 * self.K[i1, i2]
                 L1 = alpha1 + s * (alpha2 - L)
                 H1 = alpha1 + s * (alpha2 - H)
-                Lobj = (L1 * f1 + L * f2 + 0.5 * L1 ** 2 * self.K[i1, i1] +
-                        0.5 * L ** 2 * self.K[i2, i2] + s * L * L1 * self.K[i1, i2])
-                Hobj = (H1 * f1 + H * f2 + 0.5 * H1 ** 2 * self.K[i1, i1] +
-                        0.5 * H ** 2 * self.K[i2, i2] + s * H * H1 * self.K[i1, i2])
 
-                # or, in our case, just by calling the objective function at a2 = L and a2 = H:
+                #                        T                                T
+                # f(L1, L) = 1/2 * | L1 | * | K11  K12 | * | L1 | + | f1 | * | L1 |
+                #                  | L  |   | K12  K22 |   | L  |   | f2 |   | L  |
 
-                alphas_adj = self.alphas.copy()
-                alphas_adj[i2] = L
-                Lobj_ = self.f.function(alphas_adj)
-                alphas_adj[i2] = H
-                Hobj_ = self.f.function(alphas_adj)
+                Lobj = (0.5 * L1 ** 2 * self.K[i1, i1] + s * L * L1 * self.K[i1, i2] +
+                        0.5 * L ** 2 * self.K[i2, i2] + f1 * L1 + f2 * L)
 
-                assert Lobj == Lobj_
-                assert Hobj == Hobj_
+                #                        T                                T
+                # f(H1, H) = 1/2 * | H1 | * | K11  K12 | * | H1 | + | f1 | * | H1 |
+                #                  | H  |   | K12  K22 |   | H  |   | f2 |   | H  |
+
+                Hobj = (0.5 * H1 ** 2 * self.K[i1, i1] + s * H * H1 * self.K[i1, i2] +
+                        0.5 * H ** 2 * self.K[i2, i2] + f1 * H1 + f2 * H)
+
+                # Lobj = y2 * (E1 - E2) * L
+                # Hobj = y2 * (E1 - E2) * H
 
                 if Lobj > Hobj + 1e-12:
                     a2 = L
@@ -326,7 +335,7 @@ class SVC(ClassifierMixin, SVM):
                 else:
                     a2 = alpha2
 
-                warnings.warn('eta is zero')
+                warnings.warn('the kernel matrix is not positive definite')
 
             # if examples can't be optimized within tol, skip this pair
             if abs(a2 - alpha2) < 1e-12 * (a2 + alpha2 + 1e-12):
@@ -363,49 +372,9 @@ class SVC(ClassifierMixin, SVM):
             self.alphas[i1] = a1
             self.alphas[i2] = a2
 
-            # update the sets of indices for i1
-            if 0 < a1 < self.C:
-                self.I0.add(i1)
-            else:
-                self.I0.discard(i1)
-            if y1 == 1 and a1 == 0:
-                self.I1.add(i1)
-            else:
-                self.I1.discard(i1)
-            if y1 == -1 and a1 == self.C:
-                self.I2.add(i1)
-            else:
-                self.I2.discard(i1)
-            if y1 == 1 and a1 == self.C:
-                self.I3.add(i1)
-            else:
-                self.I3.discard(i1)
-            if y1 == -1 and a1 == 0:
-                self.I4.add(i1)
-            else:
-                self.I4.discard(i1)
-
-            # update the sets of indices for i2
-            if 0 < a2 < self.C:
-                self.I0.add(i2)
-            else:
-                self.I0.discard(i2)
-            if y2 == 1 and a2 == 0:
-                self.I1.add(i2)
-            else:
-                self.I1.discard(i2)
-            if y2 == -1 and a2 == self.C:
-                self.I2.add(i2)
-            else:
-                self.I2.discard(i2)
-            if y2 == 1 and a2 == self.C:
-                self.I3.add(i2)
-            else:
-                self.I3.discard(i2)
-            if y2 == -1 and a2 == 0:
-                self.I4.add(i2)
-            else:
-                self.I4.discard(i2)
+            # update the sets of indices for i1 and i2
+            self._update_index_sets(i1)
+            self._update_index_sets(i2)
 
             # update thresholds (b_up, b_up_idx) and (b_low, b_low_idx)
             # by applying equations 11a and 11b, using only i1, i2 and
@@ -417,12 +386,12 @@ class SVC(ClassifierMixin, SVM):
             self.b_low = -sys.float_info.max
 
             for i in self.I0:
-                if self.errors[i] < self.b_up:
-                    self.b_up = self.errors[i]
-                    self.b_up_idx = i
                 if self.errors[i] > self.b_low:
                     self.b_low = self.errors[i]
                     self.b_low_idx = i
+                if self.errors[i] < self.b_up:
+                    self.b_up = self.errors[i]
+                    self.b_up_idx = i
             if i1 not in self.I0:
                 if i1 in self.I3 or i1 in self.I4:
                     if self.errors[i1] > self.b_low:
@@ -445,12 +414,33 @@ class SVC(ClassifierMixin, SVM):
 
             return True
 
-        def _examine_example(self, i2):
+        def _update_index_sets(self, i):
+            if 0 < self.alphas[i] < self.C:
+                self.I0.add(i)
+            else:
+                self.I0.discard(i)
+            if self.y[i] == 1 and self.alphas[i] == 0:
+                self.I1.add(i)
+            else:
+                self.I1.discard(i)
+            if self.y[i] == -1 and self.alphas[i] == self.C:
+                self.I2.add(i)
+            else:
+                self.I2.discard(i)
+            if self.y[i] == 1 and self.alphas[i] == self.C:
+                self.I3.add(i)
+            else:
+                self.I3.discard(i)
+            if self.y[i] == -1 and self.alphas[i] == 0:
+                self.I4.add(i)
+            else:
+                self.I4.discard(i)
 
+        def _examine_example(self, i2):
             if i2 in self.I0:
                 E2 = self.errors[i2]
             else:
-                E2 = self._svm_output(i2) - self.y[i2]
+                E2 = self._svm_output_no_bias(i2) - self.y[i2]
                 self.errors[i2] = E2
 
                 # update (b_up, b_up_idx) or (b_low, b_low_idx) using E2 and i2
@@ -619,18 +609,29 @@ class SVR(RegressorMixin, SVM):
         super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, verbose)
         self.epsilon = epsilon  # epsilon insensitive loss value
 
-    # Smola and Scholkopf SMO algorithm for SVR
     class SMORegression(SVM.SMO):
         """
         Implements Smola and Scholkopf sequential minimal optimization
         algorithm for training a support vector regression.
 
+        The SMO algorithm is an algorithm for solving large quadratic programming (QP)
+        optimization problems, widely used for the training of support vector machines.
+        First developed by John C. Platt in 1998, SMO breaks up large QP problems into a
+        series of smallest possible QP problems, which are then solved analytically.
+
+        This class incorporates modifications in the original SMO algorithm to solve
+        regression problems as suggested by Alex J. Smola and Bernhard Scholkopf and
+        further modifications for better performance by Shevade et al.
+
         References
 
-        A.J. Smola, B. Schoelkopf (1998). A tutorial on support vector regression.
+        G. W. Flake, S. Lawrence. Efficient SVM Regression Training with SMO.
 
-        S.K. Shevade, S.S. Keerthi, C. Bhattacharyya, K.R.K. Murthy: Improvements to the
-        SMO Algorithm for SVM Regression. In: IEEE Transactions on Neural Networks, 1999.
+        Alex J. Smola, Bernhard Scholkopf. A Tutorial on Support Vector Regression.
+        NeuroCOLT2 Technical Report Series NC2-TR-1998-030.
+
+        S.K. Shevade, S.S. Keerthi, C. Bhattacharyya, K.R.K. Murthy. Improvements to SMO
+        Algorithm for SVM Regression. Technical Report CD-99-16.
         """
 
         def __init__(self, f, X, y, K, kernel='rbf', C=1., epsilon=0.1, tol=1e-3, verbose=False):
@@ -644,9 +645,13 @@ class SVR(RegressorMixin, SVM):
             # Shevade et al. for better performance ed efficiency
 
             # set of indices
+            # {i : 0 < alphas_p[i] < C, 0 < alphas_n[i] < C}
             self.I0 = set()
+            # {i : alphas_p[i] = 0, alphas_n[i] = 0}
             self.I1 = set(range(len(X)))
+            # {i : alphas_p[i] = 0, alphas_n[i] = C}
             self.I2 = set()
+            # {i : alphas_p[i] = C, alphas_n[i] = 0}
             self.I3 = set()
 
             # multiple thresholds
@@ -655,7 +660,7 @@ class SVR(RegressorMixin, SVM):
             self.b_up = y[self.b_up_idx] + self.epsilon
             self.b_low = y[self.b_low_idx] - self.epsilon
 
-        def _svm_output(self, i2):
+        def _svm_output_no_bias(self, i2):
             return (self.alphas_p - self.alphas_n).dot(self.K[i2])
 
         def _take_step(self, i1, i2):
@@ -697,7 +702,7 @@ class SVR(RegressorMixin, SVM):
                             Lobj = -L * delta_E
                             Hobj = -H * delta_E
                             a2 = L if Lobj > Hobj else H
-                            warnings.warn('eta is zero')
+                            warnings.warn('the kernel matrix is not positive definite')
                         a1 = alpha1_p - (a2 - alpha2_p)
                         # update alpha1, alpha2_p if change is larger than some eps
                         if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
@@ -720,7 +725,7 @@ class SVR(RegressorMixin, SVM):
                             Lobj = L * (-2 * self.epsilon + delta_E)
                             Hobj = H * (-2 * self.epsilon + delta_E)
                             a2 = L if Lobj > Hobj else H
-                            warnings.warn('eta is zero')
+                            warnings.warn('the kernel matrix is not positive definite')
                         a1 = alpha1_p + (a2 - alpha2_n)
                         # update alpha1, alpha2_n if change is larger than some eps
                         if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
@@ -743,7 +748,7 @@ class SVR(RegressorMixin, SVM):
                             Lobj = -L * (2 * self.epsilon + delta_E)
                             Hobj = -H * (2 * self.epsilon + delta_E)
                             a2 = L if Lobj > Hobj else H
-                            warnings.warn('eta is zero')
+                            warnings.warn('the kernel matrix is not positive definite')
                         a1 = alpha1_n + (a2 - alpha2_p)
                         # update alpha1_n, alpha2_p if change is larger than some eps
                         if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
@@ -766,7 +771,7 @@ class SVR(RegressorMixin, SVM):
                             Lobj = L * delta_E
                             Hobj = H * delta_E
                             a2 = L if Lobj > Hobj else H
-                            warnings.warn('eta is zero')
+                            warnings.warn('the kernel matrix is not positive definite')
                         a1 = alpha1_n - (a2 - alpha2_n)
                         # update alpha1_n, alpha2_n if change is larger than some eps
                         if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
@@ -827,41 +832,9 @@ class SVR(RegressorMixin, SVM):
             self.alphas_p[i1], self.alphas_p[i2] = alpha1_p, alpha2_p
             self.alphas_n[i1], self.alphas_n[i2] = alpha1_n, alpha2_n
 
-            # update the sets of indices for i1
-            if 0 < alpha1_p < self.C or 0 < alpha1_n < self.C:
-                self.I0.add(i1)
-            else:
-                self.I0.discard(i1)
-            if alpha1_p == 0 and alpha1_n == 0:
-                self.I1.add(i1)
-            else:
-                self.I1.discard(i1)
-            if alpha1_p == 0 and alpha1_n == self.C:
-                self.I2.add(i1)
-            else:
-                self.I2.discard(i1)
-            if alpha1_p == self.C and alpha1_n == 0:
-                self.I3.add(i1)
-            else:
-                self.I3.discard(i1)
-
-            # update the sets of indices for i2
-            if 0 < alpha2_p < self.C or 0 < alpha2_n < self.C:
-                self.I0.add(i2)
-            else:
-                self.I0.discard(i2)
-            if alpha2_p == 0 and alpha2_n == 0:
-                self.I1.add(i1)
-            else:
-                self.I1.discard(i2)
-            if alpha2_p == 0 and alpha2_n == self.C:
-                self.I2.add(i2)
-            else:
-                self.I2.discard(i2)
-            if alpha2_p == self.C and alpha2_n == 0:
-                self.I3.add(i2)
-            else:
-                self.I3.discard(i2)
+            # update the sets of indices for i1 and i2
+            self._update_index_sets(i1)
+            self._update_index_sets(i2)
 
             # update thresholds
             self.b_up_idx = -1
@@ -919,13 +892,34 @@ class SVR(RegressorMixin, SVM):
 
             return True
 
+        def _update_index_sets(self, i):
+            if 0 < self.alphas_p[i] < self.C or 0 < self.alphas_n[i] < self.C:
+                self.I0.add(i)
+            else:
+                self.I0.discard(i)
+            if self.alphas_p[i] == 0 and self.alphas_n[i] == 0:
+                self.I1.add(i)
+            else:
+                self.I1.discard(i)
+            if self.alphas_p[i] == 0 and self.alphas_n[i] == self.C:
+                self.I2.add(i)
+            else:
+                self.I2.discard(i)
+            if self.alphas_p[i] == self.C and self.alphas_n[i] == 0:
+                self.I3.add(i)
+            else:
+                self.I3.discard(i)
+
+        def _update_boundaries(self, i):
+            pass
+
         def _examine_example(self, i2):
             alpha2_p, alpha2_n = self.alphas_p[i2], self.alphas_n[i2]
 
             if i2 in self.I0:
                 E2 = self.errors[i2]
             else:
-                E2 = self.y[i2] - self._svm_output(i2)
+                E2 = self.y[i2] - self._svm_output_no_bias(i2)
                 self.errors[i2] = E2
                 if i2 in self.I1:
                     if E2 + self.epsilon < self.b_up:
@@ -1012,7 +1006,7 @@ class SVR(RegressorMixin, SVM):
                 else:
                     # loop over examples where alphas are not already at their limits
                     for i in range(len(self.X)):
-                        if 0 < self.alphas_p[i] < self.C and 0 < self.alphas_n[i] < self.C:
+                        if 0 < self.alphas_p[i] < self.C or 0 < self.alphas_n[i] < self.C:
                             num_changed += self._examine_example(i)
                             # check if optimality on I0 is attained
                             if self.b_up > self.b_low - 2 * self.tol:
@@ -1058,8 +1052,8 @@ class SVR(RegressorMixin, SVM):
             obj_fun = Quadratic(P, q)
 
             if self.optimizer is 'SMO':
-                smo = self.SMORegression(
-                    obj_fun, X, y, K, self.kernel, self.C, self.epsilon, self.tol, self.verbose).smo()
+                smo = self.SMORegression(obj_fun, X, y, K, self.kernel, self.C,
+                                         self.epsilon, self.tol, self.verbose).smo()
                 alphas_p, alphas_n = smo.alphas_p, smo.alphas_n
                 if self.kernel is 'linear':
                     self.coef_ = smo.w
