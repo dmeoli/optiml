@@ -103,13 +103,7 @@ class SVM(BaseEstimator):
             self.tol = tol
             self.verbose = verbose
 
-        def _svm_output_no_bias(self, i2):
-            raise NotImplementedError
-
         def _take_step(self, i1, i2):
-            raise NotImplementedError
-
-        def _update_index_sets(self, i):
             raise NotImplementedError
 
         def _examine_example(self, i2):
@@ -249,9 +243,6 @@ class SVC(ClassifierMixin, SVM):
             self.errors[self.b_up_idx] = -1
             self.errors[self.b_low_idx] = 1
 
-        def _svm_output_no_bias(self, i2):
-            return (self.alphas * self.y).dot(self.K[i2])
-
         def _take_step(self, i1, i2):
             # skip if chosen alphas are the same
             if i1 == i2:
@@ -373,8 +364,27 @@ class SVC(ClassifierMixin, SVM):
             self.alphas[i2] = a2
 
             # update the sets of indices for i1 and i2
-            self._update_index_sets(i1)
-            self._update_index_sets(i2)
+            for i in (i1, i2):
+                if 0 < self.alphas[i] < self.C:
+                    self.I0.add(i)
+                else:
+                    self.I0.discard(i)
+                if self.y[i] == 1 and self.alphas[i] == 0:
+                    self.I1.add(i)
+                else:
+                    self.I1.discard(i)
+                if self.y[i] == -1 and self.alphas[i] == self.C:
+                    self.I2.add(i)
+                else:
+                    self.I2.discard(i)
+                if self.y[i] == 1 and self.alphas[i] == self.C:
+                    self.I3.add(i)
+                else:
+                    self.I3.discard(i)
+                if self.y[i] == -1 and self.alphas[i] == 0:
+                    self.I4.add(i)
+                else:
+                    self.I4.discard(i)
 
             # update thresholds (b_up, b_up_idx) and (b_low, b_low_idx)
             # by applying equations 11a and 11b, using only i1, i2 and
@@ -414,33 +424,11 @@ class SVC(ClassifierMixin, SVM):
 
             return True
 
-        def _update_index_sets(self, i):
-            if 0 < self.alphas[i] < self.C:
-                self.I0.add(i)
-            else:
-                self.I0.discard(i)
-            if self.y[i] == 1 and self.alphas[i] == 0:
-                self.I1.add(i)
-            else:
-                self.I1.discard(i)
-            if self.y[i] == -1 and self.alphas[i] == self.C:
-                self.I2.add(i)
-            else:
-                self.I2.discard(i)
-            if self.y[i] == 1 and self.alphas[i] == self.C:
-                self.I3.add(i)
-            else:
-                self.I3.discard(i)
-            if self.y[i] == -1 and self.alphas[i] == 0:
-                self.I4.add(i)
-            else:
-                self.I4.discard(i)
-
         def _examine_example(self, i2):
             if i2 in self.I0:
                 E2 = self.errors[i2]
             else:
-                E2 = self._svm_output_no_bias(i2) - self.y[i2]
+                E2 = (self.alphas * self.y).dot(self.K[i2]) - self.y[i2]
                 self.errors[i2] = E2
 
                 # update (b_up, b_up_idx) or (b_low, b_low_idx) using E2 and i2
@@ -660,9 +648,6 @@ class SVR(RegressorMixin, SVM):
             self.b_up = y[self.b_up_idx] + self.epsilon
             self.b_low = y[self.b_low_idx] - self.epsilon
 
-        def _svm_output_no_bias(self, i2):
-            return (self.alphas_p - self.alphas_n).dot(self.K[i2])
-
         def _take_step(self, i1, i2):
             # skip if chosen alphas are the same
             if i1 == i2:
@@ -833,8 +818,23 @@ class SVR(RegressorMixin, SVM):
             self.alphas_n[i1], self.alphas_n[i2] = alpha1_n, alpha2_n
 
             # update the sets of indices for i1 and i2
-            self._update_index_sets(i1)
-            self._update_index_sets(i2)
+            for i in (i1, i2):
+                if 0 < self.alphas_p[i] < self.C or 0 < self.alphas_n[i] < self.C:
+                    self.I0.add(i)
+                else:
+                    self.I0.discard(i)
+                if self.alphas_p[i] == 0 and self.alphas_n[i] == 0:
+                    self.I1.add(i)
+                else:
+                    self.I1.discard(i)
+                if self.alphas_p[i] == 0 and self.alphas_n[i] == self.C:
+                    self.I2.add(i)
+                else:
+                    self.I2.discard(i)
+                if self.alphas_p[i] == self.C and self.alphas_n[i] == 0:
+                    self.I3.add(i)
+                else:
+                    self.I3.discard(i)
 
             # update thresholds
             self.b_up_idx = -1
@@ -843,11 +843,11 @@ class SVR(RegressorMixin, SVM):
             self.b_low = -sys.float_info.max
 
             for i in self.I0:
-                if 0 < self.alphas_n[i] < self.C and self.errors[i] + self.epsilon > self.b_low:
-                    self.b_low = self.errors[i] + self.epsilon
-                    self.b_low_idx = i
-                elif 0 < self.alphas_p[i] < self.C and self.errors[i] - self.epsilon > self.b_low:
+                if 0 < self.alphas_p[i] < self.C and self.errors[i] - self.epsilon > self.b_low:
                     self.b_low = self.errors[i] - self.epsilon
+                    self.b_low_idx = i
+                elif 0 < self.alphas_n[i] < self.C and self.errors[i] + self.epsilon > self.b_low:
+                    self.b_low = self.errors[i] + self.epsilon
                     self.b_low_idx = i
 
                 if 0 < self.alphas_p[i] < self.C and self.errors[i] - self.epsilon < self.b_up:
@@ -857,61 +857,26 @@ class SVR(RegressorMixin, SVM):
                     self.b_up = self.errors[i] + self.epsilon
                     self.b_up_idx = i
 
-            if i1 not in self.I0:
-                if i1 in self.I2 and self.errors[i1] + self.epsilon > self.b_low:
-                    self.b_low = self.errors[i1] + self.epsilon
-                    self.b_low_idx = i1
-                elif i1 in self.I1 and self.errors[i1] - self.epsilon > self.b_low:
-                    self.b_low = self.errors[i1] - self.epsilon
-                    self.b_low_idx = i1
+            for i in (i1, i2):
+                if i not in self.I0:
+                    if i in self.I2 and self.errors[i] + self.epsilon > self.b_low:
+                        self.b_low = self.errors[i] + self.epsilon
+                        self.b_low_idx = i
+                    elif i in self.I1 and self.errors[i] - self.epsilon > self.b_low:
+                        self.b_low = self.errors[i] - self.epsilon
+                        self.b_low_idx = i
 
-                if i1 in self.I3 and self.errors[i1] - self.epsilon < self.b_up:
-                    self.b_up = self.errors[i1] - self.epsilon
-                    self.b_up_idx = i1
-                elif i1 in self.I1 and self.errors[i1] + self.epsilon < self.b_up:
-                    self.b_up = self.errors[i1] + self.epsilon
-                    self.b_up_idx = i1
-
-            if i2 not in self.I0:
-                if i2 in self.I2 and self.errors[i2] + self.epsilon > self.b_low:
-                    self.b_low = self.errors[i2] + self.epsilon
-                    self.b_low_idx = i2
-                elif i2 in self.I1 and self.errors[i2] - self.epsilon > self.b_low:
-                    self.b_low = self.errors[i2] - self.epsilon
-                    self.b_low_idx = i2
-
-                if i2 in self.I3 and self.errors[i2] - self.epsilon < self.b_up:
-                    self.b_up = self.errors[i2] - self.epsilon
-                    self.b_up_idx = i2
-                elif i2 in self.I1 and self.errors[i2] + self.epsilon < self.b_up:
-                    self.b_up = self.errors[i2] + self.epsilon
-                    self.b_up_idx = i2
+                    if i in self.I3 and self.errors[i] - self.epsilon < self.b_up:
+                        self.b_up = self.errors[i] - self.epsilon
+                        self.b_up_idx = i
+                    elif i in self.I1 and self.errors[i] + self.epsilon < self.b_up:
+                        self.b_up = self.errors[i] + self.epsilon
+                        self.b_up_idx = i
 
             if self.b_low_idx == -1 or self.b_up_idx == -1:
                 raise Exception('unexpected status')
 
             return True
-
-        def _update_index_sets(self, i):
-            if 0 < self.alphas_p[i] < self.C or 0 < self.alphas_n[i] < self.C:
-                self.I0.add(i)
-            else:
-                self.I0.discard(i)
-            if self.alphas_p[i] == 0 and self.alphas_n[i] == 0:
-                self.I1.add(i)
-            else:
-                self.I1.discard(i)
-            if self.alphas_p[i] == 0 and self.alphas_n[i] == self.C:
-                self.I2.add(i)
-            else:
-                self.I2.discard(i)
-            if self.alphas_p[i] == self.C and self.alphas_n[i] == 0:
-                self.I3.add(i)
-            else:
-                self.I3.discard(i)
-
-        def _update_boundaries(self, i):
-            pass
 
         def _examine_example(self, i2):
             alpha2_p, alpha2_n = self.alphas_p[i2], self.alphas_n[i2]
@@ -919,7 +884,7 @@ class SVR(RegressorMixin, SVM):
             if i2 in self.I0:
                 E2 = self.errors[i2]
             else:
-                E2 = self.y[i2] - self._svm_output_no_bias(i2)
+                E2 = self.y[i2] - (self.alphas_p - self.alphas_n).dot(self.K[i2])
                 self.errors[i2] = E2
                 if i2 in self.I1:
                     if E2 + self.epsilon < self.b_up:
