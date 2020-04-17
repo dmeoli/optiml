@@ -163,9 +163,9 @@ class NeuralNetwork(BaseEstimator, Layer):
             # if opt[2] is not 'optimal':
             #     warnings.warn("max_iter or max_f_eval reached and the optimization hasn't converged yet")
         else:
-            opt = self.optimizer(f=loss, wrt=packed_weights_biases, step_rate=self.learning_rate,
-                                 momentum_type=self.momentum_type, momentum=self.momentum, batch_size=self.batch_size,
-                                 max_iter=self.epochs, verbose=self.verbose).minimize()
+            opt = self.optimizer(f=loss, wrt=packed_weights_biases, batch_size=self.batch_size,
+                                 step_rate=self.learning_rate, momentum_type=self.momentum_type,
+                                 momentum=self.momentum, max_iter=self.epochs, verbose=self.verbose).minimize()
             # if opt[2] is not 'optimal':
             #     warnings.warn("max_iter reached and the optimization hasn't converged yet")
         self._unpack(opt[0])
