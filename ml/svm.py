@@ -21,8 +21,8 @@ class SVM(BaseEstimator):
         self.kernels = {'linear': self.linear,
                         'poly': self.poly,
                         'rbf': self.rbf,
-                        'sigmoid': self.sigmoid,
-                        'laplacian': self.laplacian}
+                        'laplacian': self.laplacian,
+                        'sigmoid': self.sigmoid}
         if kernel not in self.kernels.keys():
             raise ValueError(f'unknown kernel type {kernel}')
         self.kernel = kernel
@@ -108,18 +108,6 @@ class SVM(BaseEstimator):
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
         return np.exp(-gamma * np.linalg.norm(X[:, np.newaxis] - Y[np.newaxis, :], axis=2) ** 2)
 
-    def sigmoid(self, X, Y=None):
-        """
-        Compute the sigmoid kernel between X and Y:
-
-            K(X, Y) = tanh(gamma <X, Y> + coef0)
-        """
-        if Y is None:
-            Y = X
-        gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
-                 1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
-        return np.tanh(gamma * np.dot(X, Y.T) + self.coef0)
-
     def laplacian(self, X, Y=None):
         """
         Compute the laplacian kernel between X and Y:
@@ -131,6 +119,18 @@ class SVM(BaseEstimator):
         gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
         return np.exp(-gamma * np.linalg.norm(X[:, np.newaxis] - Y[np.newaxis, :], ord=1, axis=2))
+
+    def sigmoid(self, X, Y=None):
+        """
+        Compute the sigmoid kernel between X and Y:
+
+            K(X, Y) = tanh(gamma <X, Y> + coef0)
+        """
+        if Y is None:
+            Y = X
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
+                 1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
+        return np.tanh(gamma * np.dot(X, Y.T) + self.coef0)
 
     class SMO:
         def __init__(self, f, X, y, K, kernel='rbf', C=1., tol=1e-3, verbose=False):
