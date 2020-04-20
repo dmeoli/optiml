@@ -171,8 +171,9 @@ class SVM(BaseEstimator):
             plt.xlabel('$X$', fontsize=9)
             plt.ylabel('$y$', fontsize=9)
 
-        plt.title(f'{"custom" if isinstance(svm, SVM) else "sklearn"} '
-                  f'{type(svm).__name__} using {svm.kernel} kernel', fontsize=9)
+        plt.title(f'{"custom" if isinstance(svm, SVM) else "sklearn"} {type(svm).__name__} using '
+                  f'{svm.kernel + " kernel" if isinstance(svm.kernel, str) else svm.kernel.__name__.replace("_", " ")}',
+                  fontsize=9)
 
         # set the legend
         if isinstance(svm, ClassifierMixin):
@@ -209,7 +210,7 @@ class SVM(BaseEstimator):
 
         # support vectors
         if isinstance(svm, ClassifierMixin):
-            plt.scatter(svm.support_vectors_[:, 0], svm.support_vectors_[:, 1], s=60, color='blue')
+            plt.scatter(X[svm.support_][:, 0], X[svm.support_][:, 1], s=60, color='blue')
         elif isinstance(svm, RegressorMixin):
             plt.scatter(X[svm.support_], y[svm.support_], s=60, color='blue')
 
@@ -334,35 +335,8 @@ class SVC(ClassifierMixin, SVM):
                 # on equation 17 in Platt's paper
                 a2 = clip(alpha2 + y2 * (E1 - E2) / eta, L, H)
             else:
-                # under unusual circumstances, eta will not be positive. A negative eta
-                # will occur if the kernel K does not obey Mercer’s condition, which can
-                # cause the objective function to become indefinite. A zero eta can occur
-                # even with a correct kernel, if more than one training example has the
-                # same input vector. In any event, SMO will work even when eta is not
-                # positive, in which case the objective function should be evaluated at
-                # each end of the line segment based on equations 19 in Platt's paper
-
-                f1 = y1 * E1 - alpha1 * self.K[i1, i1] - s * alpha2 * self.K[i1, i2]
-                f2 = y2 * E2 - alpha2 * self.K[i2, i2] - s * alpha1 * self.K[i1, i2]
-                L1 = alpha1 + s * (alpha2 - L)
-                H1 = alpha1 + s * (alpha2 - H)
-
-                #                        T                                T
-                # f(L1, L) = 1/2 * | L1 | * | K11  K12 | * | L1 | + | f1 | * | L1 |
-                #                  | L  |   | K12  K22 |   | L  |   | f2 |   | L  |
-
-                Lobj = (0.5 * L1 ** 2 * self.K[i1, i1] + s * L * L1 * self.K[i1, i2] +
-                        0.5 * L ** 2 * self.K[i2, i2] + f1 * L1 + f2 * L)
-
-                #                        T                                T
-                # f(H1, H) = 1/2 * | H1 | * | K11  K12 | * | H1 | + | f1 | * | H1 |
-                #                  | H  |   | K12  K22 |   | H  |   | f2 |   | H  |
-
-                Hobj = (0.5 * H1 ** 2 * self.K[i1, i1] + s * H * H1 * self.K[i1, i2] +
-                        0.5 * H ** 2 * self.K[i2, i2] + f1 * H1 + f2 * H)
-
-                # Lobj = y2 * (E1 - E2) * L
-                # Hobj = y2 * (E1 - E2) * H
+                Lobj = y2 * (E1 - E2) * L
+                Hobj = y2 * (E1 - E2) * H
 
                 if Lobj > Hobj + 1e-12:
                     a2 = L
