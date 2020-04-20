@@ -3,10 +3,10 @@ import numpy as np
 from cvxpy import Variable, Problem, Minimize, sum_squares
 
 from ml.initializers import random_uniform
-from optimization.optimizer import Optimizer
+from optimization.optimizer import LineSearchOptimizer
 
 
-class ProximalBundle(Optimizer):
+class ProximalBundle(LineSearchOptimizer):
     # Apply the Proximal Bundle Method for the minimization of the provided
     # function f.
     #
@@ -79,61 +79,55 @@ class ProximalBundle(Optimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, wrt=random_uniform, batch_size=None, mu=1, m1=0.01, eps=1e-6, max_iter=1000,
-                 momentum_type='none', momentum=0.9, m_inf=-np.inf, verbose=False, plot=False):
-        super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
+    def __init__(self, f, wrt=random_uniform, batch_size=None, mu=1, m1=0.01, eps=1e-6, max_iter=1000, max_f_eval=1000,
+                 momentum_type='none', momentum=0.9, m_inf=-np.inf, solver='OSQP', verbose=False, plot=False):
+        super().__init__(f, wrt, batch_size, eps, max_iter, max_f_eval, m1, m_inf=m_inf, verbose=verbose, plot=plot)
         if not np.isscalar(mu):
             raise ValueError('mu is not a real scalar')
         if not mu > 0:
             raise ValueError('mu must be > 0')
         self.mu = mu
-        if not np.isscalar(m1):
-            raise ValueError('m1 is not a real scalar')
-        if not 0 <= m1 <= 1:
-            raise ValueError('m1 is not in [0,1]')
-        self.m1 = m1
-        if not np.isscalar(m_inf):
-            raise ValueError('m_inf is not a real scalar')
-        self.m_inf = m_inf
         if not np.isscalar(momentum):
             raise ValueError('momentum is not a real scalar')
         if not momentum > 0:
             raise ValueError('momentum must be > 0')
         self.momentum = momentum
         if momentum_type not in ('standard', 'nesterov', 'none'):
-            raise ValueError('unknown momentum type {}'.format(momentum_type))
+            raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type
+        self.master_solver = solver
         self.step = 0
 
     def minimize(self):
 
         if self.verbose:
             if self.f.f_star() < np.inf:
-                print('iter\tf(x) - f*\t||d||\t\tstep')
+                print('iter\tf(x)\t\tf(x) - f*\t||d||\t\tstep')
             else:
                 print('iter\tf(x)\t\t||d||\t\tstep')
-
-        # compute first function and subgradient
-        fx, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
-
-        G = g.T  # matrix of subgradients
-        F = fx - g.T.dot(self.wrt)  # vector of translated function values
-        # each (fxi , gi , xi) gives the constraint
-        #
-        #  v >= fxi + gi' * (x + d - xi) = gi' * (x + d) + (fi - gi' * xi)
-        #
-        # so we just keep the single constant fi - gi' * xi instead of xi
-
-        ng = np.linalg.norm(g)
-        if self.eps < 0:
-            ng0 = -ng  # norm of first subgradient
-        else:
-            ng0 = 1  # un-scaled stopping criterion
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        while True:
+        for args in self.args:
+
+            if self.iter is 1:
+                # compute first function and subgradient
+                fx, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+
+                G = g.T  # matrix of subgradients
+                F = fx - g.T.dot(self.wrt)  # vector of translated function values
+                # each (fxi , gi , xi) gives the constraint
+                #
+                #  v >= fxi + gi' * (x + d - xi) = gi' * (x + d) + (fi - gi' * xi)
+                #
+                # so we just keep the single constant fi - gi' * xi instead of xi
+
+                ng = np.linalg.norm(g)
+                if self.eps < 0:
+                    ng0 = -ng  # norm of first subgradient
+                else:
+                    ng0 = 1  # un-scaled stopping criterion
 
             # construct the master problem
             d = Variable((self.n, 1))
@@ -149,18 +143,18 @@ class ProximalBundle(Optimizer):
             c = v + self.mu * sum_squares(d) / 2
 
             # solve the master problem
-            Problem(Minimize(c), M).solve(solver='CVXOPT')
+            Problem(Minimize(c), M).solve(solver=self.master_solver)
 
-            step2 = -d.value.ravel()
+            d = -d.value.ravel()
             v = v.value.item()
 
-            nd = np.linalg.norm(step2)
+            nd = np.linalg.norm(d)
 
             # output statistics
             if self.verbose:
                 if self.f.f_star() < np.inf:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(
-                        self.iter, (fx - self.f.f_star()) / max(abs(self.f.f_star()), 1), nd), end='')
+                    print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(
+                        self.iter, fx, (fx - self.f.f_star()) / max(abs(self.f.f_star()), 1), nd), end='')
                 else:
                     print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, fx, nd), end='')
 
@@ -169,7 +163,7 @@ class ProximalBundle(Optimizer):
                 status = 'optimal'
                 break
 
-            if self.iter > self.max_iter:
+            if self.iter >= self.max_iter or self.iter > self.line_search.max_f_eval:
                 status = 'stopped'
                 break
 
@@ -181,10 +175,10 @@ class ProximalBundle(Optimizer):
                 step1 = self.momentum * step_m1
                 self.wrt -= step1
 
-            last_wrt = self.wrt - (step1 + step2 if self.momentum_type is 'standard' else step2)
+            last_wrt = self.wrt - (step1 + d if self.momentum_type is 'standard' else d)
 
             # compute function and subgradient
-            fd, g = self.f.function(last_wrt), self.f.jacobian(last_wrt)
+            fd, g = self.f.function(last_wrt, *args), self.f.jacobian(last_wrt, *args)
 
             if fd <= self.m_inf:
                 status = 'unbounded'
@@ -194,16 +188,16 @@ class ProximalBundle(Optimizer):
             F = np.vstack((F, fd - g.T.dot(last_wrt)))
 
             # SS / NS decision
-            if fd <= fx + self.m1 * (v - fx):
+            if fd <= fx + self.line_search.m1 * (v - fx):
+                self.wrt = last_wrt
+                self.step = d if self.momentum_type is 'none' else step1 + d
+                fx = fd
                 if self.verbose:
                     print('\tSS')
                 if self.plot and self.n == 2:
-                    p_xy = np.vstack((self.wrt, last_wrt)).T
+                    p_xy = np.vstack((self.wrt + self.step, self.wrt)).T
                     contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
                                         p_xy[1, 1:] - p_xy[1, :-1], scale_units='xy', angles='xy', scale=1, color='k')
-                self.wrt = last_wrt
-                self.step = step2 if self.momentum_type is 'none' else step1 + step2
-                fx = fd
             else:
                 if self.verbose:
                     print('\tNS')
