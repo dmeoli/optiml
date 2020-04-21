@@ -3,18 +3,10 @@ language: python
 python:
   - 3.6
   - 3.7
+  - 3.8
 
 install:
-  - pip install autograd
-  - pip install cvxopt
-  - pip install cvxpy
-  - pip install matplotlib
-  - pip install --upgrade numpy
-  - pip install osqp
-  - pip install pytest-cov
-  - pip install qpsolvers
-  - pip install scikit-learn
-  - pip install scipy
+  - pip install -r requirements.txt
 
 script:
   - pytest --cov=./
