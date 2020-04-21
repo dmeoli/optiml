@@ -92,7 +92,7 @@ class SVM(BaseEstimator):
         """
         if Y is None:
             Y = X
-        gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma == 'scale' else  # auto
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
         return (gamma * np.dot(X, Y.T) + self.coef0) ** self.degree
 
@@ -104,7 +104,7 @@ class SVM(BaseEstimator):
         """
         if Y is None:
             Y = X
-        gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma == 'scale' else  # auto
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
         return np.exp(-gamma * np.linalg.norm(X[:, np.newaxis] - Y[np.newaxis, :], axis=2) ** 2)
 
@@ -116,7 +116,7 @@ class SVM(BaseEstimator):
         """
         if Y is None:
             Y = X
-        gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma == 'scale' else  # auto
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
         return np.exp(-gamma * np.linalg.norm(X[:, np.newaxis] - Y[np.newaxis, :], ord=1, axis=2))
 
@@ -128,7 +128,7 @@ class SVM(BaseEstimator):
         """
         if Y is None:
             Y = X
-        gamma = (1. / (X.shape[1] * X.var()) if self.gamma is 'scale' else  # auto
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma == 'scale' else  # auto
                  1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
         return np.tanh(gamma * np.dot(X, Y.T) + self.coef0)
 
@@ -139,7 +139,7 @@ class SVM(BaseEstimator):
             self.y = y
             self.K = K
             self.kernel = kernel
-            if kernel is 'linear':
+            if kernel == 'linear':
                 self.w = 0.
             self.b = 0.
             self.C = C
