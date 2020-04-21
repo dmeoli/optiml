@@ -105,7 +105,7 @@ class ActiveSet(BoxConstrainedOptimizer):
                     h = np.nonzero(np.logical_and(U, g > 1e-12))[0]
                     uppr = True
 
-                if h.size is 0:
+                if h.size == 0:
                     status = 'optimal'
                     break
                 else:

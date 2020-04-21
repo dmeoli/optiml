@@ -63,10 +63,10 @@ class AdaGrad(Optimizer):
                 status = 'stopped'
                 break
 
-            if self.momentum_type is 'standard':
+            if self.momentum_type == 'standard':
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
-            elif self.momentum_type is 'nesterov':
+            elif self.momentum_type == 'nesterov':
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
                 self.wrt -= step1
@@ -75,8 +75,8 @@ class AdaGrad(Optimizer):
             self.gms += g ** 2
             step2 = self.step_rate * g / np.sqrt(self.gms + self.offset)
 
-            self.wrt -= step1 + step2 if self.momentum_type is 'standard' else step2
-            self.step = step2 if self.momentum_type is 'none' else step1 + step2
+            self.wrt -= step1 + step2 if self.momentum_type == 'standard' else step2
+            self.step = step2 if self.momentum_type == 'none' else step1 + step2
 
             # plot the trajectory
             if self.plot and self.n == 2:

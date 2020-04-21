@@ -356,7 +356,7 @@ class SVC(ClassifierMixin, SVM):
 
             # update weight vector to reflect change in a1 and a2, if
             # kernel is linear, based on equation 22 in Platt's paper
-            if self.kernel is 'linear':
+            if self.kernel == 'linear':
                 self.w += y1 * (a1 - alpha1) * self.X[i1] + y2 * (a2 - alpha2) * self.X[i2]
 
             # update error cache using new alphas
@@ -548,10 +548,10 @@ class SVC(ClassifierMixin, SVM):
         if self.optimizer in ('SMO', scipy_solve_svm):
             obj_fun = Quadratic(P, q)
 
-            if self.optimizer is 'SMO':
+            if self.optimizer == 'SMO':
                 smo = self.SMOClassifier(obj_fun, X, y, K, self.kernel, self.C, self.tol, self.verbose).smo()
                 alphas = smo.alphas
-                if self.kernel is 'linear':
+                if self.kernel == 'linear':
                     self.coef_ = smo.w
                 self.intercept_ = smo.b
 
@@ -568,7 +568,7 @@ class SVC(ClassifierMixin, SVM):
 
                 b = np.zeros(1)  # equality vector
 
-                if self.optimizer is solve_qp:
+                if self.optimizer == solve_qp:
                     qpsolvers.cvxopt_.options['show_progress'] = self.verbose
                     alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
 
@@ -596,9 +596,9 @@ class SVC(ClassifierMixin, SVM):
         self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], alphas[sv]
         self.dual_coef_ = self.alphas * self.sv_y
 
-        if self.optimizer is not 'SMO':
+        if self.optimizer != 'SMO':
 
-            if self.kernel is 'linear':
+            if self.kernel == 'linear':
                 self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
 
             for n in range(len(self.alphas)):
@@ -609,7 +609,7 @@ class SVC(ClassifierMixin, SVM):
         return self
 
     def decision_function(self, X):
-        if self.kernel is not 'linear':
+        if self.kernel != 'linear':
             return np.dot(self.dual_coef_, self.kernels[self.kernel](self.support_vectors_, X)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_
 
@@ -803,7 +803,7 @@ class SVR(RegressorMixin, SVM):
 
             # if kernel is liner update weight vector
             # to reflect change in a1 and a2
-            if self.kernel is 'linear':
+            if self.kernel == 'linear':
                 self.w -= (((self.alphas_p[i1] - self.alphas_n[i1]) - (alpha1_p - alpha1_n)) * self.X[i1] +
                            ((self.alphas_p[i2] - self.alphas_n[i2]) - (alpha2_p - alpha2_n)) * self.X[i2])
 
@@ -1043,11 +1043,11 @@ class SVR(RegressorMixin, SVM):
         if self.optimizer in ('SMO', scipy_solve_svm):
             obj_fun = Quadratic(P, q)
 
-            if self.optimizer is 'SMO':
+            if self.optimizer == 'SMO':
                 smo = self.SMORegression(obj_fun, X, y, K, self.kernel, self.C,
                                          self.epsilon, self.tol, self.verbose).smo()
                 alphas_p, alphas_n = smo.alphas_p, smo.alphas_n
-                if self.kernel is 'linear':
+                if self.kernel == 'linear':
                     self.coef_ = smo.w
                 self.intercept_ = smo.b
 
@@ -1066,7 +1066,7 @@ class SVR(RegressorMixin, SVM):
 
                 b = np.zeros(1)  # equality vector
 
-                if self.optimizer is solve_qp:
+                if self.optimizer == solve_qp:
                     qpsolvers.cvxopt_.options['show_progress'] = self.verbose
                     alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
                 else:
@@ -1096,9 +1096,9 @@ class SVR(RegressorMixin, SVM):
         self.support_vectors_, self.sv_y, self.alphas_p, self.alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
         self.dual_coef_ = self.alphas_p - self.alphas_n
 
-        if self.optimizer is not 'SMO':
+        if self.optimizer != 'SMO':
 
-            if self.kernel is 'linear':
+            if self.kernel == 'linear':
                 self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
 
             for n in range(len(self.alphas_p)):
@@ -1110,6 +1110,6 @@ class SVR(RegressorMixin, SVM):
         return self
 
     def predict(self, X):
-        if self.kernel is not 'linear':
+        if self.kernel != 'linear':
             return np.dot(self.dual_coef_, self.kernels[self.kernel](self.support_vectors_, X)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_

@@ -68,7 +68,7 @@ def he_uniform(shape, channels_last=True):
 
 
 def compute_fans(shape, channels_last=True):
-    if len(shape) is 2:
+    if len(shape) == 2:
         fan_in = shape[0]
         fan_out = shape[1]
     else:  # Conv2D

@@ -36,7 +36,7 @@ class NeuralNetworkLossFunction(OptimizationFunction):
                               if isinstance(layer, ParamLayer)) +
                        np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
                               if isinstance(layer, ParamLayer) and layer.use_bias)) / X.shape[0])
-        if inspect.stack()[1].function is 'minimize':  # caller's method name
+        if inspect.stack()[1].function == 'minimize':  # caller's method name
             if (self.neural_net.verbose and self.loss_history[0]
                     and isinstance(self.neural_net, NeuralNetworkClassifier)):
                 print('\t accuracy: {:4f}'.format(0.), end='')
@@ -160,13 +160,13 @@ class NeuralNetwork(BaseEstimator, Layer):
         if issubclass(self.optimizer, LineSearchOptimizer):
             opt = self.optimizer(f=loss, wrt=packed_weights_biases, batch_size=self.batch_size, max_iter=self.epochs,
                                  max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
-            # if opt[2] is not 'optimal':
+            # if opt[2] != 'optimal':
             #     warnings.warn("max_iter or max_f_eval reached and the optimization hasn't converged yet")
         else:
             opt = self.optimizer(f=loss, wrt=packed_weights_biases, batch_size=self.batch_size,
                                  step_rate=self.learning_rate, momentum_type=self.momentum_type,
                                  momentum=self.momentum, max_iter=self.epochs, verbose=self.verbose).minimize()
-            # if opt[2] is not 'optimal':
+            # if opt[2] != 'optimal':
             #     warnings.warn("max_iter reached and the optimization hasn't converged yet")
         self._unpack(opt[0])
 
@@ -179,7 +179,7 @@ class NeuralNetwork(BaseEstimator, Layer):
 class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
     def fit(self, X, y):
-        if y.ndim is 1:
+        if y.ndim == 1:
             y = y.reshape((-1, 1))
         y = OneHotEncoder().fit_transform(y).toarray()
         return super().fit(X, y)
@@ -191,12 +191,12 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
 
     def fit(self, X, y):
-        if y.ndim is 1:
+        if y.ndim == 1:
             y = y.reshape((-1, 1))
         return super().fit(X, y)
 
     def predict(self, X):
-        if self.layers[-1].fan_out is 1:  # one target
+        if self.layers[-1].fan_out == 1:  # one target
             return self.forward(X).ravel()
         else:  # multi target
             return self.forward(X)

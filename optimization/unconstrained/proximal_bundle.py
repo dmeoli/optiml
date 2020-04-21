@@ -111,7 +111,7 @@ class ProximalBundle(LineSearchOptimizer):
 
         for args in self.args:
 
-            if self.iter is 1:
+            if self.iter == 1:
                 # compute first function and subgradient
                 fx, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
 
@@ -167,15 +167,15 @@ class ProximalBundle(LineSearchOptimizer):
                 status = 'stopped'
                 break
 
-            if self.momentum_type is 'standard':
+            if self.momentum_type == 'standard':
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
-            elif self.momentum_type is 'nesterov':
+            elif self.momentum_type == 'nesterov':
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
                 self.wrt -= step1
 
-            last_wrt = self.wrt - (step1 + d if self.momentum_type is 'standard' else d)
+            last_wrt = self.wrt - (step1 + d if self.momentum_type == 'standard' else d)
 
             # compute function and subgradient
             fd, g = self.f.function(last_wrt, *args), self.f.jacobian(last_wrt, *args)
@@ -190,7 +190,7 @@ class ProximalBundle(LineSearchOptimizer):
             # SS / NS decision
             if fd <= fx + self.line_search.m1 * (v - fx):
                 self.wrt = last_wrt
-                self.step = d if self.momentum_type is 'none' else step1 + d
+                self.step = d if self.momentum_type == 'none' else step1 + d
                 fx = fd
                 if self.verbose:
                     print('\tSS')

@@ -76,10 +76,10 @@ class Adam(Optimizer):
 
             t = self.iter
 
-            if self.momentum_type is 'standard':
+            if self.momentum_type == 'standard':
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
-            elif self.momentum_type is 'nesterov':
+            elif self.momentum_type == 'nesterov':
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
                 self.wrt -= step1
@@ -97,8 +97,8 @@ class Adam(Optimizer):
 
             step2 = self.step_rate * est_mom1_crt / (np.sqrt(est_mom2_crt) + self.offset)
 
-            self.wrt -= step1 + step2 if self.momentum_type is 'standard' else step2
-            self.step = step2 if self.momentum_type is 'none' else step1 + step2
+            self.wrt -= step1 + step2 if self.momentum_type == 'standard' else step2
+            self.step = step2 if self.momentum_type == 'none' else step1 + step2
 
             # plot the trajectory
             if self.plot and self.n == 2:

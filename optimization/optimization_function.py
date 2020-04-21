@@ -340,7 +340,7 @@ class Rosenbrock(OptimizationFunction):
         self.x_min, self.x_max, self.y_min, self.y_max = -2, 2, -1, 3
 
     def x_star(self):
-        return np.zeros(self.n) if self.a is 0 else np.ones(self.n)
+        return np.zeros(self.n) if self.a == 0 else np.ones(self.n)
 
     def f_star(self):
         return self.function(self.x_star())
