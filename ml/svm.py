@@ -68,7 +68,7 @@ class SVM(BaseEstimator):
         self.momentum_type = momentum_type
         self.momentum = momentum
         self.verbose = verbose
-        if kernel is 'linear':
+        if kernel == 'linear':
             self.coef_ = 0.
         self.intercept_ = 0.
 
