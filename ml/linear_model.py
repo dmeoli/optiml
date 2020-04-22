@@ -40,10 +40,6 @@ class LinearModelLossFunction(OptimizationFunction):
         return (np.dot(X.T, self.linear_model.predict(X, theta) - y) +
                 self.linear_model.regularization.jacobian(theta) / X.shape[0])
 
-    def plot(self):
-        surface_plot, surface_axes, contour_plot, contour_axes = super().plot()
-        # TODO add loss and accuracy plot over iterations
-
 
 class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
 

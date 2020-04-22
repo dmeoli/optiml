@@ -254,11 +254,6 @@ class BoxConstrainedQuadratic(Quadratic):
         super().__init__(Q, q)
         self.ub = ub
 
-    def plot(self):
-        surface_plot, surface_axes, contour_plot, contour_axes = super().plot()
-        # TODO add box-constraints
-        return surface_plot, surface_axes, contour_plot, contour_axes
-
 
 class LagrangianBoxConstrained(Quadratic):
 

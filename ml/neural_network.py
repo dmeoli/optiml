@@ -84,7 +84,6 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         return self.neural_net._pack(*self.neural_net.backward(y_pred - y))
 
     def plot(self):
-        # TODO add accuracy plot over iterations
         fig, loss = plt.subplots()
         loss.plot(self.loss_history['training_loss'], color='blue', marker='.')
         loss.plot(self.loss_history['test_loss'], color='green', marker='.')
