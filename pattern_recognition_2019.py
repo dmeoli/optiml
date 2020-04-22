@@ -22,5 +22,5 @@ if __name__ == '__main__':
          FullyConnected(n_in=7 * 7 * 16, n_out=10, activation=softmax)),
         loss=cross_entropy, optimizer=Adam, learning_rate=0.001, momentum_type='none', momentum=0.9,
         epochs=300, batch_size=128, max_f_eval=10000, verbose=True, plot=True)
-    cnn.fit(X_train, y_train)
+    cnn.fit(X_train, y_train, X_test, y_test)
     print(f'mnist accuracy: {cnn.score(X_test, y_test)}')
