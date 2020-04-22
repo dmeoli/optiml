@@ -104,9 +104,9 @@ class ProximalBundle(LineSearchOptimizer):
 
         if self.verbose:
             if self.f.f_star() < np.inf:
-                print('iter\tf(x)\t\tf(x) - f*\t||d||\t\tstep')
+                print('iter\tf(x)\t\tf(x) - f*\t||d||', end='')
             else:
-                print('iter\tf(x)\t\t||d||\t\tstep')
+                print('iter\tf(x)\t\t||d||', end='')
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
@@ -155,10 +155,10 @@ class ProximalBundle(LineSearchOptimizer):
             # output statistics
             if self.verbose:
                 if self.f.f_star() < np.inf:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(
+                    print('\n{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(
                         self.iter, fx, (fx - self.f.f_star()) / max(abs(self.f.f_star()), 1), nd), end='')
                 else:
-                    print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, fx, nd), end='')
+                    print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, fx, nd), end='')
 
             # stopping criteria
             if self.mu * nd <= self.eps * ng0:
@@ -194,15 +194,11 @@ class ProximalBundle(LineSearchOptimizer):
                 self.wrt = last_wrt
                 self.step = d if self.momentum_type == 'none' else step1 + d
                 fx = fd
-                if self.verbose:
-                    print('\tSS')
                 if self.plot and self.n == 2:
                     p_xy = np.vstack((self.wrt + self.step, self.wrt)).T
                     contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
                                         p_xy[1, 1:] - p_xy[1, :-1], scale_units='xy', angles='xy', scale=1, color='k')
             else:
-                if self.verbose:
-                    print('\tNS')
                 if self.plot and self.n == 2:
                     p_xy = np.vstack((self.wrt, last_wrt)).T
                     contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
