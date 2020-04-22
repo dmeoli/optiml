@@ -53,15 +53,17 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         if inspect.stack()[1].function == 'minimize':  # ignore calls form line search
 
             if isinstance(self.neural_net, NeuralNetworkClassifier):
-                training_accuracy = self.neural_net.score(X, self.train_ohe.inverse_transform(y))
 
-                if self.neural_net.verbose:
-                    print('\t accuracy: {:4f}'.format(training_accuracy), end='')
+                self.accuracy_history['training_accuracy'].append(
+                    self.neural_net.score(X, self.train_ohe.inverse_transform(y)))
 
-                self.accuracy_history['training_accuracy'].append(training_accuracy)
                 if self.X_test is not None and self.y_test is not None:
-                    self.accuracy_history['test_accuracy'].append(
-                        self.neural_net.score(self.X_test, self.test_ohe.inverse_transform(self.y_test)))
+                    test_accuracy = self.neural_net.score(self.X_test, self.test_ohe.inverse_transform(self.y_test))
+
+                    if self.neural_net.verbose and self.accuracy_history['test_accuracy']:
+                        print('\t accuracy: {:4f}'.format(test_accuracy), end='')
+
+                    self.accuracy_history['test_accuracy'].append(test_accuracy)
 
             self.loss_history['training_loss'].append(training_loss)
             if self.X_test is not None and self.y_test is not None:
@@ -84,8 +86,8 @@ class NeuralNetworkLossFunction(OptimizationFunction):
     def plot(self):
         # TODO add accuracy plot over iterations
         fig, loss = plt.subplots()
-        loss.plot(self.loss_history['training_loss'], color='blue', marker='.', alpha=0.2)
-        loss.plot(self.loss_history['test_loss'], color='darkorange', marker='.', alpha=0.2)
+        loss.plot(self.loss_history['training_loss'], color='blue', marker='.')
+        loss.plot(self.loss_history['test_loss'], color='green', marker='.')
         loss.set_title('model loss')
         loss.set_xlabel('epoch')
         loss.set_ylabel('loss')
@@ -93,12 +95,12 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         plt.show()
         if isinstance(self.neural_net, NeuralNetworkClassifier):
             fig, accuracy = plt.subplots()
-            accuracy.plot(self.accuracy_history['training_accuracy'], color='blue', marker='.', alpha=0.2)
-            accuracy.plot(self.accuracy_history['test_accuracy'], color='darkorange', marker='.', alpha=0.2)
+            accuracy.plot(self.accuracy_history['training_accuracy'], color='blue', marker='.')
+            accuracy.plot(self.accuracy_history['test_accuracy'], color='green', marker='.')
             accuracy.set_title('model accuracy')
-            loss.set_xlabel('epoch')
-            loss.set_ylabel('accuracy')
-            loss.legend(['training', 'test'])
+            accuracy.set_xlabel('epoch')
+            accuracy.set_ylabel('accuracy')
+            accuracy.legend(['training', 'test'])
             plt.show()
 
 
