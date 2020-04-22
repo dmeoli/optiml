@@ -21,5 +21,4 @@ def cross_entropy(y_pred, y_true):
 def binary_cross_entropy(y_pred, y_true):
     """Multi-label classification"""
     assert y_pred.shape == y_true.shape
-    return -np.mean(xlogy(y_true, y_pred) +
-                    xlogy(1. - y_true, 1. - y_pred))
+    return -np.mean(xlogy(y_true, y_pred) + xlogy(1. - y_true, 1. - y_pred))

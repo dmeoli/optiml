@@ -6,8 +6,8 @@ from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.preprocessing import OneHotEncoder
 
 from ml.initializers import compute_fans
-from ml.losses import mean_squared_error
 from ml.layers import Layer, ParamLayer
+from ml.losses import mean_squared_error
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
 from optimization.unconstrained.gradient_descent import GradientDescent
@@ -17,31 +17,57 @@ plt.style.use('ggplot')
 
 class NeuralNetworkLossFunction(OptimizationFunction):
 
-    def __init__(self, X, y, neural_net):
-        super().__init__(X.shape[1])
-        self.X = X
-        self.y = y
+    def __init__(self, neural_net, X_train, y_train, X_test=None, y_test=None):
+        super().__init__(X_train.shape[1])
         self.neural_net = neural_net
-        self.loss_history = ([], [])  # training loss history, validation loss history
+        self.X_train = X_train
+        self.X_test = X_test
+        self.loss_history = {'training_loss': [],  # training loss history
+                             'test_loss': []}  # test loss history
         if isinstance(self.neural_net, NeuralNetworkClassifier):
-            self.accuracy_history = ([], [])  # training accuracy history, validation loss history
+            self.train_ohe = OneHotEncoder().fit(y_train)
+            self.y_train = self.train_ohe.transform(y_train).toarray()
+            if y_test is not None:
+                self.test_ohe = OneHotEncoder().fit(y_test)
+                self.y_test = self.test_ohe.transform(y_test).toarray()
+            self.accuracy_history = {'training_accuracy': [],  # training accuracy history
+                                     'test_accuracy': []}  # test accuracy history
+        else:
+            self.y_train = y_train
+            self.y_test = y_test
 
     def args(self):
-        return self.X, self.y
+        return self.X_train, self.y_train
 
     def function(self, packed_weights_biases, X, y):
         self.neural_net._unpack(packed_weights_biases)
-        loss = (self.neural_net.loss(self.neural_net.forward(X), y) +
-                np.sum(np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
-                              if isinstance(layer, ParamLayer)) +
-                       np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
-                              if isinstance(layer, ParamLayer) and layer.use_bias)) / X.shape[0])
-        if inspect.stack()[1].function == 'minimize':  # caller's method name
-            if (self.neural_net.verbose and self.loss_history[0]
-                    and isinstance(self.neural_net, NeuralNetworkClassifier)):
-                print('\t accuracy: {:4f}'.format(0.), end='')
-            self.loss_history[0].append(loss)
-        return loss
+
+        def _function(X, y):
+            return (self.neural_net.loss(self.neural_net.forward(X), y) +
+                    np.sum(np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
+                                  if isinstance(layer, ParamLayer)) +
+                           np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
+                                  if isinstance(layer, ParamLayer) and layer.use_bias)) / X.shape[0])
+
+        training_loss = _function(X, y)
+        if inspect.stack()[1].function == 'minimize':  # ignore calls form line search
+
+            if isinstance(self.neural_net, NeuralNetworkClassifier):
+                training_accuracy = self.neural_net.score(X, self.train_ohe.inverse_transform(y))
+
+                if self.neural_net.verbose:
+                    print('\t accuracy: {:4f}'.format(training_accuracy), end='')
+
+                self.accuracy_history['training_accuracy'].append(training_accuracy)
+                if self.X_test is not None and self.y_test is not None:
+                    self.accuracy_history['test_accuracy'].append(
+                        self.neural_net.score(self.X_test, self.test_ohe.inverse_transform(self.y_test)))
+
+            self.loss_history['training_loss'].append(training_loss)
+            if self.X_test is not None and self.y_test is not None:
+                self.loss_history['test_loss'].append(_function(self.X_test, self.y_test))
+
+        return training_loss
 
     def jacobian(self, packed_weights_biases, X, y):
         """
@@ -58,21 +84,21 @@ class NeuralNetworkLossFunction(OptimizationFunction):
     def plot(self):
         # TODO add accuracy plot over iterations
         fig, loss = plt.subplots()
-        loss.plot(self.loss_history[0], 'b.', alpha=0.2)
-        # loss.plot(self.loss_history[1], 'r-')
+        loss.plot(self.loss_history['training_loss'], color='blue', marker='.', alpha=0.2)
+        loss.plot(self.loss_history['test_loss'], color='darkorange', marker='.', alpha=0.2)
         loss.set_title('model loss')
         loss.set_xlabel('epoch')
         loss.set_ylabel('loss')
-        loss.legend(['training', 'validation'])
+        loss.legend(['training', 'test'])
         plt.show()
         if isinstance(self.neural_net, NeuralNetworkClassifier):
             fig, accuracy = plt.subplots()
-            accuracy.plot(self.accuracy_history[0], 'b.', alpha=0.2)
-            accuracy.plot(self.accuracy_history[1], 'r-')
+            accuracy.plot(self.accuracy_history['training_accuracy'], color='blue', marker='.', alpha=0.2)
+            accuracy.plot(self.accuracy_history['test_accuracy'], color='darkorange', marker='.', alpha=0.2)
             accuracy.set_title('model accuracy')
             loss.set_xlabel('epoch')
             loss.set_ylabel('accuracy')
-            loss.legend(['training', 'validation'])
+            loss.legend(['training', 'test'])
             plt.show()
 
 
@@ -151,12 +177,18 @@ class NeuralNetwork(BaseEstimator, Layer):
                 self.biases_idx.append((start, end))
                 start = end
 
-    def fit(self, X, y):
+    def fit(self, X_train, y_train, X_test=None, y_test=None):
+
+        if y_train.ndim == 1:
+            y_train = y_train.reshape((-1, 1))
+        if y_test is not None and y_test.ndim == 1:
+            y_test = y_test.reshape((-1, 1))
+
         self._store_meta_info()
 
         packed_weights_biases = self._pack(*self.params)
 
-        loss = NeuralNetworkLossFunction(X, y, self)
+        loss = NeuralNetworkLossFunction(self, X_train, y_train, X_test, y_test)
         if issubclass(self.optimizer, LineSearchOptimizer):
             opt = self.optimizer(f=loss, wrt=packed_weights_biases, batch_size=self.batch_size, max_iter=self.epochs,
                                  max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
@@ -178,22 +210,11 @@ class NeuralNetwork(BaseEstimator, Layer):
 
 class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
-    def fit(self, X, y):
-        if y.ndim == 1:
-            y = y.reshape((-1, 1))
-        y = OneHotEncoder().fit_transform(y).toarray()
-        return super().fit(X, y)
-
     def predict(self, X):
         return np.argmax(self.forward(X), axis=1)
 
 
 class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
-
-    def fit(self, X, y):
-        if y.ndim == 1:
-            y = y.reshape((-1, 1))
-        return super().fit(X, y)
 
     def predict(self, X):
         if self.layers[-1].fan_out == 1:  # one target
