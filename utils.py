@@ -4,7 +4,6 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import minimize
-from sklearn.metrics._scorer import _PredictScorer
 from sklearn.model_selection import learning_curve, validation_curve
 from sklearn.preprocessing import OneHotEncoder
 
@@ -163,19 +162,16 @@ def plot_validation_curve(estimator, X, y, param_name, param_range, scorer, cv=5
     mean_test_score = np.mean(test_scores, axis=1)
     std_test_score = np.std(test_scores, axis=1)
 
-    plt.title(f'validation curve')
+    plt.title('validation curve')
     plt.xlabel(param_name)
     plt.ylabel('score')
 
-    plt.plot(param_range, mean_train_score, label='training score', color='navy', marker='.')
+    plt.plot(param_range, mean_train_score, label='training score', color='navy', marker='.', lw=2)
     plt.fill_between(param_range, mean_train_score - std_train_score,
                      mean_train_score + std_train_score, alpha=0.2, color='navy')
-    plt.plot(param_range, mean_test_score, label='cross-validation score', color='darkorange', marker='.')
+    plt.plot(param_range, mean_test_score, label='cross-validation score', color='darkorange', marker='.', lw=2)
     plt.fill_between(param_range, mean_test_score - std_test_score,
                      mean_test_score + std_test_score, alpha=0.2, color='darkorange')
-
-    if isinstance(scorer, _PredictScorer) and scorer._sign == -1:
-        plt.gca().invert_yaxis()
 
     plt.legend().get_frame().set_facecolor('white')
     plt.show()
@@ -190,19 +186,16 @@ def plot_learning_curve(estimator, X, y, scorer, cv=5, train_sizes=np.linspace(.
     mean_test_score = np.mean(test_scores, axis=1)
     std_test_score = np.std(test_scores, axis=1)
 
-    plt.title(f'learning curve')
+    plt.title('learning curve')
     plt.xlabel('training set size')
     plt.ylabel('score')
 
-    plt.plot(train_sizes, mean_train_score, label='train score', color='navy', marker='.')
+    plt.plot(train_sizes, mean_train_score, label='train score', color='navy', marker='.', lw=2)
     plt.fill_between(train_sizes, mean_train_score + std_train_score,
                      mean_train_score - std_train_score, color='navy', alpha=0.2)
-    plt.plot(train_sizes, mean_test_score, label='cross-validation score', color='darkorange', marker='.')
+    plt.plot(train_sizes, mean_test_score, label='cross-validation score', color='darkorange', marker='.', lw=2)
     plt.fill_between(train_sizes, mean_test_score + std_test_score,
                      mean_test_score - std_test_score, color='darkorange', alpha=0.2)
-
-    if isinstance(scorer, _PredictScorer) and scorer._sign == -1:
-        plt.gca().invert_yaxis()
 
     plt.legend().get_frame().set_facecolor('white')
     plt.show()

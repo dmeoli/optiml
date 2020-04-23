@@ -24,7 +24,6 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
                 - [x] Hestenes-Stiefel formula
                 - [x] Dai-Yuan formula
             - [x] Heavy Ball Gradient
-            - [x] Steepest Accelerated Gradient
             - [x] Newton
             - [x] BFGS quasi-Newton
             - [ ] L-BFGS quasi-Newton
@@ -32,9 +31,6 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Gradient Descent
                 - [x] standard momentum
                 - [x] Nesterov momentum
-                - [ ] learning rate decay
-                - [ ] momentum decay
-            - [x] Accelerated Gradient
                 - [ ] learning rate decay
                 - [ ] momentum decay
             - [x] Adam
