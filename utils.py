@@ -109,6 +109,11 @@ def load_ml_cup_blind():
     return np.delete(np.genfromtxt(path + '/ml/data/ML-CUP19/ML-CUP19-TS.csv', delimiter=','), obj=0, axis=1)
 
 
+def load_mnist():
+    mnist = np.load(path + '/ml/data/mnist.npz')
+    return mnist['x_train'][:, :, :, None], mnist['x_test'][:, :, :, None], mnist['y_train'], mnist['y_test']
+
+
 def generate_linearly_separable_data():
     mean1 = np.array([0, 2])
     mean2 = np.array([2, 0])
