@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import qpsolvers
 from matplotlib.lines import Line2D
-from qpsolvers import solve_qp
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 
+from optimization.constrained.interface import scipy_solve_qp, scipy_solve_svm, solve_qp
 from optimization.optimization_function import BoxConstrainedQuadratic, LagrangianBoxConstrained, Quadratic
 from optimization.optimizer import BoxConstrainedOptimizer, Optimizer, LineSearchOptimizer
-from utils import scipy_solve_qp, scipy_solve_svm, clip
+from utils import clip
 
 plt.style.use('ggplot')
 

@@ -3,7 +3,6 @@ import random
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.optimize import minimize
 from sklearn.model_selection import learning_curve, validation_curve
 from sklearn.preprocessing import OneHotEncoder
 
@@ -25,30 +24,6 @@ def ldl_solve(ldl_factor, b):
 def mean_euclidean_error(y_true, y_pred):
     assert y_true.shape == y_pred.shape
     return np.mean(np.linalg.norm(y_pred - y_true, axis=y_true.ndim - 1))  # for multi-output compatibility
-
-
-def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
-    return minimize(fun=f.function, jac=f.jacobian,
-                    method='slsqp', x0=np.zeros(f.n),
-                    constraints=({'type': 'ineq',
-                                  'fun': lambda x: h - np.dot(G, x),
-                                  'jac': lambda x: -G},
-                                 {'type': 'eq',
-                                  'fun': lambda x: np.dot(A, x) - b,
-                                  'jac': lambda x: A}),
-                    options={'maxiter': max_iter,
-                             'disp': verbose}).x
-
-
-def scipy_solve_svm(f, A, ub, max_iter, verbose):
-    return minimize(fun=f.function, jac=f.jacobian,
-                    method='slsqp', x0=np.zeros(f.n),
-                    constraints={'type': 'eq',
-                                 'fun': lambda x: np.dot(A, x),
-                                 'jac': lambda x: A},
-                    bounds=[(0, u) for u in ub],
-                    options={'maxiter': max_iter,
-                             'disp': verbose}).x
 
 
 def iter_mini_batches(Xy, batch_size):

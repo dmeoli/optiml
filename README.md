@@ -11,22 +11,25 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Quadratic Steepest Gradient Descent
             - [x] Quadratic Conjugate Gradient
         - Inexact Line Search Methods
-            - [x] Subgradient
-            - [x] Steepest Gradient Descent
-            - [ ] Conjugate Gradient
-                - [ ] Fletcher–Reeves formula
-                - [ ] Polak–Ribière formula
-                - [ ] Hestenes-Stiefel formula
-                - [ ] Dai-Yuan formula
-            - [x] Nonlinear Conjugate Gradient
-                - [x] Fletcher–Reeves formula
-                - [x] Polak–Ribière formula
-                - [x] Hestenes-Stiefel formula
-                - [x] Dai-Yuan formula
-            - [x] Heavy Ball Gradient
-            - [x] Newton
-            - [x] BFGS quasi-Newton
-            - [ ] L-BFGS quasi-Newton
+            - 0th Order Methods
+                - [x] Subgradient
+            - 1st Order Methods
+                - [x] Steepest Gradient Descent
+                - [ ] Conjugate Gradient
+                    - [ ] Fletcher–Reeves formula
+                    - [ ] Polak–Ribière formula
+                    - [ ] Hestenes-Stiefel formula
+                    - [ ] Dai-Yuan formula
+                - [x] Nonlinear Conjugate Gradient
+                    - [x] Fletcher–Reeves formula
+                    - [x] Polak–Ribière formula
+                    - [x] Hestenes-Stiefel formula
+                    - [x] Dai-Yuan formula
+                - [x] Heavy Ball Gradient
+            - 2nd Order Methods
+                - [x] Newton
+                - [x] BFGS quasi-Newton
+                - [ ] L-BFGS quasi-Newton
         - Fixed Step Size Methods
             - [x] Gradient Descent
                 - [x] standard momentum

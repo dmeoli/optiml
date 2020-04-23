@@ -1,36 +1,9 @@
 import numpy as np
-from qpsolvers import solve_qp
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
 from sklearn.multioutput import MultiOutputRegressor
 
-from ml.svm import scipy_solve_qp
-from optimization.constrained.active_set import ActiveSet
-from optimization.constrained.frank_wolfe import FrankWolfe
-from optimization.constrained.interior_point import InteriorPoint
-from optimization.constrained.lagrangian_dual import LagrangianDual
-from optimization.constrained.projected_gradient import ProjectedGradient
-from optimization.unconstrained.adadelta import AdaDelta
-from optimization.unconstrained.adagrad import AdaGrad
-from optimization.unconstrained.adam import Adam
-from optimization.unconstrained.adamax import AdaMax
-from optimization.unconstrained.amsgrad import AMSGrad
-from optimization.unconstrained.conjugate_gradient import NonlinearConjugateGradient
-from optimization.unconstrained.gradient_descent import GradientDescent, SteepestGradientDescent
-from optimization.unconstrained.heavy_ball_gradient import HeavyBallGradient
-from optimization.unconstrained.quasi_newton import BFGS
-from optimization.unconstrained.rmsprop import RMSProp
-from optimization.unconstrained.rprop import RProp
-from utils import load_ml_cup, mean_euclidean_error, scipy_solve_svm, load_ml_cup_blind, plot_validation_curve, \
-    plot_learning_curve
-
-line_search_optimizers = [NonlinearConjugateGradient, SteepestGradientDescent, HeavyBallGradient, BFGS]
-
-stochastic_optimizers = [GradientDescent, Adam, AdaMax, AMSGrad, AdaGrad, AdaDelta, RProp, RMSProp]
-
-constrained_optimizers = [ProjectedGradient, ActiveSet, FrankWolfe, InteriorPoint, LagrangianDual, 'SMO']
-
-other_constrained_optimizers = [solve_qp, scipy_solve_qp, scipy_solve_svm]
+from utils import load_ml_cup, mean_euclidean_error, load_ml_cup_blind, plot_validation_curve, plot_learning_curve
 
 if __name__ == '__main__':
     X, y = load_ml_cup()
