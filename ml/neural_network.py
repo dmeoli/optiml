@@ -85,21 +85,21 @@ class NeuralNetworkLossFunction(OptimizationFunction):
 
     def plot(self):
         fig, loss = plt.subplots()
-        loss.plot(self.loss_history['training_loss'], color='blue', marker='.')
-        loss.plot(self.loss_history['test_loss'], color='green', marker='.')
+        loss.plot(self.loss_history['training_loss'], color='navy', marker='.')
+        loss.plot(self.loss_history['test_loss'], color='darkorange', marker='.')
         loss.set_title('model loss')
         loss.set_xlabel('epoch')
         loss.set_ylabel('loss')
-        loss.legend(['training', 'test'])
+        loss.legend(['training', 'test']).get_frame().set_facecolor('white')
         plt.show()
         if isinstance(self.neural_net, NeuralNetworkClassifier):
             fig, accuracy = plt.subplots()
-            accuracy.plot(self.accuracy_history['training_accuracy'], color='blue', marker='.')
-            accuracy.plot(self.accuracy_history['test_accuracy'], color='green', marker='.')
+            accuracy.plot(self.accuracy_history['training_accuracy'], color='navy', marker='.')
+            accuracy.plot(self.accuracy_history['test_accuracy'], color='darkorange', marker='.')
             accuracy.set_title('model accuracy')
             accuracy.set_xlabel('epoch')
             accuracy.set_ylabel('accuracy')
-            accuracy.legend(['training', 'test'])
+            accuracy.legend(['training', 'test']).get_frame().set_facecolor('white')
             plt.show()
 
 

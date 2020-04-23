@@ -1,5 +1,4 @@
 import sys
-import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -185,8 +184,8 @@ class SVM(BaseEstimator):
                                markerfacecolor='darkorange', markersize=0),
                         Line2D([0], [0], linestyle='--', marker='.', color='black',
                                markerfacecolor='darkorange', markersize=0),
-                        Line2D([0], [0], linestyle='none', marker='.', color='blue',
-                               markerfacecolor='blue', markersize=9)],
+                        Line2D([0], [0], linestyle='none', marker='.', color='navy',
+                               markerfacecolor='navy', markersize=9)],
                        ['negative -1', 'positive +1', 'decision boundary', 'margin', 'support vectors'],
                        fontsize='7', shadow=True).get_frame().set_facecolor('white')
         elif isinstance(svm, RegressorMixin):
@@ -196,8 +195,8 @@ class SVM(BaseEstimator):
                                markerfacecolor='darkorange', markersize=0),
                         Line2D([0], [0], linestyle='--', marker='.', color='black',
                                markerfacecolor='darkorange', markersize=0),
-                        Line2D([0], [0], linestyle='none', marker='.', color='blue',
-                               markerfacecolor='blue', markersize=9)],
+                        Line2D([0], [0], linestyle='none', marker='.', color='navy',
+                               markerfacecolor='navy', markersize=9)],
                        ['training data', 'decision boundary', '$\epsilon$-insensitive tube', 'support vectors'],
                        fontsize='7', shadow=True).get_frame().set_facecolor('white')
 
@@ -210,9 +209,9 @@ class SVM(BaseEstimator):
 
         # support vectors
         if isinstance(svm, ClassifierMixin):
-            plt.scatter(X[svm.support_][:, 0], X[svm.support_][:, 1], s=60, color='blue')
+            plt.scatter(X[svm.support_][:, 0], X[svm.support_][:, 1], s=60, color='navy')
         elif isinstance(svm, RegressorMixin):
-            plt.scatter(X[svm.support_], y[svm.support_], s=60, color='blue')
+            plt.scatter(X[svm.support_], y[svm.support_], s=60, color='navy')
 
         if isinstance(svm, ClassifierMixin):
             _X1, _X2 = np.meshgrid(np.linspace(X1.min(), X1.max(), 50), np.linspace(X1.min(), X1.max(), 50))
@@ -344,8 +343,6 @@ class SVC(ClassifierMixin, SVM):
                     a2 = H
                 else:
                     a2 = alpha2
-
-                warnings.warn('the kernel matrix is not positive definite')
 
             # if examples can't be optimized within tol, skip this pair
             if abs(a2 - alpha2) < 1e-12 * (a2 + alpha2 + 1e-12):
@@ -714,7 +711,6 @@ class SVR(RegressorMixin, SVM):
                             Lobj = -L * delta_E
                             Hobj = -H * delta_E
                             a2 = L if Lobj > Hobj else H
-                            warnings.warn('the kernel matrix is not positive definite')
                         a1 = alpha1_p - (a2 - alpha2_p)
                         # update alpha1, alpha2_p if change is larger than some eps
                         if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
@@ -737,7 +733,6 @@ class SVR(RegressorMixin, SVM):
                             Lobj = L * (-2 * self.epsilon + delta_E)
                             Hobj = H * (-2 * self.epsilon + delta_E)
                             a2 = L if Lobj > Hobj else H
-                            warnings.warn('the kernel matrix is not positive definite')
                         a1 = alpha1_p + (a2 - alpha2_n)
                         # update alpha1, alpha2_n if change is larger than some eps
                         if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
@@ -760,7 +755,6 @@ class SVR(RegressorMixin, SVM):
                             Lobj = -L * (2 * self.epsilon + delta_E)
                             Hobj = -H * (2 * self.epsilon + delta_E)
                             a2 = L if Lobj > Hobj else H
-                            warnings.warn('the kernel matrix is not positive definite')
                         a1 = alpha1_n + (a2 - alpha2_p)
                         # update alpha1_n, alpha2_p if change is larger than some eps
                         if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
@@ -783,7 +777,6 @@ class SVR(RegressorMixin, SVM):
                             Lobj = L * delta_E
                             Hobj = H * delta_E
                             a2 = L if Lobj > Hobj else H
-                            warnings.warn('the kernel matrix is not positive definite')
                         a1 = alpha1_n - (a2 - alpha2_n)
                         # update alpha1_n, alpha2_n if change is larger than some eps
                         if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
