@@ -94,7 +94,7 @@ class AdaDelta(Optimizer):
 
             self.iter += 1
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

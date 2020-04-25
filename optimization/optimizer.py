@@ -45,13 +45,11 @@ class Optimizer:
         if not max_iter > 0:
             raise ValueError('max_iter must be > 0')
         self.max_iter = max_iter
-        self.iter = 1
+        self.iter = 0
         self.verbose = verbose
         self.plot = plot
-        if batch_size is None:
-            self.args = itertools.repeat(f.args())
-        else:
-            self.args = (i for i in iter_mini_batches(f.args(), batch_size))
+        self.args = (itertools.repeat(f.args()) if batch_size is None else
+                     (i for i in iter_mini_batches(f.args(), batch_size)))
 
     def minimize(self):
         raise NotImplementedError

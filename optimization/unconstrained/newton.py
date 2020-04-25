@@ -106,11 +106,10 @@ class Newton(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see mina above)
 
-    def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000,
-                 max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, delta=1e-6, tau=0.9,
-                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
-        super().__init__(f, wrt, batch_size, eps, max_iter, max_f_eval, m1, m2,
-                         a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+    def __init__(self, f, wrt=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+                 delta=1e-6, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
+        super().__init__(f, wrt, eps=eps, max_iter=max_iter, max_f_eval=max_f_eval, m1=m1, m2=m2, a_start=a_start,
+                         tau=tau, sfgrd=sfgrd, m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
         if not np.isscalar(delta):
             raise ValueError('delta is not a real scalar')
         if not delta > 0:
@@ -202,7 +201,7 @@ class Newton(LineSearchOptimizer):
 
             self.iter += 1
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

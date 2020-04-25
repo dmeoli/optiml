@@ -61,8 +61,7 @@ class SVM(BaseEstimator):
         if not epochs > 0:
             raise ValueError('epochs must be > 0')
         self.epochs = epochs
-        if not isinstance(verbose, bool) or verbose not in (0, 1):
-            raise ValueError('verbose is not a boolean value')
+        self.verbose = verbose
         self.learning_rate = learning_rate
         self.momentum_type = momentum_type
         self.momentum = momentum
@@ -303,18 +302,12 @@ class SVC(ClassifierMixin, SVM):
 
             s = y1 * y2
 
-            # gamma = s * alpha1 + alpha2
-
             # compute L and H, the bounds on new possible alpha values
             # based on equations 13 and 14 in Platt's paper
             if y1 != y2:
-                # L = max(0, gamma)
-                # H = min(self.C, gamma + self.C)
                 L = max(0, alpha2 - alpha1)
                 H = min(self.C, self.C + alpha2 - alpha1)
             else:
-                # L = max(0, gamma - self.C)
-                # H = min(self.C, gamma)
                 L = max(0, alpha2 + alpha1 - self.C)
                 H = min(self.C, alpha2 + alpha1)
 
@@ -491,7 +484,6 @@ class SVC(ClassifierMixin, SVM):
             examine_all = True
             loop_counter = 0
             while num_changed > 0 or examine_all:
-                loop_counter += 1
                 num_changed = 0
                 # loop over all training examples
                 if examine_all:
@@ -511,8 +503,10 @@ class SVC(ClassifierMixin, SVM):
                 elif num_changed == 0:
                     examine_all = True
 
-                if self.verbose:
+                if self.verbose and not loop_counter % self.verbose:
                     print('{:4d}\t{:1.4e}'.format(loop_counter, self.f.function(self.alphas)))
+
+                loop_counter += 1
 
             self.b = -(self.b_low + self.b_up) / 2
 
@@ -982,7 +976,6 @@ class SVR(RegressorMixin, SVM):
             examine_all = True
             loop_counter = 0
             while num_changed > 0 or examine_all:
-                loop_counter += 1
                 num_changed = 0
                 # loop over all training examples
                 if examine_all:
@@ -1002,9 +995,11 @@ class SVR(RegressorMixin, SVM):
                 elif num_changed == 0:
                     examine_all = True
 
-                if self.verbose:
+                if self.verbose and not loop_counter % self.verbose:
                     print('{:4d}\t{:1.4e}'.format(
                         loop_counter, self.f.function(np.hstack((self.alphas_p, self.alphas_n)))))
+
+                loop_counter += 1
 
             self.b = (self.b_low + self.b_up) / 2
 

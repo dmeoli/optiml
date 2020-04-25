@@ -1,12 +1,14 @@
+import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.base import MultiOutputMixin, RegressorMixin, BaseEstimator
-from sklearn.linear_model._base import LinearClassifierMixin
+from sklearn.base import MultiOutputMixin, RegressorMixin, BaseEstimator, ClassifierMixin
 
-from ml.losses import mean_squared_error, cross_entropy
 from ml.activations import Sigmoid
+from ml.losses import mean_squared_error, cross_entropy
 from ml.regularizers import l1, l2
 from optimization.optimization_function import OptimizationFunction
 from optimization.optimizer import LineSearchOptimizer
+
+plt.style.use('ggplot')
 
 
 class LinearModelLossFunction(OptimizationFunction):
@@ -75,7 +77,7 @@ class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
         return np.dot(X, theta if theta is not None else self.w)
 
 
-class LogisticRegression(BaseEstimator, LinearClassifierMixin):
+class LogisticRegression(BaseEstimator, ClassifierMixin):
 
     def __init__(self, optimizer, learning_rate=0.01, momentum_type='none', momentum=0.9, epochs=1000,
                  batch_size=None, max_f_eval=1000, regularization=l2, lmbda=0.01, verbose=False):

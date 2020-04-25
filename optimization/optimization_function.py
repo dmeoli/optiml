@@ -203,7 +203,7 @@ class BoxConstrainedQuadratic(Quadratic):
             # compute eigenvalue decomposition
             D, V = np.linalg.eigh(Q)  # V.dot(np.diag(D)).dot(V.T) = Q
 
-            if D[0] > 1e-14:  # smallest eigenvalue
+            if min(D) > 1e-14:  # smallest eigenvalue
                 # modify eccentricity only if \lambda_n > 0, for when \lambda_n = 0 the
                 # eccentricity is 1 by default. The formula is:
                 #

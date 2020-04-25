@@ -197,7 +197,7 @@ class Subgradient(LineSearchOptimizer):
 
         x = x_ref  # return point corresponding to best value found so far
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

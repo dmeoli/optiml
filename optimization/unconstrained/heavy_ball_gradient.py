@@ -167,7 +167,7 @@ class HeavyBallGradient(LineSearchOptimizer):
                 break
 
             # compute deflected gradient direction
-            if self.iter == 1:
+            if self.iter == 0:
                 d = -g
             else:
                 if self.beta > 0:
@@ -205,7 +205,7 @@ class HeavyBallGradient(LineSearchOptimizer):
 
             self.iter += 1
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

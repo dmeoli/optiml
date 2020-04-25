@@ -51,7 +51,7 @@ class QuadraticConjugateGradient(Optimizer):
                 break
 
             # compute search direction
-            if self.iter == 1:  # first iteration is off-line, standard gradient
+            if self.iter == 0:  # first iteration is off-line, standard gradient
                 d = -g
                 if self.verbose and not self.iter % self.verbose:
                     print('\t\t', end='')
@@ -105,7 +105,7 @@ class QuadraticConjugateGradient(Optimizer):
 
             self.iter += 1
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()
@@ -300,7 +300,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 break
 
             # compute search direction
-            if self.iter == 1:  # first iteration is off-line, standard gradient
+            if self.iter == 0:  # first iteration is off-line, standard gradient
                 d = -g
                 if self.verbose and not self.iter % self.verbose:
                     print('\t\t', end='')
@@ -361,7 +361,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
             self.iter += 1
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

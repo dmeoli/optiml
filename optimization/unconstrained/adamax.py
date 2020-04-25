@@ -74,7 +74,7 @@ class AdaMax(Optimizer):
                 status = 'stopped'
                 break
 
-            t = self.iter
+            t = self.iter + 1
 
             if self.momentum_type == 'standard':
                 step_m1 = self.step
@@ -107,7 +107,7 @@ class AdaMax(Optimizer):
 
             self.iter += 1
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

@@ -113,7 +113,7 @@ class ProximalBundle(LineSearchOptimizer):
 
         for args in self.args:
 
-            if self.iter == 1:
+            if self.iter == 0:
                 # compute first function and subgradient
                 fx, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
 
@@ -206,7 +206,7 @@ class ProximalBundle(LineSearchOptimizer):
                 self.step = 0
             self.iter += 1
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

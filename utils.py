@@ -179,3 +179,25 @@ def plot_learning_curve(estimator, X, y, scorer, cv=5, train_sizes=np.linspace(.
 
     plt.legend().get_frame().set_facecolor('white')
     plt.show()
+
+
+def plot_model_loss(loss_history):
+    fig, loss = plt.subplots()
+    loss.plot(loss_history['training_loss'], color='navy', marker='.')
+    loss.plot(loss_history['validation_loss'], color='darkorange', marker='.')
+    loss.set_title('model loss')
+    loss.set_xlabel('epoch')
+    loss.set_ylabel('loss')
+    loss.legend(['training', 'test']).get_frame().set_facecolor('white')
+    plt.show()
+
+
+def plot_model_accuracy(accuracy_history):
+    fig, accuracy = plt.subplots()
+    accuracy.plot(accuracy_history['training_accuracy'], color='navy', marker='.')
+    accuracy.plot(accuracy_history['validation_accuracy'], color='darkorange', marker='.')
+    accuracy.set_title('model accuracy')
+    accuracy.set_xlabel('epoch')
+    accuracy.set_ylabel('accuracy')
+    accuracy.legend(['training', 'test']).get_frame().set_facecolor('white')
+    plt.show()
