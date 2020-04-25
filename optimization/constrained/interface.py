@@ -1,9 +1,11 @@
 import numpy as np
+import qpsolvers
+
 from scipy.optimize import minimize
 
 
-def solve_qp(P, q, G, h, A, b, solver='quadprog'):
-    return solve_qp(P, q, G, h, A, b, solver)
+def solve_qp(f, G, h, A, b, solver='quadprog'):
+    return qpsolvers.solve_qp(f.Q, f.q, G, h, A, b, solver=solver)
 
 
 def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
@@ -19,7 +21,7 @@ def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
                              'disp': verbose}).x
 
 
-def scipy_solve_svm(f, A, ub, max_iter, verbose):
+def scipy_solve_bcqp(f, A, ub, max_iter, verbose):
     return minimize(fun=f.function, jac=f.jacobian,
                     method='slsqp', x0=np.zeros(f.n),
                     constraints={'type': 'eq',

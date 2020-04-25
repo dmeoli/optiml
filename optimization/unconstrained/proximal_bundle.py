@@ -102,7 +102,7 @@ class ProximalBundle(LineSearchOptimizer):
 
     def minimize(self):
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             if self.f.f_star() < np.inf:
                 print('iter\tf(x)\t\tf(x) - f*\t||d||', end='')
             else:
@@ -153,7 +153,7 @@ class ProximalBundle(LineSearchOptimizer):
             nd = np.linalg.norm(d)
 
             # output statistics
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 if self.f.f_star() < np.inf:
                     print('\n{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(
                         self.iter, fx, (fx - self.f.f_star()) / max(abs(self.f.f_star()), 1), nd), end='')
@@ -206,7 +206,7 @@ class ProximalBundle(LineSearchOptimizer):
                 self.step = 0
             self.iter += 1
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

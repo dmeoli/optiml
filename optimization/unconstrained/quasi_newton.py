@@ -124,7 +124,7 @@ class BFGS(LineSearchOptimizer):
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
@@ -161,7 +161,7 @@ class BFGS(LineSearchOptimizer):
                         B = B + (1e-6 - lambda_n) * np.identity(self.n)
                     B = np.linalg.inv(B)
 
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -187,10 +187,10 @@ class BFGS(LineSearchOptimizer):
 
             # compute step size: as in Newton's method, the default initial step size is 1
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, self.verbose and not self.iter % self.verbose, args)
 
             # output statistics
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\t{:1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
@@ -213,7 +213,7 @@ class BFGS(LineSearchOptimizer):
 
             rho = 1 / rho
 
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\t{:1.4e}'.format(rho), end='')
 
             D = B.dot(y) * s.T
@@ -230,7 +230,7 @@ class BFGS(LineSearchOptimizer):
 
             self.iter += 1
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

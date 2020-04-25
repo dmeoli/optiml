@@ -39,7 +39,7 @@ def test_NonlinearConjugateGradient_quadratic_HestenesStiefel():
 
 def test_NonlinearConjugateGradient_Rosenbrock_HestenesStiefel():
     obj = Rosenbrock()
-    assert np.allclose(NonlinearConjugateGradient(obj, wf=2, max_iter=2500, max_f_eval=2500).minimize()[0],
+    assert np.allclose(NonlinearConjugateGradient(obj, wf=2, max_iter=3000, max_f_eval=3000).minimize()[0],
                        obj.x_star(), rtol=0.2)
 
 

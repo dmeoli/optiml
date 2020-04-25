@@ -56,7 +56,7 @@ class FrankWolfe(BoxConstrainedOptimizer):
 
         best_lb = -np.inf  # best lower bound so far (= none, really)
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print('iter\tf(x)\t\tlb\t\t\tgap')
 
         if self.plot and self.n == 2:
@@ -79,7 +79,7 @@ class FrankWolfe(BoxConstrainedOptimizer):
             # compute the relative gap
             gap = (v - best_lb) / max(abs(v), 1)
 
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, best_lb, gap))
 
             if gap <= self.eps:
@@ -123,7 +123,7 @@ class FrankWolfe(BoxConstrainedOptimizer):
 
             self.iter += 1
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

@@ -19,7 +19,7 @@ class QuadraticConjugateGradient(Optimizer):
 
     def minimize(self):
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
@@ -33,7 +33,7 @@ class QuadraticConjugateGradient(Optimizer):
             v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
             ng = np.linalg.norm(g)
 
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -53,17 +53,17 @@ class QuadraticConjugateGradient(Optimizer):
             # compute search direction
             if self.iter == 1:  # first iteration is off-line, standard gradient
                 d = -g
-                if self.verbose:
+                if self.verbose and not self.iter % self.verbose:
                     print('\t\t', end='')
             else:  # normal iterations, use appropriate formula
                 if self.r_start > 0 and self.iter % self.n * self.r_start == 0:
                     # ... unless a restart is being performed
                     beta = 0
-                    if self.verbose:
+                    if self.verbose and not self.iter % self.verbose:
                         print('\t(res)', end='')
                 else:
                     beta = g.T.dot(self.f.Q).dot(past_d) / past_d.T.dot(self.f.Q).dot(past_d)
-                    if self.verbose:
+                    if self.verbose and not self.iter % self.verbose:
                         print('\t{:1.4f}'.format(beta), end='')
 
                 if beta != 0:
@@ -105,7 +105,7 @@ class QuadraticConjugateGradient(Optimizer):
 
             self.iter += 1
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()
@@ -262,7 +262,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
@@ -280,7 +280,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
             else:
                 ng0 = 1  # un-scaled stopping criterion
 
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -302,13 +302,13 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
             # compute search direction
             if self.iter == 1:  # first iteration is off-line, standard gradient
                 d = -g
-                if self.verbose:
+                if self.verbose and not self.iter % self.verbose:
                     print('\t\t', end='')
             else:  # normal iterations, use appropriate formula
                 if self.r_start > 0 and self.iter % self.n * self.r_start == 0:
                     # ... unless a restart is being performed
                     beta = 0
-                    if self.verbose:
+                    if self.verbose and not self.iter % self.verbose:
                         print('\t(res)', end='')
                 else:
                     if self.wf == 0:  # Fletcher-Reeves
@@ -320,7 +320,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                         beta = g.T.dot(g - past_g) / (g - past_g).T.dot(past_d)
                     elif self.wf == 3:  # Dai-Yuan
                         beta = ng ** 2 / (g - past_g).T.dot(past_d)
-                    if self.verbose:
+                    if self.verbose and not self.iter % self.verbose:
                         print('\t{:1.4f}'.format(beta), end='')
 
                 if beta != 0:
@@ -336,10 +336,10 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
             # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, self.verbose and not self.iter % self.verbose, args)
 
             # output statistics
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\t{:1.2e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
@@ -361,7 +361,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
             self.iter += 1
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

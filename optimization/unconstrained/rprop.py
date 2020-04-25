@@ -34,7 +34,7 @@ class RProp(Optimizer):
 
     def minimize(self):
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
@@ -47,7 +47,7 @@ class RProp(Optimizer):
             v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
             ng = np.linalg.norm(g)
 
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -94,7 +94,7 @@ class RProp(Optimizer):
 
             self.iter += 1
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

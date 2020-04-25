@@ -6,8 +6,8 @@ import qpsolvers
 from matplotlib.lines import Line2D
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 
-from optimization.constrained.interface import scipy_solve_qp, scipy_solve_svm, solve_qp
-from optimization.optimization_function import BoxConstrainedQuadratic, LagrangianBoxConstrained, Quadratic
+from optimization.constrained.interface import scipy_solve_qp, scipy_solve_bcqp, solve_qp
+from optimization.optimization_function import BoxConstrainedQuadratic, LagrangianBoxConstrained
 from optimization.optimizer import BoxConstrainedOptimizer, Optimizer, LineSearchOptimizer
 from utils import clip
 
@@ -52,7 +52,7 @@ class SVM(BaseEstimator):
         if not tol > 0:
             raise ValueError('tol must be > 0')
         self.tol = tol  # tolerance for KKT conditions
-        if (optimizer not in (solve_qp, scipy_solve_qp, scipy_solve_svm, 'SMO')
+        if (optimizer not in (solve_qp, scipy_solve_qp, scipy_solve_bcqp, 'SMO')
                 and not issubclass(optimizer, Optimizer)):
             raise TypeError('optimizer is not an allowed optimizer')
         self.optimizer = optimizer
@@ -542,8 +542,9 @@ class SVC(ClassifierMixin, SVM):
         A = y.astype(np.float)  # equality matrix
         ub = np.ones(n_samples) * self.C  # upper bounds
 
-        if self.optimizer in ('SMO', scipy_solve_svm):
-            obj_fun = Quadratic(P, q)
+        obj_fun = BoxConstrainedQuadratic(P, q, ub)
+
+        if self.optimizer in ('SMO', scipy_solve_bcqp):
 
             if self.optimizer == 'SMO':
                 smo = self.SMOClassifier(obj_fun, X, y, K, self.kernel, self.C, self.tol, self.verbose).smo()
@@ -553,10 +554,9 @@ class SVC(ClassifierMixin, SVM):
                 self.intercept_ = smo.b
 
             else:
-                alphas = scipy_solve_svm(obj_fun, A, ub, self.epochs, self.verbose)
+                alphas = scipy_solve_bcqp(obj_fun, A, ub, self.epochs, self.verbose)
 
         else:
-            obj_fun = BoxConstrainedQuadratic(P, q, ub)
 
             if self.optimizer in (solve_qp, scipy_solve_qp):
                 G = np.vstack((-np.identity(n_samples), np.identity(n_samples)))  # inequality matrix
@@ -567,7 +567,7 @@ class SVC(ClassifierMixin, SVM):
 
                 if self.optimizer == solve_qp:
                     qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-                    alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
+                    alphas = solve_qp(obj_fun, G, h, A, b, solver='cvxopt')
 
                 else:
                     alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
@@ -1033,8 +1033,9 @@ class SVR(RegressorMixin, SVM):
         A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
-        if self.optimizer in ('SMO', scipy_solve_svm):
-            obj_fun = Quadratic(P, q)
+        obj_fun = BoxConstrainedQuadratic(P, q, ub)
+
+        if self.optimizer in ('SMO', scipy_solve_bcqp):
 
             if self.optimizer == 'SMO':
                 smo = self.SMORegression(obj_fun, X, y, K, self.kernel, self.C,
@@ -1045,12 +1046,11 @@ class SVR(RegressorMixin, SVM):
                 self.intercept_ = smo.b
 
             else:
-                alphas = scipy_solve_svm(obj_fun, A, ub, self.epochs, self.verbose)
+                alphas = scipy_solve_bcqp(obj_fun, A, ub, self.epochs, self.verbose)
                 alphas_p = alphas[:n_samples]
                 alphas_n = alphas[n_samples:]
 
         else:
-            obj_fun = BoxConstrainedQuadratic(P, q, ub)
 
             if self.optimizer in (solve_qp, scipy_solve_qp):
                 G = np.vstack((-np.identity(2 * n_samples), np.identity(2 * n_samples)))  # inequality matrix
@@ -1061,7 +1061,8 @@ class SVR(RegressorMixin, SVM):
 
                 if self.optimizer == solve_qp:
                     qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-                    alphas = solve_qp(P, q, G, h, A, b, solver='cvxopt')
+                    alphas = solve_qp(obj_fun, G, h, A, b, solver='cvxopt')
+
                 else:
                     alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
 

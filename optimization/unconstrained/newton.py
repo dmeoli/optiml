@@ -122,7 +122,7 @@ class Newton(LineSearchOptimizer):
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
@@ -142,7 +142,7 @@ class Newton(LineSearchOptimizer):
             else:
                 ng0 = 1  # un-scaled stopping criterion
 
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -164,11 +164,11 @@ class Newton(LineSearchOptimizer):
             # compute Newton's direction
             lambda_n = min(np.linalg.eigvalsh(H))  # smallest eigenvalue
             if lambda_n < self.delta:
-                if self.verbose:
+                if self.verbose and not self.iter % self.verbose:
                     print('\t{:1.4e}'.format(self.delta - lambda_n), end='')
                 H = H + (self.delta - lambda_n) * np.identity(self.n)
             else:
-                if self.verbose:
+                if self.verbose and not self.iter % self.verbose:
                     print('\t{:1.4e}'.format(0), end='')
 
             d = -np.linalg.inv(H).dot(g)  # or np.linalg.solve(H, g)
@@ -177,10 +177,10 @@ class Newton(LineSearchOptimizer):
 
             # compute step size: in Newton's method, the default initial step size is 1
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, self.verbose and not self.iter % self.verbose, args)
 
             # output statistics
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\t{:1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
@@ -202,7 +202,7 @@ class Newton(LineSearchOptimizer):
 
             self.iter += 1
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

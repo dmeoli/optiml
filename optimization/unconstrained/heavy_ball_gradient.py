@@ -127,7 +127,7 @@ class HeavyBallGradient(LineSearchOptimizer):
         last_g = np.zeros((self.n,))  # gradient of last_wrt
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
@@ -147,7 +147,7 @@ class HeavyBallGradient(LineSearchOptimizer):
             else:
                 ng0 = 1  # un-scaled stopping criterion
 
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -180,10 +180,10 @@ class HeavyBallGradient(LineSearchOptimizer):
 
             # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, args)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, self.verbose and not self.iter % self.verbose, args)
 
             # output statistics
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\t{:1.2e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
@@ -205,7 +205,7 @@ class HeavyBallGradient(LineSearchOptimizer):
 
             self.iter += 1
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

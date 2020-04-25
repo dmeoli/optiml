@@ -3,7 +3,7 @@ import numpy as np
 
 class LineSearch:
 
-    def __init__(self, f, max_f_eval=1000, m1=0.01, a_start=1, tau=0.9, min_a=1e-16, verbose=False):
+    def __init__(self, f, max_f_eval=1000, m1=0.01, a_start=1, tau=0.9, min_a=1e-16):
         """
 
         :param f:          the objective function.
@@ -24,8 +24,6 @@ class LineSearch:
                            value <= min_a, this is taken as an indication that something has gone wrong (the gradient
                            is not a direction of descent, so maybe the function is not differentiable) and computation
                            is stopped. It is legal to take min_a = 0, thereby in fact skipping this test.
-        :param verbose:    (boolean, optional, default value False): print details about each iteration
-                           if True, nothing otherwise.
         """
         self.f = f
         if not np.isscalar(max_f_eval):
@@ -53,9 +51,8 @@ class LineSearch:
         if min_a < 0:
             raise ValueError('min_a is < 0')
         self.min_a = min_a
-        self.verbose = verbose
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, args=None):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, verbose=False, args=None):
         raise NotImplementedError
 
 
@@ -70,7 +67,7 @@ class BacktrackingLineSearch(LineSearch):
     :returns: the optimal step and the optimal f-value
     """
 
-    def __init__(self, f, max_f_eval=1000, m1=0.01, a_start=1, tau=0.9, min_a=1e-16, verbose=False):
+    def __init__(self, f, max_f_eval=1000, m1=0.01, a_start=1, tau=0.9, min_a=1e-16):
         """
 
         :param f:          the objective function.
@@ -91,12 +88,10 @@ class BacktrackingLineSearch(LineSearch):
                            value <= min_a, this is taken as an indication that something has gone wrong (the gradient
                            is not a direction of descent, so maybe the function is not differentiable) and computation
                            is stopped. It is legal to take min_a = 0, thereby in fact skipping this test.
-        :param verbose:    (boolean, optional, default value False): print details about each iteration
-                           if True, nothing otherwise.
         """
-        super().__init__(f, max_f_eval, m1, a_start, tau, min_a, verbose)
+        super().__init__(f, max_f_eval, m1, a_start, tau, min_a)
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, args=None):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, verbose=False, args=None):
 
         if args is None:
             args = []
@@ -118,7 +113,7 @@ class BacktrackingLineSearch(LineSearch):
             _as *= self.tau
             ls_iter += 1
 
-        if self.verbose:
+        if verbose:
             print('\t{:2d}'.format(ls_iter), end='')
         return _as, phi_a, last_wrt, last_g, f_eval
 
@@ -137,7 +132,7 @@ class ArmijoWolfeLineSearch(LineSearch):
     :returns: the optimal step and the optimal f-value
     """
 
-    def __init__(self, f, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, min_a=1e-16, verbose=False):
+    def __init__(self, f, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, min_a=1e-16):
         """
 
         :param f:          the objective function.
@@ -170,10 +165,8 @@ class ArmijoWolfeLineSearch(LineSearch):
                            value <= min_a, this is taken as an indication that something has gone wrong (the gradient
                            is not a direction of descent, so maybe the function is not differentiable) and computation
                            is stopped. It is legal to take min_a = 0, thereby in fact skipping this test.
-        :param verbose:    (boolean, optional, default value False): print details about each iteration
-                           if True, nothing otherwise.
         """
-        super().__init__(f, max_f_eval, m1, a_start, tau, min_a, verbose)
+        super().__init__(f, max_f_eval, m1, a_start, tau, min_a)
         if not np.isscalar(sfgrd):
             raise ValueError('sfgrd is not a real scalar')
         if not 0 < sfgrd < 1:
@@ -183,7 +176,7 @@ class ArmijoWolfeLineSearch(LineSearch):
             raise ValueError('m2 is not a real scalar')
         self.m2 = m2
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, args=None):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, verbose=False, args=None):
 
         if args is None:
             args = []
@@ -204,7 +197,7 @@ class ArmijoWolfeLineSearch(LineSearch):
             phi_a, phi_ps, last_wrt, last_g, f_eval = f2phi(self.f, d, wrt, _as, f_eval)
             # Armijo and strong Wolfe conditions
             if phi_a <= phi0 + self.m1 * _as * phi_p0 and abs(phi_ps) <= -self.m2 * phi_p0:
-                if self.verbose:
+                if verbose:
                     print('\t{:2d}\t{:2d}'.format(ls_iter, 0), end='')
                 return _as, phi_a, last_wrt, last_g, f_eval
 
@@ -214,7 +207,7 @@ class ArmijoWolfeLineSearch(LineSearch):
             _as /= self.tau
             ls_iter += 1
 
-        if self.verbose:
+        if verbose:
             print('\t{:2d}\t'.format(ls_iter), end='')
         ls_iter = 1  # count iterations of second phase
 
@@ -246,6 +239,6 @@ class ArmijoWolfeLineSearch(LineSearch):
 
             ls_iter += 1
 
-        if self.verbose:
+        if verbose:
             print('{:2d}'.format(ls_iter), end='')
         return a, phi_a, last_wrt, last_g, f_eval

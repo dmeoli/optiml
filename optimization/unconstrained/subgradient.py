@@ -108,7 +108,7 @@ class Subgradient(LineSearchOptimizer):
             # no way of cheating since the true optimal value is unknown
             self.eps = -self.eps  # revert to ordinary target level step size
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
@@ -138,7 +138,7 @@ class Subgradient(LineSearchOptimizer):
                 x_ref = self.wrt  # this is the incumbent solution
 
             # output statistics
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
@@ -172,7 +172,7 @@ class Subgradient(LineSearchOptimizer):
                 a = self.line_search.a_start * (1 / self.iter)
 
             # output statistics
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('\t{:1.4e}'.format(a), end='')
 
             # stopping criteria
@@ -197,7 +197,7 @@ class Subgradient(LineSearchOptimizer):
 
         x = x_ref  # return point corresponding to best value found so far
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

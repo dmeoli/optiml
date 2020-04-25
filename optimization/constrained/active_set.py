@@ -54,14 +54,14 @@ class ActiveSet(BoxConstrainedOptimizer):
         # 1 : n of L union U; since L and U are empty now, A = 1 : n
         A = np.full(self.f.n, True)
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print('iter\tf(x)\t\t|B|\tI/O')
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('{:4d}\t{:1.4e}\t{:d}\t'.format(self.iter, v, sum(L) + sum(U)), end='')
 
             if self.iter >= self.max_iter:
@@ -113,11 +113,11 @@ class ActiveSet(BoxConstrainedOptimizer):
                     A[h] = True
                     if uppr:
                         U[h] = False
-                        if self.verbose:
+                        if self.verbose and not self.iter % self.verbose:
                             print('O {:d}(U)'.format(h))
                     else:
                         L[h] = False
-                        if self.verbose:
+                        if self.verbose and not self.iter % self.verbose:
                             print('O {:d}(L)'.format(h))
             else:
                 # the solution of the unconstrained problem is not feasible
@@ -151,7 +151,7 @@ class ActiveSet(BoxConstrainedOptimizer):
                 U[nU] = True
                 A[nU] = False
 
-                if self.verbose:
+                if self.verbose and not self.iter % self.verbose:
                     print('I {:d}+{:d}'.format(sum(nL), sum(nU)))
 
             # plot the trajectory
@@ -164,7 +164,7 @@ class ActiveSet(BoxConstrainedOptimizer):
 
             self.iter += 1
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()

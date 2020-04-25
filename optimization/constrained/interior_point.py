@@ -134,7 +134,7 @@ class InteriorPoint(BoxConstrainedOptimizer):
         idx = np.logical_not(idx)
         lp[idx] = lp[idx] - g[idx]
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print('iter\tv\t\t\tp\t\t\tgap')
 
         if self.plot and self.n == 2:
@@ -146,7 +146,7 @@ class InteriorPoint(BoxConstrainedOptimizer):
             p = -lp.T.dot(self.f.ub) - 0.5 * xQx
             gap = (v - p) / max(abs(v), 1)
 
-            if self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, p, gap))
 
             # stopping criteria
@@ -220,7 +220,7 @@ class InteriorPoint(BoxConstrainedOptimizer):
 
             self.iter += 1
 
-        if self.verbose:
+        if self.verbose and not self.iter % self.verbose:
             print()
         if self.plot and self.n == 2:
             plt.show()
