@@ -6,7 +6,8 @@ from ml.neural_network.activations import Sigmoid
 from ml.neural_network.losses import mean_squared_error, cross_entropy
 from ml.neural_network.regularizers import l1, l2
 from optimization.optimization_function import OptimizationFunction
-from optimization.optimizer import LineSearchOptimizer, StochasticOptimizer
+from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
+from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
 
 plt.style.use('ggplot')
 

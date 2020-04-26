@@ -2,7 +2,7 @@ import pytest
 
 from optimization.optimization_function import quad1, quad2, Rosenbrock
 from optimization.unconstrained.line_search.steepest_gradient_descent import *
-from optimization.unconstrained.stochastic import StochasticGradientDescent
+from optimization.unconstrained.stochastic.stochastic_gradient_descent import StochasticGradientDescent
 
 
 def test_QuadraticSteepestGradientDescent():

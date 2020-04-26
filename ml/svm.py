@@ -6,17 +6,20 @@ import qpsolvers
 from matplotlib.lines import Line2D
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 
+from optimization.constrained.box_constrained_optimizer import BoxConstrainedOptimizer
 from optimization.constrained.interface import scipy_solve_qp, scipy_solve_bcqp, solve_qp
 from optimization.optimization_function import BoxConstrained, LagrangianBoxConstrained
-from optimization.optimizer import BoxConstrainedOptimizer, Optimizer, LineSearchOptimizer, StochasticOptimizer
+from optimization.optimizer import Optimizer
+from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
+from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
 from utils import clip
 
 plt.style.use('ggplot')
 
 
 class SVM(BaseEstimator):
-    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer='SMO',
-                 epochs=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, verbose=False):
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer='SMO', epochs=1000,
+                 learning_rate=0.01, momentum_type='none', momentum=0.9, master_solver='cvxopt', verbose=False):
         self.kernels = {'linear': self.linear,
                         'poly': self.poly,
                         'rbf': self.rbf,
@@ -65,6 +68,7 @@ class SVM(BaseEstimator):
         self.learning_rate = learning_rate
         self.momentum_type = momentum_type
         self.momentum = momentum
+        self.master_solver = master_solver
         self.verbose = verbose
         if kernel == 'linear':
             self.coef_ = 0.
@@ -230,10 +234,10 @@ class SVM(BaseEstimator):
 
 
 class SVC(ClassifierMixin, SVM):
-    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer='SMO',
-                 epochs=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, verbose=False):
-        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs,
-                         learning_rate, momentum_type, momentum, verbose)
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer='SMO', epochs=1000,
+                 learning_rate=0.01, momentum_type='none', momentum=0.9, master_solver='cvxopt', verbose=False):
+        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, learning_rate,
+                         momentum_type, momentum, master_solver, verbose)
 
     class SMOClassifier(SVM.SMO):
         """
@@ -561,7 +565,7 @@ class SVC(ClassifierMixin, SVM):
 
                 if self.optimizer == solve_qp:
                     qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-                    alphas = solve_qp(obj_fun, G, h, A, b, solver='cvxopt')
+                    alphas = solve_qp(obj_fun, G, h, A, b, solver=self.master_solver)
 
                 else:
                     alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
@@ -569,7 +573,7 @@ class SVC(ClassifierMixin, SVM):
             elif issubclass(self.optimizer, BoxConstrainedOptimizer):
                 alphas = self.optimizer(obj_fun, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
 
-            elif issubclass(self.optimizer, Optimizer):
+            else:
                 # dual lagrangian relaxation of the box-constrained problem
                 dual = LagrangianBoxConstrained(obj_fun)
 
@@ -609,10 +613,11 @@ class SVC(ClassifierMixin, SVM):
 
 
 class SVR(RegressorMixin, SVM):
-    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, epsilon=0.1, optimizer='SMO',
-                 epochs=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, verbose=False):
-        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs,
-                         learning_rate, momentum_type, momentum, verbose)
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, epsilon=0.1,
+                 optimizer='SMO', epochs=1000, learning_rate=0.01, momentum_type='none',
+                 momentum=0.9, master_solver='cvxopt', verbose=False):
+        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, learning_rate,
+                         momentum_type, momentum, master_solver, verbose)
         self.epsilon = epsilon  # epsilon insensitive loss value
 
     class SMORegression(SVM.SMO):
@@ -1056,7 +1061,7 @@ class SVR(RegressorMixin, SVM):
 
                 if self.optimizer == solve_qp:
                     qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-                    alphas = solve_qp(obj_fun, G, h, A, b, solver='cvxopt')
+                    alphas = solve_qp(obj_fun, G, h, A, b, solver=self.master_solver)
 
                 else:
                     alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
@@ -1064,7 +1069,7 @@ class SVR(RegressorMixin, SVM):
             elif issubclass(self.optimizer, BoxConstrainedOptimizer):
                 alphas = self.optimizer(obj_fun, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
 
-            elif issubclass(self.optimizer, Optimizer):
+            else:
                 # dual lagrangian relaxation of the box-constrained problem
                 dual = LagrangianBoxConstrained(obj_fun)
 

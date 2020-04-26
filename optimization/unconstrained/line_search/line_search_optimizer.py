@@ -2,7 +2,7 @@ import numpy as np
 
 from ml.neural_network.initializers import random_uniform
 from optimization.optimizer import Optimizer
-from optimization.unconstrained.line_search import ArmijoWolfeLineSearch, BacktrackingLineSearch
+from optimization.unconstrained.line_search.line_search import ArmijoWolfeLineSearch, BacktrackingLineSearch
 
 
 class LineSearchOptimizer(Optimizer):

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from optimization.optimizer import BoxConstrainedOptimizer
+from optimization.constrained.box_constrained_optimizer import BoxConstrainedOptimizer
 from utils import cholesky_solve
 
 

@@ -8,8 +8,9 @@ from ml.neural_network.initializers import compute_fans
 from ml.neural_network.layers import Layer, ParamLayer
 from ml.neural_network.losses import mean_squared_error, cross_entropy
 from optimization.optimization_function import OptimizationFunction
-from optimization.optimizer import LineSearchOptimizer, StochasticOptimizer
-from optimization.unconstrained.stochastic import StochasticGradientDescent
+from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
+from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
+from optimization.unconstrained.stochastic.stochastic_gradient_descent import StochasticGradientDescent
 
 plt.style.use('ggplot')
 
@@ -158,13 +159,13 @@ class NeuralNetwork(BaseEstimator, Layer):
 
         if issubclass(self.optimizer, LineSearchOptimizer):
             opt = self.optimizer(f=loss, wrt=packed_weights_biases, max_iter=self.epochs, max_f_eval=self.max_f_eval,
-                                 callback=store_val_loss(loss, X_test, y_test), verbose=self.verbose).minimize()
+                                 verbose=self.verbose).minimize()
             # if opt[2] != 'optimal':
             #     warnings.warn("max_iter or max_f_eval reached and the optimization hasn't converged yet")
         elif issubclass(self.optimizer, StochasticOptimizer):
             opt = self.optimizer(f=loss, wrt=packed_weights_biases, batch_size=self.batch_size, max_iter=self.epochs,
                                  step_rate=self.learning_rate, momentum_type=self.momentum_type, momentum=self.momentum,
-                                 callback=store_val_loss(loss, X_test, y_test), verbose=self.verbose).minimize()
+                                 verbose=self.verbose).minimize()
             # if opt[2] != 'optimal':
             #     warnings.warn("max_iter reached and the optimization hasn't converged yet")
         self._unpack(opt[0])

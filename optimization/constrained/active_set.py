@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.linalg import ldl
 
-from optimization.optimizer import BoxConstrainedOptimizer
+from optimization.constrained.box_constrained_optimizer import BoxConstrainedOptimizer
 from utils import ldl_solve
 
 

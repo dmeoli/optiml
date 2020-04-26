@@ -3,7 +3,7 @@ import numpy as np
 from cvxpy import Variable, Problem, Minimize, sum_squares
 
 from ml.neural_network.initializers import random_uniform
-from optimization.unconstrained.line_search import LineSearchOptimizer
+from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
 
 
 class ProximalBundle(LineSearchOptimizer):
@@ -79,9 +79,9 @@ class ProximalBundle(LineSearchOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, wrt=random_uniform, batch_size=None, mu=1, m1=0.01, eps=1e-6, max_iter=1000, max_f_eval=1000,
+    def __init__(self, f, wrt=random_uniform, mu=1, m1=0.01, eps=1e-6, max_iter=1000, max_f_eval=1000,
                  momentum_type='none', momentum=0.9, m_inf=-np.inf, master_solver='ECOS', verbose=False, plot=False):
-        super().__init__(f, wrt, batch_size, eps, max_iter, max_f_eval, m1, m_inf=m_inf, verbose=verbose, plot=plot)
+        super().__init__(f, wrt, eps, max_iter, max_f_eval, m1, m_inf=m_inf, verbose=verbose, plot=plot)
         if not np.isscalar(mu):
             raise ValueError('mu is not a real scalar')
         if not mu > 0:
@@ -95,8 +95,6 @@ class ProximalBundle(LineSearchOptimizer):
         if momentum_type not in ('standard', 'nesterov', 'none'):
             raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type
-        if master_solver not in ('CVXOPT', 'OSQP', 'ECOS'):
-            raise ValueError(f'unknown master solver {master_solver}')
         self.master_solver = master_solver
         self.step = 0
 
