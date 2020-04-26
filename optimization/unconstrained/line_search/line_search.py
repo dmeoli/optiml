@@ -52,7 +52,7 @@ class LineSearch:
             raise ValueError('min_a is < 0')
         self.min_a = min_a
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, verbose=False, args=None):
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, verbose=False):
         raise NotImplementedError
 
 
@@ -91,15 +91,12 @@ class BacktrackingLineSearch(LineSearch):
         """
         super().__init__(f, max_f_eval, m1, a_start, tau, min_a)
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, verbose=False, args=None):
-
-        if args is None:
-            args = []
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, verbose=False):
 
         def f2phi(f, d, x, a, f_eval):
             # phi(a) = f(x + a * d)
             last_wrt = x + a * d
-            phi_a, last_g = f.function(last_wrt, *args), f.jacobian(last_wrt, *args)
+            phi_a, last_g = f.function(last_wrt), f.jacobian(last_wrt)
             f_eval += 1
             return phi_a, last_wrt, last_g, f_eval
 
@@ -176,17 +173,14 @@ class ArmijoWolfeLineSearch(LineSearch):
             raise ValueError('m2 is not a real scalar')
         self.m2 = m2
 
-    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, verbose=False, args=None):
-
-        if args is None:
-            args = []
+    def search(self, d, wrt, last_wrt, last_g, f_eval, phi0=None, phi_p0=None, verbose=False):
 
         def f2phi(f, d, x, a, f_eval):
             # phi(a) = f(x + a * d)
             # phi'(a) = <\nabla f(x + a * d), d>
 
             last_wrt = x + a * d
-            phi_a, last_g = f.function(last_wrt, *args), f.jacobian(last_wrt, *args)
+            phi_a, last_g = f.function(last_wrt), f.jacobian(last_wrt)
             phi_p = d.T.dot(last_g)
             f_eval += 1
             return phi_a, phi_p, last_wrt, last_g, f_eval

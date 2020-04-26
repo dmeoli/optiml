@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.conjugate_gradient import NonlinearConjugateGradient, QuadraticConjugateGradient
+from optimization.unconstrained.line_search.conjugate_gradient import NonlinearConjugateGradient, QuadraticConjugateGradient
 
 
 def test_QuadraticConjugateGradient():

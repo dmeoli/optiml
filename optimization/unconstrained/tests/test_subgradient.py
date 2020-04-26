@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.subgradient import Subgradient
+from optimization.unconstrained.line_search.subgradient import Subgradient
 
 
 def test_quadratic():

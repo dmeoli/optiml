@@ -2,12 +2,12 @@ import numpy as np
 import pytest
 
 from optimization.constrained.interior_point import InteriorPoint
-from optimization.optimization_function import BoxConstrainedQuadratic
+from optimization.optimization_function import BoxConstrained
 
 
 def test():
     np.random.seed(2)
-    assert np.allclose(InteriorPoint(BoxConstrainedQuadratic(n=2)).minimize()[0], 0.)
+    assert np.allclose(InteriorPoint(BoxConstrained(n=2)).minimize()[0], 0.)
 
 
 if __name__ == "__main__":

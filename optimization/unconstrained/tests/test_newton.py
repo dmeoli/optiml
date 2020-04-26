@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.newton import Newton
+from optimization.unconstrained.line_search.newton import Newton
 
 
 def test_quadratic():

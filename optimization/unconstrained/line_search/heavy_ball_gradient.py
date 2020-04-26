@@ -1,13 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.initializers import random_uniform
+from ml.neural_network.initializers import random_uniform
 from optimization.optimizer import LineSearchOptimizer
 
 
-class Newton(LineSearchOptimizer):
-    # Apply a classical Newton's method for the minimization of the provided
-    # function f.
+class HeavyBallGradient(LineSearchOptimizer):
+    # Apply a Heavy Ball Gradient approach for the minimization of the
+    # provided function f.
+    #
+    # Input:
     #
     # - x is either a [n x 1] real (column) vector denoting the input of
     #   f(), or [] (empty).
@@ -30,6 +32,14 @@ class Newton(LineSearchOptimizer):
     # - x (either [n x 1] real vector or [], default []): starting point.
     #   If x == [], the default starting point provided by f() is used.
     #
+    # - beta (real scalar, optional, default value 0.9): if beta > 0 then it
+    #   is taken as the fixed momentum term. If beta < 0, then abs(beta) is
+    #   taken as the scaled momentum term, i.e.,
+    #
+    #        beta^i = abs(beta) * || g^i || / || x^i - x^{i - 1} ||
+    #
+    #   in such a way that beta near to 1 has a "significant impact"
+    #
     # - eps (real scalar, optional, default value 1e-6): the accuracy in the
     #   stopping criterion: the algorithm is stopped when the norm of the
     #   gradient is less than or equal to eps. If a negative value is provided,
@@ -42,23 +52,20 @@ class Newton(LineSearchOptimizer):
     #   max_f_eval because at each iteration at least a function evaluation is
     #   performed, possibly more due to the line search).
     #
-    # - m1 (real scalar, optional, default value 0.01): first parameter of the
-    #   Armijo-Wolfe-type line search (sufficient decrease). Has to be in (0,1)
+    # - m1 (real scalar, optional, default value 0.01): parameter of the
+    #   Armijo condition (sufficient decrease) in the line search . Has to be
+    #   in (0,1)
     #
     # - m2 (real scalar, optional, default value 0.9): typically the second
     #   parameter of the Armijo-Wolfe-type line search (strong curvature
     #   condition). It should to be in (0,1); if not, it is taken to mean that
     #   the simpler Backtracking line search should be used instead
     #
-    # - delta (real scalar, optional, default value 1e-6): minimum positive
-    #   value for the eigenvalues of the modified Hessian used to compute the
-    #   Newton direction
+    # - a_start (real scalar, optional, default value 1): starting value of
+    #   alpha in the line search (> 0)
     #
     # - tau (real scalar, optional, default value 0.9): scaling parameter for
-    #   the line search. In the Armijo-Wolfe line search it is used in the
-    #   first phase: if the derivative is not positive, then the step is
-    #   divided by tau (which is < 1, hence it is increased). In the
-    #   Backtracking line search, each time the step is multiplied by tau
+    #   the Backtracking line search, each time the step is multiplied by tau
     #   (hence it is decreased).
     #
     # - sfgrd (real scalar, optional, default value 0.01): safeguard parameter
@@ -67,7 +74,7 @@ class Newton(LineSearchOptimizer):
     #   large w.r.t. the one at the other (which leads to choosing a point
     #   extremely near to the other endpoint), a *safeguarded* version of
     #   interpolation is used whereby the new point is chosen in the interval
-    #   [as * (1 + sfgrd), am * (1 - sfgrd)], being [as, am] the
+    #   [as * (1 + sfgrd) , am * (1 - sfgrd)], being [as , am] the
     #   current interval, whatever quadratic interpolation says. If you
     #   experience problems with the line search taking too many iterations to
     #   converge at "nasty" points, try to increase this
@@ -77,12 +84,12 @@ class Newton(LineSearchOptimizer):
     #   the problem is unbounded below and computation is stopped
     #   (a "finite -inf").
     #
-    # - mina (real scalar, optional, default value 1e-16): if the algorithm
-    #   determines a step size value <= mina, this is taken as an indication
+    # - min_a (real scalar, optional, default value 1e-16): if the algorithm
+    #   determines a step size value <= min_a, this is taken as an indication
     #   that something has gone wrong (the gradient is not a direction of
-    #   descent, so maybe the function is not differentiable) and computation
-    #   is stopped. It is legal to take mina = 0, thereby in fact skipping this
-    #   test.
+    #   descent, so maybe the function is not differentiable) and the line
+    #   search is stopped (but the algorithm as a whole is not, as it is a
+    #   non-monotone algorithm).
     #
     # Output:
     #
@@ -104,17 +111,14 @@ class Newton(LineSearchOptimizer):
     #     necessarily the optimal one
     #
     #   = 'error': the algorithm found a numerical error that prevents it from
-    #     continuing optimization (see mina above)
+    #     continuing optimization (see min_a above)
 
-    def __init__(self, f, wrt=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
-                 delta=1e-6, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, verbose=False, plot=False):
-        super().__init__(f, wrt, eps=eps, max_iter=max_iter, max_f_eval=max_f_eval, m1=m1, m2=m2, a_start=a_start,
-                         tau=tau, sfgrd=sfgrd, m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
-        if not np.isscalar(delta):
-            raise ValueError('delta is not a real scalar')
-        if not delta > 0:
-            raise ValueError('delta must be > 0')
-        self.delta = delta
+    def __init__(self, f, wrt=random_uniform, beta=0.9, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
+                 a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, wrt, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        if not np.isscalar(beta):
+            raise ValueError('beta is not a real scalar')
+        self.beta = beta
 
     def minimize(self):
         last_wrt = np.zeros((self.n,))  # last point visited in the line search
@@ -124,18 +128,18 @@ class Newton(LineSearchOptimizer):
         if self.verbose and not self.iter % self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
-                print('\tf(x) - f*\trate', end='')
+                print('\tf(x) - f*\trate\t', end='')
                 prev_v = np.inf
-            print('\t\tls\tit\ta*\t\t\tdelta', end='')
+            print('\tls\tit\ta*', end='')
+
+        past_d = np.zeros((self.n,))
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args in self.args:
-            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
-            H = self.f.hessian(self.wrt, *args)
+        while True:
+            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
             ng = np.linalg.norm(g)
-
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
             else:
@@ -160,27 +164,25 @@ class Newton(LineSearchOptimizer):
                 status = 'stopped'
                 break
 
-            # compute Newton's direction
-            lambda_n = min(np.linalg.eigvalsh(H))  # smallest eigenvalue
-            if lambda_n < self.delta:
-                if self.verbose and not self.iter % self.verbose:
-                    print('\t{:1.4e}'.format(self.delta - lambda_n), end='')
-                H = H + (self.delta - lambda_n) * np.identity(self.n)
+            # compute deflected gradient direction
+            if self.iter == 0:
+                d = -g
             else:
-                if self.verbose and not self.iter % self.verbose:
-                    print('\t{:1.4e}'.format(0), end='')
-
-            d = -np.linalg.inv(H).dot(g)  # or np.linalg.solve(H, g)
+                if self.beta > 0:
+                    beta_i = self.beta
+                else:
+                    beta_i = -self.beta * ng / np.linalg.norm(past_d)
+                d = -g + beta_i * past_d
 
             phi_p0 = g.T.dot(d)
 
-            # compute step size: in Newton's method, the default initial step size is 1
+            # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, self.verbose and not self.iter % self.verbose, args)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, self.verbose and not self.iter % self.verbose)
 
             # output statistics
             if self.verbose and not self.iter % self.verbose:
-                print('\t{:1.4e}'.format(a), end='')
+                print('\t{:1.2e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
                 status = 'error'
@@ -196,7 +198,7 @@ class Newton(LineSearchOptimizer):
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
-            # update new point
+            past_d = last_wrt - self.wrt
             self.wrt = last_wrt
 
             self.iter += 1

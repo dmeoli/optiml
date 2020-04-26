@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.rmsprop import RMSProp
+from optimization.unconstrained.stochastic.rmsprop import RMSProp
 
 
 def test_RMSProp_quadratic():

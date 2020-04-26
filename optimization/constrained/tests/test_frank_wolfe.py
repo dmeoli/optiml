@@ -2,12 +2,12 @@ import numpy as np
 import pytest
 
 from optimization.constrained.frank_wolfe import FrankWolfe
-from optimization.optimization_function import BoxConstrainedQuadratic
+from optimization.optimization_function import BoxConstrained
 
 
 def test():
     np.random.seed(2)
-    assert np.allclose(FrankWolfe(BoxConstrainedQuadratic(n=2)).minimize()[0], 0.)
+    assert np.allclose(FrankWolfe(BoxConstrained(n=2)).minimize()[0], 0.)
 
 
 if __name__ == "__main__":

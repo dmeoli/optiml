@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.initializers import random_uniform
+from ml.neural_network.initializers import random_uniform
 from optimization.optimization_function import Quadratic
 from optimization.optimizer import LineSearchOptimizer, Optimizer
 
@@ -113,11 +113,9 @@ class QuadraticConjugateGradient(Optimizer):
 
 
 class ConjugateGradient(LineSearchOptimizer):
-    def __init__(self, f, wrt=random_uniform, batch_size=None, wf=0, r_start=0, eps=1e-6,
-                 max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
-                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, wrt, batch_size, eps, max_iter, max_f_eval, m1, m2,
-                         a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+    def __init__(self, f, wrt=random_uniform, wf=0, r_start=0, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01,
+                 m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, wrt, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if wf < 0 or wf > 4:
@@ -243,11 +241,9 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, wrt=random_uniform, batch_size=None, wf=0, eps=1e-6, max_iter=1000,
-                 max_f_eval=1000, r_start=0, m1=0.01, m2=0.9, a_start=1, tau=0.9, sfgrd=0.01,
-                 m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, wrt, batch_size, eps, max_iter, max_f_eval, m1, m2,
-                         a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+    def __init__(self, f, wrt=random_uniform, wf=0, eps=1e-6, max_iter=1000, max_f_eval=1000, r_start=0, m1=0.01,
+                 m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, wrt, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if not 0 <= wf <= 3:
@@ -272,8 +268,8 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args in self.args:
-            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+        while True:
+            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
             ng = np.linalg.norm(g)
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
@@ -336,7 +332,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
             # compute step size
             a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, self.verbose and not self.iter % self.verbose, args)
+                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, self.verbose and not self.iter % self.verbose)
 
             # output statistics
             if self.verbose and not self.iter % self.verbose:

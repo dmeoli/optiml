@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.adadelta import AdaDelta
+from optimization.unconstrained.stochastic.adadelta import AdaDelta
 
 
 def test_AdaDelta_quadratic():

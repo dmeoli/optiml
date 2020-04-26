@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.adagrad import AdaGrad
+from optimization.unconstrained.stochastic.adagrad import AdaGrad
 
 
 def test_AdaGrad_quadratic():

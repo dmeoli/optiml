@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.amsgrad import AMSGrad
+from optimization.unconstrained.stochastic.amsgrad import AMSGrad
 
 
 def test_AMSGrad_quadratic():

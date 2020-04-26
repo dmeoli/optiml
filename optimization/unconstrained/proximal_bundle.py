@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from cvxpy import Variable, Problem, Minimize, sum_squares
 
-from ml.initializers import random_uniform
-from optimization.optimizer import LineSearchOptimizer
+from ml.neural_network.initializers import random_uniform
+from optimization.unconstrained.line_search import LineSearchOptimizer
 
 
 class ProximalBundle(LineSearchOptimizer):
@@ -111,11 +111,11 @@ class ProximalBundle(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args in self.args:
+        while True:
 
             if self.iter == 0:
                 # compute first function and subgradient
-                fx, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+                fx, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
 
                 G = g.T  # matrix of subgradients
                 F = fx - g.T.dot(self.wrt)  # vector of translated function values
@@ -180,7 +180,7 @@ class ProximalBundle(LineSearchOptimizer):
             last_wrt = self.wrt - (step1 + d if self.momentum_type == 'standard' else d)
 
             # compute function and subgradient
-            fd, g = self.f.function(last_wrt, *args), self.f.jacobian(last_wrt, *args)
+            fd, g = self.f.function(last_wrt), self.f.jacobian(last_wrt)
 
             if fd <= self.m_inf:
                 status = 'unbounded'

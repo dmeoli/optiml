@@ -152,7 +152,7 @@ quad4 = Quadratic([[3, -5], [-5, 3]], [10, 5])
 quad5 = Quadratic([[101, -99], [-99, 101]], [10, 5])
 
 
-class BoxConstrainedQuadratic(Quadratic):
+class BoxConstrained(Quadratic):
 
     def __init__(self, Q=None, q=None, ub=None, n=2, actv=0.5, rank=1.1, ecc=0.99, u_min=8, u_max=12):
         """
@@ -268,7 +268,7 @@ class LagrangianBoxConstrained(Quadratic):
         both are constrained to be >= 0.
         :param f: box-constrained quadratic function to be relaxed
         """
-        if not isinstance(f, BoxConstrainedQuadratic):
+        if not isinstance(f, BoxConstrained):
             raise TypeError('f is not a box-constrained quadratic function')
         super().__init__(f.Q, f.q)
         self.n *= 2

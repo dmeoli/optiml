@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.adamax import AdaMax
+from optimization.unconstrained.stochastic.adamax import AdaMax
 
 
 def test_AdaMax_quadratic():

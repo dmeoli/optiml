@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.initializers import random_uniform
+from ml.neural_network.initializers import random_uniform
 from optimization.optimizer import LineSearchOptimizer
 
 
@@ -97,9 +97,9 @@ class Subgradient(LineSearchOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, a_start=1., tau=0.95,
-                 max_iter=1000, max_f_eval=1000, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, wrt, batch_size, eps, max_iter, max_f_eval, a_start=a_start, tau=tau,
+    def __init__(self, f, wrt=random_uniform, eps=1e-6, a_start=1., tau=0.95, max_iter=1000,
+                 max_f_eval=1000, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+        super().__init__(f, wrt, eps, max_iter, max_f_eval, a_start=a_start, tau=tau,
                          m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
 
     def minimize(self):
@@ -123,8 +123,8 @@ class Subgradient(LineSearchOptimizer):
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
-        for args in self.args:
-            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+        while True:
+            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
             ng = np.linalg.norm(g)
 
             if self.eps > 0:  # target-level step size

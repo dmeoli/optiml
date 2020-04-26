@@ -1,46 +1,21 @@
-import warnings
-
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.initializers import random_uniform
-from optimization.optimizer import Optimizer
+from ml.neural_network.initializers import random_uniform
+from optimization.unconstrained.stochastic import StochasticOptimizer
 
 
-class AMSGrad(Optimizer):
+class AdaGrad(StochasticOptimizer):
 
-    def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.001,
-                 momentum_type='none', momentum=0.9, beta1=0.9, beta2=0.999, offset=1e-8, verbose=False, plot=False):
-        super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
-        if not np.isscalar(step_rate):
-            raise ValueError('step_rate is not a real scalar')
-        if not step_rate > 0:
-            raise ValueError('step_rate must be > 0')
-        self.step_rate = step_rate
-        if not 0 <= beta1 < 1:
-            raise ValueError('beta1 has to lie in [0, 1)')
-        self.beta1 = beta1
-        self.est_mom1 = 0  # initialize 1st moment vector
-        if not 0 <= beta2 < 1:
-            raise ValueError('beta2 has to lie in [0, 1)')
-        self.beta2 = beta2
-        self.est_mom2 = 0  # initialize 2nd moment vector
-        if not self.beta1 < np.sqrt(self.beta2):
-            warnings.warn('constraint from convergence analysis for adam not satisfied')
-        if not np.isscalar(momentum):
-            raise ValueError('momentum is not a real scalar')
-        if not momentum > 0:
-            raise ValueError('momentum must be > 0')
-        self.momentum = momentum
-        if momentum_type not in ('standard', 'nesterov', 'none'):
-            raise ValueError(f'unknown momentum type {momentum_type}')
-        self.momentum_type = momentum_type
+    def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.01,
+                 momentum_type='none', momentum=0.9, offset=1e-4, verbose=False, plot=False):
+        super().__init__(f, wrt, step_rate, momentum_type, momentum, batch_size, eps, max_iter, verbose, plot)
         if not np.isscalar(offset):
             raise ValueError('offset is not a real scalar')
         if not offset > 0:
             raise ValueError('offset must be > 0')
         self.offset = offset
-        self.step = 0
+        self.gms = 0
 
     def minimize(self):
 
@@ -52,8 +27,6 @@ class AMSGrad(Optimizer):
 
         if self.plot and self.n == 2:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
-
-        est_mom2_crt = 0.
 
         for args in self.args:
             v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
@@ -84,17 +57,9 @@ class AMSGrad(Optimizer):
                 step1 = self.momentum * step_m1
                 self.wrt -= step1
 
-            est_mom1_m1 = self.est_mom1
-            est_mom2_m1 = self.est_mom2
-
             g = self.f.jacobian(self.wrt, *args)
-            self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * g  # update biased 1st moment estimate
-            # update biased 2nd raw moment estimate
-            self.est_mom2 = self.beta2 * est_mom2_m1 + (1. - self.beta2) * g ** 2
-
-            est_mom2_crt = np.maximum(self.est_mom2, est_mom2_crt)
-
-            step2 = self.step_rate * self.est_mom1 / (np.sqrt(est_mom2_crt) + self.offset)
+            self.gms += g ** 2
+            step2 = self.step_rate * g / np.sqrt(self.gms + self.offset)
 
             self.wrt -= step1 + step2 if self.momentum_type == 'standard' else step2
             self.step = step2 if self.momentum_type == 'none' else step1 + step2

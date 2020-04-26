@@ -7,8 +7,8 @@ from matplotlib.lines import Line2D
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 
 from optimization.constrained.interface import scipy_solve_qp, scipy_solve_bcqp, solve_qp
-from optimization.optimization_function import BoxConstrainedQuadratic, LagrangianBoxConstrained
-from optimization.optimizer import BoxConstrainedOptimizer, Optimizer, LineSearchOptimizer
+from optimization.optimization_function import BoxConstrained, LagrangianBoxConstrained
+from optimization.optimizer import BoxConstrainedOptimizer, Optimizer, LineSearchOptimizer, StochasticOptimizer
 from utils import clip
 
 plt.style.use('ggplot')
@@ -536,7 +536,7 @@ class SVC(ClassifierMixin, SVM):
         A = y.astype(np.float)  # equality matrix
         ub = np.ones(n_samples) * self.C  # upper bounds
 
-        obj_fun = BoxConstrainedQuadratic(P, q, ub)
+        obj_fun = BoxConstrained(P, q, ub)
 
         if self.optimizer in ('SMO', scipy_solve_bcqp):
 
@@ -576,7 +576,7 @@ class SVC(ClassifierMixin, SVM):
                 if issubclass(self.optimizer, LineSearchOptimizer):
                     self.optimizer(dual, max_iter=self.epochs, max_f_eval=self.max_f_eval,
                                    verbose=self.verbose).minimize()
-                else:
+                elif issubclass(self.optimizer, StochasticOptimizer):
                     self.optimizer(dual, momentum_type=self.momentum_type, momentum=self.momentum,
                                    step_rate=self.learning_rate, max_iter=self.epochs, verbose=self.verbose).minimize()
 
@@ -1028,7 +1028,7 @@ class SVR(RegressorMixin, SVM):
         A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
-        obj_fun = BoxConstrainedQuadratic(P, q, ub)
+        obj_fun = BoxConstrained(P, q, ub)
 
         if self.optimizer in ('SMO', scipy_solve_bcqp):
 
@@ -1071,7 +1071,7 @@ class SVR(RegressorMixin, SVM):
                 if issubclass(self.optimizer, LineSearchOptimizer):
                     self.optimizer(dual, max_iter=self.epochs, max_f_eval=self.max_f_eval,
                                    verbose=self.verbose).minimize()
-                else:
+                elif issubclass(self.optimizer, StochasticOptimizer):
                     self.optimizer(dual, momentum_type=self.momentum_type, momentum=self.momentum,
                                    step_rate=self.learning_rate, max_iter=self.epochs, verbose=self.verbose).minimize()
 

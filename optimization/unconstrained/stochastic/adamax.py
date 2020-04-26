@@ -3,20 +3,15 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ml.initializers import random_uniform
-from optimization.optimizer import Optimizer
+from ml.neural_network.initializers import random_uniform
+from optimization.unconstrained.stochastic import StochasticOptimizer
 
 
-class AdaMax(Optimizer):
+class AdaMax(StochasticOptimizer):
 
     def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.002,
                  momentum_type='none', momentum=0.9, beta1=0.9, beta2=0.999, offset=1e-8, verbose=False, plot=False):
-        super().__init__(f, wrt, batch_size, eps, max_iter, verbose, plot)
-        if not np.isscalar(step_rate):
-            raise ValueError('step_rate is not a real scalar')
-        if not step_rate > 0:
-            raise ValueError('step_rate must be > 0')
-        self.step_rate = step_rate
+        super().__init__(f, wrt, step_rate, momentum_type, momentum, batch_size, eps, max_iter, verbose, plot)
         if not 0 <= beta1 < 1:
             raise ValueError('beta1 has to lie in [0, 1)')
         self.beta1 = beta1
@@ -27,20 +22,11 @@ class AdaMax(Optimizer):
         self.est_mom2 = 0  # initialize the exponentially weighted infinity norm
         if not self.beta1 < np.sqrt(self.beta2):
             warnings.warn('constraint from convergence analysis for adam not satisfied')
-        if not np.isscalar(momentum):
-            raise ValueError('momentum is not a real scalar')
-        if not momentum > 0:
-            raise ValueError('momentum must be > 0')
-        self.momentum = momentum
-        if momentum_type not in ('standard', 'nesterov', 'none'):
-            raise ValueError(f'unknown momentum type {momentum_type}')
-        self.momentum_type = momentum_type
         if not np.isscalar(offset):
             raise ValueError('offset is not a real scalar')
         if not offset > 0:
             raise ValueError('offset must be > 0')
         self.offset = offset
-        self.step = 0
 
     def minimize(self):
 

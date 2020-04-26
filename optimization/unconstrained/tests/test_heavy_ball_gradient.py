@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.heavy_ball_gradient import HeavyBallGradient
+from optimization.unconstrained.line_search.heavy_ball_gradient import HeavyBallGradient
 
 
 def test_quadratic():

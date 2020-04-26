@@ -7,31 +7,32 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
 ## Contents
 - Optimization Algorithms
     - Unconstrained Optimization
-        - Exact Line Search Methods
-            - [x] Quadratic Steepest Gradient Descent
-            - [x] Quadratic Conjugate Gradient
-        - Inexact Line Search Methods
-            - 0th Order Methods
-                - [x] Subgradient
-            - 1st Order Methods
-                - [x] Steepest Gradient Descent
-                - [ ] Conjugate Gradient
-                    - [ ] Fletcher–Reeves formula
-                    - [ ] Polak–Ribière formula
-                    - [ ] Hestenes-Stiefel formula
-                    - [ ] Dai-Yuan formula
-                - [x] Nonlinear Conjugate Gradient
-                    - [x] Fletcher–Reeves formula
-                    - [x] Polak–Ribière formula
-                    - [x] Hestenes-Stiefel formula
-                    - [x] Dai-Yuan formula
-                - [x] Heavy Ball Gradient
-            - 2nd Order Methods
-                - [x] Newton
-                - [x] BFGS quasi-Newton
-                - [ ] L-BFGS quasi-Newton
-        - Fixed Step Size Methods
-            - [x] Gradient Descent
+        - Line Search Methods
+            - Exact Line Search Methods
+                - [x] Quadratic Steepest Gradient Descent
+                - [x] Quadratic Conjugate Gradient
+            - Inexact Line Search Methods
+                - 0th Order Methods
+                    - [x] Subgradient
+                - 1st Order Methods
+                    - [x] Steepest Gradient Descent
+                    - [ ] Conjugate Gradient
+                        - [ ] Fletcher–Reeves formula
+                        - [ ] Polak–Ribière formula
+                        - [ ] Hestenes-Stiefel formula
+                        - [ ] Dai-Yuan formula
+                    - [x] Nonlinear Conjugate Gradient
+                        - [x] Fletcher–Reeves formula
+                        - [x] Polak–Ribière formula
+                        - [x] Hestenes-Stiefel formula
+                        - [x] Dai-Yuan formula
+                    - [x] Heavy Ball Gradient
+                - 2nd Order Methods
+                    - [x] Newton
+                    - [x] BFGS quasi-Newton
+                    - [ ] L-BFGS quasi-Newton
+        - Stochastic Methods
+            - [x] Stochastic Gradient Descent
                 - [x] standard momentum
                 - [x] Nesterov momentum
                 - [ ] learning rate decay
@@ -93,7 +94,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [x] Quadratic
             - [x] Lagrangian Box-Constrained
     - Constrained
-        - [x] Box-Constrained Quadratic
+        - [x] Box-Constrained
 
 - Machine Learning Models
     - [x] Linear Regression

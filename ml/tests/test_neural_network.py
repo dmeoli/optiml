@@ -3,9 +3,9 @@ from sklearn.datasets import load_iris, load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from ml.losses import cross_entropy, mean_squared_error
-from ml.activations import sigmoid, softmax, linear
-from ml.layers import FullyConnected
+from ml.neural_network.losses import cross_entropy, mean_squared_error
+from ml.neural_network.activations import sigmoid, softmax, linear
+from ml.neural_network.layers import FullyConnected
 from ml.neural_network import NeuralNetworkRegressor, NeuralNetworkClassifier
 from optimization.unconstrained.quasi_newton import BFGS
 

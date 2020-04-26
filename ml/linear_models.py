@@ -2,18 +2,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.base import MultiOutputMixin, RegressorMixin, BaseEstimator, ClassifierMixin
 
-from ml.activations import Sigmoid
-from ml.losses import mean_squared_error, cross_entropy
-from ml.regularizers import l1, l2
+from ml.neural_network.activations import Sigmoid
+from ml.neural_network.losses import mean_squared_error, cross_entropy
+from ml.neural_network.regularizers import l1, l2
 from optimization.optimization_function import OptimizationFunction
-from optimization.optimizer import LineSearchOptimizer
+from optimization.optimizer import LineSearchOptimizer, StochasticOptimizer
 
 plt.style.use('ggplot')
 
 
 class LinearModelLossFunction(OptimizationFunction):
 
-    def __init__(self, X, y, linear_model, loss):
+    def __init__(self, linear_model, X, y, loss):
         super().__init__(X.shape[1])
         self.X = X
         self.y = y
@@ -35,10 +35,18 @@ class LinearModelLossFunction(OptimizationFunction):
     def args(self):
         return self.X, self.y
 
-    def function(self, theta, X, y):
+    def function(self, theta, X=None, y=None):
+        if X is None:
+            X = self.X
+        if y is None:
+            y = self.y
         return self.loss(self.linear_model.predict(X, theta), y) + self.linear_model.regularization(theta)
 
-    def jacobian(self, theta, X, y):
+    def jacobian(self, theta, X=None, y=None):
+        if X is None:
+            X = self.X
+        if y is None:
+            y = self.y
         return (np.dot(X.T, self.linear_model.predict(X, theta) - y) +
                 self.linear_model.regularization.jacobian(theta) / X.shape[0])
 
@@ -63,11 +71,11 @@ class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
         if self.targets > 1:
             raise ValueError('use sklearn.multioutput.MultiOutputRegressor to train a model over more than one target')
 
-        loss = LinearModelLossFunction(X, y, self, mean_squared_error)
+        loss = LinearModelLossFunction(self, X, y, mean_squared_error)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(loss, batch_size=self.batch_size, max_iter=self.epochs,
-                                    max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()[0]
-        else:
+            self.w = self.optimizer(loss, max_iter=self.epochs, max_f_eval=self.max_f_eval,
+                                    verbose=self.verbose).minimize()[0]
+        elif issubclass(self.optimizer, StochasticOptimizer):
             self.w = self.optimizer(loss, batch_size=self.batch_size, step_rate=self.learning_rate,
                                     momentum_type=self.momentum_type, momentum=self.momentum,
                                     max_iter=self.epochs, verbose=self.verbose).minimize()[0]
@@ -99,11 +107,11 @@ class LogisticRegression(BaseEstimator, ClassifierMixin):
                              'to train a model over more than two labels')
         y = np.where(y == self.labels[0], 0, 1)
 
-        loss = LinearModelLossFunction(X, y, self, cross_entropy)
+        loss = LinearModelLossFunction(self, X, y, cross_entropy)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.w = self.optimizer(loss, batch_size=self.batch_size, max_iter=self.epochs,
-                                    max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()[0]
-        else:
+            self.w = self.optimizer(loss, max_iter=self.epochs, max_f_eval=self.max_f_eval,
+                                    verbose=self.verbose).minimize()[0]
+        elif issubclass(self.optimizer, StochasticOptimizer):
             self.w = self.optimizer(loss, batch_size=self.batch_size, step_rate=self.learning_rate,
                                     momentum_type=self.momentum_type, momentum=self.momentum,
                                     max_iter=self.epochs, verbose=self.verbose).minimize()[0]
