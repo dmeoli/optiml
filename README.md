@@ -5,7 +5,9 @@ solver for many machine learning models developed during the Machine Learning & 
 courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [University of Pisa](https://www.unipi.it/index.php/english).
 
 ## Contents
+
 - Numerical Optimization
+
     - Unconstrained Optimization
         - Line Search Methods
             - Exact Line Search Methods
@@ -88,13 +90,13 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
             - [x] QP solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
 
-- Optimization Functions
-    - Unconstrained
-        - [x] Rosenbrock
-        - [x] Quadratic
-            - [x] Lagrangian Box-Constrained
-    - Constrained
-        - [x] Box-Constrained
+    - Optimization Functions
+        - Unconstrained
+            - [x] Rosenbrock
+            - [x] Quadratic
+                - [x] Lagrangian Box-Constrained
+        - Constrained
+            - [x] Quadratic Box-Constrained
 
 - Machine Learning Models
     - [x] Linear Regression
