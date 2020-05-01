@@ -8,9 +8,11 @@ from utils import load_ml_cup, mean_euclidean_error, load_ml_cup_blind, plot_val
 if __name__ == '__main__':
     X, y = load_ml_cup()
 
-    gamma_range = [1e-4, 1e-2]
-    C_range = [1, 10, 100, 1000]
-    epsilon_range = [0.001, 0.01, 0.1, 0.2, 0.3]
+    gamma_range = np.logspace(-6, -1, 5)
+    C_range = [1, 10, 100, 200, 300, 400, 500, 600, 1000]
+    epsilon_range = [0.001, 0.01, 0.1, 0.2, 0.4, 0.6, 0.8, 1]
+
+    from sklearn.metrics.pairwise import laplacian_kernel
 
     tuned_parameters = {'estimator__kernel': ['rbf'],
                         'estimator__epsilon': epsilon_range,
@@ -40,7 +42,7 @@ if __name__ == '__main__':
 
     # plot learning curve to visualize the effect of the
     # number of observations on the performance metric
-    plot_learning_curve(grid.best_estimator_, X, y, scorer)
+    plot_learning_curve(grid.best_estimator_, X, y, scorer, train_sizes=np.linspace(.1, 1.0, 5))
 
     # save predictions on the blind test set
     np.savetxt('./ml/data/ML-CUP19/dmeoli_ML-CUP19-TS.csv', grid.predict(load_ml_cup_blind()), delimiter=',')

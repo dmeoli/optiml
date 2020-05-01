@@ -10,7 +10,7 @@ def solve_qp(f, G, h, A, b, solver='quadprog'):
 
 def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
     return minimize(fun=f.function, jac=f.jacobian,
-                    method='slsqp', x0=np.zeros(f.n),
+                    method='slsqp', x0=np.zeros(f.ndim),
                     constraints=({'type': 'ineq',
                                   'fun': lambda x: h - np.dot(G, x),
                                   'jac': lambda x: -G},
@@ -23,7 +23,7 @@ def scipy_solve_qp(f, G, h, A, b, max_iter, verbose):
 
 def scipy_solve_bcqp(f, A, ub, max_iter, verbose):
     return minimize(fun=f.function, jac=f.jacobian,
-                    method='slsqp', x0=np.zeros(f.n),
+                    method='slsqp', x0=np.zeros(f.ndim),
                     constraints={'type': 'eq',
                                  'fun': lambda x: np.dot(A, x),
                                  'jac': lambda x: A},

@@ -11,14 +11,14 @@ class OptimizationFunction:
     def __init__(self, ndim, x_min, x_max, y_min, y_max):
         self.jac = jacobian(self.function)
         self.hes = hessian(self.function)
-        self.n = ndim
+        self.ndim = ndim
         self.x_min = x_min
         self.x_max = x_max
         self.y_min = y_min
         self.y_max = y_max
 
     def x_star(self):
-        raise NotImplementedError
+        raise np.nan
 
     def f_star(self):
         return np.inf
@@ -113,7 +113,7 @@ class Quadratic(OptimizationFunction):
             # compute the inverse of the Hessian matrix and O(2n^2) to multiply this by the -q vector
             return np.linalg.solve(self.Q, -self.q)  # complexity O(2n^3/3)
         except np.linalg.LinAlgError:  # the Hessian matrix is singular
-            return np.full(self.n, np.inf)
+            return np.full(self.ndim, np.inf)
 
     def f_star(self):
         return self.function(self.x_star())
@@ -260,6 +260,12 @@ class BoxConstrained(Quadratic):
         super().__init__(Q, q, x_min, x_max, y_min, y_max)
         self.ub = ub
 
+    def x_star(self):
+        raise np.nan
+
+    def f_star(self):
+        return np.inf
+
 
 class LagrangianBoxConstrained(Quadratic):
 
@@ -268,7 +274,7 @@ class LagrangianBoxConstrained(Quadratic):
         Construct the lagrangian relaxation of a box-constrained quadratic function defined as:
 
                        1/2 x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x
-                    1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ u
+                    1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ ub
 
         where lambda^+ are the first n components of lmbda, and lambda^- the last n components;
         both are constrained to be >= 0.
@@ -277,7 +283,7 @@ class LagrangianBoxConstrained(Quadratic):
         if not isinstance(f, BoxConstrained):
             raise TypeError('f is not a box-constrained quadratic function')
         super().__init__(f.Q, f.q, x_min, x_max, y_min, y_max)
-        self.n *= 2
+        self.ndim *= 2
         # Compute the LDL^T Cholesky symmetric indefinite factorization
         # of Q because it is symmetric but could be not positive definite.
         # This will be used at each iteration to solve the Lagrangian relaxation.
@@ -286,24 +292,30 @@ class LagrangianBoxConstrained(Quadratic):
         self.primal_solution = np.inf
         self.primal_value = np.inf
 
+    def x_star(self):
+        raise np.nan
+
+    def f_star(self):
+        return np.inf
+    
     def function(self, lmbda):
         """
         The optimal solution of the Lagrangian relaxation is the unique
         solution of the linear system:
 
-                        Q x = -q - lambda^+ + lambda^-
+                        Q x = q^T + lambda^+ - lambda^-
 
         Since we have saved the LDL^T Cholesky factorization of Q,
         i.e., Q = L D L^T, we obtain this by solving:
 
-                     L D L^T x = -q - lambda^+ + lambda^-
+                     L D L^T x = q^T + lambda^+ - lambda^-
 
         :param lmbda:
         :return: the function value
         """
-        ql = self.q.T + lmbda[:self.primal.n] - lmbda[self.primal.n:]
+        ql = self.q.T + lmbda[:self.primal.ndim] - lmbda[self.primal.ndim:]
         x = ldl_solve((self.L, self.D, self.P), -ql)
-        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.n].dot(self.primal.ub)
+        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.ndim].dot(self.primal.ub)
 
     def jacobian(self, lmbda):
         """
@@ -314,7 +326,7 @@ class LagrangianBoxConstrained(Quadratic):
         :param lmbda:
         :return:
         """
-        ql = self.q.T + lmbda[:self.primal.n] - lmbda[self.primal.n:]
+        ql = self.q.T + lmbda[:self.primal.ndim] - lmbda[self.primal.ndim:]
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = np.hstack((self.primal.ub - x, x))
 
@@ -340,7 +352,7 @@ class Rosenbrock(OptimizationFunction):
         self.b = b
 
     def x_star(self):
-        return np.zeros(self.n) if self.a == 0 else np.ones(self.n)
+        return np.zeros(self.ndim) if self.a == 0 else np.ones(self.ndim)
 
     def f_star(self):
         return self.function(self.x_star())

@@ -602,7 +602,7 @@ class SVC(ClassifierMixin, SVM):
                     raise ValueError(f'unknown optimizer {self.optimizer}')
 
                 if res[2] != 'optimal':
-                    warnings.warn("max_iter reached but the optimization hasn't converged yet")
+                    warnings.warn('max_iter reached but the optimization has not converged yet')
 
                 alphas = dual.primal_solution
 
@@ -1111,7 +1111,7 @@ class SVR(RegressorMixin, SVM):
                     raise ValueError(f'unknown optimizer {self.optimizer}')
 
                 if res[2] != 'optimal':
-                    warnings.warn("max_iter reached but the optimization hasn't converged yet")
+                    warnings.warn('max_iter reached but the optimization has not converged yet')
 
                 alphas = dual.primal_solution
 

@@ -247,8 +247,8 @@ class SteepestGradientDescent(LineSearchOptimizer):
                          m_inf, min_a, callback, callback_args, verbose, plot)
 
     def minimize(self):
-        last_x = np.zeros(self.f.n)  # last point visited in the line search
-        last_g = np.zeros(self.f.n)  # gradient of last_x
+        last_x = np.zeros(self.f.ndim)  # last point visited in the line search
+        last_g = np.zeros(self.f.ndim)  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose and not self.iter % self.verbose:

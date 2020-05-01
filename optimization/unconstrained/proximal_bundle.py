@@ -134,7 +134,7 @@ class ProximalBundle(Optimizer):
                     ng0 = 1  # un-scaled stopping criterion
 
             # construct the master problem
-            d = Variable((self.f.n, 1))
+            d = Variable((self.f.ndim, 1))
             v = Variable(1)
 
             M = [v >= F + G * (self.x.reshape(-1, 1) + d)]

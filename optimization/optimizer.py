@@ -25,7 +25,7 @@ class Optimizer:
             raise TypeError('f is not an optimization function')
         self.f = f
         if callable(x):
-            self.x = x(f.n)
+            self.x = x(f.ndim)
         elif not np.isrealobj(x):
             raise ValueError('x not a real vector')
         else:

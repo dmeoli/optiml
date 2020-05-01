@@ -120,8 +120,8 @@ class BFGS(LineSearchOptimizer):
         self.delta = delta
 
     def minimize(self):
-        last_x = np.zeros(self.f.n)  # last point visited in the line search
-        last_g = np.zeros(self.f.n)  # gradient of last_x
+        last_x = np.zeros(self.f.ndim)  # last point visited in the line search
+        last_g = np.zeros(self.f.ndim)  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose and not self.iter % self.verbose:
@@ -145,12 +145,12 @@ class BFGS(LineSearchOptimizer):
             if self.iter == 0:
                 if self.delta > 0:
                     # initial approximation of inverse of Hessian = scaled identity
-                    B = self.delta * np.identity(self.f.n)
+                    B = self.delta * np.identity(self.f.ndim)
                 else:
                     # initial approximation of inverse of Hessian computed by finite differences of gradient
                     small_step = max(-self.delta, 1e-8)
-                    B = np.zeros((self.f.n, self.f.n))
-                    for i in range(self.f.n):
+                    B = np.zeros((self.f.ndim, self.f.ndim))
+                    for i in range(self.f.ndim):
                         xp = self.x
                         xp[i] = xp[i] + small_step
                         gp = self.f.jacobian(xp)
@@ -158,7 +158,7 @@ class BFGS(LineSearchOptimizer):
                     B = (B + B.T) / 2  # ensure it is symmetric
                     lambda_n = min(np.linalg.eigvalsh(B))  # smallest eigenvalue
                     if lambda_n < 1e-6:
-                        B = B + (1e-6 - lambda_n) * np.identity(self.f.n)
+                        B = B + (1e-6 - lambda_n) * np.identity(self.f.ndim)
                     B = np.linalg.inv(B)
 
             if self.verbose and not self.iter % self.verbose:
@@ -203,8 +203,8 @@ class BFGS(LineSearchOptimizer):
                 break
 
             # update approximation of the Hessian using the BFGS formula
-            s = (last_x - self.x).reshape(self.f.n, 1)  # s^i = x^{i + 1} - x^i
-            y = (last_g - g).reshape(self.f.n, 1)  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
+            s = (last_x - self.x).reshape(self.f.ndim, 1)  # s^i = x^{i + 1} - x^i
+            y = (last_g - g).reshape(self.f.ndim, 1)  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
 
             rho = y.T.dot(s).item()
             if rho < 1e-16:

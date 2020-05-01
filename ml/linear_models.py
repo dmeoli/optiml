@@ -29,7 +29,7 @@ class LinearModelLossFunction(OptimizationFunction):
                 if self.linear_model.regularizer.lmbda == 0.:
                     self.x_opt = np.linalg.lstsq(self.X, self.y)[0]
                 else:
-                    self.x_opt = np.linalg.inv(self.X.T.dot(self.X) + np.identity(self.n) *
+                    self.x_opt = np.linalg.inv(self.X.T.dot(self.X) + np.identity(self.ndim) *
                                                self.linear_model.regularizer.lmbda).dot(self.X.T).dot(self.y)
             return self.x_opt
 
@@ -96,7 +96,7 @@ class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
             raise ValueError(f'unknown optimizer {self.optimizer}')
 
         if res[2] != 'optimal':
-            warnings.warn("max_iter reached but the optimization hasn't converged yet")
+            warnings.warn('max_iter reached but the optimization has not converged yet')
 
         self.coef_ = res[0]
 

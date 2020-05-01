@@ -118,8 +118,8 @@ class Newton(LineSearchOptimizer):
         self.delta = delta
 
     def minimize(self):
-        last_x = np.zeros(self.f.n)  # last point visited in the line search
-        last_g = np.zeros(self.f.n)  # gradient of last_x
+        last_x = np.zeros(self.f.ndim)  # last point visited in the line search
+        last_g = np.zeros(self.f.ndim)  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose and not self.iter % self.verbose:
@@ -166,7 +166,7 @@ class Newton(LineSearchOptimizer):
             if lambda_n < self.delta:
                 if self.verbose and not self.iter % self.verbose:
                     print('\t{:1.4e}'.format(self.delta - lambda_n), end='')
-                H = H + (self.delta - lambda_n) * np.identity(self.f.n)
+                H = H + (self.delta - lambda_n) * np.identity(self.f.ndim)
             else:
                 if self.verbose and not self.iter % self.verbose:
                     print('\t{:1.4e}'.format(0), end='')

@@ -169,7 +169,7 @@ class NeuralNetwork(BaseEstimator, Layer):
             raise ValueError(f'unknown optimizer {self.optimizer}')
 
         if res[2] != 'optimal':
-            warnings.warn("max_iter reached but the optimization hasn't converged yet")
+            warnings.warn('max_iter reached but the optimization has not converged yet')
 
         self._unpack(res[0])
 

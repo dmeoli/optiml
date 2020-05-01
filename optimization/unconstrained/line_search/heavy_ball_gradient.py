@@ -123,8 +123,8 @@ class HeavyBallGradient(LineSearchOptimizer):
         self.beta = beta
 
     def minimize(self):
-        last_x = np.zeros(self.f.n)  # last point visited in the line search
-        last_g = np.zeros(self.f.n)  # gradient of last_x
+        last_x = np.zeros(self.f.ndim)  # last point visited in the line search
+        last_g = np.zeros(self.f.ndim)  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose and not self.iter % self.verbose:
@@ -134,7 +134,7 @@ class HeavyBallGradient(LineSearchOptimizer):
                 prev_v = np.inf
             print('\tls\tit\ta*', end='')
 
-        past_d = np.zeros(self.f.n)
+        past_d = np.zeros(self.f.ndim)
 
         if self.plot:
             fig = self.f.plot()

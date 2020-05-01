@@ -46,13 +46,13 @@ class ActiveSet(BoxConstrainedOptimizer):
         # active, L and U respectively. Of course, L and U have to be disjoint.
         # Since we start from the middle of the box, both the initial active sets
         # are empty
-        L = np.full(self.f.n, False)
-        U = np.full(self.f.n, False)
+        L = np.full(self.f.ndim, False)
+        U = np.full(self.f.ndim, False)
 
         # the set of "active variables", those that do *not* belong to any of the
         # two active sets and therefore are "free", is therefore the complement to
         # 1 : n of L union U; since L and U are empty now, A = 1 : n
-        A = np.full(self.f.n, True)
+        A = np.full(self.f.ndim, True)
 
         if self.verbose and not self.iter % self.verbose:
             print('iter\tf(x)\t\t|B|\tI/O')
@@ -82,7 +82,7 @@ class ActiveSet(BoxConstrainedOptimizer):
             # (and anyway, any QP problem with equality constraints reduces to an
             # unconstrained one)
 
-            xs = np.zeros(self.f.n)
+            xs = np.zeros(self.f.ndim)
             xs[U] = self.f.ub[U]
 
             # use the LDL^T Cholesky symmetric indefinite factorization to solve the
@@ -124,7 +124,7 @@ class ActiveSet(BoxConstrainedOptimizer):
                 # this means that d = xs - self.x is a descent direction, use it
                 # of course, only the "free" part really needs to be computed
 
-                d = np.zeros(self.f.n)
+                d = np.zeros(self.f.ndim)
                 d[A] = xs[A] - self.x[A]
 
                 # first, compute the maximum feasible step size max_t such that:

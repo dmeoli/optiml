@@ -127,7 +127,7 @@ class InteriorPoint(BoxConstrainedOptimizer):
         # compute a feasible interior dual solution satisfying SKKTS with x for some
         # \mu we don't care much of
         g = self.f.jacobian(self.x)
-        lp = 1e-6 * np.ones(self.f.n)
+        lp = 1e-6 * np.ones(self.f.ndim)
         lm = np.copy(lp)
         idx = g >= 0
         lm[idx] = lm[idx] + g[idx]
@@ -169,7 +169,7 @@ class InteriorPoint(BoxConstrainedOptimizer):
             #
             # it appears this last form is *vastly* more numerically stable
 
-            mu = (self.f_x - p) / (4 * self.f.n * self.f.n)  # use \rho = 1 / (# of constraints)
+            mu = (self.f_x - p) / (4 * self.f.ndim * self.f.ndim)  # use \rho = 1 / (# of constraints)
 
             umx = self.f.ub - self.x
             H = self.f.Q + np.diag(lp / umx + lm / self.x)
@@ -180,9 +180,9 @@ class InteriorPoint(BoxConstrainedOptimizer):
             # because H is symmetric positive definite matrix
             dx = cholesky_solve(H, w)
 
-            dlp = (mu * np.ones(self.f.n) + lp * dx) / umx - lp
+            dlp = (mu * np.ones(self.f.ndim) + lp * dx) / umx - lp
 
-            dlm = (mu * np.ones(self.f.n) - lm * dx) / self.x - lm
+            dlm = (mu * np.ones(self.f.ndim) - lm * dx) / self.x - lm
 
             # compute maximum feasible primal step size
             idx = dx < 0  # negative direction entries

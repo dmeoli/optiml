@@ -66,7 +66,7 @@ class FrankWolfe(BoxConstrainedOptimizer):
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
 
             # solve min { <g, y> : 0 <= y <= u }
-            y = np.zeros(self.f.n)
+            y = np.zeros(self.f.ndim)
             idx = g < 0
             y[idx] = self.f.ub[idx]
 

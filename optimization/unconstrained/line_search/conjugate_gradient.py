@@ -58,7 +58,7 @@ class QuadraticConjugateGradient(Optimizer):
                 if self.verbose and not self.iter % self.verbose:
                     print('\t\t', end='')
             else:  # normal iterations, use appropriate formula
-                if self.r_start > 0 and self.iter % self.f.n * self.r_start == 0:
+                if self.r_start > 0 and self.iter % self.f.ndim * self.r_start == 0:
                     # ... unless a restart is being performed
                     beta = 0
                     if self.verbose and not self.iter % self.verbose:
@@ -262,8 +262,8 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
         self.r_start = r_start
 
     def minimize(self):
-        last_x = np.zeros(self.f.n)  # last point visited in the line search
-        last_g = np.zeros(self.f.n)  # gradient of last_x
+        last_x = np.zeros(self.f.ndim)  # last point visited in the line search
+        last_g = np.zeros(self.f.ndim)  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose and not self.iter % self.verbose:
@@ -309,7 +309,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 if self.verbose and not self.iter % self.verbose:
                     print('\t\t', end='')
             else:  # normal iterations, use appropriate formula
-                if self.r_start > 0 and self.iter % self.f.n * self.r_start == 0:
+                if self.r_start > 0 and self.iter % self.f.ndim * self.r_start == 0:
                     # ... unless a restart is being performed
                     beta = 0
                     if self.verbose and not self.iter % self.verbose:
