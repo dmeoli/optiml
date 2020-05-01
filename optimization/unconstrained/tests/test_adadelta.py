@@ -12,7 +12,7 @@ def test_AdaDelta_quadratic():
 
 def test_AdaDelta_Rosenbrock():
     obj = Rosenbrock()
-    assert np.allclose(AdaDelta(obj, step_rate=0.1).minimize()[0], obj.x_star(), rtol=0.1)
+    assert np.allclose(AdaDelta(obj, step_size=0.1).minimize()[0], obj.x_star(), rtol=0.1)
 
 
 def test_AdaDelta_standard_momentum_quadratic():

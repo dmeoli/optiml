@@ -36,30 +36,30 @@ class ProjectedGradient(BoxConstrainedOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, eps, max_iter, verbose, plot)
+    def __init__(self, f, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False, plot=False):
+        super().__init__(f, eps, max_iter, callback, callback_args, verbose, plot)
 
     def minimize(self):
 
         if self.verbose and not self.iter % self.verbose:
             print('iter\tf(x)\t\t||g(x)||')
 
-        if self.plot and self.n == 2:
+        if self.plot:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
             d = -g
 
             # project the direction over the active constraints
-            d[np.logical_and(self.f.ub - self.wrt <= 1e-12, d > 0)] = 0
-            d[np.logical_and(self.wrt <= 1e-12, d < 0)] = 0
+            d[np.logical_and(self.f.ub - self.x <= 1e-12, d > 0)] = 0
+            d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
             # compute the norm of the (projected) gradient
             ng = np.linalg.norm(d)
 
             if self.verbose and not self.iter % self.verbose:
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng))
+                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng))
 
             if ng <= self.eps:
                 status = 'optimal'
@@ -73,9 +73,9 @@ class ProjectedGradient(BoxConstrainedOptimizer):
             #   0 <= x[i] + max_t d[i] <= ub[i]   for all i
 
             idx = d > 0  # positive gradient entries
-            max_t = min((self.f.ub[idx] - self.wrt[idx]) / d[idx], default=np.inf)
+            max_t = min((self.f.ub[idx] - self.x[idx]) / d[idx], default=np.inf)
             idx = d < 0  # negative gradient entries
-            max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=np.inf))
+            max_t = min(max_t, min(-self.x[idx] / d[idx], default=np.inf))
 
             # compute optimal unbounded step size:
             #   min { 1/2 (x + a d)^T Q (x + a d) + q^T (x + a d) }
@@ -90,18 +90,20 @@ class ProjectedGradient(BoxConstrainedOptimizer):
                 # optimal unbounded step size restricted to max feasible step
                 t = min(-g.T.dot(d) / den, max_t)
 
-            self.wrt += t * d
+            self.x += t * d
 
             # plot the trajectory
-            if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt - t * d, self.wrt)).T
+            if self.plot:
+                p_xy = np.vstack((self.x - t * d, self.x)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
             self.iter += 1
 
+            self.callback()
+
         if self.verbose:
             print()
-        if self.plot and self.n == 2:
+        if self.plot:
             plt.show()
-        return self.wrt, v, status
+        return self.x, self.f_x, status

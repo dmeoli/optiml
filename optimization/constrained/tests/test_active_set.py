@@ -7,7 +7,7 @@ from optimization.optimization_function import BoxConstrained
 
 def test():
     np.random.seed(2)
-    assert np.allclose(ActiveSet(BoxConstrained(n=2)).minimize()[0], 0.)
+    assert np.allclose(ActiveSet(BoxConstrained(ndim=2)).minimize()[0], 0.)
 
 
 if __name__ == "__main__":

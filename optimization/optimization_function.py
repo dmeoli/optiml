@@ -1,9 +1,6 @@
 import autograd.numpy as np
 from autograd import jacobian, hessian
-from matplotlib import cm
 from matplotlib import pyplot as plt
-from matplotlib.colors import LogNorm
-from mpl_toolkits.mplot3d import Axes3D
 from scipy.linalg import ldl
 
 from utils import ldl_solve
@@ -11,10 +8,14 @@ from utils import ldl_solve
 
 class OptimizationFunction:
 
-    def __init__(self, n=2):
+    def __init__(self, ndim, x_min, x_max, y_min, y_max):
         self.jac = jacobian(self.function)
         self.hes = hessian(self.function)
-        self.n = n
+        self.n = ndim
+        self.x_min = x_min
+        self.x_max = x_max
+        self.y_min = y_min
+        self.y_max = y_max
 
     def x_star(self):
         raise NotImplementedError
@@ -47,26 +48,32 @@ class OptimizationFunction:
     def plot(self):
         X, Y = np.meshgrid(np.arange(self.x_min, self.x_max, 0.1), np.arange(self.y_min, self.y_max, 0.1))
 
-        # 3D surface plot
-        surface_plot = plt.figure()
-        surface_axes = Axes3D(surface_plot)
-
-        z = np.array([self.function(np.array([x, y]))
+        Z = np.array([self.function(np.array([x, y]))
                       for x, y in zip(X.ravel(), Y.ravel())]).reshape(X.shape)
 
-        surface_axes.plot_surface(X, Y, z, norm=LogNorm(), cmap=cm.get_cmap('jet'))
+        fig = plt.figure(figsize=(16, 8))
 
-        # 2D contour
-        contour_plot, contour_axes = plt.subplots()
+        # 3D surface plot
+        ax = fig.add_subplot(1, 2, 1, projection='3d', elev=50, azim=-50)
+        ax.plot_surface(X, Y, Z, cmap='jet', alpha=0.5)
+        ax.plot([self.x_star()[0]], [self.x_star()[1]], [self.f_star()], marker='*', color='r', markersize=10)
+        ax.set_xlabel('$x_1$')
+        ax.set_ylabel('$x_2$')
+        ax.set_zlabel('$f(x)$')
 
-        contour_axes.contour(X, Y, z, cmap=cm.get_cmap('jet'))
-        contour_axes.plot(*self.x_star(), 'r*', markersize=10)
-        return surface_plot, surface_axes, contour_plot, contour_axes
+        # 2D contour plot
+        ax = fig.add_subplot(1, 2, 2)
+        ax.contour(X, Y, Z, 70, cmap='jet')
+        ax.plot(*self.x_star(), marker='*', color='r', markersize=10)
+        ax.set_xlabel('$x_1$')
+        ax.set_ylabel('$x_2$')
+
+        return fig
 
 
 class Quadratic(OptimizationFunction):
 
-    def __init__(self, Q, q):
+    def __init__(self, Q, q, x_min=-5, x_max=2, y_min=-5, y_max=2):
         """
         Construct a quadratic function from its linear and quadratic part defined as:
 
@@ -84,7 +91,7 @@ class Quadratic(OptimizationFunction):
             raise ValueError('Q not a real matrix')
 
         n = Q.shape[1]
-        super().__init__(n)
+        super().__init__(n, x_min, x_max, y_min, y_max)
 
         if n <= 1:
             raise ValueError('Q is too small')
@@ -97,8 +104,6 @@ class Quadratic(OptimizationFunction):
         if q.size != n:
             raise ValueError('q size does not match with Q')
         self.q = q
-
-        self.x_min, self.x_max, self.y_min, self.y_max = -5, 2, -5, 2
 
     def x_star(self):
         try:
@@ -140,21 +145,22 @@ class Quadratic(OptimizationFunction):
 
 
 # 2x2 quadratic function with nicely conditioned Hessian
-quad1 = Quadratic([[6, -2], [-2, 6]], [10, 5])
+quad1 = Quadratic(Q=[[6, -2], [-2, 6]], q=[10, 5])
 # 2x2 quadratic function with less nicely conditioned Hessian
-quad2 = Quadratic([[5, -3], [-3, 5]], [10, 5])
+quad2 = Quadratic(Q=[[5, -3], [-3, 5]], q=[10, 5])
 # 2x2 quadratic function with Hessian having one zero eigenvalue (singular matrix)
-quad3 = Quadratic([[4, -4], [-4, 4]], [10, 5])
+quad3 = Quadratic(Q=[[4, -4], [-4, 4]], q=[10, 5])
 # 2x2 quadratic function with indefinite Hessian (one positive and one negative eigenvalue)
-quad4 = Quadratic([[3, -5], [-5, 3]], [10, 5])
+quad4 = Quadratic(Q=[[3, -5], [-5, 3]], q=[10, 5])
 # 2x2 quadratic function with "very elongated" Hessian
 # (a very small positive minimum eigenvalue, the other much larger)
-quad5 = Quadratic([[101, -99], [-99, 101]], [10, 5])
+quad5 = Quadratic(Q=[[101, -99], [-99, 101]], q=[10, 5])
 
 
 class BoxConstrained(Quadratic):
 
-    def __init__(self, Q=None, q=None, ub=None, n=2, actv=0.5, rank=1.1, ecc=0.99, u_min=8, u_max=12):
+    def __init__(self, Q=None, q=None, ub=None, x_min=-5, x_max=2, y_min=-5, y_max=2,
+                 ndim=2, actv=0.5, rank=1.1, ecc=0.99, u_min=8, u_max=12):
         """
         Construct a box-constrained quadratic function defined as:
 
@@ -167,10 +173,10 @@ class BoxConstrained(Quadratic):
         :param ub: ([n x 1] real column vector): the upper bound of the box.
         """
         if Q is None and q is None:
-            if not np.isscalar(n) or not np.isreal(n):
+            if not np.isscalar(ndim) or not np.isreal(ndim):
                 raise ValueError('n not a real scalar')
-            n = round(n)
-            if n <= 0:
+            ndim = round(ndim)
+            if ndim <= 0:
                 raise ValueError('n must be > 0')
             if not np.isscalar(actv) or not np.isreal(actv):
                 raise ValueError('actv not a real scalar')
@@ -193,11 +199,11 @@ class BoxConstrained(Quadratic):
             if u_max <= u_min:
                 raise ValueError('u_max must be > u_min')
 
-            np.random.seed(n)
+            np.random.seed(ndim)
 
-            ub = u_min * np.ones(n) + (u_max - u_min) * np.random.rand(n)
+            ub = u_min * np.ones(ndim) + (u_max - u_min) * np.random.rand(ndim)
 
-            G = np.random.rand(round(rank * n), n)
+            G = np.random.rand(round(rank * ndim), ndim)
             Q = G.T.dot(G)
 
             # compute eigenvalue decomposition
@@ -229,13 +235,13 @@ class BoxConstrained(Quadratic):
             #
             # and then we set q = -z^T Q
 
-            z = np.zeros(n)
+            z = np.zeros(ndim)
 
             # out_b[i] = True if z[i] will be out of the bounds
-            out_b = np.random.rand(n) <= actv
+            out_b = np.random.rand(ndim) <= actv
 
             # 50/50 chance of being left of lb or right of ub
-            lr = np.random.rand(n) <= 0.5
+            lr = np.random.rand(ndim) <= 0.5
             l = np.logical_and(out_b, lr)
             r = np.logical_and(out_b, np.logical_not(lr))
 
@@ -251,13 +257,13 @@ class BoxConstrained(Quadratic):
 
             q = -Q.dot(z)
 
-        super().__init__(Q, q)
+        super().__init__(Q, q, x_min, x_max, y_min, y_max)
         self.ub = ub
 
 
 class LagrangianBoxConstrained(Quadratic):
 
-    def __init__(self, f):
+    def __init__(self, f, x_min=-5, x_max=2, y_min=-5, y_max=2):
         """
         Construct the lagrangian relaxation of a box-constrained quadratic function defined as:
 
@@ -270,7 +276,7 @@ class LagrangianBoxConstrained(Quadratic):
         """
         if not isinstance(f, BoxConstrained):
             raise TypeError('f is not a box-constrained quadratic function')
-        super().__init__(f.Q, f.q)
+        super().__init__(f.Q, f.q, x_min, x_max, y_min, y_max)
         self.n *= 2
         # Compute the LDL^T Cholesky symmetric indefinite factorization
         # of Q because it is symmetric but could be not positive definite.
@@ -328,11 +334,10 @@ class LagrangianBoxConstrained(Quadratic):
 
 class Rosenbrock(OptimizationFunction):
 
-    def __init__(self, n=2, a=1, b=2):
-        super().__init__(n)
+    def __init__(self, ndim=2, a=1, b=2, x_min=-2, x_max=2, y_min=-1, y_max=3):
+        super().__init__(ndim, x_min, x_max, y_min, y_max)
         self.a = a
         self.b = b
-        self.x_min, self.x_max, self.y_min, self.y_max = -2, 2, -1, 3
 
     def x_star(self):
         return np.zeros(self.n) if self.a == 0 else np.ones(self.n)
@@ -347,25 +352,3 @@ class Rosenbrock(OptimizationFunction):
         :return:  the value of the Rosenbrock function at x.
         """
         return np.sum(self.b * (x[1:] - x[:-1] ** 2) ** 2 + (self.a - x[:-1]) ** 2)
-
-
-class Ackley(OptimizationFunction):
-
-    def __init__(self, n=2):
-        super().__init__(n)
-        self.x_min, self.x_max, self.y_min, self.y_max = -5, 5, -5, 5
-
-    def x_star(self):
-        return np.zeros(self.n)
-
-    def f_star(self):
-        return self.function(self.x_star())
-
-    def function(self, x):
-        """
-        The Ackley function.
-        :param x: 1D array of points at which the Ackley function is to be computed.
-        :return:  the value of the Ackley function.
-        """
-        return (-20 * np.exp(-0.2 * np.sqrt(np.sum(x ** 2) / x.size)) -
-                np.exp((np.sum(np.cos(2.0 * np.pi * x))) / x.size) + np.e + 20)

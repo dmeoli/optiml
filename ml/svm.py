@@ -1,4 +1,5 @@
 import sys
+import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +11,7 @@ from optimization.constrained.box_constrained_optimizer import BoxConstrainedOpt
 from optimization.constrained.interface import scipy_solve_qp, scipy_solve_bcqp, solve_qp
 from optimization.optimization_function import BoxConstrained, LagrangianBoxConstrained
 from optimization.optimizer import Optimizer
+from optimization.unconstrained import ProximalBundle
 from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
 from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
 from utils import clip
@@ -18,8 +20,9 @@ plt.style.use('ggplot')
 
 
 class SVM(BaseEstimator):
-    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer='SMO', epochs=1000,
-                 learning_rate=0.01, momentum_type='none', momentum=0.9, master_solver='cvxopt', verbose=False):
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer='SMO',
+                 epochs=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, max_f_eval=1000,
+                 master_solver='cvxopt', verbose=False, plot=False):
         self.kernels = {'linear': self.linear,
                         'poly': self.poly,
                         'rbf': self.rbf,
@@ -68,8 +71,10 @@ class SVM(BaseEstimator):
         self.learning_rate = learning_rate
         self.momentum_type = momentum_type
         self.momentum = momentum
+        self.max_f_eval = max_f_eval
         self.master_solver = master_solver
         self.verbose = verbose
+        self.plot = plot
         if kernel == 'linear':
             self.coef_ = 0.
         self.intercept_ = 0.
@@ -224,7 +229,7 @@ class SVM(BaseEstimator):
             plt.contour(_X1, _X2, Z + 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
             plt.contour(_X1, _X2, Z - 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
         elif isinstance(svm, RegressorMixin):
-            _X = np.linspace(-2 * np.pi, 2 * np.pi, 10000).reshape((-1, 1))
+            _X = np.linspace(-2 * np.pi, 2 * np.pi, 10000).reshape(-1, 1)
             Z = svm.predict(_X)
             ax.plot(_X, Z, color='k', linewidth=1)
             ax.plot(_X, Z + svm.epsilon, color='grey', linestyle='--', linewidth=1)
@@ -234,10 +239,11 @@ class SVM(BaseEstimator):
 
 
 class SVC(ClassifierMixin, SVM):
-    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer='SMO', epochs=1000,
-                 learning_rate=0.01, momentum_type='none', momentum=0.9, master_solver='cvxopt', verbose=False):
+    def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer='SMO',
+                 epochs=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, max_f_eval=1000,
+                 master_solver='cvxopt', verbose=False, plot=False):
         super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, learning_rate,
-                         momentum_type, momentum, master_solver, verbose)
+                         momentum_type, momentum, max_f_eval, master_solver, verbose, plot)
 
     class SMOClassifier(SVM.SMO):
         """
@@ -299,10 +305,12 @@ class SVC(ClassifierMixin, SVM):
             alpha1 = self.alphas[i1]
             y1 = self.y[i1]
             E1 = self.errors[i1]
+            C1 = self.f.ub[i1]
 
             alpha2 = self.alphas[i2]
             y2 = self.y[i2]
             E2 = self.errors[i2]
+            C2 = self.f.ub[i2]
 
             s = y1 * y2
 
@@ -310,10 +318,10 @@ class SVC(ClassifierMixin, SVM):
             # based on equations 13 and 14 in Platt's paper
             if y1 != y2:
                 L = max(0, alpha2 - alpha1)
-                H = min(self.C, self.C + alpha2 - alpha1)
+                H = min(C2, C1 + alpha2 - alpha1)
             else:
-                L = max(0, alpha2 + alpha1 - self.C)
-                H = min(self.C, alpha2 + alpha1)
+                L = max(0, alpha2 + alpha1 - C1)
+                H = min(C2, alpha2 + alpha1)
 
             if L == H:
                 return False
@@ -341,6 +349,8 @@ class SVC(ClassifierMixin, SVM):
                 else:
                     a2 = alpha2
 
+                warnings.warn('the kernel matrix is not positive definite')
+
             # if examples can't be optimized within tol, skip this pair
             if abs(a2 - alpha2) < 1e-12 * (a2 + alpha2 + 1e-12):
                 return False
@@ -362,14 +372,14 @@ class SVC(ClassifierMixin, SVM):
             self.errors[i2] += y1 * (a1 - alpha1) * self.K[i1, i2] + y2 * (a2 - alpha2) * self.K[i2, i2]
 
             # to prevent precision problems
-            if a2 > self.C - 1e-8 * self.C:
-                a2 = self.C
-            elif a2 < 1e-8 * self.C:
+            if a2 > C2 - 1e-8 * C2:
+                a2 = C2
+            elif a2 <= 1e-8 * C2:
                 a2 = 0.
 
-            if a1 > self.C - 1e-8 * self.C:
-                a1 = self.C
-            elif a1 < 1e-8 * self.C:
+            if a1 > C1 - 1e-8 * C1:
+                a1 = C1
+            elif a1 <= 1e-8 * C1:
                 a1 = 0.
 
             # update model object with new alphas
@@ -377,8 +387,8 @@ class SVC(ClassifierMixin, SVM):
             self.alphas[i2] = a2
 
             # update the sets of indices for i1 and i2
-            for i in (i1, i2):
-                if 0 < self.alphas[i] < self.C:
+            for C, i in ((C1, i1), (C2, i2)):
+                if 0 < self.alphas[i] < C:
                     self.I0.add(i)
                 else:
                     self.I0.discard(i)
@@ -386,11 +396,11 @@ class SVC(ClassifierMixin, SVM):
                     self.I1.add(i)
                 else:
                     self.I1.discard(i)
-                if self.y[i] == -1 and self.alphas[i] == self.C:
+                if self.y[i] == -1 and self.alphas[i] == C:
                     self.I2.add(i)
                 else:
                     self.I2.discard(i)
-                if self.y[i] == 1 and self.alphas[i] == self.C:
+                if self.y[i] == 1 and self.alphas[i] == C:
                     self.I3.add(i)
                 else:
                     self.I3.discard(i)
@@ -540,19 +550,19 @@ class SVC(ClassifierMixin, SVM):
         A = y.astype(np.float)  # equality matrix
         ub = np.ones(n_samples) * self.C  # upper bounds
 
-        obj_fun = BoxConstrained(P, q, ub)
+        bcqp = BoxConstrained(P, q, ub)
 
         if self.optimizer in ('SMO', scipy_solve_bcqp):
 
             if self.optimizer == 'SMO':
-                smo = self.SMOClassifier(obj_fun, X, y, K, self.kernel, self.C, self.tol, self.verbose).smo()
+                smo = self.SMOClassifier(bcqp, X, y, K, self.kernel, self.C, self.tol, self.verbose).smo()
                 alphas = smo.alphas
                 if self.kernel == 'linear':
                     self.coef_ = smo.w
                 self.intercept_ = smo.b
 
             else:
-                alphas = scipy_solve_bcqp(obj_fun, A, ub, self.epochs, self.verbose)
+                alphas = scipy_solve_bcqp(bcqp, A, ub, self.epochs, self.verbose)
 
         else:
 
@@ -565,24 +575,34 @@ class SVC(ClassifierMixin, SVM):
 
                 if self.optimizer == solve_qp:
                     qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-                    alphas = solve_qp(obj_fun, G, h, A, b, solver=self.master_solver)
+                    alphas = solve_qp(bcqp, G, h, A, b, solver=self.master_solver)
 
                 else:
-                    alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
+                    alphas = scipy_solve_qp(bcqp, G, h, A, b, self.epochs, self.verbose)
 
             elif issubclass(self.optimizer, BoxConstrainedOptimizer):
-                alphas = self.optimizer(obj_fun, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
+                alphas = self.optimizer(bcqp, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
 
             else:
                 # dual lagrangian relaxation of the box-constrained problem
-                dual = LagrangianBoxConstrained(obj_fun)
+                dual = LagrangianBoxConstrained(bcqp)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
-                    self.optimizer(dual, max_iter=self.epochs, max_f_eval=self.max_f_eval,
-                                   verbose=self.verbose).minimize()
+                    res = self.optimizer(f=dual, max_iter=self.epochs, max_f_eval=self.max_f_eval,
+                                         verbose=self.verbose, plot=self.plot).minimize()
                 elif issubclass(self.optimizer, StochasticOptimizer):
-                    self.optimizer(dual, momentum_type=self.momentum_type, momentum=self.momentum,
-                                   step_rate=self.learning_rate, max_iter=self.epochs, verbose=self.verbose).minimize()
+                    res = self.optimizer(f=dual, step_size=self.learning_rate, max_iter=self.epochs,
+                                         momentum_type=self.momentum_type, momentum=self.momentum,
+                                         verbose=self.verbose, plot=self.plot).minimize()
+                elif issubclass(self.optimizer, ProximalBundle):
+                    res = self.optimizer(f=dual, max_iter=self.epochs, master_solver=self.master_solver,
+                                         momentum_type=self.momentum_type, momentum=self.momentum,
+                                         verbose=self.verbose, plot=self.plot).minimize()
+                else:
+                    raise ValueError(f'unknown optimizer {self.optimizer}')
+
+                if res[2] != 'optimal':
+                    warnings.warn("max_iter reached but the optimization hasn't converged yet")
 
                 alphas = dual.primal_solution
 
@@ -614,10 +634,10 @@ class SVC(ClassifierMixin, SVM):
 
 class SVR(RegressorMixin, SVM):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, epsilon=0.1,
-                 optimizer='SMO', epochs=1000, learning_rate=0.01, momentum_type='none',
-                 momentum=0.9, master_solver='cvxopt', verbose=False):
+                 optimizer='SMO', epochs=1000, learning_rate=0.01, momentum_type='none', momentum=0.9,
+                 max_f_eval=1000, master_solver='cvxopt', verbose=False, plot=False):
         super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, learning_rate,
-                         momentum_type, momentum, master_solver, verbose)
+                         momentum_type, momentum, max_f_eval, master_solver, verbose, plot)
         self.epsilon = epsilon  # epsilon insensitive loss value
 
     class SMORegression(SVM.SMO):
@@ -710,6 +730,7 @@ class SVR(RegressorMixin, SVM):
                             Lobj = -L * delta_E
                             Hobj = -H * delta_E
                             a2 = L if Lobj > Hobj else H
+                            warnings.warn('the kernel matrix is not positive definite')
                         a1 = alpha1_p - (a2 - alpha2_p)
                         # update alpha1, alpha2_p if change is larger than some eps
                         if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
@@ -732,6 +753,7 @@ class SVR(RegressorMixin, SVM):
                             Lobj = L * (-2 * self.epsilon + delta_E)
                             Hobj = H * (-2 * self.epsilon + delta_E)
                             a2 = L if Lobj > Hobj else H
+                            warnings.warn('the kernel matrix is not positive definite')
                         a1 = alpha1_p + (a2 - alpha2_n)
                         # update alpha1, alpha2_n if change is larger than some eps
                         if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
@@ -754,6 +776,7 @@ class SVR(RegressorMixin, SVM):
                             Lobj = -L * (2 * self.epsilon + delta_E)
                             Hobj = -H * (2 * self.epsilon + delta_E)
                             a2 = L if Lobj > Hobj else H
+                            warnings.warn('the kernel matrix is not positive definite')
                         a1 = alpha1_n + (a2 - alpha2_p)
                         # update alpha1_n, alpha2_p if change is larger than some eps
                         if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
@@ -776,6 +799,7 @@ class SVR(RegressorMixin, SVM):
                             Lobj = L * delta_E
                             Hobj = H * delta_E
                             a2 = L if Lobj > Hobj else H
+                            warnings.warn('the kernel matrix is not positive definite')
                         a1 = alpha1_n - (a2 - alpha2_n)
                         # update alpha1_n, alpha2_n if change is larger than some eps
                         if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
@@ -1033,20 +1057,19 @@ class SVR(RegressorMixin, SVM):
         A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
-        obj_fun = BoxConstrained(P, q, ub)
+        bcqp = BoxConstrained(P, q, ub)
 
         if self.optimizer in ('SMO', scipy_solve_bcqp):
 
             if self.optimizer == 'SMO':
-                smo = self.SMORegression(obj_fun, X, y, K, self.kernel, self.C,
-                                         self.epsilon, self.tol, self.verbose).smo()
+                smo = self.SMORegression(bcqp, X, y, K, self.kernel, self.C, self.epsilon, self.tol, self.verbose).smo()
                 alphas_p, alphas_n = smo.alphas_p, smo.alphas_n
                 if self.kernel == 'linear':
                     self.coef_ = smo.w
                 self.intercept_ = smo.b
 
             else:
-                alphas = scipy_solve_bcqp(obj_fun, A, ub, self.epochs, self.verbose)
+                alphas = scipy_solve_bcqp(bcqp, A, ub, self.epochs, self.verbose)
                 alphas_p = alphas[:n_samples]
                 alphas_n = alphas[n_samples:]
 
@@ -1061,24 +1084,34 @@ class SVR(RegressorMixin, SVM):
 
                 if self.optimizer == solve_qp:
                     qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-                    alphas = solve_qp(obj_fun, G, h, A, b, solver=self.master_solver)
+                    alphas = solve_qp(bcqp, G, h, A, b, solver=self.master_solver)
 
                 else:
-                    alphas = scipy_solve_qp(obj_fun, G, h, A, b, self.epochs, self.verbose)
+                    alphas = scipy_solve_qp(bcqp, G, h, A, b, self.epochs, self.verbose)
 
             elif issubclass(self.optimizer, BoxConstrainedOptimizer):
-                alphas = self.optimizer(obj_fun, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
+                alphas = self.optimizer(bcqp, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
 
             else:
                 # dual lagrangian relaxation of the box-constrained problem
-                dual = LagrangianBoxConstrained(obj_fun)
+                dual = LagrangianBoxConstrained(bcqp)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
-                    self.optimizer(dual, max_iter=self.epochs, max_f_eval=self.max_f_eval,
-                                   verbose=self.verbose).minimize()
+                    res = self.optimizer(f=dual, max_iter=self.epochs, max_f_eval=self.max_f_eval,
+                                         verbose=self.verbose, plot=self.plot).minimize()
                 elif issubclass(self.optimizer, StochasticOptimizer):
-                    self.optimizer(dual, momentum_type=self.momentum_type, momentum=self.momentum,
-                                   step_rate=self.learning_rate, max_iter=self.epochs, verbose=self.verbose).minimize()
+                    res = self.optimizer(f=dual, step_size=self.learning_rate, max_iter=self.epochs,
+                                         momentum_type=self.momentum_type, momentum=self.momentum,
+                                         verbose=self.verbose, plot=self.plot).minimize()
+                elif issubclass(self.optimizer, ProximalBundle):
+                    res = self.optimizer(f=dual, max_iter=self.epochs, master_solver=self.master_solver,
+                                         momentum_type=self.momentum_type, momentum=self.momentum,
+                                         verbose=self.verbose, plot=self.plot).minimize()
+                else:
+                    raise ValueError(f'unknown optimizer {self.optimizer}')
+
+                if res[2] != 'optimal':
+                    warnings.warn("max_iter reached but the optimization hasn't converged yet")
 
                 alphas = dual.primal_solution
 

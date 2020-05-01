@@ -11,10 +11,10 @@ class QuadraticSteepestGradientDescent(Optimizer):
     """
     Apply the Steepest Gradient Descent algorithm with exact line search to the quadratic function.
 
-        f(x) = 1/2 x^T Q x - q^T x
+        f(x) = 1/2 x^T Q x + q^T x
 
     :param f:        the objective function.
-    :param wrt:      ([n x 1] real column vector): the point where to start the algorithm from
+    :param x:        ([n x 1] real column vector): the point where to start the algorithm from
     :return x:       ([n x 1] real column vector): either the best solution found so far (possibly the
                      optimal one) or a direction proving the problem is unbounded below, depending on case
     :return status:  (string): a string describing the status of the algorithm at termination:
@@ -28,12 +28,13 @@ class QuadraticSteepestGradientDescent(Optimizer):
                      x is the best solution found so far, but not necessarily the optimal one.
     """
 
-    def __init__(self, f, wrt=random_uniform, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot)
+    def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000,
+                 callback=None, callback_args=(), verbose=False, plot=False):
+        super().__init__(f, x, eps, max_iter, callback, callback_args, verbose, plot)
         if not isinstance(f, Quadratic):
             raise ValueError('f is not a quadratic function')
-        if self.wrt.size != self.f.Q.shape[0]:
-            raise ValueError('wrt size does not match with Q')
+        if self.x.size != self.f.Q.shape[0]:
+            raise ValueError('x size does not match with Q')
 
     def minimize(self):
 
@@ -43,20 +44,20 @@ class QuadraticSteepestGradientDescent(Optimizer):
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
 
-        if self.plot and self.n == 2:
-            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
+        if self.plot:
+            fig = self.f.plot()
 
         while True:
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(g)
 
             if self.verbose and not self.iter % self.verbose:
-                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
+                    print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
-                    prev_v = v
+                        print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                    prev_v = self.f_x
 
             # stopping criteria
             if ng <= self.eps:
@@ -91,24 +92,26 @@ class QuadraticSteepestGradientDescent(Optimizer):
             step = a * d
 
             # compute new point
-            self.wrt += step
+            last_x = self.x + step
 
             # plot the trajectory
-            if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt - step, self.wrt)).T
-                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
-                                    scale_units='xy', angles='xy', scale=1, color='k')
+            if self.plot:
+                self.plot_step(fig, self.x, last_x)
 
             # <\nabla f(x_i), \nabla f(x_i+1)> = 0
-            assert np.isclose(self.f.jacobian(self.wrt - step).T.dot(self.f.jacobian(self.wrt)), 0)
+            assert np.isclose(self.f.jacobian(self.x).T.dot(self.f.jacobian(last_x)), 0)
+
+            self.x = last_x
 
             self.iter += 1
 
+            self.callback()
+
         if self.verbose:
             print()
-        if self.plot and self.n == 2:
+        if self.plot:
             plt.show()
-        return self.wrt, v, status
+        return self.x, self.f_x, status
 
 
 class SteepestGradientDescent(LineSearchOptimizer):
@@ -175,12 +178,13 @@ class SteepestGradientDescent(LineSearchOptimizer):
     #   test.
     """
 
-    def __init__(self, f, wrt=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
-                 a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+    def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
+                 a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
+                 callback_args=(), verbose=False, plot=False):
         """
 
         :param f:          the objective function.
-        :param wrt:        ([n x 1] real column vector): the point where to start the algorithm from.
+        :param x:          ([n x 1] real column vector): the point where to start the algorithm from.
         :param eps:        (real scalar, optional, default value 1e-6): the accuracy in the stopping
                            criterion: the algorithm is stopped when the norm of the gradient is less
                            than or equal to eps.
@@ -239,11 +243,12 @@ class SteepestGradientDescent(LineSearchOptimizer):
                               - 'error': the algorithm found a numerical error that prev_vents it from continuing
                            optimization (see min_a above).
         """
-        super().__init__(f, wrt, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+        super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
+                         m_inf, min_a, callback, callback_args, verbose, plot)
 
     def minimize(self):
-        last_wrt = np.zeros((self.n,))  # last point visited in the line search
-        last_g = np.zeros((self.n,))  # gradient of last_wrt
+        last_x = np.zeros(self.f.n)  # last point visited in the line search
+        last_g = np.zeros(self.f.n)  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose and not self.iter % self.verbose:
@@ -253,11 +258,11 @@ class SteepestGradientDescent(LineSearchOptimizer):
                 prev_v = np.inf
             print('\tls\tit\ta*', end='')
 
-        if self.plot and self.n == 2:
-            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
+        if self.plot:
+            fig = self.f.plot()
 
         while True:
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(g)
 
             if self.eps < 0:
@@ -266,14 +271,14 @@ class SteepestGradientDescent(LineSearchOptimizer):
                 ng0 = 1  # un-scaled stopping criterion
 
             if self.verbose and not self.iter % self.verbose:
-                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
+                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
+                    print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                        print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
                         print('\t\t\t', end='')
-                    prev_v = v
+                    prev_v = self.f_x
 
             # stopping criteria
             if ng <= self.eps * ng0:
@@ -289,8 +294,9 @@ class SteepestGradientDescent(LineSearchOptimizer):
             phi_p0 = -ng * ng
 
             # compute step size
-            a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, self.verbose and not self.iter % self.verbose)
+            a, self.f_x, last_x, last_g, f_eval = self.line_search.search(
+                d, self.x, last_x, last_g, f_eval, self.f_x, phi_p0,
+                self.verbose and not self.iter % self.verbose)
 
             # output statistics
             if self.verbose and not self.iter % self.verbose:
@@ -300,23 +306,23 @@ class SteepestGradientDescent(LineSearchOptimizer):
                 status = 'error'
                 break
 
-            if v <= self.m_inf:
+            if self.f_x <= self.m_inf:
                 status = 'unbounded'
                 break
 
             # plot the trajectory
-            if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, last_wrt)).T
-                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
-                                    scale_units='xy', angles='xy', scale=1, color='k')
+            if self.plot:
+                self.plot_step(fig, self.x, last_x)
 
             # update new point
-            self.wrt = last_wrt
+            self.x = last_x
 
             self.iter += 1
 
+            self.callback()
+
         if self.verbose:
             print()
-        if self.plot and self.n == 2:
+        if self.plot:
             plt.show()
-        return self.wrt, v, status
+        return self.x, self.f_x, status

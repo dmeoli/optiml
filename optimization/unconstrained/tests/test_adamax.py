@@ -6,13 +6,13 @@ from optimization.unconstrained.stochastic.adamax import AdaMax
 
 
 def test_AdaMax_quadratic():
-    assert np.allclose(AdaMax(quad1, step_rate=0.1).minimize()[0], quad1.x_star(), rtol=0.1)
-    assert np.allclose(AdaMax(quad2, step_rate=0.1).minimize()[0], quad2.x_star(), rtol=0.1)
+    assert np.allclose(AdaMax(quad1, step_size=0.1).minimize()[0], quad1.x_star(), rtol=0.1)
+    assert np.allclose(AdaMax(quad2, step_size=0.1).minimize()[0], quad2.x_star(), rtol=0.1)
 
 
 def test_AdaMax_Rosenbrock():
     obj = Rosenbrock()
-    assert np.allclose(AdaMax(obj, step_rate=0.1).minimize()[0], obj.x_star(), rtol=0.1)
+    assert np.allclose(AdaMax(obj, step_size=0.1).minimize()[0], obj.x_star(), rtol=0.1)
 
 
 def test_AdaMax_standard_momentum_quadratic():
@@ -22,7 +22,7 @@ def test_AdaMax_standard_momentum_quadratic():
 
 def test_AdaMax_standard_momentum_Rosenbrock():
     obj = Rosenbrock()
-    assert np.allclose(AdaMax(obj, step_rate=0.1, max_iter=2000, momentum_type='standard', momentum=0.3).minimize()[0],
+    assert np.allclose(AdaMax(obj, step_size=0.1, max_iter=2000, momentum_type='standard', momentum=0.3).minimize()[0],
                        obj.x_star(), rtol=0.1)
 
 

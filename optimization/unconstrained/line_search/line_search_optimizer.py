@@ -7,12 +7,13 @@ from optimization.unconstrained.line_search.line_search import ArmijoWolfeLineSe
 
 class LineSearchOptimizer(Optimizer):
 
-    def __init__(self, f, wrt=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
-                 a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
+    def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
+                 a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
+                 callback_args=(), verbose=False, plot=False):
         """
 
         :param f:          the objective function.
-        :param wrt:        ([n x 1] real column vector): the point where to start the algorithm from.
+        :param x:          ([n x 1] real column vector): the point where to start the algorithm from.
         :param eps:        (real scalar, optional, default value 1e-6): the accuracy in the stopping
                            criterion: the algorithm is stopped when the norm of the gradient is less
                            than or equal to eps.
@@ -53,7 +54,7 @@ class LineSearchOptimizer(Optimizer):
         :param plot:       (boolean, optional, default value False): plot the function's surface and its contours
                            if True and the function's dimension is 2, nothing otherwise.
         """
-        super().__init__(f, wrt, eps, max_iter, verbose, plot)
+        super().__init__(f, x, eps, max_iter, callback, callback_args, verbose, plot)
         if not np.isscalar(m_inf):
             raise ValueError('m_inf is not a real scalar')
         self.m_inf = m_inf

@@ -8,12 +8,13 @@ from optimization.unconstrained.line_search.line_search_optimizer import LineSea
 
 
 class QuadraticConjugateGradient(Optimizer):
-    def __init__(self, f, wrt=random_uniform, r_start=0, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_iter, verbose, plot)
+    def __init__(self, f, x=random_uniform, r_start=0, eps=1e-6, max_iter=1000,
+                 callback=None, callback_args=(), verbose=False, plot=False):
+        super().__init__(f, x, eps, max_iter, callback, callback_args, verbose, plot)
         if not isinstance(f, Quadratic):
             raise ValueError('f is not a quadratic function')
-        if self.wrt.size != self.f.Q.shape[0]:
-            raise ValueError('wrt size does not match with Q')
+        if self.x.size != self.f.Q.shape[0]:
+            raise ValueError('x size does not match with Q')
         if not np.isscalar(r_start):
             raise ValueError('r_start is not an integer scalar')
         self.r_start = r_start
@@ -27,20 +28,20 @@ class QuadraticConjugateGradient(Optimizer):
                 prev_v = np.inf
             print('\t\tbeta', end='')
 
-        if self.plot and self.n == 2:
-            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
+        if self.plot:
+            fig = self.f.plot()
 
         while True:
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(g)
 
             if self.verbose and not self.iter % self.verbose:
-                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
+                    print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
-                    prev_v = v
+                        print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                    prev_v = self.f_x
 
             # stopping criteria
             if ng <= self.eps:
@@ -57,7 +58,7 @@ class QuadraticConjugateGradient(Optimizer):
                 if self.verbose and not self.iter % self.verbose:
                     print('\t\t', end='')
             else:  # normal iterations, use appropriate formula
-                if self.r_start > 0 and self.iter % self.n * self.r_start == 0:
+                if self.r_start > 0 and self.iter % self.f.n * self.r_start == 0:
                     # ... unless a restart is being performed
                     beta = 0
                     if self.verbose and not self.iter % self.verbose:
@@ -94,29 +95,33 @@ class QuadraticConjugateGradient(Optimizer):
             step = a * d
 
             # compute new point
-            self.wrt += step
+            last_x = self.x + step
 
             past_d = d  # previous search direction
 
             # plot the trajectory
-            if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt - step, self.wrt)).T
-                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
-                                    scale_units='xy', angles='xy', scale=1, color='k')
+            if self.plot:
+                super().plot_step(fig, self.x, last_x)
+
+            self.x = last_x
 
             self.iter += 1
 
+            self.callback()
+
         if self.verbose:
             print()
-        if self.plot and self.n == 2:
+        if self.plot:
             plt.show()
-        return self.wrt, v, status
+        return self.x, self.f_x, status
 
 
 class ConjugateGradient(LineSearchOptimizer):
-    def __init__(self, f, wrt=random_uniform, wf=0, r_start=0, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01,
-                 m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+    def __init__(self, f, x=random_uniform, wf=0, r_start=0, eps=1e-6, max_iter=1000, max_f_eval=1000,
+                 m1=0.01, m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
+                 callback_args=(), verbose=False, plot=False):
+        super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
+                         m_inf, min_a, callback, callback_args, verbose, plot)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if wf < 0 or wf > 4:
@@ -242,9 +247,11 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, wrt=random_uniform, wf=0, eps=1e-6, max_iter=1000, max_f_eval=1000, r_start=0, m1=0.01,
-                 m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd, m_inf, min_a, verbose, plot)
+    def __init__(self, f, x=random_uniform, wf=0, eps=1e-6, max_iter=1000, max_f_eval=1000, r_start=0,
+                 m1=0.01, m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16,
+                 callback=None, callback_args=(), verbose=False, plot=False):
+        super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
+                         m_inf, min_a, callback, callback_args, verbose, plot)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if not 0 <= wf <= 3:
@@ -255,8 +262,8 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
         self.r_start = r_start
 
     def minimize(self):
-        last_wrt = np.zeros((self.n,))  # last point visited in the line search
-        last_g = np.zeros((self.n,))  # gradient of last_wrt
+        last_x = np.zeros(self.f.n)  # last point visited in the line search
+        last_g = np.zeros(self.f.n)  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose and not self.iter % self.verbose:
@@ -266,11 +273,11 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 prev_v = np.inf
             print('\tbeta\tls\tit\ta*', end='')
 
-        if self.plot and self.n == 2:
-            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
+        if self.plot:
+            fig = self.f.plot()
 
         while True:
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(g)
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
@@ -278,14 +285,14 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 ng0 = 1  # un-scaled stopping criterion
 
             if self.verbose and not self.iter % self.verbose:
-                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
+                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
+                    print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                        print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
                         print('\t\t\t', end='')
-                    prev_v = v
+                    prev_v = self.f_x
 
             # stopping criteria
             if ng <= self.eps * ng0:
@@ -302,7 +309,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 if self.verbose and not self.iter % self.verbose:
                     print('\t\t', end='')
             else:  # normal iterations, use appropriate formula
-                if self.r_start > 0 and self.iter % self.n * self.r_start == 0:
+                if self.r_start > 0 and self.iter % self.f.n * self.r_start == 0:
                     # ... unless a restart is being performed
                     beta = 0
                     if self.verbose and not self.iter % self.verbose:
@@ -332,8 +339,9 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
             phi_p0 = g.T.dot(d)
 
             # compute step size
-            a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, self.verbose and not self.iter % self.verbose)
+            a, self.f_x, last_x, last_g, f_eval = self.line_search.search(
+                d, self.x, last_x, last_g, f_eval, self.f_x, phi_p0,
+                self.verbose and not self.iter % self.verbose)
 
             # output statistics
             if self.verbose and not self.iter % self.verbose:
@@ -343,23 +351,23 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 status = 'error'
                 break
 
-            if v <= self.m_inf:
+            if self.f_x <= self.m_inf:
                 status = 'unbounded'
                 break
 
             # plot the trajectory
-            if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, last_wrt)).T
-                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
-                                    scale_units='xy', angles='xy', scale=1, color='k')
+            if self.plot:
+                super().plot_step(fig, self.x, last_x)
 
             # update new point
-            self.wrt = last_wrt
+            self.x = last_x
 
             self.iter += 1
 
+            self.callback()
+
         if self.verbose:
             print()
-        if self.plot and self.n == 2:
+        if self.plot:
             plt.show()
-        return self.wrt, v, status
+        return self.x, self.f_x, status

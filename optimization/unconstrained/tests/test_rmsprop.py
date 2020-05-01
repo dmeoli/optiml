@@ -6,8 +6,8 @@ from optimization.unconstrained.stochastic.rmsprop import RMSProp
 
 
 def test_RMSProp_quadratic():
-    assert np.allclose(RMSProp(quad1, step_rate=0.1).minimize()[0], quad1.x_star(), rtol=0.1)
-    assert np.allclose(RMSProp(quad2, step_rate=0.1).minimize()[0], quad2.x_star(), rtol=0.1)
+    assert np.allclose(RMSProp(quad1, step_size=0.1).minimize()[0], quad1.x_star(), rtol=0.1)
+    assert np.allclose(RMSProp(quad2, step_size=0.1).minimize()[0], quad2.x_star(), rtol=0.1)
 
 
 def test_RMSProp_Rosenbrock():

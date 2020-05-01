@@ -2,7 +2,8 @@ import numpy as np
 import pytest
 
 from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.line_search.conjugate_gradient import NonlinearConjugateGradient, QuadraticConjugateGradient
+from optimization.unconstrained.line_search.conjugate_gradient import NonlinearConjugateGradient, \
+    QuadraticConjugateGradient
 
 
 def test_QuadraticConjugateGradient():
@@ -17,8 +18,7 @@ def test_NonlinearConjugateGradient_quadratic_FletcherReeves():
 
 def test_NonlinearConjugateGradient_Rosenbrock_FletcherReeves():
     obj = Rosenbrock()
-    assert np.allclose(NonlinearConjugateGradient(obj, wf=0, max_iter=2500, max_f_eval=2500).minimize()[0],
-                       obj.x_star(), rtol=0.2)
+    assert np.allclose(NonlinearConjugateGradient(obj, wf=0).minimize()[0], obj.x_star(), rtol=0.1)
 
 
 def test_NonlinearConjugateGradient_quadratic_PolakRibiere():
@@ -28,8 +28,7 @@ def test_NonlinearConjugateGradient_quadratic_PolakRibiere():
 
 def test_NonlinearConjugateGradient_Rosenbrock_PolakRibiere():
     obj = Rosenbrock()
-    assert np.allclose(NonlinearConjugateGradient(obj, wf=1, max_iter=2500, max_f_eval=2500).minimize()[0],
-                       obj.x_star(), rtol=0.2)
+    assert np.allclose(NonlinearConjugateGradient(obj, wf=1).minimize()[0], obj.x_star(), rtol=0.1)
 
 
 def test_NonlinearConjugateGradient_quadratic_HestenesStiefel():
@@ -39,8 +38,7 @@ def test_NonlinearConjugateGradient_quadratic_HestenesStiefel():
 
 def test_NonlinearConjugateGradient_Rosenbrock_HestenesStiefel():
     obj = Rosenbrock()
-    assert np.allclose(NonlinearConjugateGradient(obj, wf=2, max_iter=3000, max_f_eval=3000).minimize()[0],
-                       obj.x_star(), rtol=0.2)
+    assert np.allclose(NonlinearConjugateGradient(obj, wf=2, r_start=1).minimize()[0], obj.x_star(), rtol=0.1)
 
 
 def test_NonlinearConjugateGradient_quadratic_DaiYuan():

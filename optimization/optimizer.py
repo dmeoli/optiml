@@ -6,11 +6,12 @@ from optimization.optimization_function import OptimizationFunction
 
 class Optimizer:
 
-    def __init__(self, f, wrt=random_uniform, eps=1e-6, max_iter=1000, verbose=False, plot=False):
+    def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000,
+                 callback=None, callback_args=(), verbose=False, plot=False):
         """
 
         :param f:        the objective function.
-        :param wrt:      ([n x 1] real column vector): the point where to start the algorithm from.
+        :param x:        ([n x 1] real column vector): the point where to start the algorithm from.
         :param eps:      (real scalar, optional, default value 1e-6): the accuracy in the stopping
                          criterion: the algorithm is stopped when the norm of the gradient is less
                          than or equal to eps.
@@ -23,13 +24,13 @@ class Optimizer:
         if not isinstance(f, OptimizationFunction):
             raise TypeError('f is not an optimization function')
         self.f = f
-        if callable(wrt):
-            self.wrt = wrt(f.n)
-        elif not np.isrealobj(wrt):
+        if callable(x):
+            self.x = x(f.n)
+        elif not np.isrealobj(x):
             raise ValueError('x not a real vector')
         else:
-            self.wrt = np.asarray(wrt, dtype=float)
-        self.n = self.wrt.size
+            self.x = np.asarray(x, dtype=np.float)
+        self.f_x = np.nan
         if not np.isscalar(eps):
             raise ValueError('eps is not a real scalar')
         if not eps > 0:
@@ -41,8 +42,21 @@ class Optimizer:
             raise ValueError('max_iter must be > 0')
         self.max_iter = max_iter
         self.iter = 0
+        self._callback = callback
+        self.callback_args = callback_args
         self.verbose = verbose
         self.plot = plot
+
+    def callback(self):
+        if callable(self._callback):
+            self._callback(self.x, self.f_x, *self.callback_args)
+
+    def plot_step(self, fig, x, last_x, color='k'):
+        p_xy = np.vstack((x, last_x)).T
+        fig.axes[0].plot(p_xy[0], p_xy[1], [self.f.function(self.x), self.f.function(last_x)],
+                         marker='.', color=color)
+        fig.axes[1].quiver(p_xy[0, 0], p_xy[1, 0], p_xy[0, 1] - p_xy[0, 0], p_xy[1, 1] - p_xy[1, 0],
+                           scale_units='xy', angles='xy', scale=1, color=color)
 
     def minimize(self):
         raise NotImplementedError

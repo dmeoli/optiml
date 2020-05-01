@@ -97,10 +97,10 @@ class Subgradient(LineSearchOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, wrt=random_uniform, eps=1e-6, a_start=1., tau=0.95, max_iter=1000,
-                 max_f_eval=1000, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, wrt, eps, max_iter, max_f_eval, a_start=a_start, tau=tau,
-                         m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
+    def __init__(self, f, x=random_uniform, eps=1e-6, a_start=1e-4, tau=0.95, max_iter=1000, max_f_eval=1000,
+                 m_inf=-np.inf, min_a=1e-16, callback=None, callback_args=(), verbose=False, plot=False):
+        super().__init__(f, x, eps, max_iter, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf, min_a=min_a,
+                         callback=callback, callback_args=callback_args, verbose=verbose, plot=plot)
 
     def minimize(self):
 
@@ -115,47 +115,47 @@ class Subgradient(LineSearchOptimizer):
                 prev_v = np.inf
             print('\ta*', end='')
 
-        x_ref = self.wrt
+        x_ref = self.x
         f_ref = np.inf  # best f-value found so far
         if self.eps > 0:
             delta = 0  # required displacement from f_ref
 
-        if self.plot and self.n == 2:
-            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
+        if self.plot:
+            fig = self.f.plot()
 
         while True:
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(g)
 
             if self.eps > 0:  # target-level step size
-                if v <= f_ref - delta:  # found a "significantly" better point
-                    delta = self.line_search.a_start * max(abs(v), 1)  # reset delta
+                if self.f_x <= f_ref - delta:  # found a "significantly" better point
+                    delta = self.line_search.a_start * max(abs(self.f_x), 1)  # reset delta
                 else:  # decrease delta
-                    delta = max(delta * self.line_search.tau, self.eps * max(abs(min(v, f_ref)), 1))
+                    delta = max(delta * self.line_search.tau, self.eps * max(abs(min(self.f_x, f_ref)), 1))
 
-            if v < f_ref:  # found a better f-value (however slightly better)
-                f_ref = v  # update f_ref
-                x_ref = self.wrt  # this is the incumbent solution
+            if self.f_x < f_ref:  # found a better f-value (however slightly better)
+                f_ref = self.f_x  # update f_ref
+                x_ref = self.x  # this is the incumbent solution
 
             # output statistics
             if self.verbose and not self.iter % self.verbose:
-                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
+                    print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                        print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
                         print('\t\t\t', end='')
-                    prev_v = v
+                    prev_v = self.f_x
 
             # stopping criteria
             if self.eps < 0 and f_ref - self.f.f_star() <= -self.eps * max(abs(self.f.f_star()), 1):
-                x_ref = self.wrt
+                x_ref = self.x
                 status = 'optimal'
                 break
 
             if ng < 1e-12:  # unlikely, but it could happen
-                x_ref = self.wrt
+                x_ref = self.x
                 status = 'optimal'
                 break
 
@@ -165,9 +165,9 @@ class Subgradient(LineSearchOptimizer):
 
             # compute step size
             if self.eps > 0:  # Polyak step size with target level
-                a = (v - f_ref + delta) / ng
+                a = (self.f_x - f_ref + delta) / ng
             elif self.eps < 0:  # true Polyak step size (cheating)
-                a = (v - self.f.f_star()) / ng
+                a = (self.f_x - self.f.f_star()) / ng
             else:  # diminishing square-summable step size
                 a = self.line_search.a_start * (1 / self.iter)
 
@@ -180,25 +180,28 @@ class Subgradient(LineSearchOptimizer):
                 status = 'stopped'
                 break
 
-            if v <= self.m_inf:
+            if self.f_x <= self.m_inf:
                 status = 'unbounded'
                 break
 
+            # compute new point
+            last_x = self.x - (a / ng) * g
+
             # plot the trajectory
-            if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, self.wrt - (a / ng) * g)).T
-                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
-                                    scale_units='xy', angles='xy', scale=1, color='k')
+            if self.plot:
+                super().plot_step(fig, self.x, last_x)
 
             # compute new point
-            self.wrt = self.wrt - (a / ng) * g
+            self.x = last_x
 
             self.iter += 1
+
+            self.callback()
 
         x = x_ref  # return point corresponding to best value found so far
 
         if self.verbose:
             print()
-        if self.plot and self.n == 2:
+        if self.plot:
             plt.show()
-        return x, v, status
+        return x, self.f_x, status

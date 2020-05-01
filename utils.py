@@ -1,11 +1,12 @@
 import os
-import random
 
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import learning_curve, validation_curve
 from sklearn.preprocessing import OneHotEncoder
 
+
+# linear algebra utils
 
 def cholesky_solve(A, b):
     """Solve a symmetric positive definite linear
@@ -21,46 +22,20 @@ def ldl_solve(ldl_factor, b):
     return np.linalg.solve(L.T, (np.linalg.solve(D, np.linalg.solve(L, b[P]))))
 
 
+# metrics
+
 def mean_euclidean_error(y_true, y_pred):
     assert y_true.shape == y_pred.shape
     return np.mean(np.linalg.norm(y_pred - y_true, axis=y_true.ndim - 1))  # for multi-output compatibility
 
 
-def iter_mini_batches(Xy, batch_size):
-    """Return an iterator that successively yields tuples containing aligned
-    mini batches of size batch_size from sliceable objects given in Xy, in
-    random order without replacement.
-    Because different containers might require slicing over different
-    dimensions, the dimension of each container has to be givens as a list
-    dims.
-    :param: Xy: tuple of arrays to be sliced into mini batches in alignment with the others
-    :param: batch_size: size of each batch
-    :return: infinite iterator of mini batches in random order (without replacement)
-    """
-
-    if Xy[0].shape[0] != Xy[1].shape[0]:
-        raise ValueError('X and y have unequal lengths')
-
-    if batch_size > Xy[0].shape[0]:
-        raise ValueError('batch_size must be less or equal than the number of examples')
-
-    n_batches, rest = divmod(len(Xy[0]), batch_size)
-    if rest:
-        n_batches += 1
-
-    while True:
-        idx = list(range(n_batches))
-        while True:
-            random.shuffle(idx)
-            for i in idx:
-                start = i * batch_size
-                stop = (i + 1) * batch_size
-                yield [param[slice(start, stop)] for param in Xy]
-
+# util functions
 
 def clip(x, l, h):
     return max(l, min(x, h))
 
+
+# dataset loaders
 
 path = os.path.dirname(os.path.abspath(__file__))
 
@@ -88,6 +63,8 @@ def load_mnist():
     mnist = np.load(path + '/ml/data/mnist.npz')
     return mnist['x_train'][:, :, :, None], mnist['x_test'][:, :, :, None], mnist['y_train'], mnist['y_test']
 
+
+# data generators
 
 def generate_linearly_separable_data():
     mean1 = np.array([0, 2])
@@ -130,8 +107,10 @@ def generate_non_linearly_regression_data():
     X = np.sort(4 * np.pi * np.random.rand(100)) - 2 * np.pi
     y = np.sinc(X)
     y += 0.25 * (0.5 - np.random.rand(100))  # noise
-    return X.reshape((-1, 1)), y
+    return X.reshape(-1, 1), y
 
+
+# plot functions
 
 def plot_validation_curve(estimator, X, y, param_name, param_range, scorer, cv=5):
     train_scores, test_scores = validation_curve(estimator, X, y, param_name=param_name, param_range=param_range,
@@ -183,8 +162,8 @@ def plot_learning_curve(estimator, X, y, scorer, cv=5, train_sizes=np.linspace(.
 
 def plot_model_loss(loss_history):
     fig, loss = plt.subplots()
-    loss.plot(loss_history['training_loss'], color='navy', marker='.')
-    loss.plot(loss_history['validation_loss'], color='darkorange', marker='.')
+    loss.plot(loss_history['training_loss'], color='navy', lw=2)
+    loss.plot(loss_history['validation_loss'], color='darkorange', lw=2)
     loss.set_title('model loss')
     loss.set_xlabel('epoch')
     loss.set_ylabel('loss')
@@ -194,8 +173,8 @@ def plot_model_loss(loss_history):
 
 def plot_model_accuracy(accuracy_history):
     fig, accuracy = plt.subplots()
-    accuracy.plot(accuracy_history['training_accuracy'], color='navy', marker='.')
-    accuracy.plot(accuracy_history['validation_accuracy'], color='darkorange', marker='.')
+    accuracy.plot(accuracy_history['training_accuracy'], color='navy', lw=2)
+    accuracy.plot(accuracy_history['validation_accuracy'], color='darkorange', lw=2)
     accuracy.set_title('model accuracy')
     accuracy.set_xlabel('epoch')
     accuracy.set_ylabel('accuracy')

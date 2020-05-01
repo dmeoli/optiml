@@ -7,9 +7,10 @@ from optimization.unconstrained.stochastic.stochastic_optimizer import Stochasti
 
 class StochasticGradientDescent(StochasticOptimizer):
 
-    def __init__(self, f, wrt=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_rate=0.01,
-                 momentum_type='none', momentum=0.9, verbose=False, plot=False):
-        super().__init__(f, wrt, step_rate, momentum_type, momentum, batch_size, eps, max_iter, verbose, plot)
+    def __init__(self, f, x=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_size=0.01,
+                 momentum_type='none', momentum=0.9, callback=None, callback_args=(), verbose=False, plot=False):
+        super().__init__(f, x, step_size, momentum_type, momentum, batch_size,
+                         eps, max_iter, callback, callback_args, verbose, plot)
 
     def minimize(self):
 
@@ -19,20 +20,20 @@ class StochasticGradientDescent(StochasticOptimizer):
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
 
-        if self.plot and self.n == 2:
-            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
+        if self.plot:
+            fig = self.f.plot()
 
         for args in self.args:
-            v, g = self.f.function(self.wrt, *args), self.f.jacobian(self.wrt, *args)
+            self.f_x, g = self.f.function(self.x, *args), self.f.jacobian(self.x, *args)
             ng = np.linalg.norm(g)
 
             if self.verbose and not self.iter % self.verbose:
-                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, ng), end='')
+                print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
+                    print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
-                    prev_v = v
+                        print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                    prev_v = self.f_x
 
             # stopping criteria
             if ng <= self.eps:
@@ -45,30 +46,30 @@ class StochasticGradientDescent(StochasticOptimizer):
 
             if self.momentum_type == 'standard':
                 step_m1 = self.step
-                self.step = self.step_rate * -g + self.momentum * step_m1
-                self.wrt += self.step
+                self.step = self.step_size * -g + self.momentum * step_m1
+                self.x += self.step
             elif self.momentum_type == 'nesterov':
                 step_m1 = self.step
                 big_jump = self.momentum * step_m1
-                self.wrt += big_jump
-                g = self.f.jacobian(self.wrt, *args)
-                correction = self.step_rate * -g
-                self.wrt += correction
+                self.x += big_jump
+                g = self.f.jacobian(self.x, *args)
+                correction = self.step_size * -g
+                self.x += correction
                 self.step = big_jump + correction
             elif self.momentum_type == 'none':
-                self.step = self.step_rate * -g
-                self.wrt += self.step
+                self.step = self.step_size * -g
+                self.x += self.step
 
             # plot the trajectory
-            if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt - self.step, self.wrt)).T
-                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
-                                    scale_units='xy', angles='xy', scale=1, color='k')
+            if self.plot:
+                super().plot_step(fig, self.x - self.step, self.x)
 
             self.iter += 1
 
+            self.callback()
+
         if self.verbose:
             print()
-        if self.plot and self.n == 2:
+        if self.plot:
             plt.show()
-        return self.wrt, v, status
+        return self.x, self.f_x, status

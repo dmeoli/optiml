@@ -44,8 +44,8 @@ class FrankWolfe(BoxConstrainedOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, t=0., eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, eps, max_iter, verbose, plot)
+    def __init__(self, f, t=0., eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False, plot=False):
+        super().__init__(f, eps, max_iter, callback, callback_args, verbose, plot)
         if not np.isreal(t) or not np.isscalar(t):
             raise ValueError('t is not a real scalar')
         if not 0 <= t < 1:
@@ -59,11 +59,11 @@ class FrankWolfe(BoxConstrainedOptimizer):
         if self.verbose and not self.iter % self.verbose:
             print('iter\tf(x)\t\tlb\t\t\tgap')
 
-        if self.plot and self.n == 2:
+        if self.plot:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
 
             # solve min { <g, y> : 0 <= y <= u }
             y = np.zeros(self.f.n)
@@ -72,15 +72,15 @@ class FrankWolfe(BoxConstrainedOptimizer):
 
             # compute the lower bound: remember that the first-order approximation
             # is f(x) + g(y - x)
-            lb = v + g.T.dot(y - self.wrt)
+            lb = self.f_x + g.T.dot(y - self.x)
             if lb > best_lb:
                 best_lb = lb
 
             # compute the relative gap
-            gap = (v - best_lb) / max(abs(v), 1)
+            gap = (self.f_x - best_lb) / max(abs(self.f_x), 1)
 
             if self.verbose and not self.iter % self.verbose:
-                print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, best_lb, gap))
+                print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, best_lb, gap))
 
             if gap <= self.eps:
                 status = 'optimal'
@@ -92,12 +92,12 @@ class FrankWolfe(BoxConstrainedOptimizer):
 
             # in the stabilized case, restrict y in the box
             if self.t > 0:
-                y = max(self.wrt - self.t * self.f.ub, min(self.wrt + self.t * self.f.ub, y))
+                y = max(self.x - self.t * self.f.ub, min(self.x + self.t * self.f.ub, y))
 
             # compute step size
             # we are taking direction d = y - x and y is feasible, hence the
             # maximum step size is 1
-            d = y - self.wrt
+            d = y - self.x
 
             # compute optimal unbounded step size:
             #   min 1/2 (x + a d)^T * Q * (x + a d) + q^T * (x + a d)
@@ -113,18 +113,20 @@ class FrankWolfe(BoxConstrainedOptimizer):
                 # optimal unbounded step size restricted to max feasible step
                 a = min(-g.T.dot(d) / den, 1)
 
-            self.wrt += a * d
+            self.x += a * d
 
             # plot the trajectory
-            if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt - a * d, self.wrt)).T
+            if self.plot:
+                p_xy = np.vstack((self.x - a * d, self.x)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
             self.iter += 1
 
+            self.callback()
+
         if self.verbose:
             print()
-        if self.plot and self.n == 2:
+        if self.plot:
             plt.show()
-        return self.wrt, v, status
+        return self.x, self.f_x, status

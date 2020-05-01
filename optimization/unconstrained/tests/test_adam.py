@@ -6,13 +6,13 @@ from optimization.unconstrained.stochastic.adam import Adam
 
 
 def test_Adam_quadratic():
-    assert np.allclose(Adam(quad1, step_rate=0.1).minimize()[0], quad1.x_star(), rtol=0.1)
-    assert np.allclose(Adam(quad2, step_rate=0.1).minimize()[0], quad2.x_star(), rtol=0.1)
+    assert np.allclose(Adam(quad1, step_size=0.1).minimize()[0], quad1.x_star(), rtol=0.1)
+    assert np.allclose(Adam(quad2, step_size=0.1).minimize()[0], quad2.x_star(), rtol=0.1)
 
 
 def test_Adam_Rosenbrock():
     obj = Rosenbrock()
-    assert np.allclose(Adam(obj, step_rate=0.1).minimize()[0], obj.x_star(), rtol=0.1)
+    assert np.allclose(Adam(obj, step_size=0.1).minimize()[0], obj.x_star(), rtol=0.1)
 
 
 def test_Adam_standard_momentum_quadratic():
@@ -22,13 +22,13 @@ def test_Adam_standard_momentum_quadratic():
 
 def test_Adam_standard_momentum_Rosenbrock():
     obj = Rosenbrock()
-    assert np.allclose(Adam(obj, step_rate=0.1, max_iter=2000, momentum_type='standard').minimize()[0],
+    assert np.allclose(Adam(obj, step_size=0.1, max_iter=2000, momentum_type='standard').minimize()[0],
                        obj.x_star(), rtol=0.1)
 
 
 def test_Nadam_quadratic():
     assert np.allclose(Adam(quad1, momentum_type='nesterov').minimize()[0], quad1.x_star(), rtol=0.1)
-    assert np.allclose(Adam(quad2, step_rate=0.1, momentum_type='nesterov', momentum=0.5).minimize()[0],
+    assert np.allclose(Adam(quad2, step_size=0.1, momentum_type='nesterov', momentum=0.5).minimize()[0],
                        quad2.x_star(), rtol=0.1)
 
 

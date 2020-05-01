@@ -12,7 +12,7 @@ def test_svr():
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75)
     svr = SVR(kernel='linear').fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.7
+    assert svr.score(X_test, y_test) >= 0.57
 
 
 def test_svc():
@@ -20,7 +20,7 @@ def test_svc():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75)
     svc = OneVsRestClassifier(SVC(kernel='rbf')).fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.94
+    assert svc.score(X_test, y_test) >= 0.89
 
 
 if __name__ == "__main__":

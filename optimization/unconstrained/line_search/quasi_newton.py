@@ -110,17 +110,18 @@ class BFGS(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, wrt=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
-                 delta=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, wrt, eps=eps, max_iter=max_iter, max_f_eval=max_f_eval, m1=m1, m2=m2, a_start=a_start,
-                         tau=tau, sfgrd=sfgrd, m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
+    def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
+                 a_start=1, delta=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
+                 callback_args=(), verbose=False, plot=False):
+        super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
+                         m_inf, min_a, callback, callback_args, verbose, plot)
         if not np.isscalar(delta):
             raise ValueError('delta is not a real scalar')
         self.delta = delta
 
     def minimize(self):
-        last_wrt = np.zeros((self.n,))  # last point visited in the line search
-        last_g = np.zeros((self.n,))  # gradient of last_wrt
+        last_x = np.zeros(self.f.n)  # last point visited in the line search
+        last_g = np.zeros(self.f.n)  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose and not self.iter % self.verbose:
@@ -130,11 +131,11 @@ class BFGS(LineSearchOptimizer):
                 prev_v = np.inf
             print('\tls\tit\ta*\t\t\trho', end='')
 
-        if self.plot and self.n == 2:
-            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
+        if self.plot:
+            fig = self.f.plot()
 
         while True:
-            v, g = self.f.function(self.wrt), self.f.jacobian(self.wrt)
+            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(g)
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
@@ -144,31 +145,31 @@ class BFGS(LineSearchOptimizer):
             if self.iter == 0:
                 if self.delta > 0:
                     # initial approximation of inverse of Hessian = scaled identity
-                    B = self.delta * np.identity(self.n)
+                    B = self.delta * np.identity(self.f.n)
                 else:
                     # initial approximation of inverse of Hessian computed by finite differences of gradient
                     small_step = max(-self.delta, 1e-8)
-                    B = np.zeros((self.n, self.n))
-                    for i in range(self.n):
-                        xp = self.wrt
+                    B = np.zeros((self.f.n, self.f.n))
+                    for i in range(self.f.n):
+                        xp = self.x
                         xp[i] = xp[i] + small_step
                         gp = self.f.jacobian(xp)
                         B[i] = ((gp - g) / small_step).T
                     B = (B + B.T) / 2  # ensure it is symmetric
                     lambda_n = min(np.linalg.eigvalsh(B))  # smallest eigenvalue
                     if lambda_n < 1e-6:
-                        B = B + (1e-6 - lambda_n) * np.identity(self.n)
+                        B = B + (1e-6 - lambda_n) * np.identity(self.f.n)
                     B = np.linalg.inv(B)
 
             if self.verbose and not self.iter % self.verbose:
-                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, v, ng), end='')
+                print('\n{:d}\t\t{:d}\t\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('\t{:1.4e}'.format(v - self.f.f_star()), end='')
+                    print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((v - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                        print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
                         print('\t\t\t', end='')
-                    prev_v = v
+                    prev_v = self.f_x
 
             # stopping criteria
             if ng <= self.eps * ng0:
@@ -185,8 +186,9 @@ class BFGS(LineSearchOptimizer):
             phi_p0 = g.T.dot(d)
 
             # compute step size: as in Newton's method, the default initial step size is 1
-            a, v, last_wrt, last_g, f_eval = self.line_search.search(
-                d, self.wrt, last_wrt, last_g, f_eval, v, phi_p0, self.verbose and not self.iter % self.verbose)
+            a, self.f_x, last_x, last_g, f_eval = self.line_search.search(
+                d, self.x, last_x, last_g, f_eval, self.f_x, phi_p0,
+                self.verbose and not self.iter % self.verbose)
 
             # output statistics
             if self.verbose and not self.iter % self.verbose:
@@ -196,13 +198,13 @@ class BFGS(LineSearchOptimizer):
                 status = 'error'
                 break
 
-            if v <= self.m_inf:
+            if self.f_x <= self.m_inf:
                 status = 'unbounded'
                 break
 
             # update approximation of the Hessian using the BFGS formula
-            s = (last_wrt - self.wrt).reshape((self.n, 1))  # s^i = x^{i + 1} - x^i
-            y = (last_g - g).reshape((self.n, 1))  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
+            s = (last_x - self.x).reshape(self.f.n, 1)  # s^i = x^{i + 1} - x^i
+            y = (last_g - g).reshape(self.f.n, 1)  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
 
             rho = y.T.dot(s).item()
             if rho < 1e-16:
@@ -219,28 +221,29 @@ class BFGS(LineSearchOptimizer):
             B = B + rho * ((1 + rho * y.T.dot(B).dot(y)) * (s.dot(s.T)) - D - D.T)
 
             # plot the trajectory
-            if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, last_wrt)).T
-                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
-                                    scale_units='xy', angles='xy', scale=1, color='k')
+            if self.plot:
+                super().plot_step(fig, self.x, last_x)
 
             # update new point
-            self.wrt = last_wrt
+            self.x = last_x
 
             self.iter += 1
 
+            self.callback()
+
         if self.verbose:
             print()
-        if self.plot and self.n == 2:
+        if self.plot:
             plt.show()
-        return self.wrt, v, status
+        return self.x, self.f_x, status
 
 
 class LBFGS(LineSearchOptimizer):
-    def __init__(self, f, wrt=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
-                 delta=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, verbose=False, plot=False):
-        super().__init__(f, wrt, eps=eps, max_iter=max_iter, max_f_eval=max_f_eval, m1=m1, m2=m2, a_start=a_start,
-                         tau=tau, sfgrd=sfgrd, m_inf=m_inf, min_a=min_a, verbose=verbose, plot=plot)
+    def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
+                 a_start=1, delta=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
+                 callback_args=(), verbose=False, plot=False):
+        super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
+                         m_inf, min_a, callback, callback_args, verbose, plot)
         if not np.isscalar(delta):
             raise ValueError('delta is not a real scalar')
         self.delta = delta

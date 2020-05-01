@@ -38,8 +38,8 @@ class InteriorPoint(BoxConstrainedOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, eps=1e-10, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, eps, max_iter, verbose, plot)
+    def __init__(self, f, eps=1e-10, max_iter=1000, callback=None, callback_args=(), verbose=False, plot=False):
+        super().__init__(f, eps, max_iter, callback, callback_args, verbose, plot)
 
     def minimize(self):
 
@@ -126,7 +126,7 @@ class InteriorPoint(BoxConstrainedOptimizer):
 
         # compute a feasible interior dual solution satisfying SKKTS with x for some
         # \mu we don't care much of
-        g = self.f.jacobian(self.wrt)
+        g = self.f.jacobian(self.x)
         lp = 1e-6 * np.ones(self.f.n)
         lm = np.copy(lp)
         idx = g >= 0
@@ -135,19 +135,19 @@ class InteriorPoint(BoxConstrainedOptimizer):
         lp[idx] = lp[idx] - g[idx]
 
         if self.verbose and not self.iter % self.verbose:
-            print('iter\tv\t\t\tp\t\t\tgap')
+            print('iter\tf(x)\t\t\tp\t\t\tgap')
 
-        if self.plot and self.n == 2:
+        if self.plot:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
-            v = self.f.function(self.wrt)
-            xQx = self.wrt.dot(self.f.Q).dot(self.wrt)
+            self.f_x = self.f.function(self.x)
+            xQx = self.x.dot(self.f.Q).dot(self.x)
             p = -lp.T.dot(self.f.ub) - 0.5 * xQx
-            gap = (v - p) / max(abs(v), 1)
+            gap = (self.f_x - p) / max(abs(self.f_x), 1)
 
             if self.verbose and not self.iter % self.verbose:
-                print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, v, p, gap))
+                print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, p, gap))
 
             # stopping criteria
             if gap <= self.eps:
@@ -169,12 +169,12 @@ class InteriorPoint(BoxConstrainedOptimizer):
             #
             # it appears this last form is *vastly* more numerically stable
 
-            mu = (v - p) / (4 * self.f.n * self.f.n)  # use \rho = 1 / (# of constraints)
+            mu = (self.f_x - p) / (4 * self.f.n * self.f.n)  # use \rho = 1 / (# of constraints)
 
-            umx = self.f.ub - self.wrt
-            H = self.f.Q + np.diag(lp / umx + lm / self.wrt)
-            # w = \mu (np.ones(n) / umx - np.ones(n) / self.wrt) + lp - lm
-            w = mu * (self.f.ub - 2 * self.wrt) / (umx * self.wrt) + lp - lm
+            umx = self.f.ub - self.x
+            H = self.f.Q + np.diag(lp / umx + lm / self.x)
+            # w = \mu (np.ones(n) / umx - np.ones(n) / self.x) + lp - lm
+            w = mu * (self.f.ub - 2 * self.x) / (umx * self.x) + lp - lm
 
             # and use Cholesky to solve the system
             # because H is symmetric positive definite matrix
@@ -182,12 +182,12 @@ class InteriorPoint(BoxConstrainedOptimizer):
 
             dlp = (mu * np.ones(self.f.n) + lp * dx) / umx - lp
 
-            dlm = (mu * np.ones(self.f.n) - lm * dx) / self.wrt - lm
+            dlm = (mu * np.ones(self.f.n) - lm * dx) / self.x - lm
 
             # compute maximum feasible primal step size
             idx = dx < 0  # negative direction entries
             if any(idx):
-                max_t = min(-self.wrt[idx] / dx[idx])
+                max_t = min(-self.x[idx] / dx[idx])
             else:
                 max_t = np.inf
 
@@ -208,20 +208,22 @@ class InteriorPoint(BoxConstrainedOptimizer):
 
             max_t *= 0.9995  # ensure the new iterate remains interior
 
-            self.wrt += max_t * dx
+            self.x += max_t * dx
             lp += max_t * dlp
             lm += max_t * dlm
 
             # plot the trajectory
-            if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt - max_t * dx, self.wrt)).T
+            if self.plot:
+                p_xy = np.vstack((self.x - max_t * dx, self.x)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
                                     scale_units='xy', angles='xy', scale=1, color='k')
 
             self.iter += 1
 
+            self.callback()
+
         if self.verbose:
             print()
-        if self.plot and self.n == 2:
+        if self.plot:
             plt.show()
-        return self.wrt, v, status
+        return self.x, self.f_x, status

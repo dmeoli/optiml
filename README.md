@@ -5,7 +5,7 @@ solver for many machine learning models developed during the Machine Learning & 
 courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [University of Pisa](https://www.unipi.it/index.php/english).
 
 ## Contents
-- Optimization Algorithms
+- Numerical Optimization
     - Unconstrained Optimization
         - Line Search Methods
             - Exact Line Search Methods
@@ -78,19 +78,19 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
     - Constrained Optimization
         - Box-Constrained Optimization
             - [x] Projected Gradient
-            - [x] Frank-Wolfe
+            - [x] Frank-Wolfe or Conditional Gradient
             - [x] Active Set
             - [x] Interior Point
             - [x] Lagrangian Dual
             - [x] Sequential Minimal Optimization (ad hoc for SVMs)
             - [x] BCQP solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
-        - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
-        - [x] QP solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
+        - Quadratic Optimization
+            - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
+            - [x] QP solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
 
 - Optimization Functions
     - Unconstrained
         - [x] Rosenbrock
-        - [x] Ackley
         - [x] Quadratic
             - [x] Lagrangian Box-Constrained
     - Constrained
@@ -147,7 +147,12 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] He normal and uniform
 
 - Notebooks
-    - [x] Support Vector Machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/SupportVectorMachines.ipynb)
+    - Numerical Optimization
+        - [x] Line Search Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/LineSearchMethods.ipynb)
+        - [x] Stochastic Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/StochasticMethods.ipynb)
+    - Machine Learning
+        - [x] Support Vector Machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/SupportVectorMachines.ipynb)
+        - [x] Convolutional Neural Networks [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/ConvolutionalNeuralNetworks.ipynb)
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

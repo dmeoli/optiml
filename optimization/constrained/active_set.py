@@ -34,12 +34,12 @@ class ActiveSet(BoxConstrainedOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, eps=1e-6, max_iter=1000, verbose=False, plot=False):
-        super().__init__(f, eps, max_iter, verbose, plot)
+    def __init__(self, f, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False, plot=False):
+        super().__init__(f, eps, max_iter, callback, callback_args, verbose, plot)
 
     def minimize(self):
 
-        v = self.f.function(self.wrt)
+        self.f_x = self.f.function(self.x)
 
         # because all constraints are box ones, the active set is logically
         # partitioned onto the set of lower and upper bound constraints that are
@@ -57,12 +57,12 @@ class ActiveSet(BoxConstrainedOptimizer):
         if self.verbose and not self.iter % self.verbose:
             print('iter\tf(x)\t\t|B|\tI/O')
 
-        if self.plot and self.n == 2:
+        if self.plot:
             surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
             if self.verbose and not self.iter % self.verbose:
-                print('{:4d}\t{:1.4e}\t{:d}\t'.format(self.iter, v, sum(L) + sum(U)), end='')
+                print('{:4d}\t{:1.4e}\t{:d}\t'.format(self.iter, self.f_x, sum(L) + sum(U)), end='')
 
             if self.iter >= self.max_iter:
                 status = 'stopped'
@@ -93,10 +93,10 @@ class ActiveSet(BoxConstrainedOptimizer):
                 # the solution of the unconstrained problem is actually feasible
 
                 # move the current point right there
-                last_wrt = xs
+                last_x = xs
 
                 # compute function value and gradient
-                v, g = self.f.function(last_wrt), self.f.jacobian(last_wrt)
+                self.f_x, g = self.f.function(last_x), self.f.jacobian(last_x)
 
                 h = np.nonzero(np.logical_and(L, g < -1e-12))[0]
                 if h.size > 0:
@@ -121,33 +121,33 @@ class ActiveSet(BoxConstrainedOptimizer):
                             print('O {:d}(L)'.format(h))
             else:
                 # the solution of the unconstrained problem is not feasible
-                # this means that d = xs - self.wrt is a descent direction, use it
+                # this means that d = xs - self.x is a descent direction, use it
                 # of course, only the "free" part really needs to be computed
 
                 d = np.zeros(self.f.n)
-                d[A] = xs[A] - self.wrt[A]
+                d[A] = xs[A] - self.x[A]
 
                 # first, compute the maximum feasible step size max_t such that:
-                #   0 <= self.wrt[i] + max_t d[i] <= u[i]   for all i
+                #   0 <= self.x[i] + max_t d[i] <= u[i]   for all i
 
                 idx = np.logical_and(A, d > 0)  # positive gradient entries
-                max_t = min((self.f.ub[idx] - self.wrt[idx]) / d[idx], default=np.inf)
+                max_t = min((self.f.ub[idx] - self.x[idx]) / d[idx], default=np.inf)
                 idx = np.logical_and(A, d < 0)  # negative gradient entries
-                max_t = min(max_t, min(-self.wrt[idx] / d[idx], default=np.inf))
+                max_t = min(max_t, min(-self.x[idx] / d[idx], default=np.inf))
 
                 # it is useless to compute the optimal t, because we know already
                 # that it is 1, whereas max_t necessarily is < 1
-                last_wrt = self.wrt + max_t * d
+                last_x = self.x + max_t * d
 
                 # compute function value
-                v = self.f.function(last_wrt)
+                self.f_x = self.f.function(last_x)
 
                 # update the active set(s)
-                nL = np.logical_and(A, last_wrt <= 1e-12)
+                nL = np.logical_and(A, last_x <= 1e-12)
                 L[nL] = True
                 A[nL] = False
 
-                nU = np.logical_and(A, last_wrt >= self.f.ub - 1e-12)
+                nU = np.logical_and(A, last_x >= self.f.ub - 1e-12)
                 U[nU] = True
                 A[nU] = False
 
@@ -155,17 +155,19 @@ class ActiveSet(BoxConstrainedOptimizer):
                     print('I {:d}+{:d}'.format(sum(nL), sum(nU)))
 
             # plot the trajectory
-            if self.plot and self.n == 2:
-                p_xy = np.vstack((self.wrt, last_wrt)).T
+            if self.plot:
+                p_xy = np.vstack((self.x, last_x)).T
                 contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1],
                                     p_xy[1, 1:] - p_xy[1, :-1], scale_units='xy', angles='xy', scale=1, color='k')
 
-            self.wrt = last_wrt
+            self.x = last_x
 
             self.iter += 1
 
+            self.callback()
+
         if self.verbose:
             print()
-        if self.plot and self.n == 2:
+        if self.plot:
             plt.show()
-        return self.wrt, v, status
+        return self.x, self.f_x, status

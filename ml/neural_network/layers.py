@@ -2,7 +2,7 @@ import numpy as np
 
 from ml.neural_network.initializers import glorot_uniform, zeros
 from ml.neural_network.activations import Activation
-from ml.neural_network.regularizers import l2
+from ml.regularizers import l2
 
 
 class Layer:
@@ -19,9 +19,9 @@ class ParamLayer(Layer):
     def __init__(self, w_shape, activation, w_init, b_init, w_reg, b_reg, use_bias):
 
         if isinstance(activation, Activation):
-            self._a = activation
+            self.activation = activation
         else:
-            raise TypeError
+            raise TypeError(f'unknown activation function {activation}')
 
         if w_init is None:
             self.W = glorot_uniform(w_shape)
@@ -59,11 +59,11 @@ class FullyConnected(ParamLayer):
         self._WX_b = self._X.dot(self.W)
         if self.use_bias:
             self._WX_b += self.b
-        return self._a(self._WX_b)
+        return self.activation(self._WX_b)
 
     def backward(self, delta):
         # dW, db
-        dZ = delta * self._a.jacobian(self._WX_b)
+        dZ = delta * self.activation.jacobian(self._WX_b)
         grads = {'dW': self._X.T.dot(dZ)}
         if self.use_bias:
             grads['db'] = np.sum(dZ, axis=0, keepdims=True)
@@ -114,13 +114,13 @@ class Conv2D(ParamLayer):
         if self.use_bias:
             self._WX_b += self.b
 
-        self._activated = self._a(self._WX_b)
+        self._activated = self.activation(self._WX_b)
         return self._activated if self.channels_last else self._activated.transpose((0, 3, 1, 2))
 
     def backward(self, delta):
         # according to:
         # https://medium.com/@2017csm1006/forward-and-backpropagation-in-convolutional-neural-network-4dfa96d7b37e
-        dZ = delta * self._a.jacobian(self._WX_b)
+        dZ = delta * self.activation.jacobian(self._WX_b)
 
         # dW, db
         dW = np.empty_like(self.W)  # [c,h,w,out]
