@@ -12,7 +12,7 @@ from ml.neural_network.layers import Layer, ParamLayer
 from ml.neural_network.losses import (mean_squared_error, categorical_cross_entropy, binary_cross_entropy,
                                       sparse_categorical_cross_entropy)
 from optimization.optimization_function import OptimizationFunction
-from optimization.unconstrained import ProximalBundle
+from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
 from optimization.unconstrained.stochastic.stochastic_gradient_descent import StochasticGradientDescent
 from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
@@ -23,13 +23,11 @@ plt.style.use('ggplot')
 
 class NeuralNetworkLossFunction(OptimizationFunction):
 
-    def __init__(self, neural_net, X_train, X_test, y_train, y_test):
-        super().__init__(X_train.shape[1])
+    def __init__(self, neural_net, X_train, y_train, x_min=-10, x_max=10, y_min=-10, y_max=10):
+        super().__init__(X_train.shape[1], x_min, x_max, y_min, y_max)
         self.neural_net = neural_net
         self.X_train = X_train
-        self.X_test = X_test
         self.y_train = y_train
-        self.y_test = y_test
 
     def args(self):
         return self.X_train, self.y_train
@@ -150,12 +148,14 @@ class NeuralNetwork(BaseEstimator, Layer):
 
         packed_weights_biases = self._pack(*self.params)
 
-        loss = NeuralNetworkLossFunction(self, X_train, X_test, y_train, y_test)
+        loss = NeuralNetworkLossFunction(self, X_train, y_train)
 
         if issubclass(self.optimizer, LineSearchOptimizer):
             res = self.optimizer(f=loss, x=packed_weights_biases, max_iter=self.epochs, max_f_eval=self.max_f_eval,
                                  callback=self._store_plot_data, callback_args=(loss, X_train, X_test, y_train, y_test),
                                  verbose=self.verbose, plot=self.plot).minimize()
+            if res[2] != 'optimal':
+                warnings.warn('max_iter reached but the optimization has not converged yet')
         elif issubclass(self.optimizer, StochasticOptimizer):
             res = self.optimizer(f=loss, x=packed_weights_biases, batch_size=self.batch_size, max_iter=self.epochs,
                                  step_size=self.learning_rate, momentum_type=self.momentum_type, momentum=self.momentum,
@@ -166,10 +166,7 @@ class NeuralNetwork(BaseEstimator, Layer):
                                  master_solver=self.master_solver, momentum_type=self.momentum_type,
                                  momentum=self.momentum, verbose=self.verbose, plot=self.plot).minimize()
         else:
-            raise ValueError(f'unknown optimizer {self.optimizer}')
-
-        if res[2] != 'optimal':
-            warnings.warn('max_iter reached but the optimization has not converged yet')
+            raise ValueError(f'unknown optimizer {type(self.optimizer).__name__}')
 
         self._unpack(res[0])
 
@@ -203,7 +200,7 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
         if self.loss in (sparse_categorical_cross_entropy, categorical_cross_entropy):
             if self.layers[-1].activation != softmax:
-                raise ValueError(f'NeuralNetworkClassifier with {self.loss} loss '
+                raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} loss '
                                  f'function only works with softmax output layer')
             if self.loss == categorical_cross_entropy:
                 n_classes = np.unique(y).size
@@ -214,7 +211,7 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
             raise ValueError('NeuralNetworkClassifier with binary_cross_entropy '
                              'loss function only works with sigmoid output layer')
         elif self.loss in (mean_squared_error, mean_euclidean_error) and self.layers[-1].activation == softmax:
-            raise ValueError(f'NeuralNetworkClassifier with {self.loss} loss '
+            raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} loss '
                              f'function does not work with softmax output layer')
 
         if self.loss == categorical_cross_entropy:

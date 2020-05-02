@@ -11,7 +11,7 @@ from optimization.constrained.box_constrained_optimizer import BoxConstrainedOpt
 from optimization.constrained.interface import scipy_solve_qp, scipy_solve_bcqp, solve_qp
 from optimization.optimization_function import BoxConstrained, LagrangianBoxConstrained
 from optimization.optimizer import Optimizer
-from optimization.unconstrained import ProximalBundle
+from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
 from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
 from utils import clip
@@ -349,7 +349,7 @@ class SVC(ClassifierMixin, SVM):
                 else:
                     a2 = alpha2
 
-                warnings.warn('the kernel matrix is not positive definite')
+                warnings.warn('kernel matrix is not positive definite')
 
             # if examples can't be optimized within tol, skip this pair
             if abs(a2 - alpha2) < 1e-12 * (a2 + alpha2 + 1e-12):
@@ -590,19 +590,18 @@ class SVC(ClassifierMixin, SVM):
                 if issubclass(self.optimizer, LineSearchOptimizer):
                     res = self.optimizer(f=dual, max_iter=self.epochs, max_f_eval=self.max_f_eval,
                                          verbose=self.verbose, plot=self.plot).minimize()
+                    if res[2] != 'optimal':
+                        warnings.warn('max_iter reached but the optimization has not converged yet')
                 elif issubclass(self.optimizer, StochasticOptimizer):
-                    res = self.optimizer(f=dual, step_size=self.learning_rate, max_iter=self.epochs,
-                                         momentum_type=self.momentum_type, momentum=self.momentum,
-                                         verbose=self.verbose, plot=self.plot).minimize()
+                    self.optimizer(f=dual, step_size=self.learning_rate, max_iter=self.epochs,
+                                   momentum_type=self.momentum_type, momentum=self.momentum,
+                                   verbose=self.verbose, plot=self.plot).minimize()
                 elif issubclass(self.optimizer, ProximalBundle):
-                    res = self.optimizer(f=dual, max_iter=self.epochs, master_solver=self.master_solver,
-                                         momentum_type=self.momentum_type, momentum=self.momentum,
-                                         verbose=self.verbose, plot=self.plot).minimize()
+                    self.optimizer(f=dual, max_iter=self.epochs, master_solver=self.master_solver,
+                                   momentum_type=self.momentum_type, momentum=self.momentum,
+                                   verbose=self.verbose, plot=self.plot).minimize()
                 else:
                     raise ValueError(f'unknown optimizer {self.optimizer}')
-
-                if res[2] != 'optimal':
-                    warnings.warn('max_iter reached but the optimization has not converged yet')
 
                 alphas = dual.primal_solution
 
@@ -730,7 +729,7 @@ class SVR(RegressorMixin, SVM):
                             Lobj = -L * delta_E
                             Hobj = -H * delta_E
                             a2 = L if Lobj > Hobj else H
-                            warnings.warn('the kernel matrix is not positive definite')
+                            warnings.warn('kernel matrix is not positive definite')
                         a1 = alpha1_p - (a2 - alpha2_p)
                         # update alpha1, alpha2_p if change is larger than some eps
                         if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
@@ -753,7 +752,7 @@ class SVR(RegressorMixin, SVM):
                             Lobj = L * (-2 * self.epsilon + delta_E)
                             Hobj = H * (-2 * self.epsilon + delta_E)
                             a2 = L if Lobj > Hobj else H
-                            warnings.warn('the kernel matrix is not positive definite')
+                            warnings.warn('kernel matrix is not positive definite')
                         a1 = alpha1_p + (a2 - alpha2_n)
                         # update alpha1, alpha2_n if change is larger than some eps
                         if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
@@ -776,7 +775,7 @@ class SVR(RegressorMixin, SVM):
                             Lobj = -L * (2 * self.epsilon + delta_E)
                             Hobj = -H * (2 * self.epsilon + delta_E)
                             a2 = L if Lobj > Hobj else H
-                            warnings.warn('the kernel matrix is not positive definite')
+                            warnings.warn('kernel matrix is not positive definite')
                         a1 = alpha1_n + (a2 - alpha2_p)
                         # update alpha1_n, alpha2_p if change is larger than some eps
                         if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
@@ -799,7 +798,7 @@ class SVR(RegressorMixin, SVM):
                             Lobj = L * delta_E
                             Hobj = H * delta_E
                             a2 = L if Lobj > Hobj else H
-                            warnings.warn('the kernel matrix is not positive definite')
+                            warnings.warn('kernel matrix is not positive definite')
                         a1 = alpha1_n - (a2 - alpha2_n)
                         # update alpha1_n, alpha2_n if change is larger than some eps
                         if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
@@ -1099,19 +1098,18 @@ class SVR(RegressorMixin, SVM):
                 if issubclass(self.optimizer, LineSearchOptimizer):
                     res = self.optimizer(f=dual, max_iter=self.epochs, max_f_eval=self.max_f_eval,
                                          verbose=self.verbose, plot=self.plot).minimize()
+                    if res[2] != 'optimal':
+                        warnings.warn('max_iter reached but the optimization has not converged yet')
                 elif issubclass(self.optimizer, StochasticOptimizer):
-                    res = self.optimizer(f=dual, step_size=self.learning_rate, max_iter=self.epochs,
-                                         momentum_type=self.momentum_type, momentum=self.momentum,
-                                         verbose=self.verbose, plot=self.plot).minimize()
+                    self.optimizer(f=dual, step_size=self.learning_rate, max_iter=self.epochs,
+                                   momentum_type=self.momentum_type, momentum=self.momentum,
+                                   verbose=self.verbose, plot=self.plot).minimize()
                 elif issubclass(self.optimizer, ProximalBundle):
-                    res = self.optimizer(f=dual, max_iter=self.epochs, master_solver=self.master_solver,
-                                         momentum_type=self.momentum_type, momentum=self.momentum,
-                                         verbose=self.verbose, plot=self.plot).minimize()
+                    self.optimizer(f=dual, max_iter=self.epochs, master_solver=self.master_solver,
+                                   momentum_type=self.momentum_type, momentum=self.momentum,
+                                   verbose=self.verbose, plot=self.plot).minimize()
                 else:
                     raise ValueError(f'unknown optimizer {self.optimizer}')
-
-                if res[2] != 'optimal':
-                    warnings.warn('max_iter reached but the optimization has not converged yet')
 
                 alphas = dual.primal_solution
 

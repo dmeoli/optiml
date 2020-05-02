@@ -1,7 +1,7 @@
 import numpy as np
 
 from ml.neural_network.initializers import glorot_uniform, zeros
-from ml.neural_network.activations import Activation
+from ml.neural_network.activations import Activation, linear
 from ml.regularizers import l2
 
 
@@ -49,7 +49,8 @@ class ParamLayer(Layer):
 
 
 class FullyConnected(ParamLayer):
-    def __init__(self, n_in, n_out, activation, w_init=glorot_uniform, b_init=zeros, w_reg=l2, b_reg=l2, use_bias=True):
+    def __init__(self, n_in, n_out, activation=linear, w_init=glorot_uniform,
+                 b_init=zeros, w_reg=l2, b_reg=l2, use_bias=True):
         super().__init__((n_in, n_out), activation, w_init, b_init, w_reg, b_reg, use_bias)
         self.fan_in = n_in
         self.fan_out = n_out
@@ -74,7 +75,7 @@ class FullyConnected(ParamLayer):
 
 class Conv2D(ParamLayer):
     def __init__(self, in_channels, out_channels, kernel_size=(3, 3), strides=(1, 1), padding='valid',
-                 channels_last=True, activation=None, w_init=glorot_uniform, b_init=zeros,
+                 channels_last=True, activation=linear, w_init=glorot_uniform, b_init=zeros,
                  w_reg=l2, b_reg=l2, use_bias=True):
         super().__init__((in_channels,) + kernel_size + (out_channels,),
                          activation, w_init, b_init, w_reg, b_reg, use_bias)

@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from ml.neural_network.activations import sigmoid, softmax, linear
 from ml.neural_network.layers import FullyConnected
 from ml.neural_network.losses import mean_squared_error, categorical_cross_entropy
-from ml.neural_network import NeuralNetworkRegressor, NeuralNetworkClassifier
+from ml.neural_network.neural_network import NeuralNetworkRegressor, NeuralNetworkClassifier
 from optimization.unconstrained.line_search.quasi_newton import BFGS
 
 

@@ -8,7 +8,7 @@ from ml.neural_network.activations import Sigmoid
 from ml.neural_network.losses import mean_squared_error, binary_cross_entropy
 from ml.regularizers import l2, L2
 from optimization.optimization_function import OptimizationFunction
-from optimization.unconstrained import ProximalBundle
+from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
 from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
 
@@ -17,8 +17,8 @@ plt.style.use('ggplot')
 
 class LinearModelLossFunction(OptimizationFunction):
 
-    def __init__(self, linear_model, X, y):
-        super().__init__(X.shape[1])
+    def __init__(self, linear_model, X, y, x_min=-10, x_max=10, y_min=-10, y_max=10):
+        super().__init__(X.shape[1], x_min, x_max, y_min, y_max)
         self.X = X
         self.y = y
         self.linear_model = linear_model
@@ -84,6 +84,8 @@ class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
         if issubclass(self.optimizer, LineSearchOptimizer):
             res = self.optimizer(f=loss, max_iter=self.epochs, max_f_eval=self.max_f_eval,
                                  verbose=self.verbose, plot=self.plot).minimize()
+            if res[2] != 'optimal':
+                warnings.warn('max_iter reached but the optimization has not converged yet')
         elif issubclass(self.optimizer, StochasticOptimizer):
             res = self.optimizer(f=loss, batch_size=self.batch_size, step_size=self.learning_rate,
                                  momentum_type=self.momentum_type, momentum=self.momentum,
@@ -94,9 +96,6 @@ class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
                                  verbose=self.verbose, plot=self.plot).minimize()
         else:
             raise ValueError(f'unknown optimizer {self.optimizer}')
-
-        if res[2] != 'optimal':
-            warnings.warn('max_iter reached but the optimization has not converged yet')
 
         self.coef_ = res[0]
 

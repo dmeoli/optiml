@@ -112,6 +112,9 @@ def generate_non_linearly_regression_data():
 
 # plot functions
 
+plt.style.use('ggplot')
+
+
 def plot_validation_curve(estimator, X, y, param_name, param_range, scorer, cv=5):
     train_scores, test_scores = validation_curve(estimator, X, y, param_name=param_name, param_range=param_range,
                                                  cv=cv, scoring=scorer, n_jobs=-1)

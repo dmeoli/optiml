@@ -18,7 +18,7 @@ class MeanSquaredError(Loss):
 
     def function(self, y_pred, y_true):
         assert y_pred.shape == y_true.shape
-        return np.mean(np.square(y_pred - y_true))
+        return 0.5 * np.mean(np.square(y_pred - y_true))
 
 
 class MeanAbsoluteError(Loss):
