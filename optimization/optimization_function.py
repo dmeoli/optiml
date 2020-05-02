@@ -113,7 +113,7 @@ class Quadratic(OptimizationFunction):
             # compute the inverse of the Hessian matrix and O(2n^2) to multiply this by the -q vector
             return np.linalg.solve(self.Q, -self.q)  # complexity O(2n^3/3)
         except np.linalg.LinAlgError:  # the Hessian matrix is singular
-            return np.full(self.ndim, np.inf)
+            return np.nan
 
     def f_star(self):
         return self.function(self.x_star())
@@ -315,7 +315,7 @@ class LagrangianBoxConstrained(Quadratic):
         """
         ql = self.q.T + lmbda[:self.primal.ndim] - lmbda[self.primal.ndim:]
         x = ldl_solve((self.L, self.D, self.P), -ql)
-        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.ndim].dot(self.primal.ub)
+        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.ndim].T.dot(self.primal.ub)
 
     def jacobian(self, lmbda):
         """

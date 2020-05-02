@@ -22,7 +22,7 @@ def test_AdaMax_standard_momentum_quadratic():
 
 def test_AdaMax_standard_momentum_Rosenbrock():
     obj = Rosenbrock()
-    assert np.allclose(AdaMax(obj, step_size=0.1, max_iter=2000, momentum_type='standard', momentum=0.3).minimize()[0],
+    assert np.allclose(AdaMax(obj, step_size=0.1, epochs=2000, momentum_type='standard', momentum=0.3).minimize()[0],
                        obj.x_star(), rtol=0.1)
 
 

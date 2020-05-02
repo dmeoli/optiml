@@ -33,6 +33,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
                     - [x] Newton
                     - [x] BFGS quasi-Newton
                     - [ ] L-BFGS quasi-Newton
+            - [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
         - Stochastic Methods
             - [x] Stochastic Gradient Descent
                 - [x] standard momentum

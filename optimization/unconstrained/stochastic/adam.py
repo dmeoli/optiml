@@ -9,11 +9,11 @@ from optimization.unconstrained.stochastic.stochastic_optimizer import Stochasti
 
 class Adam(StochasticOptimizer):
 
-    def __init__(self, f, x=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_size=0.001,
+    def __init__(self, f, x=random_uniform, batch_size=None, eps=1e-6, epochs=1000, step_size=0.001,
                  momentum_type='none', momentum=0.9, beta1=0.9, beta2=0.999, offset=1e-8, callback=None,
                  callback_args=(), verbose=False, plot=False):
         super().__init__(f, x, step_size, momentum_type, momentum, batch_size,
-                         eps, max_iter, callback, callback_args, verbose, plot)
+                         eps, epochs, callback, callback_args, verbose, plot)
         if not 0 <= beta1 < 1:
             raise ValueError('beta1 has to lie in [0, 1)')
         self.beta1 = beta1

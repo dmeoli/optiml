@@ -2,6 +2,7 @@ import warnings
 
 import autograd.numpy as np
 from matplotlib import pyplot as plt
+from scipy.optimize import minimize
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
@@ -23,11 +24,13 @@ plt.style.use('ggplot')
 
 class NeuralNetworkLossFunction(OptimizationFunction):
 
-    def __init__(self, neural_net, X_train, y_train, x_min=-10, x_max=10, y_min=-10, y_max=10):
+    def __init__(self, neural_net, X_train, X_test, y_train, y_test, x_min=-10, x_max=10, y_min=-10, y_max=10):
         super().__init__(X_train.shape[1], x_min, x_max, y_min, y_max)
         self.neural_net = neural_net
         self.X_train = X_train
+        self.X_test = X_test
         self.y_train = y_train
+        self.y_test = y_test
 
     def args(self):
         return self.X_train, self.y_train
@@ -55,11 +58,25 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         delta = self.neural_net.loss.jacobian(self.neural_net.forward(X), y)
         return self.neural_net._pack(*self.neural_net.backward(delta))
 
+    def store_plot_data(self, packed_weights_biases, X=None, y=None):
+        if X is None:
+            X = self.X_train
+        if y is None:
+            y = self.y_train
+
+        self.neural_net.loss_history['training_loss'].append(self.function(packed_weights_biases, X, y))
+        self.neural_net.loss_history['validation_loss'].append(self.function(packed_weights_biases,
+                                                                             self.X_test, self.y_test))
+        if isinstance(self.neural_net, NeuralNetworkClassifier):
+            self.neural_net.accuracy_history['training_accuracy'].append(self.neural_net.score(X, y))
+            self.neural_net.accuracy_history['validation_accuracy'].append(
+                self.neural_net.score(self.X_test, self.y_test))
+
 
 class NeuralNetwork(BaseEstimator, Layer):
 
     def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent, learning_rate=0.01,
-                 epochs=100, momentum_type='none', momentum=0.9, validation_split=0.2, batch_size=None,
+                 max_iter=1000, momentum_type='none', momentum=0.9, validation_split=0.2, batch_size=None,
                  max_f_eval=1000, master_solver='ECOS', verbose=False, plot=False):
         self.layers = layers
         self.loss = loss
@@ -67,7 +84,7 @@ class NeuralNetwork(BaseEstimator, Layer):
         self.learning_rate = learning_rate
         self.momentum_type = momentum_type
         self.momentum = momentum
-        self.epochs = epochs
+        self.max_iter = max_iter
         self.batch_size = batch_size
         self.validation_split = validation_split
         self.max_f_eval = max_f_eval
@@ -136,10 +153,6 @@ class NeuralNetwork(BaseEstimator, Layer):
                 self.biases_idx.append((start, end))
                 start = end
 
-    def _store_plot_data(self, packed_weights_biases, training_loss, loss, X_train, X_test, y_train, y_test):
-        self.loss_history['training_loss'].append(training_loss)
-        self.loss_history['validation_loss'].append(loss.function(packed_weights_biases, X_test, y_test))
-
     def fit(self, X, y):
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=self.validation_split)
@@ -148,27 +161,41 @@ class NeuralNetwork(BaseEstimator, Layer):
 
         packed_weights_biases = self._pack(*self.params)
 
-        loss = NeuralNetworkLossFunction(self, X_train, y_train)
+        loss = NeuralNetworkLossFunction(self, X_train, X_test, y_train, y_test)
 
-        if issubclass(self.optimizer, LineSearchOptimizer):
-            res = self.optimizer(f=loss, x=packed_weights_biases, max_iter=self.epochs, max_f_eval=self.max_f_eval,
-                                 callback=self._store_plot_data, callback_args=(loss, X_train, X_test, y_train, y_test),
-                                 verbose=self.verbose, plot=self.plot).minimize()
-            if res[2] != 'optimal':
+        if isinstance(self.optimizer, str):  # scipy optimization
+            res = minimize(fun=loss.function, jac=loss.jacobian, args=loss.args(),
+                           x0=packed_weights_biases, method=self.optimizer,
+                           callback=loss.store_plot_data,
+                           options={'disp': self.verbose,
+                                    'maxiter': self.max_iter,
+                                    'maxfun': self.max_f_eval})
+            if res.status != 0:
                 warnings.warn('max_iter reached but the optimization has not converged yet')
-        elif issubclass(self.optimizer, StochasticOptimizer):
-            res = self.optimizer(f=loss, x=packed_weights_biases, batch_size=self.batch_size, max_iter=self.epochs,
-                                 step_size=self.learning_rate, momentum_type=self.momentum_type, momentum=self.momentum,
-                                 callback=self._store_plot_data, callback_args=(loss, X_train, X_test, y_train, y_test),
-                                 verbose=self.verbose, plot=self.plot).minimize()
-        elif issubclass(self.optimizer, ProximalBundle):
-            res = self.optimizer(f=loss, x=packed_weights_biases, max_iter=self.epochs,
-                                 master_solver=self.master_solver, momentum_type=self.momentum_type,
-                                 momentum=self.momentum, verbose=self.verbose, plot=self.plot).minimize()
+            self._unpack(res.x)
         else:
-            raise ValueError(f'unknown optimizer {type(self.optimizer).__name__}')
+            if issubclass(self.optimizer, LineSearchOptimizer):
+                res = self.optimizer(f=loss, x=packed_weights_biases, max_iter=self.max_iter,
+                                     max_f_eval=self.max_f_eval, callback=loss.store_plot_data,
+                                     verbose=self.verbose, plot=self.plot).minimize()
+                if res[2] != 'optimal':
+                    warnings.warn('max_iter reached but the optimization has not converged yet')
+            elif issubclass(self.optimizer, StochasticOptimizer):
+                res = self.optimizer(f=loss, x=packed_weights_biases, batch_size=self.batch_size, epochs=self.max_iter,
+                                     step_size=self.learning_rate, momentum_type=self.momentum_type,
+                                     momentum=self.momentum,
+                                     callback=loss.store_plot_data,
+                                     callback_args=(X_train, y_train),  # mini batches
+                                     verbose=self.verbose, plot=self.plot).minimize()
+            elif issubclass(self.optimizer, ProximalBundle):
+                res = self.optimizer(f=loss, x=packed_weights_biases, max_iter=self.max_iter,
+                                     master_solver=self.master_solver, momentum_type=self.momentum_type,
+                                     momentum=self.momentum, callback=loss.store_plot_data,
+                                     verbose=self.verbose, plot=self.plot).minimize()
+            else:
+                raise ValueError(f'unknown optimizer {type(self.optimizer).__name__}')
 
-        self._unpack(res[0])
+            self._unpack(res[0])
 
         return self
 
@@ -176,23 +203,14 @@ class NeuralNetwork(BaseEstimator, Layer):
 class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
     def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent, learning_rate=0.01,
-                 epochs=100, momentum_type='none', momentum=0.9, validation_split=0.2, batch_size=None,
+                 max_iter=1000, momentum_type='none', momentum=0.9, validation_split=0.2, batch_size=None,
                  max_f_eval=1000, master_solver='ECOS', verbose=False, plot=False):
-        super().__init__(layers, loss, optimizer, learning_rate, epochs, momentum_type, momentum,
+        super().__init__(layers, loss, optimizer, learning_rate, max_iter, momentum_type, momentum,
                          validation_split, batch_size, max_f_eval, master_solver, verbose, plot)
         if loss == categorical_cross_entropy:
             self.ohe = OneHotEncoder()
         self.accuracy_history = {'training_accuracy': [],
                                  'validation_accuracy': []}
-
-    def _store_plot_data(self, packed_weights_biases, training_loss, loss, X_train, X_test, y_train, y_test):
-        super()._store_plot_data(packed_weights_biases, training_loss, loss, X_train, X_test, y_train, y_test)
-        self.accuracy_history['training_accuracy'].append(
-            self.score(X_train, (self.ohe.inverse_transform(y_train)
-                                 if self.loss == categorical_cross_entropy else y_train)))
-        self.accuracy_history['validation_accuracy'].append(
-            self.score(X_test, (self.ohe.inverse_transform(y_test)
-                                if self.loss == categorical_cross_entropy else y_test)))
 
     def fit(self, X, y):
         if y.ndim == 1:

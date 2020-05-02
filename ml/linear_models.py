@@ -2,9 +2,11 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.optimize import minimize
 from sklearn.base import MultiOutputMixin, RegressorMixin, BaseEstimator, ClassifierMixin
 
 from ml.neural_network.activations import Sigmoid
+from ml.neural_network.initializers import random_uniform
 from ml.neural_network.losses import mean_squared_error, binary_cross_entropy
 from ml.regularizers import l2, L2
 from optimization.optimization_function import OptimizationFunction
@@ -60,7 +62,8 @@ class LinearModelLossFunction(OptimizationFunction):
 
 class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
 
-    def __init__(self, optimizer, learning_rate=0.01, momentum_type='none', momentum=0.9, epochs=1000, batch_size=None,
+    def __init__(self, optimizer, learning_rate=0.01, momentum_type='none', momentum=0.9, max_iter=1000,
+                 batch_size=None,
                  max_f_eval=1000, regularizer=l2, master_solver='cvxopt', verbose=False, plot=False):
         self.loss = mean_squared_error
         self.regularizer = regularizer
@@ -68,7 +71,7 @@ class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
         self.learning_rate = learning_rate
         self.momentum_type = momentum_type
         self.momentum = momentum
-        self.epochs = epochs
+        self.max_iter = max_iter
         self.batch_size = batch_size
         self.max_f_eval = max_f_eval
         self.master_solver = master_solver
@@ -81,23 +84,34 @@ class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
             raise ValueError('use sklearn.multioutput.MultiOutputRegressor to train a model over more than one target')
 
         loss = LinearModelLossFunction(self, X, y)
-        if issubclass(self.optimizer, LineSearchOptimizer):
-            res = self.optimizer(f=loss, max_iter=self.epochs, max_f_eval=self.max_f_eval,
-                                 verbose=self.verbose, plot=self.plot).minimize()
-            if res[2] != 'optimal':
-                warnings.warn('max_iter reached but the optimization has not converged yet')
-        elif issubclass(self.optimizer, StochasticOptimizer):
-            res = self.optimizer(f=loss, batch_size=self.batch_size, step_size=self.learning_rate,
-                                 momentum_type=self.momentum_type, momentum=self.momentum,
-                                 max_iter=self.epochs, verbose=self.verbose, plot=self.plot).minimize()
-        elif issubclass(self.optimizer, ProximalBundle):
-            res = self.optimizer(f=loss, max_iter=self.epochs, master_solver=self.master_solver,
-                                 momentum_type=self.momentum_type, momentum=self.momentum,
-                                 verbose=self.verbose, plot=self.plot).minimize()
-        else:
-            raise ValueError(f'unknown optimizer {self.optimizer}')
 
-        self.coef_ = res[0]
+        if isinstance(self.optimizer, str):  # scipy optimization
+            res = minimize(fun=loss.function, jac=loss.jacobian, args=loss.args(),
+                           x0=random_uniform(loss.ndim), method=self.optimizer,
+                           options={'disp': self.verbose,
+                                    'maxiter': self.max_iter,
+                                    'maxfun': self.max_f_eval})
+            if res.status != 0:
+                warnings.warn('max_iter reached but the optimization has not converged yet')
+            self.coef_ = res.x
+        else:
+            if issubclass(self.optimizer, LineSearchOptimizer):
+                res = self.optimizer(f=loss, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
+                                     verbose=self.verbose, plot=self.plot).minimize()
+                if res[2] != 'optimal':
+                    warnings.warn('max_iter reached but the optimization has not converged yet')
+            elif issubclass(self.optimizer, StochasticOptimizer):
+                res = self.optimizer(f=loss, batch_size=self.batch_size, step_size=self.learning_rate,
+                                     momentum_type=self.momentum_type, momentum=self.momentum,
+                                     epochs=self.max_iter, verbose=self.verbose, plot=self.plot).minimize()
+            elif issubclass(self.optimizer, ProximalBundle):
+                res = self.optimizer(f=loss, max_iter=self.max_iter, master_solver=self.master_solver,
+                                     momentum_type=self.momentum_type, momentum=self.momentum,
+                                     verbose=self.verbose, plot=self.plot).minimize()
+            else:
+                raise ValueError(f'unknown optimizer {self.optimizer}')
+
+            self.coef_ = res[0]
 
         return self
 
@@ -107,13 +121,13 @@ class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
 
 class LogisticRegression(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, optimizer, learning_rate=0.01, momentum_type='none', momentum=0.9, epochs=1000, batch_size=None,
-                 max_f_eval=1000, regularizer=l2, master_solver='cvxopt', verbose=False, plot=False):
+    def __init__(self, optimizer, learning_rate=0.01, momentum_type='none', momentum=0.9, max_iter=1000,
+                 batch_size=None, max_f_eval=1000, regularizer=l2, master_solver='cvxopt', verbose=False, plot=False):
         self.loss = binary_cross_entropy
         self.learning_rate = learning_rate
         self.momentum_type = momentum_type
         self.momentum = momentum
-        self.epochs = epochs
+        self.max_iter = max_iter
         self.batch_size = batch_size
         self.optimizer = optimizer
         self.max_f_eval = max_f_eval
@@ -131,12 +145,12 @@ class LogisticRegression(BaseEstimator, ClassifierMixin):
 
         loss = LinearModelLossFunction(self, X, y)
         if issubclass(self.optimizer, LineSearchOptimizer):
-            self.coef_ = self.optimizer(f=loss, max_iter=self.epochs, max_f_eval=self.max_f_eval,
+            self.coef_ = self.optimizer(f=loss, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
                                         verbose=self.verbose, plot=self.plot).minimize()[0]
         elif issubclass(self.optimizer, StochasticOptimizer):
             self.coef_ = self.optimizer(f=loss, batch_size=self.batch_size, step_size=self.learning_rate,
                                         momentum_type=self.momentum_type, momentum=self.momentum,
-                                        max_iter=self.epochs, verbose=self.verbose, plot=self.plot).minimize()[0]
+                                        epochs=self.max_iter, verbose=self.verbose, plot=self.plot).minimize()[0]
         return self
 
     def decision_function(self, X, theta=None):

@@ -7,11 +7,11 @@ from optimization.unconstrained.stochastic.stochastic_optimizer import Stochasti
 
 class AdaGrad(StochasticOptimizer):
 
-    def __init__(self, f, x=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_size=0.01,
+    def __init__(self, f, x=random_uniform, batch_size=None, eps=1e-6, epochs=1000, step_size=0.01,
                  momentum_type='none', momentum=0.9, offset=1e-4, callback=None, callback_args=(),
                  verbose=False, plot=False):
         super().__init__(f, x, step_size, momentum_type, momentum, batch_size,
-                         eps, max_iter, callback, callback_args, verbose, plot)
+                         eps, epochs, callback, callback_args, verbose, plot)
         if not np.isscalar(offset):
             raise ValueError('offset is not a real scalar')
         if not offset > 0:

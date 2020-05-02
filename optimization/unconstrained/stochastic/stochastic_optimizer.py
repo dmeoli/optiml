@@ -9,22 +9,22 @@ from optimization.optimizer import Optimizer
 
 class StochasticOptimizer(Optimizer):
     def __init__(self, f, x=random_uniform, step_size=0.01, momentum_type='none', momentum=0.9, batch_size=None,
-                 eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False, plot=False):
+                 eps=1e-6, epochs=1000, callback=None, callback_args=(), verbose=False, plot=False):
         """
 
-        :param f:        the objective function.
-        :param x:        ([n x 1] real column vector): the point where to start the algorithm from.
-        :param eps:      (real scalar, optional, default value 1e-6): the accuracy in the stopping
-                         criterion: the algorithm is stopped when the norm of the gradient is less
-                         than or equal to eps.
-        :param max_iter: (integer scalar, optional, default value 1000): the maximum number of iterations.
-        :param verbose:  (boolean, optional, default value False): print details about each iteration
-                         if True, nothing otherwise.
-        :param plot:     (boolean, optional, default value False): plot the function's surface and its contours
-                         if True and the function's dimension is 2, nothing otherwise.
+        :param f: the objective function.
+        :param x: ([n x 1] real column vector): the point where to start the algorithm from.
+        :param eps: (real scalar, optional, default value 1e-6): the accuracy in the stopping
+                    criterion: the algorithm is stopped when the norm of the gradient is less
+                    than or equal to eps.
+        :param epochs: (integer scalar, optional, default value 1000): the maximum number of iterations.
+        :param verbose: (boolean, optional, default value False): print details about each iteration
+                        if True, nothing otherwise.
+        :param plot: (boolean, optional, default value False): plot the function's surface and its contours
+                     if True and the function's dimension is 2, nothing otherwise.
         """
 
-        super().__init__(f, x, eps, max_iter, callback, callback_args, verbose, plot)
+        super().__init__(f, x, eps, epochs, callback, callback_args, verbose, plot)
         if not np.isscalar(step_size):
             raise ValueError('step_size is not a real scalar')
         if not step_size > 0:

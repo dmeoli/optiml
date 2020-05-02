@@ -7,11 +7,11 @@ from optimization.unconstrained.stochastic.stochastic_optimizer import Stochasti
 
 class RProp(StochasticOptimizer):
 
-    def __init__(self, f, x=random_uniform, batch_size=None, eps=1e-6, max_iter=1000, step_size=0.001,
+    def __init__(self, f, x=random_uniform, batch_size=None, eps=1e-6, epochs=1000, step_size=0.001,
                  min_step=1e-6, step_shrink=0.5, step_grow=1.2, max_step=1, momentum_type='none',
                  momentum=0.9, callback=None, callback_args=(), verbose=False, plot=False):
         super().__init__(f, x, step_size, momentum_type, momentum, batch_size,
-                         eps, max_iter, callback, callback_args, verbose, plot)
+                         eps, epochs, callback, callback_args, verbose, plot)
         self.min_step = min_step
         self.step_shrink = step_shrink
         self.step_grow = step_grow

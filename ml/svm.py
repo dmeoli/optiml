@@ -21,7 +21,7 @@ plt.style.use('ggplot')
 
 class SVM(BaseEstimator):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer='SMO',
-                 epochs=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, max_f_eval=1000,
+                 max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, max_f_eval=1000,
                  master_solver='cvxopt', verbose=False, plot=False):
         self.kernels = {'linear': self.linear,
                         'poly': self.poly,
@@ -62,11 +62,7 @@ class SVM(BaseEstimator):
                 and not issubclass(optimizer, Optimizer)):
             raise TypeError('optimizer is not an allowed optimizer')
         self.optimizer = optimizer
-        if not np.isscalar(epochs):
-            raise ValueError('epochs is not an integer scalar')
-        if not epochs > 0:
-            raise ValueError('epochs must be > 0')
-        self.epochs = epochs
+        self.max_iter = max_iter
         self.verbose = verbose
         self.learning_rate = learning_rate
         self.momentum_type = momentum_type
@@ -240,9 +236,9 @@ class SVM(BaseEstimator):
 
 class SVC(ClassifierMixin, SVM):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer='SMO',
-                 epochs=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, max_f_eval=1000,
+                 max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, max_f_eval=1000,
                  master_solver='cvxopt', verbose=False, plot=False):
-        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, learning_rate,
+        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, max_iter, learning_rate,
                          momentum_type, momentum, max_f_eval, master_solver, verbose, plot)
 
     class SMOClassifier(SVM.SMO):
@@ -562,7 +558,7 @@ class SVC(ClassifierMixin, SVM):
                 self.intercept_ = smo.b
 
             else:
-                alphas = scipy_solve_bcqp(bcqp, A, ub, self.epochs, self.verbose)
+                alphas = scipy_solve_bcqp(bcqp, A, ub, self.max_iter, self.verbose)
 
         else:
 
@@ -578,26 +574,26 @@ class SVC(ClassifierMixin, SVM):
                     alphas = solve_qp(bcqp, G, h, A, b, solver=self.master_solver)
 
                 else:
-                    alphas = scipy_solve_qp(bcqp, G, h, A, b, self.epochs, self.verbose)
+                    alphas = scipy_solve_qp(bcqp, G, h, A, b, self.max_iter, self.verbose)
 
             elif issubclass(self.optimizer, BoxConstrainedOptimizer):
-                alphas = self.optimizer(bcqp, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
+                alphas = self.optimizer(bcqp, max_iter=self.max_iter, verbose=self.verbose).minimize()[0]
 
             else:
                 # dual lagrangian relaxation of the box-constrained problem
                 dual = LagrangianBoxConstrained(bcqp)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
-                    res = self.optimizer(f=dual, max_iter=self.epochs, max_f_eval=self.max_f_eval,
+                    res = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
                                          verbose=self.verbose, plot=self.plot).minimize()
                     if res[2] != 'optimal':
                         warnings.warn('max_iter reached but the optimization has not converged yet')
                 elif issubclass(self.optimizer, StochasticOptimizer):
-                    self.optimizer(f=dual, step_size=self.learning_rate, max_iter=self.epochs,
+                    self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
                                    momentum_type=self.momentum_type, momentum=self.momentum,
                                    verbose=self.verbose, plot=self.plot).minimize()
                 elif issubclass(self.optimizer, ProximalBundle):
-                    self.optimizer(f=dual, max_iter=self.epochs, master_solver=self.master_solver,
+                    self.optimizer(f=dual, max_iter=self.max_iter, master_solver=self.master_solver,
                                    momentum_type=self.momentum_type, momentum=self.momentum,
                                    verbose=self.verbose, plot=self.plot).minimize()
                 else:
@@ -633,9 +629,9 @@ class SVC(ClassifierMixin, SVM):
 
 class SVR(RegressorMixin, SVM):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, epsilon=0.1,
-                 optimizer='SMO', epochs=1000, learning_rate=0.01, momentum_type='none', momentum=0.9,
+                 optimizer='SMO', max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9,
                  max_f_eval=1000, master_solver='cvxopt', verbose=False, plot=False):
-        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, epochs, learning_rate,
+        super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, max_iter, learning_rate,
                          momentum_type, momentum, max_f_eval, master_solver, verbose, plot)
         self.epsilon = epsilon  # epsilon insensitive loss value
 
@@ -1068,7 +1064,7 @@ class SVR(RegressorMixin, SVM):
                 self.intercept_ = smo.b
 
             else:
-                alphas = scipy_solve_bcqp(bcqp, A, ub, self.epochs, self.verbose)
+                alphas = scipy_solve_bcqp(bcqp, A, ub, self.max_iter, self.verbose)
                 alphas_p = alphas[:n_samples]
                 alphas_n = alphas[n_samples:]
 
@@ -1086,26 +1082,26 @@ class SVR(RegressorMixin, SVM):
                     alphas = solve_qp(bcqp, G, h, A, b, solver=self.master_solver)
 
                 else:
-                    alphas = scipy_solve_qp(bcqp, G, h, A, b, self.epochs, self.verbose)
+                    alphas = scipy_solve_qp(bcqp, G, h, A, b, self.max_iter, self.verbose)
 
             elif issubclass(self.optimizer, BoxConstrainedOptimizer):
-                alphas = self.optimizer(bcqp, max_iter=self.epochs, verbose=self.verbose).minimize()[0]
+                alphas = self.optimizer(bcqp, max_iter=self.max_iter, verbose=self.verbose).minimize()[0]
 
             else:
                 # dual lagrangian relaxation of the box-constrained problem
                 dual = LagrangianBoxConstrained(bcqp)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
-                    res = self.optimizer(f=dual, max_iter=self.epochs, max_f_eval=self.max_f_eval,
+                    res = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
                                          verbose=self.verbose, plot=self.plot).minimize()
                     if res[2] != 'optimal':
                         warnings.warn('max_iter reached but the optimization has not converged yet')
                 elif issubclass(self.optimizer, StochasticOptimizer):
-                    self.optimizer(f=dual, step_size=self.learning_rate, max_iter=self.epochs,
+                    self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
                                    momentum_type=self.momentum_type, momentum=self.momentum,
                                    verbose=self.verbose, plot=self.plot).minimize()
                 elif issubclass(self.optimizer, ProximalBundle):
-                    self.optimizer(f=dual, max_iter=self.epochs, master_solver=self.master_solver,
+                    self.optimizer(f=dual, max_iter=self.max_iter, master_solver=self.master_solver,
                                    momentum_type=self.momentum_type, momentum=self.momentum,
                                    verbose=self.verbose, plot=self.plot).minimize()
                 else:

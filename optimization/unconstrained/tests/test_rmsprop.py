@@ -12,7 +12,7 @@ def test_RMSProp_quadratic():
 
 def test_RMSProp_Rosenbrock():
     obj = Rosenbrock()
-    assert np.allclose(RMSProp(obj, max_iter=1500).minimize()[0], obj.x_star(), rtol=0.1)
+    assert np.allclose(RMSProp(obj, epochs=1500).minimize()[0], obj.x_star(), rtol=0.1)
 
 
 def test_RMSProp_standard_momentum_quadratic():
