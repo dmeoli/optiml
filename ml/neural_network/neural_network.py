@@ -4,8 +4,8 @@ import autograd.numpy as np
 from matplotlib import pyplot as plt
 from scipy.optimize import minimize
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
 
 from ml.neural_network.activations import sigmoid, linear, softmax
 from ml.neural_network.initializers import compute_fans
@@ -13,11 +13,10 @@ from ml.neural_network.layers import Layer, ParamLayer
 from ml.neural_network.losses import (mean_squared_error, categorical_cross_entropy, binary_cross_entropy,
                                       sparse_categorical_cross_entropy)
 from optimization.optimization_function import OptimizationFunction
-from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
+from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.stochastic.stochastic_gradient_descent import StochasticGradientDescent
 from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
-from utils import mean_euclidean_error
 
 plt.style.use('ggplot')
 
@@ -35,21 +34,21 @@ class NeuralNetworkLossFunction(OptimizationFunction):
     def args(self):
         return self.X_train, self.y_train
 
-    def function(self, packed_weights_biases, X=None, y=None):
+    def function(self, packed_coef_inter, X=None, y=None):
         if X is None:
             X = self.X_train
         if y is None:
             y = self.y_train
 
-        self.neural_net._unpack(packed_weights_biases)
+        self.neural_net._unpack(packed_coef_inter)
 
-        weights_regs = np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
-                              if isinstance(layer, ParamLayer)) / X.shape[0]
-        biases_regs = np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
-                             if isinstance(layer, ParamLayer) and layer.use_bias) / X.shape[0]
-        return self.neural_net.loss(self.neural_net.forward(X), y) + weights_regs + biases_regs
+        coef_regs = np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
+                           if isinstance(layer, ParamLayer)) / X.shape[0]
+        inter_regs = np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
+                            if isinstance(layer, ParamLayer) and layer.use_bias) / X.shape[0]
+        return self.neural_net.loss(self.neural_net.forward(X), y) + coef_regs + inter_regs
 
-    def jacobian(self, packed_weights_biases, X=None, y=None):
+    def jacobian(self, packed_coef_inter, X=None, y=None):
         if X is None:
             X = self.X_train
         if y is None:
@@ -58,17 +57,18 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         delta = self.neural_net.loss.jacobian(self.neural_net.forward(X), y)
         return self.neural_net._pack(*self.neural_net.backward(delta))
 
-    def store_plot_data(self, packed_weights_biases, X=None, y=None):
+    def store_plot_data(self, packed_coef_inter, X=None, y=None):
         if X is None:
             X = self.X_train
         if y is None:
             y = self.y_train
 
-        self.neural_net.loss_history['training_loss'].append(self.function(packed_weights_biases, X, y))
-        self.neural_net.loss_history['validation_loss'].append(self.function(packed_weights_biases,
-                                                                             self.X_test, self.y_test))
+        self.neural_net.loss_history['training_loss'].append(self.function(packed_coef_inter, X, y))
+        self.neural_net.loss_history['validation_loss'].append(
+            self.function(packed_coef_inter, self.X_test, self.y_test))
         if isinstance(self.neural_net, NeuralNetworkClassifier):
-            self.neural_net.accuracy_history['training_accuracy'].append(self.neural_net.score(X, y))
+            self.neural_net.accuracy_history['training_accuracy'].append(
+                self.neural_net.score(X, y))
             self.neural_net.accuracy_history['validation_accuracy'].append(
                 self.neural_net.score(self.X_test, self.y_test))
 
@@ -100,57 +100,57 @@ class NeuralNetwork(BaseEstimator, Layer):
         return X
 
     def backward(self, delta):
-        weights_grads = []
-        biases_grads = []
+        coef_grads = []
+        inter_grads = []
         # back propagate
         for layer in self.layers[::-1]:
             if isinstance(layer, ParamLayer):
                 delta, grads = layer.backward(delta)
-                weights_grads.append(grads['dW'] + layer.w_reg.jacobian(layer.W))
+                coef_grads.append(grads['dW'] + layer.w_reg.jacobian(layer.W))
                 if layer.use_bias:
-                    biases_grads.append(grads['db'] + layer.b_reg.jacobian(layer.b))
+                    inter_grads.append(grads['db'] + layer.b_reg.jacobian(layer.b))
             else:
                 delta = layer.backward(delta)
-        return weights_grads[::-1], biases_grads[::-1]
+        return coef_grads[::-1], inter_grads[::-1]
 
     @property
     def params(self):
         return ([layer.W for layer in self.layers if isinstance(layer, ParamLayer)],
                 [layer.b for layer in self.layers if isinstance(layer, ParamLayer) and layer.use_bias])
 
-    def _pack(self, weights, biases):
-        return np.hstack([w.ravel() for w in weights + biases])
+    def _pack(self, coefs, intercepts):
+        return np.hstack([w.ravel() for w in coefs + intercepts])
 
-    def _unpack(self, packed_weights_biases):
-        weight_idx = 0
-        bias_idx = 0
+    def _unpack(self, packed_coef_inter):
+        coef_idx = 0
+        inter_idx = 0
         for layer in self.layers:
             if isinstance(layer, ParamLayer):
-                start, end, shape = self.weights_idx[weight_idx]
-                layer.W = np.reshape(packed_weights_biases[start:end], shape)
+                start, end, shape = self.coef_idx[coef_idx]
+                layer.W = np.reshape(packed_coef_inter[start:end], shape)
                 if layer.use_bias:
-                    start, end = self.biases_idx[bias_idx]
-                    layer.b = packed_weights_biases[start:end]
-                    bias_idx += 1
-                weight_idx += 1
+                    start, end = self.inter_idx[inter_idx]
+                    layer.b = packed_coef_inter[start:end]
+                    inter_idx += 1
+                coef_idx += 1
 
     def _store_meta_info(self):
         # store meta information for the parameters
-        self.weights_idx = []
-        self.biases_idx = []
+        self.coef_idx = []
+        self.inter_idx = []
         start = 0
-        # save sizes and indices of weights for faster unpacking
+        # save sizes and indices of coefs for faster unpacking
         for layer in self.layers:
             if isinstance(layer, ParamLayer):
                 end = start + (np.prod(layer.W.shape))
-                self.weights_idx.append((start, end, layer.W.shape))
+                self.coef_idx.append((start, end, layer.W.shape))
                 start = end
-        # save sizes and indices of biases for faster unpacking
+        # save sizes and indices of intercepts for faster unpacking
         for layer in self.layers:
             if isinstance(layer, ParamLayer) and layer.use_bias:
                 fan_in, fan_out = compute_fans(layer.b.shape)
                 end = start + fan_out
-                self.biases_idx.append((start, end))
+                self.inter_idx.append((start, end))
                 start = end
 
     def fit(self, X, y):
@@ -159,13 +159,13 @@ class NeuralNetwork(BaseEstimator, Layer):
 
         self._store_meta_info()
 
-        packed_weights_biases = self._pack(*self.params)
+        packed_coef_inter = self._pack(*self.params)
 
         loss = NeuralNetworkLossFunction(self, X_train, X_test, y_train, y_test)
 
         if isinstance(self.optimizer, str):  # scipy optimization
             res = minimize(fun=loss.function, jac=loss.jacobian, args=loss.args(),
-                           x0=packed_weights_biases, method=self.optimizer,
+                           x0=packed_coef_inter, method=self.optimizer,
                            callback=loss.store_plot_data,
                            options={'disp': self.verbose,
                                     'maxiter': self.max_iter,
@@ -175,20 +175,20 @@ class NeuralNetwork(BaseEstimator, Layer):
             self._unpack(res.x)
         else:
             if issubclass(self.optimizer, LineSearchOptimizer):
-                res = self.optimizer(f=loss, x=packed_weights_biases, max_iter=self.max_iter,
+                res = self.optimizer(f=loss, x=packed_coef_inter, max_iter=self.max_iter,
                                      max_f_eval=self.max_f_eval, callback=loss.store_plot_data,
                                      verbose=self.verbose, plot=self.plot).minimize()
                 if res[2] != 'optimal':
                     warnings.warn('max_iter reached but the optimization has not converged yet')
             elif issubclass(self.optimizer, StochasticOptimizer):
-                res = self.optimizer(f=loss, x=packed_weights_biases, batch_size=self.batch_size, epochs=self.max_iter,
+                res = self.optimizer(f=loss, x=packed_coef_inter, batch_size=self.batch_size, epochs=self.max_iter,
                                      step_size=self.learning_rate, momentum_type=self.momentum_type,
                                      momentum=self.momentum,
                                      callback=loss.store_plot_data,
                                      callback_args=(X_train, y_train),  # mini batches
                                      verbose=self.verbose, plot=self.plot).minimize()
             elif issubclass(self.optimizer, ProximalBundle):
-                res = self.optimizer(f=loss, x=packed_weights_biases, max_iter=self.max_iter,
+                res = self.optimizer(f=loss, x=packed_coef_inter, max_iter=self.max_iter,
                                      master_solver=self.master_solver, momentum_type=self.momentum_type,
                                      momentum=self.momentum, callback=loss.store_plot_data,
                                      verbose=self.verbose, plot=self.plot).minimize()
@@ -207,8 +207,6 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
                  max_f_eval=1000, master_solver='ECOS', verbose=False, plot=False):
         super().__init__(layers, loss, optimizer, learning_rate, max_iter, momentum_type, momentum,
                          validation_split, batch_size, max_f_eval, master_solver, verbose, plot)
-        if loss == categorical_cross_entropy:
-            self.ohe = OneHotEncoder()
         self.accuracy_history = {'training_accuracy': [],
                                  'validation_accuracy': []}
 
@@ -216,24 +214,24 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
         if y.ndim == 1:
             y = y.reshape(-1, 1)
 
+        n_classes = np.unique(y).size
         if self.loss in (sparse_categorical_cross_entropy, categorical_cross_entropy):
             if self.layers[-1].activation != softmax:
                 raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} loss '
-                                 f'function only works with softmax output layer')
-            if self.loss == categorical_cross_entropy:
-                n_classes = np.unique(y).size
-                if self.layers[-1].fan_out != n_classes:
-                    raise ValueError(f'the number of neurons in the output layer must '
-                                     f'be equal to the number of classes, e.g. {n_classes}')
-        elif self.loss == binary_cross_entropy and self.layers[-1].activation != sigmoid:
-            raise ValueError('NeuralNetworkClassifier with binary_cross_entropy '
-                             'loss function only works with sigmoid output layer')
-        elif self.loss in (mean_squared_error, mean_euclidean_error) and self.layers[-1].activation == softmax:
-            raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} loss '
-                             f'function does not work with softmax output layer')
-
-        if self.loss == categorical_cross_entropy:
-            y = self.ohe.fit_transform(y).toarray()
+                                 'function only works with softmax output layer')
+            if self.layers[-1].fan_out != n_classes:
+                raise ValueError('the number of neurons in the output layer must '
+                                 f'be equal to the number of classes, i.e. {n_classes}')
+        elif self.loss in (mean_squared_error, binary_cross_entropy):
+            if n_classes > 2:
+                raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} '
+                                 'loss function only works for binary classification')
+            if self.layers[-1].activation != sigmoid:
+                raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} '
+                                 'loss function only works with sigmoid output layer')
+            if self.layers[-1].fan_out != 1:
+                raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} loss '
+                                 'function only works with one neuron in the output layer')
 
         return super().fit(X, y)
 
@@ -245,6 +243,10 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
         else:
             return self.forward(X)
 
+    def score(self, X, y, sample_weight=None):
+        y = np.argmax(y, axis=1) if self.loss == categorical_cross_entropy else y
+        return accuracy_score(y, self.predict(X), sample_weight=sample_weight)
+
 
 class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
 
@@ -255,15 +257,19 @@ class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
         if self.layers[-1].activation not in (linear, sigmoid):
             raise ValueError('NeuralNetworkRegressor only works with linear or '
                              'sigmoid (for regression between 0 and 1) output layer')
-        if self.loss == binary_cross_entropy and self.layers[-1].activation != sigmoid:
-            raise ValueError('NeuralNetworkRegressor with binary_cross_entropy loss function only '
-                             'works with sigmoid output layer for regression between 0 and 1')
+        if self.loss == binary_cross_entropy:
+            if self.layers[-1].activation != sigmoid:
+                raise ValueError('NeuralNetworkRegressor with binary_cross_entropy loss function only '
+                                 'works with sigmoid output layer for regression between 0 and 1')
+            if not (0 <= y <= 1).all():
+                raise ValueError('NeuralNetworkRegressor with binary_cross_entropy loss '
+                                 'function only works for regression between 0 and 1')
         n_targets = y.shape[1]
         if self.layers[-1].fan_out != n_targets:
             raise ValueError(f'the number of neurons in the output layer must be '
                              f'equal to the number of targets, i.e. {n_targets}')
 
-        super().fit(X, y)
+        return super().fit(X, y)
 
     def predict(self, X):
         if self.layers[-1].fan_out == 1:  # one target

@@ -543,7 +543,7 @@ class SVC(ClassifierMixin, SVM):
         P = (P + P.T) / 2  # ensure P is symmetric
         q = -np.ones(n_samples)
 
-        A = y.astype(np.float)  # equality matrix
+        A = y.astype(np.float32)  # equality matrix
         ub = np.ones(n_samples) * self.C  # upper bounds
 
         bcqp = BoxConstrained(P, q, ub)
