@@ -4,6 +4,12 @@ from scipy.special import xlogy
 
 class Loss:
 
+    def __init__(self, x_min=-10, x_max=10, y_min=-10, y_max=10):
+        self.x_min = x_min
+        self.x_max = x_max
+        self.y_min = y_min
+        self.y_max = y_max
+
     def function(self, y_pred, y_true):
         raise NotImplementedError
 

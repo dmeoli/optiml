@@ -16,49 +16,49 @@ class Layer:
 
 class ParamLayer(Layer):
 
-    def __init__(self, w_shape, activation, w_init, b_init, w_reg, b_reg, use_bias):
+    def __init__(self, coef_shape, activation, coef_init, inter_init, coef_reg, inter_reg, fit_intercept):
 
         if isinstance(activation, Activation):
             self.activation = activation
         else:
             raise TypeError(f'unknown activation function {activation}')
 
-        if w_init is None:
-            self.W = glorot_uniform(w_shape)
+        if coef_init is None:
+            self.W = glorot_uniform(coef_shape)
         else:
-            self.W = w_init(w_shape)
+            self.W = coef_init(coef_shape)
 
-        self.use_bias = use_bias
-        if self.use_bias:
-            shape = [1] * len(w_shape)
-            shape[-1] = w_shape[-1]
-            if b_init is None:
+        self.fit_intercept = fit_intercept
+        if self.fit_intercept:
+            shape = [1] * len(coef_shape)
+            shape[-1] = coef_shape[-1]
+            if inter_init is None:
                 self.b = zeros(shape)
             else:
-                self.b = b_init(shape)
+                self.b = inter_init(shape)
 
-        if w_reg is None:
+        if coef_reg is None:
             self.w_reg = l2
         else:
-            self.w_reg = w_reg
+            self.w_reg = coef_reg
 
-        if b_reg is None:
+        if inter_reg is None:
             self.b_reg = l2
         else:
-            self.b_reg = b_reg
+            self.b_reg = inter_reg
 
 
 class FullyConnected(ParamLayer):
-    def __init__(self, n_in, n_out, activation=linear, w_init=glorot_uniform,
-                 b_init=zeros, w_reg=l2, b_reg=l2, use_bias=True):
-        super().__init__((n_in, n_out), activation, w_init, b_init, w_reg, b_reg, use_bias)
+    def __init__(self, n_in, n_out, activation=linear, coef_init=glorot_uniform,
+                 inter_init=zeros, coef_reg=l2, inter_reg=l2, fit_intercept=True):
+        super().__init__((n_in, n_out), activation, coef_init, inter_init, coef_reg, inter_reg, fit_intercept)
         self.fan_in = n_in
         self.fan_out = n_out
 
     def forward(self, X):
         self._X = X
         self._WX_b = self._X.dot(self.W)
-        if self.use_bias:
+        if self.fit_intercept:
             self._WX_b += self.b
         return self.activation(self._WX_b)
 
@@ -66,7 +66,7 @@ class FullyConnected(ParamLayer):
         # dW, db
         dZ = delta * self.activation.jacobian(self._WX_b)
         grads = {'dW': self._X.T.dot(dZ)}
-        if self.use_bias:
+        if self.fit_intercept:
             grads['db'] = np.sum(dZ, axis=0, keepdims=True)
         # dX
         dX = dZ.dot(self.W.T)
@@ -75,10 +75,10 @@ class FullyConnected(ParamLayer):
 
 class Conv2D(ParamLayer):
     def __init__(self, in_channels, out_channels, kernel_size=(3, 3), strides=(1, 1), padding='valid',
-                 channels_last=True, activation=linear, w_init=glorot_uniform, b_init=zeros,
-                 w_reg=l2, b_reg=l2, use_bias=True):
+                 channels_last=True, activation=linear, coef_init=glorot_uniform, inter_init=zeros,
+                 coef_reg=l2, inter_reg=l2, fit_intercept=True):
         super().__init__((in_channels,) + kernel_size + (out_channels,),
-                         activation, w_init, b_init, w_reg, b_reg, use_bias)
+                         activation, coef_init, inter_init, coef_reg, inter_reg, fit_intercept)
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -112,7 +112,7 @@ class Conv2D(ParamLayer):
 
         # convolution
         self._WX_b = self.convolution(self._padded, self.W, tmp_conved)
-        if self.use_bias:
+        if self.fit_intercept:
             self._WX_b += self.b
 
         self._activated = self.activation(self._WX_b)
@@ -128,7 +128,7 @@ class Conv2D(ParamLayer):
         dW = self.convolution(self._padded.transpose((3, 1, 2, 0)), dZ, dW)
 
         grads = {'dW': dW}
-        if self.use_bias:  # tied biases
+        if self.fit_intercept:  # tied intercepts
             grads['db'] = np.sum(dZ, axis=(0, 1, 2), keepdims=True)
 
         # dX

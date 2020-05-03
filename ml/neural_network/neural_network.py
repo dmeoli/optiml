@@ -23,8 +23,9 @@ plt.style.use('ggplot')
 
 class NeuralNetworkLossFunction(OptimizationFunction):
 
-    def __init__(self, neural_net, X_train, X_test, y_train, y_test, x_min=-10, x_max=10, y_min=-10, y_max=10):
-        super().__init__(X_train.shape[1], x_min, x_max, y_min, y_max)
+    def __init__(self, neural_net, X_train, X_test, y_train, y_test):
+        super().__init__(X_train.shape[1], neural_net.loss.x_min, neural_net.loss.x_max,
+                         neural_net.loss.y_min, neural_net.loss.y_max)
         self.neural_net = neural_net
         self.X_train = X_train
         self.X_test = X_test
@@ -45,7 +46,7 @@ class NeuralNetworkLossFunction(OptimizationFunction):
         coef_regs = np.sum(layer.w_reg(layer.W) for layer in self.neural_net.layers
                            if isinstance(layer, ParamLayer)) / X.shape[0]
         inter_regs = np.sum(layer.b_reg(layer.b) for layer in self.neural_net.layers
-                            if isinstance(layer, ParamLayer) and layer.use_bias) / X.shape[0]
+                            if isinstance(layer, ParamLayer) and layer.fit_intercept) / X.shape[0]
         return self.neural_net.loss(self.neural_net.forward(X), y) + coef_regs + inter_regs
 
     def jacobian(self, packed_coef_inter, X=None, y=None):
@@ -107,7 +108,7 @@ class NeuralNetwork(BaseEstimator, Layer):
             if isinstance(layer, ParamLayer):
                 delta, grads = layer.backward(delta)
                 coef_grads.append(grads['dW'] + layer.w_reg.jacobian(layer.W))
-                if layer.use_bias:
+                if layer.fit_intercept:
                     inter_grads.append(grads['db'] + layer.b_reg.jacobian(layer.b))
             else:
                 delta = layer.backward(delta)
@@ -116,7 +117,7 @@ class NeuralNetwork(BaseEstimator, Layer):
     @property
     def params(self):
         return ([layer.W for layer in self.layers if isinstance(layer, ParamLayer)],
-                [layer.b for layer in self.layers if isinstance(layer, ParamLayer) and layer.use_bias])
+                [layer.b for layer in self.layers if isinstance(layer, ParamLayer) and layer.fit_intercept])
 
     def _pack(self, coefs, intercepts):
         return np.hstack([w.ravel() for w in coefs + intercepts])
@@ -128,7 +129,7 @@ class NeuralNetwork(BaseEstimator, Layer):
             if isinstance(layer, ParamLayer):
                 start, end, shape = self.coef_idx[coef_idx]
                 layer.W = np.reshape(packed_coef_inter[start:end], shape)
-                if layer.use_bias:
+                if layer.fit_intercept:
                     start, end = self.inter_idx[inter_idx]
                     layer.b = packed_coef_inter[start:end]
                     inter_idx += 1
@@ -147,7 +148,7 @@ class NeuralNetwork(BaseEstimator, Layer):
                 start = end
         # save sizes and indices of intercepts for faster unpacking
         for layer in self.layers:
-            if isinstance(layer, ParamLayer) and layer.use_bias:
+            if isinstance(layer, ParamLayer) and layer.fit_intercept:
                 fan_in, fan_out = compute_fans(layer.b.shape)
                 end = start + fan_out
                 self.inter_idx.append((start, end))

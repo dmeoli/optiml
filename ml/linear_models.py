@@ -7,11 +7,12 @@ from sklearn.base import MultiOutputMixin, RegressorMixin, BaseEstimator, Classi
 
 from ml.neural_network.activations import Sigmoid
 from ml.neural_network.initializers import random_uniform
-from ml.neural_network.losses import mean_squared_error, binary_cross_entropy
+from ml.neural_network.losses import mean_squared_error, binary_cross_entropy, MeanSquaredError
 from ml.regularizers import l2, L2
 from optimization.optimization_function import OptimizationFunction
 from optimization.unconstrained.proximal_bundle import ProximalBundle
 from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
+from optimization.unconstrained.stochastic import StochasticGradientDescent
 from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
 
 plt.style.use('ggplot')
@@ -19,14 +20,15 @@ plt.style.use('ggplot')
 
 class LinearModelLossFunction(OptimizationFunction):
 
-    def __init__(self, linear_model, X, y, x_min=-10, x_max=10, y_min=-10, y_max=10):
-        super().__init__(X.shape[1], x_min, x_max, y_min, y_max)
+    def __init__(self, linear_model, X, y):
+        super().__init__(X.shape[1], linear_model.loss.x_min, linear_model.loss.x_max,
+                         linear_model.loss.y_min, linear_model.loss.y_max)
         self.X = X
         self.y = y
         self.linear_model = linear_model
 
     def x_star(self):
-        if self.linear_model.loss is mean_squared_error and isinstance(self.linear_model.regularizer, L2):
+        if isinstance(self.linear_model.loss, MeanSquaredError) and isinstance(self.linear_model.regularizer, L2):
             if not hasattr(self, 'x_opt'):
                 if self.linear_model.regularizer.lmbda == 0.:
                     self.x_opt = np.linalg.lstsq(self.X, self.y)[0]
@@ -62,10 +64,10 @@ class LinearModelLossFunction(OptimizationFunction):
 
 class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
 
-    def __init__(self, optimizer, learning_rate=0.01, momentum_type='none', momentum=0.9, max_iter=1000,
-                 batch_size=None,
-                 max_f_eval=1000, regularizer=l2, master_solver='cvxopt', verbose=False, plot=False):
-        self.loss = mean_squared_error
+    def __init__(self, loss=mean_squared_error, optimizer=StochasticGradientDescent, learning_rate=0.01,
+                 momentum_type='none', momentum=0.9, max_iter=1000, batch_size=None, max_f_eval=1000,
+                 regularizer=l2, master_solver='cvxopt', verbose=False, plot=False):
+        self.loss = loss
         self.regularizer = regularizer
         self.optimizer = optimizer
         self.learning_rate = learning_rate
@@ -121,9 +123,10 @@ class LinearRegression(BaseEstimator, MultiOutputMixin, RegressorMixin):
 
 class LogisticRegression(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, optimizer, learning_rate=0.01, momentum_type='none', momentum=0.9, max_iter=1000,
-                 batch_size=None, max_f_eval=1000, regularizer=l2, master_solver='cvxopt', verbose=False, plot=False):
-        self.loss = binary_cross_entropy
+    def __init__(self, loss=binary_cross_entropy, optimizer=StochasticGradientDescent, learning_rate=0.01,
+                 momentum_type='none', momentum=0.9, max_iter=1000, batch_size=None, max_f_eval=1000,
+                 regularizer=l2, master_solver='cvxopt', verbose=False, plot=False):
+        self.loss = loss
         self.learning_rate = learning_rate
         self.momentum_type = momentum_type
         self.momentum = momentum
