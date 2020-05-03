@@ -7,9 +7,10 @@ python:
 
 install:
   - pip install --upgrade -r requirements.txt
+  - pip install coveralls
 
 script:
-  - pytest
+  - pytest --cov=./
 
 after_success:
   - coveralls

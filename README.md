@@ -77,7 +77,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface
              - [x] standard momentum
              - [x] Nesterov momentum
-        - [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
+        - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
     - Constrained Optimization
         - Box-Constrained Optimization
             - [x] Projected Gradient
