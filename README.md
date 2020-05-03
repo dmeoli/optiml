@@ -1,4 +1,4 @@
-# Machine Learning & Numerical Optimization [![Build Status](https://travis-ci.org/dmeoli/MachineLearningNumericalOptimization.svg?branch=master)](https://travis-ci.org/dmeoli/MachineLearningNumericalOptimization)
+# Machine Learning & Numerical Optimization [![Build Status](https://travis-ci.org/dmeoli/MachineLearningNumericalOptimization.svg?branch=master)](https://travis-ci.org/dmeoli/MachineLearningNumericalOptimization) [![Coverage Status](https://coveralls.io/repos/github/dmeoli/MachineLearningNumericalOptimization/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/MachineLearningNumericalOptimization?branch=master)
 
 This code is a simple and modular implementation of some of the most important optimization algorithms used as core 
 solver for many machine learning models developed during the Machine Learning & Numerical Methods and Optimization 
@@ -33,7 +33,6 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
                     - [x] Newton
                     - [x] BFGS quasi-Newton
                     - [ ] L-BFGS quasi-Newton
-            - [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
         - Stochastic Methods
             - [x] Stochastic Gradient Descent
                 - [x] standard momentum
@@ -78,6 +77,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface
              - [x] standard momentum
              - [x] Nesterov momentum
+        - [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
     - Constrained Optimization
         - Box-Constrained Optimization
             - [x] Projected Gradient
