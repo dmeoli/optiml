@@ -60,7 +60,7 @@ class OptimizationFunction:
 
         # 2D contour plot
         ax = fig.add_subplot(1, 2, 2)
-        ax.contour(X, Y, Z, 70, norm=SymLogNorm(linthresh=abs(Z.min()), base=np.e), cmap='jet')
+        ax.contour(X, Y, Z, 70, cmap='jet')
         ax.plot(*self.x_star(), marker='*', color='r', markersize=10)
         ax.set_xlabel('$x_1$')
         ax.set_ylabel('$x_2$')

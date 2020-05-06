@@ -21,7 +21,7 @@ class AdaGrad(StochasticOptimizer):
     def minimize(self):
 
         if self.verbose and not self.iter % self.verbose:
-            print('epoch\tf(x)', end='')
+            print('epoch\tf(x)\t', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf

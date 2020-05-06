@@ -310,6 +310,9 @@ class SMOClassifier(SMO):
 
         self.b = -(self.b_low + self.b_up) / 2
 
+        if self.verbose:
+            print()
+
         return self
 
 
@@ -704,5 +707,8 @@ class SMORegression(SMO):
             loop_counter += 1
 
         self.b = (self.b_low + self.b_up) / 2
+
+        if self.verbose:
+            print()
 
         return self

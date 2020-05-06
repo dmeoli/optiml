@@ -27,7 +27,7 @@ path = os.path.dirname(os.path.abspath(__file__))
 def load_monk(n_dataset):
     if n_dataset not in (1, 2, 3):
         raise ValueError(f'unknown monk dataset {n_dataset}')
-    monks = [np.delete(np.genfromtxt(path + '/ml/data/monks/monks-' + str(n_dataset) + '.' + type), obj=-1, axis=1)
+    monks = [np.delete(np.genfromtxt(path + '/data/monks/monks-' + str(n_dataset) + '.' + type), obj=-1, axis=1)
              for type in ('train', 'test')]
     return (OneHotEncoder().fit_transform(monks[0][:, 1:]).toarray(),  # X_train
             OneHotEncoder().fit_transform(monks[1][:, 1:]).toarray(),  # X_test
@@ -35,12 +35,12 @@ def load_monk(n_dataset):
 
 
 def load_ml_cup():
-    ml_cup = np.delete(np.genfromtxt(path + '/ml/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), obj=0, axis=1)
+    ml_cup = np.delete(np.genfromtxt(path + '/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), obj=0, axis=1)
     return ml_cup[:, :-2], ml_cup[:, -2:]
 
 
 def load_ml_cup_blind():
-    return np.delete(np.genfromtxt(path + '/ml/data/ML-CUP19/ML-CUP19-TS.csv', delimiter=','), obj=0, axis=1)
+    return np.delete(np.genfromtxt(path + '/data/ML-CUP19/ML-CUP19-TS.csv', delimiter=','), obj=0, axis=1)
 
 
 # data generators
