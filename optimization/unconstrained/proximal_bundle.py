@@ -200,5 +200,5 @@ class ProximalBundle(Optimizer):
             self.callback()
 
         if self.verbose:
-            print()
+            print('\n')
         return self.x, v, status

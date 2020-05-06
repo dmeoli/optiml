@@ -116,5 +116,5 @@ class FrankWolfe(BoxConstrainedOptimizer):
             self.callback()
 
         if self.verbose:
-            print()
+            print('\n')
         return self.x, self.f_x, status

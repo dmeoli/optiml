@@ -193,5 +193,5 @@ class Subgradient(LineSearchOptimizer):
         x = x_ref  # return point corresponding to best value found so far
 
         if self.verbose:
-            print()
+            print('\n')
         return x, self.f_x, status

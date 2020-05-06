@@ -100,7 +100,7 @@ class QuadraticSteepestGradientDescent(Optimizer):
             self.iter += 1
 
         if self.verbose:
-            print()
+            print('\n')
         return self.x, self.f_x, status
 
 
@@ -303,5 +303,5 @@ class SteepestGradientDescent(LineSearchOptimizer):
             self.iter += 1
 
         if self.verbose:
-            print()
+            print('\n')
         return self.x, self.f_x, status
