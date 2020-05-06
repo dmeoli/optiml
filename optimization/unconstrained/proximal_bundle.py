@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from cvxpy import Variable, Problem, Minimize, sum_squares
 
@@ -76,8 +75,8 @@ class ProximalBundle(Optimizer):
     #     necessarily the optimal one
 
     def __init__(self, f, x=random_uniform, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf, master_solver='ECOS',
-                 momentum_type='none', momentum=0.9, callback=None, callback_args=(), verbose=False, plot=False):
-        super().__init__(f, x, eps, max_iter, callback, callback_args, verbose, plot)
+                 momentum_type='none', momentum=0.9, callback=None, callback_args=(), verbose=False):
+        super().__init__(f, x, eps, max_iter, callback, callback_args, verbose)
         if not np.isscalar(mu):
             raise ValueError('mu is not a real scalar')
         if not mu > 0:
@@ -109,9 +108,6 @@ class ProximalBundle(Optimizer):
                 print('iter\tf(x)\t\tf(x) - f*\t||d||', end='')
             else:
                 print('iter\tf(x)\t\t||d||', end='')
-
-        if self.plot:
-            fig = self.f.plot()
 
         while True:
 
@@ -196,11 +192,7 @@ class ProximalBundle(Optimizer):
                 self.x = last_x
                 self.step = d if self.momentum_type == 'none' else step1 + d
                 self.f_x = fd
-                if self.plot:
-                    super().plot_step(fig, self.x + self.step, self.x)
             else:
-                if self.plot:
-                    super().plot_step(fig, self.x, last_x, color='b')
                 self.step = 0
 
             self.iter += 1
@@ -209,6 +201,4 @@ class ProximalBundle(Optimizer):
 
         if self.verbose:
             print()
-        if self.plot:
-            plt.show()
         return self.x, v, status

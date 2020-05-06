@@ -21,7 +21,7 @@ class NeuralNetwork(BaseEstimator, Layer):
 
     def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent, learning_rate=0.01,
                  max_iter=1000, momentum_type='none', momentum=0.9, validation_split=0.1, batch_size=None,
-                 max_f_eval=1000, master_solver='ECOS', shuffle=True, random_state=None, verbose=False, plot=False):
+                 max_f_eval=1000, master_solver='ECOS', shuffle=True, random_state=None, verbose=False):
         self.layers = layers
         self.loss = loss
         self.optimizer = optimizer
@@ -36,7 +36,6 @@ class NeuralNetwork(BaseEstimator, Layer):
         self.shuffle = shuffle
         self.random_state = random_state
         self.verbose = verbose
-        self.plot = plot
         self.loss_history = {'training_loss': [],
                              'validation_loss': []}
 
@@ -116,6 +115,7 @@ class NeuralNetwork(BaseEstimator, Layer):
             self.loss = self.loss(self, X, y)
             res = minimize(fun=self.loss.function, jac=self.loss.jacobian, args=self.loss.args(),
                            x0=packed_coef_inter, method=self.optimizer,
+                           # TODO add callback to save xi if f.ndim == 2
                            options={'disp': self.verbose,
                                     'maxiter': self.max_iter,
                                     'maxfun': self.max_f_eval})
@@ -125,8 +125,9 @@ class NeuralNetwork(BaseEstimator, Layer):
         else:
             if issubclass(self.optimizer, LineSearchOptimizer):
                 self.loss = self.loss(self, X, y)
-                res = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
-                                     max_f_eval=self.max_f_eval, verbose=self.verbose, plot=self.plot).minimize()
+                self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
+                                                max_f_eval=self.max_f_eval, verbose=self.verbose)
+                res = self.optimizer.minimize()
                 if res[2] != 'optimal':
                     warnings.warn('max_iter reached but the optimization has not converged yet')
             elif issubclass(self.optimizer, StochasticOptimizer):
@@ -137,17 +138,19 @@ class NeuralNetwork(BaseEstimator, Layer):
                 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=self.validation_split,
                                                                   stratify=stratify, random_state=self.random_state)
                 self.loss = self.loss(self, X_train, y_train)
-                res = self.optimizer(f=self.loss, x=packed_coef_inter, step_size=self.learning_rate,
-                                     epochs=self.max_iter, batch_size=self.batch_size,
-                                     momentum_type=self.momentum_type, momentum=self.momentum,
-                                     callback=self._store_plot_data, callback_args=(X_val, y_val),
-                                     shuffle=self.shuffle, random_state=self.random_state,
-                                     verbose=self.verbose, plot=self.plot).minimize()
+                self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, step_size=self.learning_rate,
+                                                epochs=self.max_iter, batch_size=self.batch_size,
+                                                momentum_type=self.momentum_type, momentum=self.momentum,
+                                                callback=self._store_plot_data, callback_args=(X_val, y_val),
+                                                shuffle=self.shuffle, random_state=self.random_state,
+                                                verbose=self.verbose)
+                res = self.optimizer.minimize()
             elif issubclass(self.optimizer, ProximalBundle):
                 self.loss = self.loss(self, X, y)
-                res = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
-                                     master_solver=self.master_solver, momentum_type=self.momentum_type,
-                                     momentum=self.momentum, verbose=self.verbose, plot=self.plot).minimize()
+                self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
+                                                master_solver=self.master_solver, momentum_type=self.momentum_type,
+                                                momentum=self.momentum, verbose=self.verbose)
+                res = self.optimizer.minimize()
             else:
                 raise ValueError(f'unknown optimizer {type(self.optimizer).__name__}')
 
@@ -160,9 +163,9 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
     def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent, learning_rate=0.01,
                  max_iter=1000, momentum_type='none', momentum=0.9, validation_split=0.1, batch_size=None,
-                 max_f_eval=1000, master_solver='ECOS', shuffle=True, random_state=None, verbose=False, plot=False):
+                 max_f_eval=1000, master_solver='ECOS', shuffle=True, random_state=None, verbose=False):
         super().__init__(layers, loss, optimizer, learning_rate, max_iter, momentum_type, momentum, validation_split,
-                         batch_size, max_f_eval, master_solver, shuffle, random_state, verbose, plot)
+                         batch_size, max_f_eval, master_solver, shuffle, random_state, verbose)
         self.accuracy_history = {'training_accuracy': [],
                                  'validation_accuracy': []}
 

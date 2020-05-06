@@ -9,8 +9,8 @@ from optimization.optimization_function import OptimizationFunction
 
 class LossFunction(OptimizationFunction):
 
-    def __init__(self, neural_net, X, y, x_min=-10, x_max=10, y_min=-10, y_max=10):
-        super().__init__(X.shape[1], x_min, x_max, y_min, y_max)
+    def __init__(self, neural_net, X, y):
+        super().__init__(X.shape[1])
         self.neural_net = neural_net
         self.X = X
         self.y = y

@@ -1,6 +1,5 @@
 import warnings
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from ml.neural_network.initializers import random_uniform
@@ -112,9 +111,9 @@ class BFGS(LineSearchOptimizer):
 
     def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
                  a_start=1, delta=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
-                 callback_args=(), verbose=False, plot=False):
+                 callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
-                         m_inf, min_a, callback, callback_args, verbose, plot)
+                         m_inf, min_a, callback, callback_args, verbose)
         if not np.isscalar(delta):
             raise ValueError('delta is not a real scalar')
         self.delta = delta
@@ -130,9 +129,6 @@ class BFGS(LineSearchOptimizer):
                 print('\tf(x) - f*\trate\t', end='')
                 prev_v = np.inf
             print('\tls\tit\ta*\t\t\trho', end='')
-
-        if self.plot:
-            fig = self.f.plot()
 
         while True:
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
@@ -220,10 +216,6 @@ class BFGS(LineSearchOptimizer):
             D = B.dot(y) * s.T
             B = B + rho * ((1 + rho * y.T.dot(B).dot(y)) * (s.dot(s.T)) - D - D.T)
 
-            # plot the trajectory
-            if self.plot:
-                super().plot_step(fig, self.x, last_x)
-
             # update new point
             self.x = last_x
 
@@ -233,17 +225,15 @@ class BFGS(LineSearchOptimizer):
 
         if self.verbose:
             print()
-        if self.plot:
-            plt.show()
         return self.x, self.f_x, status
 
 
 class LBFGS(LineSearchOptimizer):
     def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
                  a_start=1, delta=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
-                 callback_args=(), verbose=False, plot=False):
+                 callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
-                         m_inf, min_a, callback, callback_args, verbose, plot)
+                         m_inf, min_a, callback, callback_args, verbose)
         if not np.isscalar(delta):
             raise ValueError('delta is not a real scalar')
         self.delta = delta

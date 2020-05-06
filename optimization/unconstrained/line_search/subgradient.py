@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
 from ml.neural_network.initializers import random_uniform
@@ -98,9 +97,9 @@ class Subgradient(LineSearchOptimizer):
     #     necessarily the optimal one
 
     def __init__(self, f, x=random_uniform, eps=1e-6, a_start=1e-4, tau=0.95, max_iter=1000, max_f_eval=1000,
-                 m_inf=-np.inf, min_a=1e-16, callback=None, callback_args=(), verbose=False, plot=False):
+                 m_inf=-np.inf, min_a=1e-16, callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf, min_a=min_a,
-                         callback=callback, callback_args=callback_args, verbose=verbose, plot=plot)
+                         callback=callback, callback_args=callback_args, verbose=verbose)
 
     def minimize(self):
 
@@ -119,9 +118,6 @@ class Subgradient(LineSearchOptimizer):
         f_ref = np.inf  # best f-value found so far
         if self.eps > 0:
             delta = 0  # required displacement from f_ref
-
-        if self.plot:
-            fig = self.f.plot()
 
         while True:
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
@@ -187,10 +183,6 @@ class Subgradient(LineSearchOptimizer):
             # compute new point
             last_x = self.x - (a / ng) * g
 
-            # plot the trajectory
-            if self.plot:
-                super().plot_step(fig, self.x, last_x)
-
             # compute new point
             self.x = last_x
 
@@ -202,6 +194,4 @@ class Subgradient(LineSearchOptimizer):
 
         if self.verbose:
             print()
-        if self.plot:
-            plt.show()
         return x, self.f_x, status

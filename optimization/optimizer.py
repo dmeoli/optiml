@@ -7,7 +7,7 @@ from optimization.optimization_function import OptimizationFunction
 class Optimizer:
 
     def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000,
-                 callback=None, callback_args=(), verbose=False, plot=False):
+                 callback=None, callback_args=(), verbose=False):
         """
 
         :param f:        the objective function.
@@ -18,8 +18,6 @@ class Optimizer:
         :param max_iter: (integer scalar, optional, default value 1000): the maximum number of iterations.
         :param verbose:  (boolean, optional, default value False): print details about each iteration
                          if True, nothing otherwise.
-        :param plot:     (boolean, optional, default value False): plot the function's surface and its contours
-                         if True and the function's dimension is 2, nothing otherwise.
         """
         if not isinstance(f, OptimizationFunction):
             raise TypeError('f is not an optimization function')
@@ -31,6 +29,10 @@ class Optimizer:
         else:
             self.x = np.asarray(x, dtype=np.float)
         self.f_x = np.nan
+        if self.f.ndim == 2:
+            self.x0_history = []
+            self.x1_history = []
+            self.f_x_history = []
         if not np.isscalar(eps):
             raise ValueError('eps is not a real scalar')
         if not eps > 0:
@@ -45,18 +47,14 @@ class Optimizer:
         self._callback = callback
         self.callback_args = callback_args
         self.verbose = verbose
-        self.plot = plot
 
     def callback(self, args=None):
+        if self.f.ndim == 2:
+            self.x0_history.append(self.x[0])
+            self.x1_history.append(self.x[1])
+            self.f_x_history.append(self.f_x)
         if callable(self._callback):
             self._callback(self.x, *args, *self.callback_args)
-
-    def plot_step(self, fig, x, last_x, color='k'):
-        p_xy = np.vstack((x, last_x)).T
-        fig.axes[0].plot(p_xy[0], p_xy[1], [self.f.function(self.x), self.f.function(last_x)],
-                         marker='.', color=color)
-        fig.axes[1].quiver(p_xy[0, 0], p_xy[1, 0], p_xy[0, 1] - p_xy[0, 0], p_xy[1, 1] - p_xy[1, 0],
-                           scale_units='xy', angles='xy', scale=1, color=color)
 
     def minimize(self):
         raise NotImplementedError

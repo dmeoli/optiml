@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
 from ml.neural_network.initializers import random_uniform
@@ -9,9 +8,9 @@ class StochasticGradientDescent(StochasticOptimizer):
 
     def __init__(self, f, x=random_uniform, batch_size=None, eps=1e-6, epochs=1000, step_size=0.01,
                  momentum_type='none', momentum=0.9, callback=None, callback_args=(), shuffle=True,
-                 random_state=None, verbose=False, plot=False):
+                 random_state=None, verbose=False):
         super().__init__(f, x, step_size, momentum_type, momentum, batch_size, eps, epochs,
-                         callback, callback_args, shuffle, random_state, verbose, plot)
+                         callback, callback_args, shuffle, random_state, verbose)
 
     def minimize(self):
 
@@ -20,9 +19,6 @@ class StochasticGradientDescent(StochasticOptimizer):
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
-
-        if self.plot:
-            fig = self.f.plot()
 
         for args in self.args:
             self.f_x, g = self.f.function(self.x, *args), self.f.jacobian(self.x, *args)
@@ -61,16 +57,10 @@ class StochasticGradientDescent(StochasticOptimizer):
                 self.step = self.step_size * -g
                 self.x += self.step
 
-            # plot the trajectory
-            if self.plot:
-                super().plot_step(fig, self.x - self.step, self.x)
-
             self.iter += 1
 
             self.callback(args)
 
         if self.verbose:
             print()
-        if self.plot:
-            plt.show()
         return self.x, self.f_x, status

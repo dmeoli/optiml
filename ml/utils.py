@@ -91,14 +91,14 @@ def generate_non_linearly_regression_data():
 
 def generate_centred_and_normalized_regression_data():
     # generating sine curve and uniform noise
-    x = np.linspace(0, 1, 40)
-    noise = 1 * np.random.uniform(size=40)
-    y = np.sin(x * 1.5 * np.pi)
+    X = np.linspace(0, 1, 50)
+    noise = 1 * np.random.uniform(size=50)
+    y = np.sin(X * 1.5 * np.pi)
     y += noise
     # centering the y data to avoid fit the intercept
     y -= y.mean()
     # design matrix is 2x, x^2
-    X = np.vstack((2 * x, x ** 2)).T
+    X = np.vstack((2 * X, X ** 2)).T
     # normalizing the design matrix to facilitate visualization
     X = X / np.linalg.norm(X, axis=0)
     return X, y

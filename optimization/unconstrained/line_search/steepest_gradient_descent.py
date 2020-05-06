@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
 from ml.neural_network.initializers import random_uniform
@@ -29,8 +28,8 @@ class QuadraticSteepestGradientDescent(Optimizer):
     """
 
     def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000,
-                 callback=None, callback_args=(), verbose=False, plot=False):
-        super().__init__(f, x, eps, max_iter, callback, callback_args, verbose, plot)
+                 callback=None, callback_args=(), verbose=False):
+        super().__init__(f, x, eps, max_iter, callback, callback_args, verbose)
         if not isinstance(f, Quadratic):
             raise ValueError('f is not a quadratic function')
         if self.x.size != self.f.Q.shape[0]:
@@ -43,9 +42,6 @@ class QuadraticSteepestGradientDescent(Optimizer):
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
-
-        if self.plot:
-            fig = self.f.plot()
 
         while True:
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
@@ -94,10 +90,6 @@ class QuadraticSteepestGradientDescent(Optimizer):
             # compute new point
             last_x = self.x + step
 
-            # plot the trajectory
-            if self.plot:
-                self.plot_step(fig, self.x, last_x)
-
             # <\nabla f(x_i), \nabla f(x_i+1)> = 0
             assert np.isclose(self.f.jacobian(self.x).T.dot(self.f.jacobian(last_x)), 0)
 
@@ -109,8 +101,6 @@ class QuadraticSteepestGradientDescent(Optimizer):
 
         if self.verbose:
             print()
-        if self.plot:
-            plt.show()
         return self.x, self.f_x, status
 
 
@@ -180,7 +170,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
     def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
                  a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
-                 callback_args=(), verbose=False, plot=False):
+                 callback_args=(), verbose=False):
         """
 
         :param f:          the objective function.
@@ -222,8 +212,6 @@ class SteepestGradientDescent(LineSearchOptimizer):
                            is stopped. It is legal to take min_a = 0, thereby in fact skipping this test.
         :param verbose:    (boolean, optional, default value False): print details about each iteration
                            if True, nothing otherwise.
-        :param plot:       (boolean, optional, default value False): plot the function's surface and its contours
-                           if True and the function's dimension is 2, nothing otherwise.
         :return x:         ([n x 1] real column vector): the best solution found so far.
                                 - v (real, scalar): if x == [] this is the best known lower bound on the unconstrained
                                 global optimum of f(); it can be -inf if either f() is not bounded below, or no such
@@ -244,7 +232,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
                            optimization (see min_a above).
         """
         super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
-                         m_inf, min_a, callback, callback_args, verbose, plot)
+                         m_inf, min_a, callback, callback_args, verbose)
 
     def minimize(self):
         last_x = np.zeros(self.f.ndim)  # last point visited in the line search
@@ -257,9 +245,6 @@ class SteepestGradientDescent(LineSearchOptimizer):
                 print('\tf(x) - f*\trate\t', end='')
                 prev_v = np.inf
             print('\tls\tit\ta*', end='')
-
-        if self.plot:
-            fig = self.f.plot()
 
         while True:
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
@@ -310,10 +295,6 @@ class SteepestGradientDescent(LineSearchOptimizer):
                 status = 'unbounded'
                 break
 
-            # plot the trajectory
-            if self.plot:
-                self.plot_step(fig, self.x, last_x)
-
             # update new point
             self.x = last_x
 
@@ -323,6 +304,4 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
         if self.verbose:
             print()
-        if self.plot:
-            plt.show()
         return self.x, self.f_x, status

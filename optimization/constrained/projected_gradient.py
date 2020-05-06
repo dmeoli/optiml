@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
 from optimization.constrained.box_constrained_optimizer import BoxConstrainedOptimizer
@@ -36,16 +35,13 @@ class ProjectedGradient(BoxConstrainedOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False, plot=False):
-        super().__init__(f, eps, max_iter, callback, callback_args, verbose, plot)
+    def __init__(self, f, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
+        super().__init__(f, eps, max_iter, callback, callback_args, verbose)
 
     def minimize(self):
 
         if self.verbose and not self.iter % self.verbose:
             print('iter\tf(x)\t\t||g(x)||')
-
-        if self.plot:
-            surface_plot, contour_plot, contour_plot, contour_axes = self.f.plot()
 
         while True:
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
@@ -92,18 +88,10 @@ class ProjectedGradient(BoxConstrainedOptimizer):
 
             self.x += t * d
 
-            # plot the trajectory
-            if self.plot:
-                p_xy = np.vstack((self.x - t * d, self.x)).T
-                contour_axes.quiver(p_xy[0, :-1], p_xy[1, :-1], p_xy[0, 1:] - p_xy[0, :-1], p_xy[1, 1:] - p_xy[1, :-1],
-                                    scale_units='xy', angles='xy', scale=1, color='k')
-
             self.iter += 1
 
             self.callback()
 
         if self.verbose:
             print()
-        if self.plot:
-            plt.show()
         return self.x, self.f_x, status

@@ -9,14 +9,10 @@ from optimization.utils import ldl_solve
 
 class OptimizationFunction:
 
-    def __init__(self, ndim, x_min, x_max, y_min, y_max):
+    def __init__(self, ndim):
         self.jac = jacobian(self.function)
         self.hes = hessian(self.function)
         self.ndim = ndim
-        self.x_min = x_min
-        self.x_max = x_max
-        self.y_min = y_min
-        self.y_max = y_max
 
     def x_star(self):
         return np.nan
@@ -46,8 +42,8 @@ class OptimizationFunction:
         """
         return self.hes(x)
 
-    def plot(self):
-        X, Y = np.meshgrid(np.arange(self.x_min, self.x_max, 0.1), np.arange(self.y_min, self.y_max, 0.1))
+    def plot(self, x_min, x_max, y_min, y_max):
+        X, Y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
         Z = np.array([self.function(np.array([x, y]))
                       for x, y in zip(X.ravel(), Y.ravel())]).reshape(X.shape)
@@ -74,7 +70,7 @@ class OptimizationFunction:
 
 class Quadratic(OptimizationFunction):
 
-    def __init__(self, Q, q, x_min=-5, x_max=2, y_min=-5, y_max=2):
+    def __init__(self, Q, q):
         """
         Construct a quadratic function from its linear and quadratic part defined as:
 
@@ -92,7 +88,7 @@ class Quadratic(OptimizationFunction):
             raise ValueError('Q not a real matrix')
 
         n = Q.shape[1]
-        super().__init__(n, x_min, x_max, y_min, y_max)
+        super().__init__(n)
 
         if n <= 1:
             raise ValueError('Q is too small')
@@ -156,8 +152,7 @@ quad5 = Quadratic(Q=[[101, -99], [-99, 101]], q=[10, 5])
 
 class BoxConstrained(Quadratic):
 
-    def __init__(self, Q=None, q=None, ub=None, x_min=-5, x_max=2, y_min=-5, y_max=2,
-                 ndim=2, actv=0.5, rank=1.1, ecc=0.99, u_min=8, u_max=12):
+    def __init__(self, Q=None, q=None, ub=None, ndim=2, actv=0.5, rank=1.1, ecc=0.99, u_min=8, u_max=12):
         """
         Construct a box-constrained quadratic function defined as:
 
@@ -254,7 +249,7 @@ class BoxConstrained(Quadratic):
 
             q = -Q.dot(z)
 
-        super().__init__(Q, q, x_min, x_max, y_min, y_max)
+        super().__init__(Q, q)
         self.ub = ub
 
     def x_star(self):
@@ -266,7 +261,7 @@ class BoxConstrained(Quadratic):
 
 class LagrangianBoxConstrained(Quadratic):
 
-    def __init__(self, bcqp, x_min=-5, x_max=2, y_min=-5, y_max=2):
+    def __init__(self, bcqp):
         """
         Construct the lagrangian relaxation of a box-constrained quadratic function defined as:
 
@@ -279,7 +274,7 @@ class LagrangianBoxConstrained(Quadratic):
         """
         if not isinstance(bcqp, BoxConstrained):
             raise TypeError('f is not a box-constrained quadratic function')
-        super().__init__(bcqp.Q, bcqp.q, x_min, x_max, y_min, y_max)
+        super().__init__(bcqp.Q, bcqp.q)
         self.ndim *= 2
         # Compute the LDL^T Cholesky symmetric indefinite factorization
         # of Q because it is symmetric but could be not positive definite.
@@ -343,8 +338,8 @@ class LagrangianBoxConstrained(Quadratic):
 
 class Rosenbrock(OptimizationFunction):
 
-    def __init__(self, ndim=2, a=1, b=2, x_min=-2, x_max=2, y_min=-1, y_max=3):
-        super().__init__(ndim, x_min, x_max, y_min, y_max)
+    def __init__(self, ndim=2, a=1, b=2):
+        super().__init__(ndim)
         self.a = a
         self.b = b
 

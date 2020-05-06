@@ -17,7 +17,7 @@ from optimization.unconstrained.stochastic.stochastic_optimizer import Stochasti
 class SVM(BaseEstimator):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer=SMO,
                  max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, max_f_eval=1000,
-                 master_solver='cvxopt', verbose=False, plot=False):
+                 master_solver='cvxopt', verbose=False):
         self.kernels = {'linear': self.linear,
                         'poly': self.poly,
                         'rbf': self.rbf,
@@ -66,7 +66,6 @@ class SVM(BaseEstimator):
         self.max_f_eval = max_f_eval
         self.master_solver = master_solver
         self.verbose = verbose
-        self.plot = plot
         if kernel == 'linear':
             self.coef_ = 0.
         self.intercept_ = 0.
@@ -135,9 +134,9 @@ class SVM(BaseEstimator):
 class SVC(ClassifierMixin, SVM):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer=SMOClassifier,
                  max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, max_f_eval=1000,
-                 master_solver='cvxopt', verbose=False, plot=False):
+                 master_solver='cvxopt', verbose=False):
         super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, max_iter, learning_rate,
-                         momentum_type, momentum, max_f_eval, master_solver, verbose, plot)
+                         momentum_type, momentum, max_f_eval, master_solver, verbose)
 
     def fit(self, X, y):
         """
@@ -201,17 +200,17 @@ class SVC(ClassifierMixin, SVM):
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
                     res = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
-                                         verbose=self.verbose, plot=self.plot).minimize()
+                                         verbose=self.verbose).minimize()
                     if res[2] != 'optimal':
                         warnings.warn('max_iter reached but the optimization has not converged yet')
                 elif issubclass(self.optimizer, StochasticOptimizer):
                     self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
                                    momentum_type=self.momentum_type, momentum=self.momentum,
-                                   verbose=self.verbose, plot=self.plot).minimize()
+                                   verbose=self.verbose).minimize()
                 elif issubclass(self.optimizer, ProximalBundle):
                     self.optimizer(f=dual, max_iter=self.max_iter, master_solver=self.master_solver,
                                    momentum_type=self.momentum_type, momentum=self.momentum,
-                                   verbose=self.verbose, plot=self.plot).minimize()
+                                   verbose=self.verbose).minimize()
                 else:
                     raise ValueError(f'unknown optimizer {self.optimizer}')
 
@@ -246,9 +245,9 @@ class SVC(ClassifierMixin, SVM):
 class SVR(RegressorMixin, SVM):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, epsilon=0.1,
                  optimizer=SMORegression, max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9,
-                 max_f_eval=1000, master_solver='cvxopt', verbose=False, plot=False):
+                 max_f_eval=1000, master_solver='cvxopt', verbose=False):
         super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, max_iter, learning_rate,
-                         momentum_type, momentum, max_f_eval, master_solver, verbose, plot)
+                         momentum_type, momentum, max_f_eval, master_solver, verbose)
         self.epsilon = epsilon  # epsilon insensitive loss value
 
     def fit(self, X, y):
@@ -314,17 +313,17 @@ class SVR(RegressorMixin, SVM):
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
                     res = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
-                                         verbose=self.verbose, plot=self.plot).minimize()
+                                         verbose=self.verbose).minimize()
                     if res[2] != 'optimal':
                         warnings.warn('max_iter reached but the optimization has not converged yet')
                 elif issubclass(self.optimizer, StochasticOptimizer):
                     self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
                                    momentum_type=self.momentum_type, momentum=self.momentum,
-                                   verbose=self.verbose, plot=self.plot).minimize()
+                                   verbose=self.verbose).minimize()
                 elif issubclass(self.optimizer, ProximalBundle):
                     self.optimizer(f=dual, max_iter=self.max_iter, master_solver=self.master_solver,
                                    momentum_type=self.momentum_type, momentum=self.momentum,
-                                   verbose=self.verbose, plot=self.plot).minimize()
+                                   verbose=self.verbose).minimize()
                 else:
                     raise ValueError(f'unknown optimizer {self.optimizer}')
 

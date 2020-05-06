@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
 from ml.neural_network.initializers import random_uniform
@@ -9,8 +8,8 @@ from optimization.unconstrained.line_search.line_search_optimizer import LineSea
 
 class QuadraticConjugateGradient(Optimizer):
     def __init__(self, f, x=random_uniform, r_start=0, eps=1e-6, max_iter=1000,
-                 callback=None, callback_args=(), verbose=False, plot=False):
-        super().__init__(f, x, eps, max_iter, callback, callback_args, verbose, plot)
+                 callback=None, callback_args=(), verbose=False):
+        super().__init__(f, x, eps, max_iter, callback, callback_args, verbose)
         if not isinstance(f, Quadratic):
             raise ValueError('f is not a quadratic function')
         if self.x.size != self.f.Q.shape[0]:
@@ -27,9 +26,6 @@ class QuadraticConjugateGradient(Optimizer):
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
             print('\t\tbeta', end='')
-
-        if self.plot:
-            fig = self.f.plot()
 
         while True:
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
@@ -99,10 +95,6 @@ class QuadraticConjugateGradient(Optimizer):
 
             past_d = d  # previous search direction
 
-            # plot the trajectory
-            if self.plot:
-                super().plot_step(fig, self.x, last_x)
-
             self.x = last_x
 
             self.iter += 1
@@ -111,17 +103,15 @@ class QuadraticConjugateGradient(Optimizer):
 
         if self.verbose:
             print()
-        if self.plot:
-            plt.show()
         return self.x, self.f_x, status
 
 
 class ConjugateGradient(LineSearchOptimizer):
     def __init__(self, f, x=random_uniform, wf=0, r_start=0, eps=1e-6, max_iter=1000, max_f_eval=1000,
                  m1=0.01, m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
-                 callback_args=(), verbose=False, plot=False):
+                 callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
-                         m_inf, min_a, callback, callback_args, verbose, plot)
+                         m_inf, min_a, callback, callback_args, verbose)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if wf < 0 or wf > 4:
@@ -249,9 +239,9 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
     def __init__(self, f, x=random_uniform, wf=0, eps=1e-6, max_iter=1000, max_f_eval=1000, r_start=0,
                  m1=0.01, m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16,
-                 callback=None, callback_args=(), verbose=False, plot=False):
+                 callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
-                         m_inf, min_a, callback, callback_args, verbose, plot)
+                         m_inf, min_a, callback, callback_args, verbose)
         if not np.isscalar(wf):
             raise ValueError('wf is not a real scalar')
         if not 0 <= wf <= 3:
@@ -272,9 +262,6 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 print('\tf(x) - f*\trate\t', end='')
                 prev_v = np.inf
             print('\tbeta\tls\tit\ta*', end='')
-
-        if self.plot:
-            fig = self.f.plot()
 
         while True:
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
@@ -355,10 +342,6 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 status = 'unbounded'
                 break
 
-            # plot the trajectory
-            if self.plot:
-                super().plot_step(fig, self.x, last_x)
-
             # update new point
             self.x = last_x
 
@@ -368,6 +351,4 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
         if self.verbose:
             print()
-        if self.plot:
-            plt.show()
         return self.x, self.f_x, status
