@@ -1,4 +1,4 @@
-# Machine Learning & Numerical Optimization [![Build Status](https://travis-ci.org/dmeoli/MachineLearningNumericalOptimization.svg?branch=master)](https://travis-ci.org/dmeoli/MachineLearningNumericalOptimization) [![Coverage Status](https://coveralls.io/repos/github/dmeoli/MachineLearningNumericalOptimization/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/MachineLearningNumericalOptimization?branch=master)
+# Machine Learning & Numerical Optimization [![Build Status](https://travis-ci.org/dmeoli/MachineLearningNumericalOptimization.svg?branch=master)](https://travis-ci.org/dmeoli/MachineLearningNumericalOptimization) [![Coverage Status](https://coveralls.io/repos/github/dmeoli/MachineLearningNumericalOptimization/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/MachineLearningNumericalOptimization?branch=master) [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)]
 
 This code is a simple and modular implementation of some of the most important optimization algorithms used as core 
 solver for many machine learning models developed during the Machine Learning & Numerical Methods and Optimization 
@@ -7,9 +7,8 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
 ## Contents
 
 - Numerical Optimization
-
     - Unconstrained Optimization
-        - Line Search Methods
+        - Line Search Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/LineSearchMethods.ipynb)
             - Exact Line Search Methods
                 - [x] Quadratic Steepest Gradient Descent
                 - [x] Quadratic Conjugate Gradient
@@ -33,7 +32,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
                     - [x] Newton
                     - [x] BFGS quasi-Newton
                     - [ ] L-BFGS quasi-Newton
-        - Stochastic Methods
+        - Stochastic Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/StochasticMethods.ipynb)
             - [x] Stochastic Gradient Descent
                 - [x] standard momentum
                 - [x] Nesterov momentum
@@ -79,7 +78,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
              - [x] Nesterov momentum
         - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
     - Constrained Optimization
-        - Box-Constrained Optimization
+        - Box-Constrained Quadratic Optimization Methods
             - [x] Projected Gradient
             - [x] Frank-Wolfe or Conditional Gradient
             - [x] Active Set
@@ -100,15 +99,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Quadratic Box-Constrained
 
 - Machine Learning Models
-    - [x] Linear Regression
-        - Regularizers
-            - [x] L1 or Lasso Regression
-            - [x] L2 or Ridge Regression
-    - [x] Logistic Regression
-        - Regularizers
-            - [x] L1 or Lasso
-            - [x] L2 or Ridge or Tikhonov
-    - [x] Support Vector Machines
+    - [x] Support Vector Machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/SupportVectorMachines.ipynb)
         - [x] Support Vector Classifier
         - [x] Support Vector Regression
         - Kernels
@@ -120,8 +111,8 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
     - [x] Neural Networks
         - Losses
             - [x] Mean Squared Error
-            - [x] Mean Absolute Error
-            - [x] Cross Entropy
+            - [x] Categorical Cross Entropy
+            - [x] Sparse Categorical Cross Entropy
             - [x] Binary Cross Entropy
         - Regularizers
             - [x] L1 or Lasso
@@ -130,32 +121,23 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Sigmoid
             - [x] Tanh
             - [x] ReLU
-            - [x] LeakyReLU
-            - [x] ELU
             - [x] SoftMax
-            - [x] SoftPlus
         - Layers
             - [x] Fully Connected
-            - [x] Convolutional
-            - [x] Max Pooling
-            - [x] Avg Pooling
-            - [x] Flatten
-            - [x] Dropout
-            - [ ] Batch Normalization
+            - [x] Convolutional [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/ConvolutionalNeuralNetworks.ipynb)
+                - [x] Conv 2D
+                - [x] Max Pooling
+                - [x] Avg Pooling
+                - [x] Flatten
             - [ ] Recurrent
-            - [ ] Long Short-Term Memory (LSTM)
-            - [ ] Gated Recurrent Units (GRU)
+                - [ ] Long Short-Term Memory (LSTM)
+                - [ ] Gated Recurrent Units (GRU)
+            - Normalization
+                - [x] Dropout
+                - [ ] Batch Normalization
         - Initializers
             - [x] Xavier or Glorot normal and uniform
             - [x] He normal and uniform
-
-- Notebooks
-    - Numerical Optimization
-        - [x] Line Search Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/LineSearchMethods.ipynb)
-        - [x] Stochastic Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/StochasticMethods.ipynb)
-    - Machine Learning
-        - [x] Support Vector Machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/SupportVectorMachines.ipynb)
-        - [x] Convolutional Neural Networks [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/ConvolutionalNeuralNetworks.ipynb)
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

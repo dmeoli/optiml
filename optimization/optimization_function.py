@@ -1,9 +1,10 @@
 import autograd.numpy as np
 from autograd import jacobian, hessian
 from matplotlib import pyplot as plt
+from matplotlib.colors import SymLogNorm
 from scipy.linalg import ldl
 
-from utils import ldl_solve
+from optimization.utils import ldl_solve
 
 
 class OptimizationFunction:
@@ -18,7 +19,7 @@ class OptimizationFunction:
         self.y_max = y_max
 
     def x_star(self):
-        raise np.nan
+        return np.nan
 
     def f_star(self):
         return np.inf
@@ -55,11 +56,11 @@ class OptimizationFunction:
 
         # 3D surface plot
         ax = fig.add_subplot(1, 2, 1, projection='3d', elev=50, azim=-50)
-        ax.plot_surface(X, Y, Z, cmap='jet', alpha=0.5)
+        ax.plot_surface(X, Y, Z, norm=SymLogNorm(abs(Z.min())), cmap='jet', alpha=0.5)
         ax.plot([self.x_star()[0]], [self.x_star()[1]], [self.f_star()], marker='*', color='r', markersize=10)
         ax.set_xlabel('$x_1$')
         ax.set_ylabel('$x_2$')
-        ax.set_zlabel('$f(x)$')
+        ax.set_zlabel(f'${type(self).__name__}$')
 
         # 2D contour plot
         ax = fig.add_subplot(1, 2, 2)
@@ -107,10 +108,6 @@ class Quadratic(OptimizationFunction):
 
     def x_star(self):
         try:
-            # alternatively we can solve the linear system as np.linalg.inv(self.Q).dot(-self.q)
-            # but the complexity increase about 3 times as much as LU factorization used by
-            # default in np.linalg.solve(self.Q, -self.q) because it requires is O(2n^3) to
-            # compute the inverse of the Hessian matrix and O(2n^2) to multiply this by the -q vector
             return np.linalg.solve(self.Q, -self.q)  # complexity O(2n^3/3)
         except np.linalg.LinAlgError:  # the Hessian matrix is singular
             return np.nan
@@ -269,7 +266,7 @@ class BoxConstrained(Quadratic):
 
 class LagrangianBoxConstrained(Quadratic):
 
-    def __init__(self, f, x_min=-5, x_max=2, y_min=-5, y_max=2):
+    def __init__(self, bcqp, x_min=-5, x_max=2, y_min=-5, y_max=2):
         """
         Construct the lagrangian relaxation of a box-constrained quadratic function defined as:
 
@@ -278,17 +275,17 @@ class LagrangianBoxConstrained(Quadratic):
 
         where lambda^+ are the first n components of lmbda, and lambda^- the last n components;
         both are constrained to be >= 0.
-        :param f: box-constrained quadratic function to be relaxed
+        :param bcqp: box-constrained quadratic function to be relaxed
         """
-        if not isinstance(f, BoxConstrained):
+        if not isinstance(bcqp, BoxConstrained):
             raise TypeError('f is not a box-constrained quadratic function')
-        super().__init__(f.Q, f.q, x_min, x_max, y_min, y_max)
+        super().__init__(bcqp.Q, bcqp.q, x_min, x_max, y_min, y_max)
         self.ndim *= 2
         # Compute the LDL^T Cholesky symmetric indefinite factorization
         # of Q because it is symmetric but could be not positive definite.
         # This will be used at each iteration to solve the Lagrangian relaxation.
         self.L, self.D, self.P = ldl(self.Q)
-        self.primal = f
+        self.primal = bcqp
         self.primal_solution = np.inf
         self.primal_value = np.inf
 
@@ -297,7 +294,7 @@ class LagrangianBoxConstrained(Quadratic):
 
     def f_star(self):
         return np.inf
-    
+
     def function(self, lmbda):
         """
         The optimal solution of the Lagrangian relaxation is the unique

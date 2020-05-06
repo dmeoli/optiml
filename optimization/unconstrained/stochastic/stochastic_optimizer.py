@@ -1,7 +1,7 @@
 import itertools
-import random
 
 import numpy as np
+from sklearn.utils import shuffle
 
 from ml.neural_network.initializers import random_uniform
 from optimization.optimizer import Optimizer
@@ -9,7 +9,8 @@ from optimization.optimizer import Optimizer
 
 class StochasticOptimizer(Optimizer):
     def __init__(self, f, x=random_uniform, step_size=0.01, momentum_type='none', momentum=0.9, batch_size=None,
-                 eps=1e-6, epochs=1000, callback=None, callback_args=(), verbose=False, plot=False):
+                 eps=1e-6, epochs=1000, callback=None, callback_args=(), shuffle=True, random_state=None,
+                 verbose=False, plot=False):
         """
 
         :param f: the objective function.
@@ -38,16 +39,15 @@ class StochasticOptimizer(Optimizer):
         if momentum_type not in ('standard', 'nesterov', 'none'):
             raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type
+        self.shuffle = shuffle
+        self.random_state = random_state
         self.step = 0
 
         if batch_size is None:
             self.args = itertools.repeat(f.args())
         else:
-            if f.args()[0].shape[0] != f.args()[1].shape[0]:
-                raise ValueError('X and y have unequal lengths')
-
-            if batch_size > f.args()[0].shape[0]:
-                raise ValueError('batch_size must be less than the number of examples')
+            n_samples = f.args()[0].shape[0]
+            batch_size = np.clip(batch_size, 1, n_samples)
 
             n_batches, rest = divmod(len(f.args()[0]), batch_size)
             if rest:
@@ -73,7 +73,8 @@ class StochasticOptimizer(Optimizer):
         while True:
             idx = list(range(self.batch_size))
             while True:
-                random.shuffle(idx)
+                if self.shuffle:
+                    shuffle(idx, random_state=self.random_state)
                 for i in idx:
                     start = i * self.batch_size
                     stop = (i + 1) * self.batch_size

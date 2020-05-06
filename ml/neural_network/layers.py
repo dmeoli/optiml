@@ -2,7 +2,7 @@ import numpy as np
 
 from ml.neural_network.initializers import glorot_uniform, zeros
 from ml.neural_network.activations import Activation, linear
-from ml.regularizers import l2
+from ml.neural_network.regularizers import l2
 
 
 class Layer:
@@ -24,28 +24,32 @@ class ParamLayer(Layer):
             raise TypeError(f'unknown activation function {activation}')
 
         if coef_init is None:
-            self.W = glorot_uniform(coef_shape)
+            self.coef_ = glorot_uniform(coef_shape)
+        elif callable(coef_init):
+            self.coef_ = coef_init(coef_shape)
         else:
-            self.W = coef_init(coef_shape)
+            self.coef_ = np.asarray(coef_init, dtype=np.float).reshape(-1, 1)
 
         self.fit_intercept = fit_intercept
         if self.fit_intercept:
             shape = [1] * len(coef_shape)
             shape[-1] = coef_shape[-1]
             if inter_init is None:
-                self.b = zeros(shape)
+                self.inter_ = zeros(shape)
+            elif callable(inter_init):
+                self.inter_ = inter_init(shape)
             else:
-                self.b = inter_init(shape)
+                self.inter_ = np.asarray(inter_init, dtype=np.float).reshape(-1, 1)
 
         if coef_reg is None:
-            self.w_reg = l2
+            self.coef_reg = l2
         else:
-            self.w_reg = coef_reg
+            self.coef_reg = coef_reg
 
         if inter_reg is None:
-            self.b_reg = l2
+            self.inter_reg = l2
         else:
-            self.b_reg = inter_reg
+            self.inter_reg = inter_reg
 
 
 class FullyConnected(ParamLayer):
@@ -57,9 +61,9 @@ class FullyConnected(ParamLayer):
 
     def forward(self, X):
         self._X = X
-        self._WX_b = self._X.dot(self.W)
+        self._WX_b = self._X.dot(self.coef_)
         if self.fit_intercept:
-            self._WX_b += self.b
+            self._WX_b += self.inter_
         return self.activation(self._WX_b)
 
     def backward(self, delta):
@@ -69,7 +73,7 @@ class FullyConnected(ParamLayer):
         if self.fit_intercept:
             grads['db'] = np.sum(dZ, axis=0, keepdims=True)
         # dX
-        dX = dZ.dot(self.W.T)
+        dX = dZ.dot(self.coef_.T)
         return dX, grads
 
 
@@ -111,9 +115,9 @@ class Conv2D(ParamLayer):
             self._X, self.kernel_size, self.strides, self.out_channels, self.padding)
 
         # convolution
-        self._WX_b = self.convolution(self._padded, self.W, tmp_conved)
+        self._WX_b = self.convolution(self._padded, self.coef_, tmp_conved)
         if self.fit_intercept:
-            self._WX_b += self.b
+            self._WX_b += self.inter_
 
         self._activated = self.activation(self._WX_b)
         return self._activated if self.channels_last else self._activated.transpose((0, 3, 1, 2))
@@ -124,7 +128,7 @@ class Conv2D(ParamLayer):
         dZ = delta * self.activation.jacobian(self._WX_b)
 
         # dW, db
-        dW = np.empty_like(self.W)  # [c,h,w,out]
+        dW = np.empty_like(self.coef_)  # [c,h,w,out]
         dW = self.convolution(self._padded.transpose((3, 1, 2, 0)), dZ, dW)
 
         grads = {'dW': dW}
@@ -134,7 +138,7 @@ class Conv2D(ParamLayer):
         # dX
         padded_dX = np.zeros_like(self._padded)  # [n, h, w, c]
         s0, s1, k0, k1 = self.strides + self.kernel_size
-        t_flt = self.W.transpose((3, 1, 2, 0))  # [c, fh, hw, out] => [out, fh, fw, c]
+        t_flt = self.coef_.transpose((3, 1, 2, 0))  # [c, fh, hw, out] => [out, fh, fw, c]
         for i in range(dZ.shape[1]):
             for j in range(dZ.shape[2]):
                 padded_dX[:, i * s0:i * s0 + k0, j * s1:j * s1 + k1, :] += dZ[:, i, j, :].reshape(

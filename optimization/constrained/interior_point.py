@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from optimization.constrained.box_constrained_optimizer import BoxConstrainedOptimizer
-from utils import cholesky_solve
+from optimization.utils import cholesky_solve
 
 
 class InteriorPoint(BoxConstrainedOptimizer):

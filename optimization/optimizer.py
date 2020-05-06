@@ -47,9 +47,9 @@ class Optimizer:
         self.verbose = verbose
         self.plot = plot
 
-    def callback(self):
+    def callback(self, args=None):
         if callable(self._callback):
-            self._callback(self.x, *self.callback_args)
+            self._callback(self.x, *args, *self.callback_args)
 
     def plot_step(self, fig, x, last_x, color='k'):
         p_xy = np.vstack((x, last_x)).T

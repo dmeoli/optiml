@@ -32,30 +32,6 @@ class ReLU(Activation):
         return np.where(x > 0, 1., 0.)
 
 
-class LeakyReLU(Activation):
-
-    def __init__(self, alpha=0.3):
-        self.alpha = alpha
-
-    def function(self, x):
-        return np.maximum(x, self.alpha * x)
-
-    def jacobian(self, x):
-        return np.where(x > 0, 1., self.alpha)
-
-
-class ELU(Activation):
-
-    def __init__(self, alpha=1.):
-        self.alpha = alpha
-
-    def function(self, x):
-        return np.maximum(x, self.alpha * (np.exp(x) - 1.))
-
-    def jacobian(self, x):
-        return np.where(x > 0, 1., self.function(x) + self.alpha)
-
-
 class Tanh(Activation):
 
     def function(self, x):
@@ -75,15 +51,6 @@ class Sigmoid(Activation):
         return x * (1. - x)
 
 
-class SoftPlus(Activation):
-
-    def function(self, x):
-        return np.log(1. + np.exp(x))
-
-    def jacobian(self, x):
-        return 1. / (1. + np.exp(-x))
-
-
 class SoftMax(Activation):
 
     def function(self, x, axis=-1):
@@ -96,9 +63,6 @@ class SoftMax(Activation):
 
 linear = Linear()
 relu = ReLU()
-leaky_relu = LeakyReLU()
-elu = ELU()
 tanh = Tanh()
 sigmoid = Sigmoid()
-softplus = SoftPlus()
 softmax = SoftMax()

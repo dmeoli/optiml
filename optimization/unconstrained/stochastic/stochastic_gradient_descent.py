@@ -8,14 +8,15 @@ from optimization.unconstrained.stochastic.stochastic_optimizer import Stochasti
 class StochasticGradientDescent(StochasticOptimizer):
 
     def __init__(self, f, x=random_uniform, batch_size=None, eps=1e-6, epochs=1000, step_size=0.01,
-                 momentum_type='none', momentum=0.9, callback=None, callback_args=(), verbose=False, plot=False):
-        super().__init__(f, x, step_size, momentum_type, momentum, batch_size,
-                         eps, epochs, callback, callback_args, verbose, plot)
+                 momentum_type='none', momentum=0.9, callback=None, callback_args=(), shuffle=True,
+                 random_state=None, verbose=False, plot=False):
+        super().__init__(f, x, step_size, momentum_type, momentum, batch_size, eps, epochs,
+                         callback, callback_args, shuffle, random_state, verbose, plot)
 
     def minimize(self):
 
         if self.verbose and not self.iter % self.verbose:
-            print('iter\tf(x)\t\t||g(x)||', end='')
+            print('epoch\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
@@ -66,7 +67,7 @@ class StochasticGradientDescent(StochasticOptimizer):
 
             self.iter += 1
 
-            self.callback()
+            self.callback(args)
 
         if self.verbose:
             print()

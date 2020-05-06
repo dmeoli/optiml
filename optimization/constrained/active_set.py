@@ -3,7 +3,7 @@ import numpy as np
 from scipy.linalg import ldl
 
 from optimization.constrained.box_constrained_optimizer import BoxConstrainedOptimizer
-from utils import ldl_solve
+from optimization.utils import ldl_solve
 
 
 class ActiveSet(BoxConstrainedOptimizer):
