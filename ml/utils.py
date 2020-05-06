@@ -6,8 +6,10 @@ from matplotlib.lines import Line2D
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import learning_curve, validation_curve
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.svm import SVC as SKLSVC
+from sklearn.svm import SVR as SKLSVR
 
-from ml.svm import SVM
+from ml.svm import SVM, SVC, SVR
 
 
 # metrics
@@ -87,6 +89,21 @@ def generate_non_linearly_regression_data():
     return X.reshape(-1, 1), y
 
 
+def generate_centred_and_normalized_regression_data():
+    # generating sine curve and uniform noise
+    x = np.linspace(0, 1, 40)
+    noise = 1 * np.random.uniform(size=40)
+    y = np.sin(x * 1.5 * np.pi)
+    y += noise
+    # centering the y data to avoid fit the intercept
+    y -= y.mean()
+    # design matrix is 2x, x^2
+    X = np.vstack((2 * x, x ** 2)).T
+    # normalizing the design matrix to facilitate visualization
+    X = X / np.linalg.norm(X, axis=0)
+    return X, y
+
+
 # plot functions
 
 plt.style.use('ggplot')
@@ -144,19 +161,19 @@ def plot_svm_hyperplane(svm, X, y):
         plt.plot(X, y, marker='o', markersize=4, color='darkorange', linestyle='none')
 
     # support vectors
-    if isinstance(svm, ClassifierMixin):
+    if isinstance(svm, SVC) or isinstance(svm, SKLSVC):
         plt.scatter(X[svm.support_][:, 0], X[svm.support_][:, 1], s=60, color='navy')
-    elif isinstance(svm, RegressorMixin):
+    elif isinstance(svm, SVR) or isinstance(svm, SKLSVR):
         plt.scatter(X[svm.support_], y[svm.support_], s=60, color='navy')
 
-    if isinstance(svm, ClassifierMixin):
+    if isinstance(svm, SVC) or isinstance(svm, SKLSVC):
         _X1, _X2 = np.meshgrid(np.linspace(X1.min(), X1.max(), 50), np.linspace(X1.min(), X1.max(), 50))
         X = np.array([[x1, x2] for x1, x2 in zip(np.ravel(_X1), np.ravel(_X2))])
         Z = svm.decision_function(X).reshape(_X1.shape)
         plt.contour(_X1, _X2, Z, [0.0], colors='k', linewidths=1, origin='lower')
         plt.contour(_X1, _X2, Z + 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
         plt.contour(_X1, _X2, Z - 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
-    elif isinstance(svm, RegressorMixin):
+    elif isinstance(svm, SVR) or isinstance(svm, SKLSVR):
         _X = np.linspace(-2 * np.pi, 2 * np.pi, 10000).reshape(-1, 1)
         Z = svm.predict(_X)
         ax.plot(_X, Z, color='k', linewidth=1)

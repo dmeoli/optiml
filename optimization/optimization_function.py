@@ -56,7 +56,7 @@ class OptimizationFunction:
 
         # 3D surface plot
         ax = fig.add_subplot(1, 2, 1, projection='3d', elev=50, azim=-50)
-        ax.plot_surface(X, Y, Z, norm=SymLogNorm(abs(Z.min())), cmap='jet', alpha=0.5)
+        ax.plot_surface(X, Y, Z, norm=SymLogNorm(linthresh=abs(Z.min()), base=np.e), cmap='jet', alpha=0.5)
         ax.plot([self.x_star()[0]], [self.x_star()[1]], [self.f_star()], marker='*', color='r', markersize=10)
         ax.set_xlabel('$x_1$')
         ax.set_ylabel('$x_2$')
