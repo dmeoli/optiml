@@ -1,16 +1,19 @@
 import numpy as np
 
 from ml.neural_network.initializers import random_uniform
+from optimization.unconstrained.stochastic.schedules import constant
 from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
 
 
 class StochasticGradientDescent(StochasticOptimizer):
 
     def __init__(self, f, x=random_uniform, batch_size=None, eps=1e-6, epochs=1000, step_size=0.01,
-                 momentum_type='none', momentum=0.9, callback=None, callback_args=(), shuffle=True,
-                 random_state=None, verbose=False):
+                 momentum_type='none', momentum=0.9, step_size_schedule=constant, momentum_schedule=constant,
+                 callback=None, callback_args=(), shuffle=True, random_state=None, verbose=False):
         super().__init__(f, x, step_size, momentum_type, momentum, batch_size, eps, epochs,
                          callback, callback_args, shuffle, random_state, verbose)
+        self.step_size = step_size_schedule(self.step_size)
+        self.momentum = momentum_schedule(self.momentum)
 
     def minimize(self):
 
@@ -23,6 +26,8 @@ class StochasticGradientDescent(StochasticOptimizer):
         for args in self.args:
             self.f_x, g = self.f.function(self.x, *args), self.f.jacobian(self.x, *args)
             ng = np.linalg.norm(g)
+
+            self.callback(args)
 
             if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng), end='')
@@ -43,23 +48,21 @@ class StochasticGradientDescent(StochasticOptimizer):
 
             if self.momentum_type == 'standard':
                 step_m1 = self.step
-                self.step = self.step_size * -g + self.momentum * step_m1
+                self.step = next(self.step_size) * -g + next(self.momentum) * step_m1
                 self.x += self.step
             elif self.momentum_type == 'nesterov':
                 step_m1 = self.step
-                big_jump = self.momentum * step_m1
+                big_jump = next(self.momentum) * step_m1
                 self.x += big_jump
                 g = self.f.jacobian(self.x, *args)
-                correction = self.step_size * -g
+                correction = next(self.step_size) * -g
                 self.x += correction
                 self.step = big_jump + correction
             elif self.momentum_type == 'none':
-                self.step = self.step_size * -g
+                self.step = next(self.step_size) * -g
                 self.x += self.step
 
             self.iter += 1
-
-            self.callback(args)
 
         if self.verbose:
             print()

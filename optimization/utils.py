@@ -26,6 +26,7 @@ def clip(x, l, h):
 
 # plot functions
 
+
 def plot_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max):
     fig = f.plot(x_min, x_max, y_min, y_max)
     fig.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history, marker='.', color='k')

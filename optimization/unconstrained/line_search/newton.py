@@ -133,6 +133,8 @@ class Newton(LineSearchOptimizer):
             H = self.f.hessian(self.x)
             ng = np.linalg.norm(g)
 
+            self.callback()
+
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
             else:
@@ -191,8 +193,6 @@ class Newton(LineSearchOptimizer):
             self.x = last_x
 
             self.iter += 1
-
-            self.callback()
 
         if self.verbose:
             print()

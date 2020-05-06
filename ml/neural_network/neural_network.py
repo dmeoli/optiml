@@ -166,13 +166,13 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
                  max_f_eval=1000, master_solver='ECOS', shuffle=True, random_state=None, verbose=False):
         super().__init__(layers, loss, optimizer, learning_rate, max_iter, momentum_type, momentum, validation_split,
                          batch_size, max_f_eval, master_solver, shuffle, random_state, verbose)
-        self.accuracy_history = {'training_accuracy': [],
-                                 'validation_accuracy': []}
+        self.accuracy_history = {'train_acc': [],
+                                 'val_acc': []}
 
     def _store_plot_data(self, packed_coef_inter, X_batch, y_batch, X_val, y_val):
         super()._store_plot_data(packed_coef_inter, X_batch, y_batch, X_val, y_val)
-        self.accuracy_history['training_accuracy'].append(self.score(X_batch, y_batch))
-        self.accuracy_history['validation_accuracy'].append(self.score(X_val, y_val))
+        self.accuracy_history['train_acc'].append(self.score(X_batch, y_batch))
+        self.accuracy_history['val_acc'].append(self.score(X_val, y_val))
 
     def fit(self, X, y):
         if y.ndim == 1:

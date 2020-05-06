@@ -123,6 +123,8 @@ class Subgradient(LineSearchOptimizer):
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(g)
 
+            self.callback()
+
             if self.eps > 0:  # target-level step size
                 if self.f_x <= f_ref - delta:  # found a "significantly" better point
                     delta = self.line_search.a_start * max(abs(self.f_x), 1)  # reset delta
@@ -187,8 +189,6 @@ class Subgradient(LineSearchOptimizer):
             self.x = last_x
 
             self.iter += 1
-
-            self.callback()
 
         x = x_ref  # return point corresponding to best value found so far
 

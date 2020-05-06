@@ -106,10 +106,10 @@ def generate_centred_and_normalized_regression_data():
 
 # plot functions
 
-plt.style.use('ggplot')
-
 
 def plot_svm_hyperplane(svm, X, y):
+    plt.style.use('ggplot')
+
     ax = plt.axes()
 
     # axis labels and limits
@@ -184,6 +184,8 @@ def plot_svm_hyperplane(svm, X, y):
 
 
 def plot_validation_curve(estimator, X, y, param_name, param_range, scorer, cv=5):
+    plt.style.use('ggplot')
+
     train_scores, test_scores = validation_curve(estimator, X, y, param_name=param_name, param_range=param_range,
                                                  cv=cv, scoring=scorer, n_jobs=-1)
 
@@ -208,6 +210,8 @@ def plot_validation_curve(estimator, X, y, param_name, param_range, scorer, cv=5
 
 
 def plot_learning_curve(estimator, X, y, scorer, cv=5, train_sizes=np.linspace(.1, 1.0, 5)):
+    plt.style.use('ggplot')
+
     train_sizes, train_scores, test_scores = learning_curve(estimator, X, y, train_sizes=train_sizes,
                                                             cv=cv, scoring=scorer, n_jobs=-1)
 
@@ -232,6 +236,8 @@ def plot_learning_curve(estimator, X, y, scorer, cv=5, train_sizes=np.linspace(.
 
 
 def plot_model_loss(loss_history):
+    plt.style.use('ggplot')
+
     fig, loss = plt.subplots()
     loss.plot(loss_history['training_loss'], color='navy', lw=2)
     loss.plot(loss_history['validation_loss'], color='darkorange', lw=2)
@@ -243,9 +249,11 @@ def plot_model_loss(loss_history):
 
 
 def plot_model_accuracy(accuracy_history):
+    plt.style.use('ggplot')
+
     fig, accuracy = plt.subplots()
-    accuracy.plot(accuracy_history['training_accuracy'], color='navy', lw=2)
-    accuracy.plot(accuracy_history['validation_accuracy'], color='darkorange', lw=2)
+    accuracy.plot(accuracy_history['train_acc'], color='navy', lw=2)
+    accuracy.plot(accuracy_history['val_acc'], color='darkorange', lw=2)
     accuracy.set_title('model accuracy')
     accuracy.set_xlabel('epoch')
     accuracy.set_ylabel('accuracy')

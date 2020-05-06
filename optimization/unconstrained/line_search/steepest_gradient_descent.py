@@ -47,6 +47,8 @@ class QuadraticSteepestGradientDescent(Optimizer):
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(g)
 
+            self.callback()
+
             if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
@@ -96,8 +98,6 @@ class QuadraticSteepestGradientDescent(Optimizer):
             self.x = last_x
 
             self.iter += 1
-
-            self.callback()
 
         if self.verbose:
             print()
@@ -250,6 +250,8 @@ class SteepestGradientDescent(LineSearchOptimizer):
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(g)
 
+            self.callback()
+
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
             else:
@@ -299,8 +301,6 @@ class SteepestGradientDescent(LineSearchOptimizer):
             self.x = last_x
 
             self.iter += 1
-
-            self.callback()
 
         if self.verbose:
             print()

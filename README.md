@@ -37,57 +37,43 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Stochastic Gradient Descent
                 - [x] standard momentum
                 - [x] Nesterov momentum
-                - [ ] learning rate decay
-                - [ ] momentum decay
+                - [ ] step rate schedules
+                - [ ] momentum schedules
             - [x] Adam
                 - [x] standard momentum
-                - [x] Nadam
-                - [ ] learning rate decay
-                - [ ] momentum decay
+                - [x] Nesterov momentum (Nadam)
             - [x] AMSGrad
                 - [x] standard momentum
                 - [x] Nesterov momentum
-                - [ ] learning rate decay
-                - [ ] momentum decay
             - [x] AdaMax
                 - [x] standard momentum
-                - [x] NadaMax
-                - [ ] learning rate decay
-                - [ ] momentum decay
+                - [x] Nesterov momentum (NadaMax)
             - [x] AdaGrad
                 - [x] standard momentum
                 - [x] Nesterov momentum
-                - [ ] learning rate decay
-                - [ ] momentum decay
             - [x] AdaDelta
                 - [x] standard momentum
                 - [x] Nesterov momentum
-                - [ ] learning rate decay
-                - [ ] momentum decay
             - [x] RProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
-                - [ ] learning rate decay
-                - [ ] momentum decay
             - [x] RMSProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
-                - [ ] learning rate decay
-                - [ ] momentum decay
         - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface
              - [x] standard momentum
              - [x] Nesterov momentum
         - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
     - Constrained Optimization
-        - Box-Constrained Quadratic Optimization Methods
-            - [x] Projected Gradient
-            - [x] Frank-Wolfe or Conditional Gradient
-            - [x] Active Set
-            - [x] Interior Point
-            - [x] Lagrangian Dual
-            - [x] Sequential Minimal Optimization (ad hoc for SVMs)
-            - [x] BCQP solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
         - Quadratic Optimization
+            - Box-Constrained Quadratic Optimization Methods
+                - [x] Projected Gradient
+                - [x] Frank-Wolfe or Conditional Gradient
+                - [x] Active Set
+                - [x] Interior Point
+                - [x] Lagrangian Dual
+                - [x] Sequential Minimal Optimization (ad hoc for SVMs)
+                - [x] BCQP solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
             - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
             - [x] QP solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
 

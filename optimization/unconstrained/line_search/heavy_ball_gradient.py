@@ -138,6 +138,9 @@ class HeavyBallGradient(LineSearchOptimizer):
         while True:
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(g)
+
+            self.callback()
+
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
             else:
@@ -192,11 +195,10 @@ class HeavyBallGradient(LineSearchOptimizer):
                 break
 
             past_d = last_x - self.x
+
             self.x = last_x
 
             self.iter += 1
-
-            self.callback()
 
         if self.verbose:
             print()

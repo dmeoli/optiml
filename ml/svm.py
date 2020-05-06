@@ -193,24 +193,28 @@ class SVC(ClassifierMixin, SVM):
                     alphas = scipy_solve_qp(bcqp, G, h, A, b, self.max_iter, self.verbose)
 
             elif issubclass(self.optimizer, BoxConstrainedOptimizer):
-                alphas = self.optimizer(bcqp, max_iter=self.max_iter, verbose=self.verbose).minimize()[0]
+                self.optimizer = self.optimizer(f=bcqp, max_iter=self.max_iter, verbose=self.verbose)
+                alphas = self.optimizer.minimize()[0]
 
             else:
                 dual = LagrangianBoxConstrained(bcqp)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
-                    res = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
-                                         verbose=self.verbose).minimize()
+                    self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
+                                                    verbose=self.verbose)
+                    res = self.optimizer.minimize()
                     if res[2] != 'optimal':
                         warnings.warn('max_iter reached but the optimization has not converged yet')
                 elif issubclass(self.optimizer, StochasticOptimizer):
-                    self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
-                                   momentum_type=self.momentum_type, momentum=self.momentum,
-                                   verbose=self.verbose).minimize()
+                    self.optimizer = self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
+                                                    momentum_type=self.momentum_type, momentum=self.momentum,
+                                                    verbose=self.verbose)
+                    self.optimizer.minimize()
                 elif issubclass(self.optimizer, ProximalBundle):
-                    self.optimizer(f=dual, max_iter=self.max_iter, master_solver=self.master_solver,
-                                   momentum_type=self.momentum_type, momentum=self.momentum,
-                                   verbose=self.verbose).minimize()
+                    self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, master_solver=self.master_solver,
+                                                    momentum_type=self.momentum_type, momentum=self.momentum,
+                                                    verbose=self.verbose)
+                    self.optimizer.minimize()
                 else:
                     raise ValueError(f'unknown optimizer {self.optimizer}')
 
@@ -306,24 +310,28 @@ class SVR(RegressorMixin, SVM):
                     alphas = scipy_solve_qp(bcqp, G, h, A, b, self.max_iter, self.verbose)
 
             elif issubclass(self.optimizer, BoxConstrainedOptimizer):
-                alphas = self.optimizer(bcqp, max_iter=self.max_iter, verbose=self.verbose).minimize()[0]
+                self.optimizer = self.optimizer(f=bcqp, max_iter=self.max_iter, verbose=self.verbose)
+                alphas = self.optimizer.minimize()[0]
 
             else:
                 dual = LagrangianBoxConstrained(bcqp)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
-                    res = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
-                                         verbose=self.verbose).minimize()
+                    self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
+                                                    verbose=self.verbose)
+                    res = self.optimizer.minimize()
                     if res[2] != 'optimal':
                         warnings.warn('max_iter reached but the optimization has not converged yet')
                 elif issubclass(self.optimizer, StochasticOptimizer):
-                    self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
-                                   momentum_type=self.momentum_type, momentum=self.momentum,
-                                   verbose=self.verbose).minimize()
+                    self.optimizer = self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
+                                                    momentum_type=self.momentum_type, momentum=self.momentum,
+                                                    verbose=self.verbose)
+                    self.optimizer.minimize()
                 elif issubclass(self.optimizer, ProximalBundle):
-                    self.optimizer(f=dual, max_iter=self.max_iter, master_solver=self.master_solver,
-                                   momentum_type=self.momentum_type, momentum=self.momentum,
-                                   verbose=self.verbose).minimize()
+                    self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, master_solver=self.master_solver,
+                                                    momentum_type=self.momentum_type, momentum=self.momentum,
+                                                    verbose=self.verbose)
+                    self.optimizer.minimize()
                 else:
                     raise ValueError(f'unknown optimizer {self.optimizer}')
 

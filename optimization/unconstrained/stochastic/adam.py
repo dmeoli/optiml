@@ -40,6 +40,8 @@ class Adam(StochasticOptimizer):
         for args in self.args:
             self.f_x, g = self.f.function(self.x, *args), self.f.jacobian(self.x, *args)
 
+            self.callback(args)
+
             if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:1.4e}'.format(self.iter, self.f_x), end='')
                 if self.f.f_star() < np.inf:
@@ -86,8 +88,6 @@ class Adam(StochasticOptimizer):
                 self.step = step2
 
             self.iter += 1
-
-            self.callback(args)
 
         if self.verbose:
             print()
