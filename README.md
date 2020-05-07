@@ -31,8 +31,9 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
                     - [x] Heavy Ball Gradient
                 - 2nd Order Methods
                     - [x] Newton
-                    - [x] BFGS quasi-Newton
-                    - [ ] L-BFGS quasi-Newton
+                    - Quasi-Newton
+                        - [x] BFGS
+                        - [ ] L-BFGS
         - Stochastic Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/StochasticMethods.ipynb)
             - [x] Stochastic Gradient Descent
                 - [x] standard momentum

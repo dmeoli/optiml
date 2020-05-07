@@ -101,9 +101,12 @@ class NeuralNetwork(BaseEstimator, Layer):
                 self.inter_idx.append((start, end))
                 start = end
 
-    def _store_plot_data(self, packed_coef_inter, X_batch, y_batch, X_val, y_val):
-        self.loss_history['training_loss'].append(self.loss.function(packed_coef_inter, X_batch, y_batch))
-        self.loss_history['validation_loss'].append(self.loss.function(packed_coef_inter, X_val, y_val))
+    def _store_plot_data(self, packed_coef_inter, loss, X_batch, y_batch, X_val, y_val):
+        assert loss == self.loss.function(packed_coef_inter, X_batch, y_batch)
+        self.loss_history['training_loss'].append(loss)
+        val_loss = self.loss.function(packed_coef_inter, X_val, y_val)
+        self.loss_history['validation_loss'].append(val_loss)
+        print('\tval_loss: {:1.4e}'.format(val_loss), end='')
 
     def fit(self, X, y):
 
@@ -169,10 +172,14 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
         self.accuracy_history = {'train_acc': [],
                                  'val_acc': []}
 
-    def _store_plot_data(self, packed_coef_inter, X_batch, y_batch, X_val, y_val):
-        super()._store_plot_data(packed_coef_inter, X_batch, y_batch, X_val, y_val)
-        self.accuracy_history['train_acc'].append(self.score(X_batch, y_batch))
-        self.accuracy_history['val_acc'].append(self.score(X_val, y_val))
+    def _store_plot_data(self, packed_coef_inter, loss, X_batch, y_batch, X_val, y_val):
+        super()._store_plot_data(packed_coef_inter, loss, X_batch, y_batch, X_val, y_val)
+        acc = self.score(X_batch, y_batch)
+        self.accuracy_history['train_acc'].append(acc)
+        print('\tacc: {:1.4e}'.format(acc), end='')
+        val_acc = self.score(X_val, y_val)
+        self.accuracy_history['val_acc'].append(val_acc)
+        print('\tval_acc: {:1.4e}'.format(val_acc), end='')
 
     def fit(self, X, y):
         if y.ndim == 1:

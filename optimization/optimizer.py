@@ -54,7 +54,7 @@ class Optimizer:
             self.x1_history.append(self.x[1])
             self.f_x_history.append(self.f_x)
         if callable(self._callback):
-            self._callback(self.x, *args, *self.callback_args)
+            self._callback(self.x, self.f_x, *args, *self.callback_args)
 
     def minimize(self):
         raise NotImplementedError

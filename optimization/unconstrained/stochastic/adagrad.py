@@ -29,8 +29,6 @@ class AdaGrad(StochasticOptimizer):
         for args in self.args:
             self.f_x, g = self.f.function(self.x, *args), self.f.jacobian(self.x, *args)
 
-            self.callback(args)
-
             if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:1.4e}'.format(self.iter, self.f_x), end='')
                 if self.f.f_star() < np.inf:
@@ -38,6 +36,8 @@ class AdaGrad(StochasticOptimizer):
                     if prev_v < np.inf:
                         print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     prev_v = self.f_x
+
+            self.callback(args)
 
             if self.iter >= self.max_iter:
                 status = 'stopped'
