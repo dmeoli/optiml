@@ -26,7 +26,7 @@ class AdaGrad(StochasticOptimizer):
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
 
-        for args in self.args:
+        for args in self.batches:
             self.f_x, g = self.f.function(self.x, *args), self.f.jacobian(self.x, *args)
 
             if self.verbose and not self.iter % self.verbose:

@@ -37,8 +37,8 @@ class Adam(StochasticOptimizer):
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
 
-        for args in self.args:
-            self.f_x, g = self.f.function(self.x, *args), self.f.jacobian(self.x, *args)
+        for batch in self.batches:
+            self.f_x, g = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
 
             if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:1.4e}'.format(self.iter, self.f_x), end='')
@@ -48,7 +48,7 @@ class Adam(StochasticOptimizer):
                         print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     prev_v = self.f_x
 
-            self.callback(args)
+            self.callback(batch)
 
             if self.iter >= self.max_iter:
                 status = 'stopped'
@@ -67,7 +67,7 @@ class Adam(StochasticOptimizer):
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
 
-            g = self.f.jacobian(self.x, *args)
+            g = self.f.jacobian(self.x, *batch)
             self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * g  # update biased 1st moment estimate
             # update biased 2nd raw moment estimate
             self.est_mom2 = self.beta2 * est_mom2_m1 + (1. - self.beta2) * g ** 2

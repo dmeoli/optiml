@@ -42,19 +42,19 @@ class StochasticOptimizer(Optimizer):
         self.step = 0
 
         if batch_size is None:
-            self.args = itertools.repeat(f.args())
+            self.batches = itertools.repeat(f.batches())
         else:
-            n_samples = f.args()[0].shape[0]
+            n_samples = f.batches()[0].shape[0]
             batch_size = np.clip(batch_size, 1, n_samples)
 
-            n_batches, rest = divmod(len(f.args()[0]), batch_size)
+            n_batches, rest = divmod(len(f.batches()[0]), batch_size)
             if rest:
                 n_batches += 1
 
             self.batch_size = n_batches
             self.max_iter *= n_batches
 
-            self.args = (i for i in self.iter_mini_batches())
+            self.batches = (i for i in self.iter_mini_batches())
 
     def iter_mini_batches(self):
         """Return an iterator that successively yields tuples containing aligned
@@ -76,7 +76,7 @@ class StochasticOptimizer(Optimizer):
                 for i in idx:
                     start = i * self.batch_size
                     stop = (i + 1) * self.batch_size
-                    yield [param[slice(start, stop)] for param in self.f.args()]
+                    yield [param[slice(start, stop)] for param in self.f.batches()]
 
     def minimize(self):
         raise NotImplementedError

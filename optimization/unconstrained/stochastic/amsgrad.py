@@ -39,7 +39,7 @@ class AMSGrad(StochasticOptimizer):
 
         est_mom2_crt = 0.
 
-        for args in self.args:
+        for args in self.batches:
             self.f_x, g = self.f.function(self.x, *args), self.f.jacobian(self.x, *args)
 
             if self.verbose and not self.iter % self.verbose:
