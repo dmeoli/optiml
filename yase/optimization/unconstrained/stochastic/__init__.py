@@ -1,4 +1,7 @@
-__all__ = ['StochasticGradientDescent', 'Adam', 'AMSGrad', 'AdaMax', 'AdaGrad', 'AdaDelta', 'RProp', 'RMSProp']
+__all__ = ['StochasticOptimizer',
+           'StochasticGradientDescent', 'Adam', 'AMSGrad', 'AdaMax', 'AdaGrad', 'AdaDelta', 'RProp', 'RMSProp']
+
+from .stochastic_optimizer import StochasticOptimizer
 
 from .stochastic_gradient_descent import StochasticGradientDescent
 from .amsgrad import AMSGrad
