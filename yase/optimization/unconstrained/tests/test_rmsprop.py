@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.stochastic.rmsprop import RMSProp
+from yase.optimization.optimizer import quad2, quad1, Rosenbrock
+from yase.optimization.unconstrained.stochastic import RMSProp
 
 
 def test_RMSProp_quadratic():
@@ -11,8 +11,8 @@ def test_RMSProp_quadratic():
 
 
 def test_RMSProp_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(RMSProp(obj, epochs=1500).minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(RMSProp(rosen, epochs=1500).minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 def test_RMSProp_standard_momentum_quadratic():
@@ -21,8 +21,8 @@ def test_RMSProp_standard_momentum_quadratic():
 
 
 def test_RMSProp_standard_momentum_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(RMSProp(obj, momentum_type='standard').minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(RMSProp(rosen, momentum_type='standard').minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 def test_RMSProp_nesterov_momentum_quadratic():
@@ -31,8 +31,8 @@ def test_RMSProp_nesterov_momentum_quadratic():
 
 
 def test_RMSProp_nesterov_momentum_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(RMSProp(obj, momentum_type='nesterov').minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(RMSProp(rosen, momentum_type='nesterov').minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":

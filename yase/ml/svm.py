@@ -5,14 +5,13 @@ import qpsolvers
 from scipy.optimize import minimize
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 
-from optimization.constrained.box_constrained_optimizer import BoxConstrainedOptimizer
-from optimization.constrained.interface import scipy_solve_qp, scipy_solve_bcqp, solve_qp
-from optimization.constrained.smo import SMORegression, SMOClassifier, SMO
-from optimization.optimization_function import BoxConstrained, LagrangianBoxConstrained
-from optimization.optimizer import Optimizer
-from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
-from optimization.unconstrained.proximal_bundle import ProximalBundle
-from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
+from ..optimization import Optimizer
+from ..optimization.constrained import (SMO, SMOClassifier, SMORegression, BoxConstrainedQuadratic,
+                                        BoxConstrainedOptimizer, LagrangianBoxConstrainedQuadratic)
+from ..optimization.constrained import solve_qp, scipy_solve_qp, scipy_solve_bcqp
+from ..optimization.unconstrained import ProximalBundle
+from ..optimization.unconstrained.line_search import LineSearchOptimizer
+from ..optimization.unconstrained.stochastic import StochasticOptimizer
 
 
 class SVM(BaseEstimator):
@@ -163,7 +162,7 @@ class SVC(ClassifierMixin, SVM):
         A = y.astype(np.float32)  # equality matrix
         ub = np.ones(n_samples) * self.C  # upper bounds
 
-        bcqp = BoxConstrained(P, q, ub)
+        bcqp = BoxConstrainedQuadratic(P, q, ub)
 
         if self.optimizer == SMOClassifier:
 
@@ -184,7 +183,7 @@ class SVC(ClassifierMixin, SVM):
 
         elif issubclass(self.optimizer, Optimizer) or isinstance(self.optimizer, str):
 
-            dual = LagrangianBoxConstrained(bcqp)
+            dual = LagrangianBoxConstrainedQuadratic(bcqp)
 
             if isinstance(self.optimizer, str):  # scipy optimization
 
@@ -312,7 +311,7 @@ class SVR(RegressorMixin, SVM):
         A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
-        bcqp = BoxConstrained(P, q, ub)
+        bcqp = BoxConstrainedQuadratic(P, q, ub)
 
         if self.optimizer == SMORegression:
 
@@ -335,7 +334,7 @@ class SVR(RegressorMixin, SVM):
 
             elif issubclass(self.optimizer, Optimizer) or isinstance(self.optimizer, str):
 
-                dual = LagrangianBoxConstrained(bcqp)
+                dual = LagrangianBoxConstrainedQuadratic(bcqp)
 
                 if isinstance(self.optimizer, str):  # scipy optimization
 

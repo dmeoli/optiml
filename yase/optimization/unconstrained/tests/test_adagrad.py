@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.stochastic.adagrad import AdaGrad
+from yase.optimization.optimizer import quad1, quad2, Rosenbrock
+from yase.optimization.unconstrained.stochastic import AdaGrad
 
 
 def test_AdaGrad_quadratic():
@@ -11,8 +11,8 @@ def test_AdaGrad_quadratic():
 
 
 def test_AdaGrad_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(AdaGrad(obj, step_size=0.1).minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(AdaGrad(rosen, step_size=0.1).minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 def test_AdaGrad_standard_momentum_quadratic():
@@ -21,8 +21,8 @@ def test_AdaGrad_standard_momentum_quadratic():
 
 
 def test_AdaGrad_standard_momentum_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(AdaGrad(obj, momentum_type='standard').minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(AdaGrad(rosen, momentum_type='standard').minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 def test_AdaGrad_nesterov_momentum_quadratic():
@@ -31,8 +31,8 @@ def test_AdaGrad_nesterov_momentum_quadratic():
 
 
 def test_AdaGrad_nesterov_momentum_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(AdaGrad(obj, momentum_type='nesterov').minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(AdaGrad(rosen, momentum_type='nesterov').minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,6 @@ autograd
 cvxpy
 matplotlib
 numpy
-pytest-cov
 qpsolvers
 scikit-learn
 scipy

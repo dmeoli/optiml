@@ -1,8 +1,8 @@
 import numpy as np
 
-from ml.neural_network.initializers import random_uniform
-from optimization.unconstrained.stochastic.schedules import constant
-from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
+from ....ml.neural_network.initializers import random_uniform
+from . import StochasticOptimizer
+from .schedules import constant
 
 
 class StochasticGradientDescent(StochasticOptimizer):

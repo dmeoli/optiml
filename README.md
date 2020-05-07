@@ -67,7 +67,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
     - Constrained Optimization
         - Quadratic Optimization
-            - Box-Constrained Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/optimization/BoxConstrainedMethods.ipynb)
+            - Box-Constrained Quadratic Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/optimization/BoxConstrainedMethods.ipynb)
                 - [x] Projected Gradient
                 - [x] Frank-Wolfe or Conditional Gradient
                 - [x] Active Set
@@ -82,9 +82,9 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - Unconstrained
             - [x] Rosenbrock
             - [x] Quadratic
-                - [x] Lagrangian Box-Constrained
+                - [x] Lagrangian Box-Constrained Quadratic
         - Constrained
-            - [x] Quadratic Box-Constrained
+            - [x] Box-Constrained Quadratic
 
 - Machine Learning Models
     - [x] Support Vector Machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/ml/SupportVectorMachines.ipynb)
@@ -135,6 +135,14 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
 git clone https://github.com/dmeoli/yase
 cd yase
 pip install .
+```
+
+## Test
+
+After installation, you can launch the test suite from outside the source directory:
+
+```
+pytest yase
 ```
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.stochastic.adadelta import AdaDelta
+from yase.optimization.optimizer import quad1, quad2, Rosenbrock
+from yase.optimization.unconstrained.stochastic import AdaDelta
 
 
 def test_AdaDelta_quadratic():
@@ -11,8 +11,8 @@ def test_AdaDelta_quadratic():
 
 
 def test_AdaDelta_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(AdaDelta(obj, step_size=0.1).minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(AdaDelta(rosen, step_size=0.1).minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 def test_AdaDelta_standard_momentum_quadratic():
@@ -21,8 +21,8 @@ def test_AdaDelta_standard_momentum_quadratic():
 
 
 def test_AdaDelta_standard_momentum_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(AdaDelta(obj, momentum_type='standard').minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(AdaDelta(rosen, momentum_type='standard').minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 def test_AdaDelta_nesterov_momentum_quadratic():
@@ -31,8 +31,8 @@ def test_AdaDelta_nesterov_momentum_quadratic():
 
 
 def test_AdaDelta_nesterov_momentum_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(AdaDelta(obj, momentum_type='nesterov').minimize()[0], obj.x_star(), rtol=0.01)
+    rosen = Rosenbrock()
+    assert np.allclose(AdaDelta(rosen, momentum_type='nesterov').minimize()[0], rosen.x_star(), rtol=0.01)
 
 
 if __name__ == "__main__":

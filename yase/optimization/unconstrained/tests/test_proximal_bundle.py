@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.proximal_bundle import ProximalBundle
+from yase.optimization.optimizer import quad1, quad2, Rosenbrock
+from yase.optimization.unconstrained import ProximalBundle
 
 
 def test_quadratic():
@@ -11,8 +11,8 @@ def test_quadratic():
 
 
 def test_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(ProximalBundle(obj).minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(ProximalBundle(rosen).minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 def test_standard_momentum_quadratic():
@@ -21,9 +21,9 @@ def test_standard_momentum_quadratic():
 
 
 def test_standard_momentum_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(ProximalBundle(obj, momentum_type='standard', momentum=0.8, max_iter=2000).minimize()[0],
-                       obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(ProximalBundle(rosen, momentum_type='standard', momentum=0.8, max_iter=2000).minimize()[0],
+                       rosen.x_star(), rtol=0.1)
 
 
 def test_Nesterov_momentum_quadratic():
@@ -34,9 +34,9 @@ def test_Nesterov_momentum_quadratic():
 
 
 def test_Nesterov_momentum_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(ProximalBundle(obj, momentum_type='nesterov', momentum=0.4).minimize()[0],
-                       obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(ProximalBundle(rosen, momentum_type='nesterov', momentum=0.4).minimize()[0],
+                       rosen.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":

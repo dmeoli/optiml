@@ -1,8 +1,8 @@
 import numpy as np
 
-from ml.neural_network.initializers import glorot_uniform, zeros
-from ml.neural_network.activations import Activation, linear
-from ml.neural_network.regularizers import l2
+from .activations import Activation, linear
+from .initializers import glorot_uniform, zeros
+from .regularizers import l2
 
 
 class Layer:

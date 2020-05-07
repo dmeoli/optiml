@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-from ml.svm import SVC, SVR
+from yase.ml.svm import SVC, SVR
 
 
 def test_svr():

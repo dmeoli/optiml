@@ -1,13 +1,12 @@
 import numpy as np
 import pytest
 
-from optimization.constrained.projected_gradient import ProjectedGradient
-from optimization.optimization_function import BoxConstrained
+from yase.optimization.constrained import ProjectedGradient, BoxConstrainedQuadratic
 
 
 def test():
     np.random.seed(2)
-    assert np.allclose(ProjectedGradient(BoxConstrained(ndim=2)).minimize()[0], 0.)
+    assert np.allclose(ProjectedGradient(BoxConstrainedQuadratic(ndim=2)).minimize()[0], 0.)
 
 
 if __name__ == "__main__":

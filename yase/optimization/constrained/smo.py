@@ -3,7 +3,7 @@ import warnings
 
 import numpy as np
 
-from optimization.utils import clip
+from ..utils import clip
 
 
 class SMO:

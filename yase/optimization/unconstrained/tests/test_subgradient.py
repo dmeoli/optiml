@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.line_search.subgradient import Subgradient
+from yase.optimization.optimizer import quad1, quad2, Rosenbrock
+from yase.optimization.unconstrained.line_search import Subgradient
 
 
 def test_quadratic():
@@ -11,8 +11,8 @@ def test_quadratic():
 
 
 def test_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(Subgradient(obj, a_start=0.052).minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(Subgradient(rosen, a_start=0.052).minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":

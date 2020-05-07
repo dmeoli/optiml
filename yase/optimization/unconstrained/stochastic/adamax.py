@@ -2,8 +2,8 @@ import warnings
 
 import numpy as np
 
-from ml.neural_network.initializers import random_uniform
-from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
+from ....ml.neural_network.initializers import random_uniform
+from . import StochasticOptimizer
 
 
 class AdaMax(StochasticOptimizer):

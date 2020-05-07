@@ -1,12 +1,12 @@
 from sklearn.datasets import fetch_openml
 from sklearn.metrics import classification_report
 
-from ml.neural_network.activations import linear, softmax
-from ml.neural_network.layers import Conv2D, MaxPool2D, Flatten, FullyConnected
-from ml.neural_network.losses import sparse_categorical_cross_entropy
-from ml.neural_network.neural_network import NeuralNetworkClassifier
-from ml.utils import plot_model_loss, plot_model_accuracy
-from optimization.unconstrained.stochastic.adam import Adam
+from .neural_network import NeuralNetworkClassifier
+from .neural_network.activations import softmax, linear
+from .neural_network.layers import Conv2D, MaxPool2D, Flatten, FullyConnected
+from .neural_network.losses import sparse_categorical_cross_entropy
+from .utils import plot_model_loss, plot_model_accuracy
+from ..optimization.unconstrained.stochastic import Adam
 
 if __name__ == '__main__':
     # ub = np.array([11.2588947455727,

@@ -5,9 +5,13 @@ python:
   - 3.7
   - 3.8
 
-install:
+before_install:
   - pip install --upgrade -r requirements.txt
+  - pip install pytest-cov
   - pip install coveralls
+
+install:
+  - pip install .
 
 script:
   - pytest --cov=./

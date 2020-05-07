@@ -1,9 +1,8 @@
 import numpy as np
 import pytest
 
-from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.line_search.conjugate_gradient import NonlinearConjugateGradient, \
-    QuadraticConjugateGradient
+from yase.optimization.optimizer import quad2, quad1, Rosenbrock
+from yase.optimization.unconstrained.line_search import QuadraticConjugateGradient, NonlinearConjugateGradient
 
 
 def test_QuadraticConjugateGradient():
@@ -17,8 +16,8 @@ def test_NonlinearConjugateGradient_quadratic_FletcherReeves():
 
 
 def test_NonlinearConjugateGradient_Rosenbrock_FletcherReeves():
-    obj = Rosenbrock()
-    assert np.allclose(NonlinearConjugateGradient(obj, wf=0).minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(NonlinearConjugateGradient(rosen, wf=0).minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 def test_NonlinearConjugateGradient_quadratic_PolakRibiere():
@@ -27,8 +26,8 @@ def test_NonlinearConjugateGradient_quadratic_PolakRibiere():
 
 
 def test_NonlinearConjugateGradient_Rosenbrock_PolakRibiere():
-    obj = Rosenbrock()
-    assert np.allclose(NonlinearConjugateGradient(obj, wf=1).minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(NonlinearConjugateGradient(rosen, wf=1).minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 def test_NonlinearConjugateGradient_quadratic_HestenesStiefel():
@@ -37,8 +36,8 @@ def test_NonlinearConjugateGradient_quadratic_HestenesStiefel():
 
 
 def test_NonlinearConjugateGradient_Rosenbrock_HestenesStiefel():
-    obj = Rosenbrock()
-    assert np.allclose(NonlinearConjugateGradient(obj, wf=2, r_start=1).minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(NonlinearConjugateGradient(rosen, wf=2, r_start=1).minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 def test_NonlinearConjugateGradient_quadratic_DaiYuan():
@@ -47,8 +46,8 @@ def test_NonlinearConjugateGradient_quadratic_DaiYuan():
 
 
 def test_NonlinearConjugateGradient_Rosenbrock_DaiYuan():
-    obj = Rosenbrock()
-    assert np.allclose(NonlinearConjugateGradient(obj, wf=3).minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(NonlinearConjugateGradient(rosen, wf=3).minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":

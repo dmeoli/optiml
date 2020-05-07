@@ -1,10 +1,10 @@
 import autograd.numpy as np
 from scipy.special import xlogy
 
-from ml.neural_network.activations import Linear
-from ml.neural_network.layers import ParamLayer
-from ml.neural_network.regularizers import L2
-from optimization.optimization_function import OptimizationFunction
+from .activations import Linear
+from .layers import ParamLayer
+from .regularizers import L2
+from ...optimization import OptimizationFunction
 
 
 class LossFunction(OptimizationFunction):

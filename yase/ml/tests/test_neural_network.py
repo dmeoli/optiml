@@ -4,12 +4,12 @@ from sklearn.datasets import load_iris, load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-from ml.neural_network.activations import sigmoid, softmax, linear, tanh
-from ml.neural_network.layers import FullyConnected
-from ml.neural_network.losses import mean_squared_error, sparse_categorical_cross_entropy
-from ml.neural_network.neural_network import NeuralNetworkRegressor, NeuralNetworkClassifier
-from optimization.unconstrained.line_search import BFGS
-from optimization.unconstrained.stochastic import Adam
+from yase.ml.neural_network.activations import sigmoid, softmax, linear, tanh
+from yase.ml.neural_network.layers import FullyConnected
+from yase.ml.neural_network.losses import mean_squared_error, sparse_categorical_cross_entropy
+from yase.ml.neural_network import NeuralNetworkRegressor, NeuralNetworkClassifier
+from yase.optimization.unconstrained.line_search import BFGS
+from yase.optimization.unconstrained.stochastic import Adam
 
 
 def test_perceptron_regressor():

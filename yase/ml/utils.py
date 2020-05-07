@@ -9,7 +9,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.svm import SVC as SKLSVC
 from sklearn.svm import SVR as SKLSVR
 
-from ml.svm import SVM, SVC, SVR
+from .svm import SVM, SVC, SVR
 
 
 # metrics

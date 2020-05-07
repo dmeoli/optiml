@@ -3,8 +3,8 @@ import itertools
 import numpy as np
 from sklearn.utils import shuffle
 
-from ml.neural_network.initializers import random_uniform
-from optimization.optimizer import Optimizer
+from ....ml.neural_network.initializers import random_uniform
+from ... import Optimizer
 
 
 class StochasticOptimizer(Optimizer):

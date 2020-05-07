@@ -1,7 +1,7 @@
 import numpy as np
 
-from ml.neural_network.initializers import random_uniform
-from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
+from ....ml.neural_network.initializers import random_uniform
+from . import LineSearchOptimizer
 
 
 class Subgradient(LineSearchOptimizer):

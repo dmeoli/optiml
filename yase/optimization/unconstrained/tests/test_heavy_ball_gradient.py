@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.line_search.heavy_ball_gradient import HeavyBallGradient
+from yase.optimization.optimizer import quad2, quad1, Rosenbrock
+from yase.optimization.unconstrained.line_search import HeavyBallGradient
 
 
 def test_quadratic():
@@ -11,8 +11,8 @@ def test_quadratic():
 
 
 def test_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(HeavyBallGradient(obj).minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(HeavyBallGradient(rosen).minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":

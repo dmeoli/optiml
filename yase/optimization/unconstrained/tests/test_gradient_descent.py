@@ -1,8 +1,9 @@
+import numpy as np
 import pytest
 
-from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.line_search.steepest_gradient_descent import *
-from optimization.unconstrained.stochastic.stochastic_gradient_descent import StochasticGradientDescent
+from yase.optimization.optimizer import quad2, quad1, Rosenbrock
+from yase.optimization.unconstrained.line_search import QuadraticSteepestGradientDescent, SteepestGradientDescent
+from yase.optimization.unconstrained.stochastic import StochasticGradientDescent
 
 
 def test_QuadraticSteepestGradientDescent():
@@ -16,8 +17,8 @@ def test_SteepestGradientDescent_quadratic():
 
 
 def test_SteepestGradientDescent_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(SteepestGradientDescent(obj).minimize()[0], obj.x_star())
+    rosen = Rosenbrock()
+    assert np.allclose(SteepestGradientDescent(rosen).minimize()[0], rosen.x_star())
 
 
 def test_GradientDescent_quadratic():
@@ -26,8 +27,8 @@ def test_GradientDescent_quadratic():
 
 
 def test_GradientDescent_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(StochasticGradientDescent(obj).minimize()[0], obj.x_star(), rtol=0.1)
+    rosen = Rosenbrock()
+    assert np.allclose(StochasticGradientDescent(rosen).minimize()[0], rosen.x_star(), rtol=0.1)
 
 
 def test_GradientDescent_standard_momentum_quadratic():
@@ -36,8 +37,8 @@ def test_GradientDescent_standard_momentum_quadratic():
 
 
 def test_GradientDescent_standard_momentum_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(StochasticGradientDescent(obj, momentum_type='standard').minimize()[0], obj.x_star())
+    rosen = Rosenbrock()
+    assert np.allclose(StochasticGradientDescent(rosen, momentum_type='standard').minimize()[0], rosen.x_star())
 
 
 def test_GradientDescent_Nesterov_momentum_quadratic():
@@ -46,8 +47,8 @@ def test_GradientDescent_Nesterov_momentum_quadratic():
 
 
 def test_GradientDescent_Nesterov_momentum_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(StochasticGradientDescent(obj, momentum_type='nesterov').minimize()[0], obj.x_star())
+    rosen = Rosenbrock()
+    assert np.allclose(StochasticGradientDescent(rosen, momentum_type='nesterov').minimize()[0], rosen.x_star())
 
 
 if __name__ == "__main__":

@@ -1,8 +1,8 @@
 import numpy as np
 from cvxpy import Variable, Problem, Minimize, sum_squares
 
-from ml.neural_network.initializers import random_uniform
-from optimization.unconstrained.line_search.line_search_optimizer import Optimizer
+from ...ml.neural_network.initializers import random_uniform
+from .. import Optimizer
 
 
 class ProximalBundle(Optimizer):

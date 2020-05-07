@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from optimization.optimization_function import quad1, quad2, Rosenbrock
-from optimization.unconstrained.line_search.newton import Newton
+from yase.optimization.optimizer import quad1, quad2, Rosenbrock
+from yase.optimization.unconstrained.line_search import Newton
 
 
 def test_quadratic():
@@ -11,8 +11,8 @@ def test_quadratic():
 
 
 def test_Rosenbrock():
-    obj = Rosenbrock()
-    assert np.allclose(Newton(obj).minimize()[0], obj.x_star())
+    rosen = Rosenbrock()
+    assert np.allclose(Newton(rosen).minimize()[0], rosen.x_star())
 
 
 if __name__ == "__main__":

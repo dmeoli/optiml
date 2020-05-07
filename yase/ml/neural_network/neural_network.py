@@ -6,15 +6,14 @@ from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
-from ml.neural_network.activations import sigmoid, linear, softmax
-from ml.neural_network.initializers import compute_fans
-from ml.neural_network.layers import Layer, ParamLayer
-from ml.neural_network.losses import (CategoricalCrossEntropy, SparseCategoricalCrossEntropy,
-                                      MeanSquaredError, BinaryCrossEntropy, mean_squared_error)
-from optimization.unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
-from optimization.unconstrained.proximal_bundle import ProximalBundle
-from optimization.unconstrained.stochastic.stochastic_gradient_descent import StochasticGradientDescent
-from optimization.unconstrained.stochastic.stochastic_optimizer import StochasticOptimizer
+from .activations import sigmoid, linear, softmax
+from .initializers import compute_fans
+from .layers import Layer, ParamLayer
+from .losses import (CategoricalCrossEntropy, SparseCategoricalCrossEntropy,
+                     MeanSquaredError, BinaryCrossEntropy, mean_squared_error)
+from ...optimization.unconstrained import ProximalBundle
+from ...optimization.unconstrained.line_search import LineSearchOptimizer
+from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
 
 
 class NeuralNetwork(BaseEstimator, Layer):

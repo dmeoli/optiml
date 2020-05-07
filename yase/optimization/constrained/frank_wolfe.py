@@ -1,6 +1,6 @@
 import numpy as np
 
-from optimization.constrained.box_constrained_optimizer import BoxConstrainedOptimizer
+from . import BoxConstrainedOptimizer
 
 
 class FrankWolfe(BoxConstrainedOptimizer):
