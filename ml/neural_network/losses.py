@@ -65,7 +65,7 @@ class MeanSquaredError(LossFunction):
                 not self.neural_net.layers[-1].fit_intercept):
             if not hasattr(self, 'x_opt'):
                 if self.neural_net.layers[-1].coef_reg.lmbda == 0.:
-                    self.x_opt = np.linalg.lstsq(self.X, self.y, rcond=None)[0]
+                    self.x_opt = np.linalg.inv(self.X.T.dot(self.X)).dot(self.X.T).dot(self.y)
                 else:
                     self.x_opt = np.linalg.inv(self.X.T.dot(self.X) + np.identity(self.ndim) *
                                                self.neural_net.layers[-1].coef_reg.lmbda).dot(self.X.T).dot(self.y)
