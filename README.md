@@ -129,7 +129,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Xavier or Glorot normal and uniform
             - [x] He normal and uniform
 
-# Install
+## Install
 
 ```
 git clone https://github.com/dmeoli/yase

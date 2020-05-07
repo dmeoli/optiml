@@ -20,7 +20,8 @@ def test_perceptron_regressor():
                                  loss=mean_squared_error, optimizer=BFGS)
     net.fit(X_train, y_train)
     assert net.score(X_test, y_test) >= 0.5
-    assert np.allclose(net.coefs_[0].ravel(), np.linalg.lstsq(X_train, y_train)[0], rtol=0.1)
+    assert np.allclose(net.coefs_[0].ravel(),
+                       np.linalg.inv(X_train.T.dot(X_train)).dot(X_train.T).dot(y_train), rtol=0.1)
 
 
 def test_neural_network_regressor():
