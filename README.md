@@ -97,11 +97,13 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] laplacian kernel
             - [x] sigmoid kernel
     - [x] Neural Networks
+        - [x] Neural Network Classifier
+        - [x] Neural Network Regressor
         - Losses
             - [x] Mean Squared Error
+            - [x] Binary Cross Entropy
             - [x] Categorical Cross Entropy
             - [x] Sparse Categorical Cross Entropy
-            - [x] Binary Cross Entropy
         - Regularizers
             - [x] L1 or Lasso
             - [x] L2 or Ridge or Tikhonov
