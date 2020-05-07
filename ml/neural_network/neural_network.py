@@ -135,18 +135,24 @@ class NeuralNetwork(BaseEstimator, Layer):
                            options={'disp': self.verbose,
                                     'maxiter': self.max_iter,
                                     'maxfun': self.max_f_eval})
+
             if res.status != 0:
                 warnings.warn('max_iter reached but the optimization has not converged yet')
+
             self._unpack(res.x)
         else:
             if issubclass(self.optimizer, LineSearchOptimizer):
+
                 self.loss = self.loss(self, X, y)
                 self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
                                                 max_f_eval=self.max_f_eval, verbose=self.verbose)
                 res = self.optimizer.minimize()
+
                 if res[2] != 'optimal':
                     warnings.warn('max_iter reached but the optimization has not converged yet')
+
             elif issubclass(self.optimizer, StochasticOptimizer):
+
                 # don't stratify in multi-label classification # TODO fix multi-label case
                 n_classes = y.shape[1] if isinstance(self.loss, CategoricalCrossEntropy) else np.unique(y).size
                 should_stratify = isinstance(self, NeuralNetworkClassifier) and n_classes == 2
@@ -161,14 +167,17 @@ class NeuralNetwork(BaseEstimator, Layer):
                                                 shuffle=self.shuffle, random_state=self.random_state,
                                                 verbose=self.verbose)
                 res = self.optimizer.minimize()
+
             elif issubclass(self.optimizer, ProximalBundle):
+
                 self.loss = self.loss(self, X, y)
                 self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
                                                 master_solver=self.master_solver, momentum_type=self.momentum_type,
                                                 momentum=self.momentum, verbose=self.verbose)
                 res = self.optimizer.minimize()
+
             else:
-                raise ValueError(f'unknown optimizer {type(self.optimizer).__name__}')
+                raise ValueError(f'unknown optimizer {self.optimizer}')
 
             self._unpack(res[0])
 

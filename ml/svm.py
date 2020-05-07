@@ -165,89 +165,95 @@ class SVC(ClassifierMixin, SVM):
 
         bcqp = BoxConstrained(P, q, ub)
 
-        if self.optimizer in (SMOClassifier, scipy_solve_bcqp):
+        if self.optimizer == SMOClassifier:
 
-            if self.optimizer == SMOClassifier:
-                smo = SMOClassifier(bcqp, X, y, K, self.kernel, self.C, self.tol, self.verbose).minimize()
-                alphas = smo.alphas
-                if self.kernel == 'linear':
-                    self.coef_ = smo.w
-                self.intercept_ = smo.b
+            smo = SMOClassifier(bcqp, X, y, K, self.kernel, self.C, self.tol, self.verbose).minimize()
+            alphas = smo.alphas
+            if self.kernel == 'linear':
+                self.coef_ = smo.w
+            self.intercept_ = smo.b
+
+        elif issubclass(self.optimizer, BoxConstrainedOptimizer):
+
+            self.optimizer = self.optimizer(f=bcqp, max_iter=self.max_iter, verbose=self.verbose)
+            alphas = self.optimizer.minimize()[0]
+
+        elif self.optimizer == scipy_solve_bcqp:
+
+            alphas = scipy_solve_bcqp(bcqp, A, ub, self.max_iter, self.verbose)
+
+        elif issubclass(self.optimizer, Optimizer) or isinstance(self.optimizer, str):
+
+            dual = LagrangianBoxConstrained(bcqp)
+
+            if isinstance(self.optimizer, str):  # scipy optimization
+
+                method = self.optimizer
+                if dual.ndim == 2:
+                    self.optimizer = {'x0_history': [],
+                                      'x1_history': [],
+                                      'f_x_history': []}
+
+                def _save_opt_steps(x):
+                    if dual.ndim == 2:
+                        self.optimizer['x0_history'].append(x[0])
+                        self.optimizer['x1_history'].append(x[1])
+                        self.optimizer['f_x_history'].append(dual.function(x))
+
+                res = minimize(fun=dual.function, jac=dual.jacobian,
+                               x0=np.zeros(dual.ndim), method=method,
+                               callback=_save_opt_steps,
+                               options={'disp': self.verbose,
+                                        'maxiter': self.max_iter,
+                                        'maxfun': self.max_f_eval})
+
+                if res.status != 0:
+                    warnings.warn('max_iter reached but the optimization has not converged yet')
+
+            elif issubclass(self.optimizer, LineSearchOptimizer):
+
+                self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
+                                                verbose=self.verbose)
+                res = self.optimizer.minimize()
+
+                if res[2] != 'optimal':
+                    warnings.warn('max_iter reached but the optimization has not converged yet')
+
+            elif issubclass(self.optimizer, StochasticOptimizer):
+
+                self.optimizer = self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
+                                                momentum_type=self.momentum_type, momentum=self.momentum,
+                                                verbose=self.verbose)
+                self.optimizer.minimize()
+
+            elif issubclass(self.optimizer, ProximalBundle):
+
+                self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter,
+                                                master_solver=self.master_solver,
+                                                momentum_type=self.momentum_type, momentum=self.momentum,
+                                                verbose=self.verbose)
+                self.optimizer.minimize()
+
+            alphas = dual.primal_solution
+
+        elif self.optimizer in (solve_qp, scipy_solve_qp):
+
+            G = np.vstack((-np.identity(n_samples), np.identity(n_samples)))  # inequality matrix
+            lb = np.zeros(n_samples)  # lower bounds
+            h = np.hstack((lb, ub))  # inequality vector
+
+            b = np.zeros(1)  # equality vector
+
+            if self.optimizer == solve_qp:
+                qpsolvers.cvxopt_.options['show_progress'] = self.verbose
+                alphas = solve_qp(bcqp, G, h, A, b, solver=self.master_solver)
 
             else:
-                alphas = scipy_solve_bcqp(bcqp, A, ub, self.max_iter, self.verbose)
+                alphas = scipy_solve_qp(bcqp, G, h, A, b, self.max_iter, self.verbose)
 
         else:
 
-            if self.optimizer in (solve_qp, scipy_solve_qp):
-                G = np.vstack((-np.identity(n_samples), np.identity(n_samples)))  # inequality matrix
-                lb = np.zeros(n_samples)  # lower bounds
-                h = np.hstack((lb, ub))  # inequality vector
-
-                b = np.zeros(1)  # equality vector
-
-                if self.optimizer == solve_qp:
-                    qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-                    alphas = solve_qp(bcqp, G, h, A, b, solver=self.master_solver)
-
-                else:
-                    alphas = scipy_solve_qp(bcqp, G, h, A, b, self.max_iter, self.verbose)
-
-            elif issubclass(self.optimizer, BoxConstrainedOptimizer):
-                self.optimizer = self.optimizer(f=bcqp, max_iter=self.max_iter, verbose=self.verbose)
-                alphas = self.optimizer.minimize()[0]
-
-            else:
-                dual = LagrangianBoxConstrained(bcqp)
-
-                if isinstance(self.optimizer, str):  # scipy optimization
-                    self.loss = self.loss(self, X, y)
-
-                    method = self.optimizer
-                    if self.loss.ndim == 2:
-                        self.optimizer = {'x0_history': [],
-                                          'x1_history': [],
-                                          'f_x_history': []}
-
-                    def _save_opt_steps(x):
-                        if self.loss.ndim == 2:
-                            self.optimizer['x0_history'].append(x[0])
-                            self.optimizer['x1_history'].append(x[1])
-                            self.optimizer['f_x_history'].append(self.loss.function(x))
-
-                    res = minimize(fun=dual.function, jac=dual.jacobian,
-                                   x0=np.zeros(dual.ndim), method=method,
-                                   callback=_save_opt_steps,
-                                   options={'disp': self.verbose,
-                                            'maxiter': self.max_iter,
-                                            'maxfun': self.max_f_eval})
-                    if res.status != 0:
-                        warnings.warn('max_iter reached but the optimization has not converged yet')
-
-                elif issubclass(self.optimizer, LineSearchOptimizer):
-                    self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
-                                                    verbose=self.verbose)
-                    res = self.optimizer.minimize()
-                    if res[2] != 'optimal':
-                        warnings.warn('max_iter reached but the optimization has not converged yet')
-
-                elif issubclass(self.optimizer, StochasticOptimizer):
-                    self.optimizer = self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
-                                                    momentum_type=self.momentum_type, momentum=self.momentum,
-                                                    verbose=self.verbose)
-                    self.optimizer.minimize()
-
-                elif issubclass(self.optimizer, ProximalBundle):
-                    self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter,
-                                                    master_solver=self.master_solver,
-                                                    momentum_type=self.momentum_type, momentum=self.momentum,
-                                                    verbose=self.verbose)
-                    self.optimizer.minimize()
-
-                else:
-                    raise ValueError(f'unknown optimizer {self.optimizer}')
-
-                alphas = dual.primal_solution
+            raise ValueError(f'unknown optimizer {self.optimizer}')
 
         sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
@@ -308,23 +314,80 @@ class SVR(RegressorMixin, SVM):
 
         bcqp = BoxConstrained(P, q, ub)
 
-        if self.optimizer in (SMORegression, scipy_solve_bcqp):
+        if self.optimizer == SMORegression:
 
-            if self.optimizer == SMORegression:
-                smo = SMORegression(bcqp, X, y, K, self.kernel, self.C, self.epsilon, self.tol, self.verbose).minimize()
-                alphas_p, alphas_n = smo.alphas_p, smo.alphas_n
-                if self.kernel == 'linear':
-                    self.coef_ = smo.w
-                self.intercept_ = smo.b
-
-            else:
-                alphas = scipy_solve_bcqp(bcqp, A, ub, self.max_iter, self.verbose)
-                alphas_p = alphas[:n_samples]
-                alphas_n = alphas[n_samples:]
+            smo = SMORegression(bcqp, X, y, K, self.kernel, self.C, self.epsilon, self.tol, self.verbose).minimize()
+            alphas_p, alphas_n = smo.alphas_p, smo.alphas_n
+            if self.kernel == 'linear':
+                self.coef_ = smo.w
+            self.intercept_ = smo.b
 
         else:
 
-            if self.optimizer in (solve_qp, scipy_solve_qp):
+            if issubclass(self.optimizer, BoxConstrainedOptimizer):
+
+                self.optimizer = self.optimizer(f=bcqp, max_iter=self.max_iter, verbose=self.verbose)
+                alphas = self.optimizer.minimize()[0]
+
+            elif self.optimizer == scipy_solve_bcqp:
+
+                alphas = scipy_solve_bcqp(bcqp, A, ub, self.max_iter, self.verbose)
+
+            elif issubclass(self.optimizer, Optimizer) or isinstance(self.optimizer, str):
+
+                dual = LagrangianBoxConstrained(bcqp)
+
+                if isinstance(self.optimizer, str):  # scipy optimization
+
+                    method = self.optimizer
+                    if dual.ndim == 2:
+                        self.optimizer = {'x0_history': [],
+                                          'x1_history': [],
+                                          'f_x_history': []}
+
+                    def _save_opt_steps(x):
+                        if dual.ndim == 2:
+                            self.optimizer['x0_history'].append(x[0])
+                            self.optimizer['x1_history'].append(x[1])
+                            self.optimizer['f_x_history'].append(dual.function(x))
+
+                    res = minimize(fun=dual.function, jac=dual.jacobian,
+                                   x0=np.zeros(dual.ndim), method=method,
+                                   callback=_save_opt_steps,
+                                   options={'disp': self.verbose,
+                                            'maxiter': self.max_iter,
+                                            'maxfun': self.max_f_eval})
+
+                    if res.status != 0:
+                        warnings.warn('max_iter reached but the optimization has not converged yet')
+
+                elif issubclass(self.optimizer, LineSearchOptimizer):
+
+                    self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
+                                                    verbose=self.verbose)
+                    res = self.optimizer.minimize()
+
+                    if res[2] != 'optimal':
+                        warnings.warn('max_iter reached but the optimization has not converged yet')
+
+                elif issubclass(self.optimizer, StochasticOptimizer):
+
+                    self.optimizer = self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
+                                                    momentum_type=self.momentum_type, momentum=self.momentum,
+                                                    verbose=self.verbose)
+                    self.optimizer.minimize()
+
+                elif issubclass(self.optimizer, ProximalBundle):
+
+                    self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, master_solver=self.master_solver,
+                                                    momentum_type=self.momentum_type, momentum=self.momentum,
+                                                    verbose=self.verbose)
+                    self.optimizer.minimize()
+
+                alphas = dual.primal_solution
+
+            elif self.optimizer in (solve_qp, scipy_solve_qp):
+
                 G = np.vstack((-np.identity(2 * n_samples), np.identity(2 * n_samples)))  # inequality matrix
                 lb = np.zeros(2 * n_samples)  # lower bounds
                 h = np.hstack((lb, ub))  # inequality vector
@@ -338,33 +401,9 @@ class SVR(RegressorMixin, SVM):
                 else:
                     alphas = scipy_solve_qp(bcqp, G, h, A, b, self.max_iter, self.verbose)
 
-            elif issubclass(self.optimizer, BoxConstrainedOptimizer):
-                self.optimizer = self.optimizer(f=bcqp, max_iter=self.max_iter, verbose=self.verbose)
-                alphas = self.optimizer.minimize()[0]
-
             else:
-                dual = LagrangianBoxConstrained(bcqp)
 
-                if issubclass(self.optimizer, LineSearchOptimizer):
-                    self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
-                                                    verbose=self.verbose)
-                    res = self.optimizer.minimize()
-                    if res[2] != 'optimal':
-                        warnings.warn('max_iter reached but the optimization has not converged yet')
-                elif issubclass(self.optimizer, StochasticOptimizer):
-                    self.optimizer = self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
-                                                    momentum_type=self.momentum_type, momentum=self.momentum,
-                                                    verbose=self.verbose)
-                    self.optimizer.minimize()
-                elif issubclass(self.optimizer, ProximalBundle):
-                    self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, master_solver=self.master_solver,
-                                                    momentum_type=self.momentum_type, momentum=self.momentum,
-                                                    verbose=self.verbose)
-                    self.optimizer.minimize()
-                else:
-                    raise ValueError(f'unknown optimizer {self.optimizer}')
-
-                alphas = dual.primal_solution
+                raise ValueError(f'unknown optimizer {self.optimizer}')
 
             alphas_p = alphas[:n_samples]
             alphas_n = alphas[n_samples:]
