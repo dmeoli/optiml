@@ -116,9 +116,22 @@ class NeuralNetwork(BaseEstimator, Layer):
 
         if isinstance(self.optimizer, str):  # scipy optimization
             self.loss = self.loss(self, X, y)
-            res = minimize(fun=self.loss.function, jac=self.loss.jacobian, args=self.loss.args(),
-                           x0=packed_coef_inter, method=self.optimizer,
-                           # TODO add callback to save xi if f.ndim == 2
+
+            method = self.optimizer
+            if self.loss.ndim == 2:
+                self.optimizer = {'x0_history': [],
+                                  'x1_history': [],
+                                  'f_x_history': []}
+
+            def _save_opt_steps(x):
+                if self.loss.ndim == 2:
+                    self.optimizer['x0_history'].append(x[0])
+                    self.optimizer['x1_history'].append(x[1])
+                    self.optimizer['f_x_history'].append(self.loss.function(x))
+
+            res = minimize(fun=self.loss.function, jac=self.loss.jacobian,
+                           x0=packed_coef_inter, method=method,
+                           callback=_save_opt_steps,
                            options={'disp': self.verbose,
                                     'maxiter': self.max_iter,
                                     'maxfun': self.max_f_eval})
