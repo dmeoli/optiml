@@ -129,7 +129,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Xavier or Glorot normal and uniform
             - [x] He normal and uniform
 
-## Install
+## Installation
 
 ```
 git clone https://github.com/dmeoli/yase
@@ -137,7 +137,7 @@ cd yase
 pip install .
 ```
 
-## Test
+## Testing
 
 After installation, you can launch the test suite from outside the source directory:
 
