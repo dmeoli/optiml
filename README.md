@@ -67,7 +67,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
     - Constrained Optimization
         - Quadratic Optimization
-            - Box-Constrained Quadratic Optimization Methods
+            - Box-Constrained Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/BoxConstrainedMethods.ipynb)
                 - [x] Projected Gradient
                 - [x] Frank-Wolfe or Conditional Gradient
                 - [x] Active Set
