@@ -9,7 +9,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
 
 - Numerical Optimization
     - Unconstrained Optimization
-        - Line Search Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/LineSearchMethods.ipynb)
+        - Line Search Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/optimization/LineSearchMethods.ipynb)
             - Exact Line Search Methods
                 - [x] Quadratic Steepest Gradient Descent
                 - [x] Quadratic Conjugate Gradient
@@ -34,7 +34,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
                     - Quasi-Newton
                         - [x] BFGS
                         - [ ] L-BFGS
-        - Stochastic Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/StochasticMethods.ipynb)
+        - Stochastic Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/optimization/StochasticMethods.ipynb)
             - [x] Stochastic Gradient Descent
                 - [x] standard momentum
                 - [x] Nesterov momentum
@@ -67,7 +67,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
     - Constrained Optimization
         - Quadratic Optimization
-            - Box-Constrained Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/BoxConstrainedMethods.ipynb)
+            - Box-Constrained Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/optimization/BoxConstrainedMethods.ipynb)
                 - [x] Projected Gradient
                 - [x] Frank-Wolfe or Conditional Gradient
                 - [x] Active Set
@@ -87,7 +87,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Quadratic Box-Constrained
 
 - Machine Learning Models
-    - [x] Support Vector Machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/SupportVectorMachines.ipynb)
+    - [x] Support Vector Machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/ml/SupportVectorMachines.ipynb)
         - [x] Support Vector Classifier
         - [x] Support Vector Regression
         - Kernels
@@ -114,7 +114,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] SoftMax
         - Layers
             - [x] Fully Connected
-            - [x] Convolutional [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/ConvolutionalNeuralNetworks.ipynb)
+            - [x] Convolutional [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/ml/ConvolutionalNeuralNetworks.ipynb)
                 - [x] Conv 2D
                 - [x] Max Pooling
                 - [x] Avg Pooling
