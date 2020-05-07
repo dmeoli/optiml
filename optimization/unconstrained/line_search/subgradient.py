@@ -143,7 +143,7 @@ class Subgradient(LineSearchOptimizer):
                     if prev_v < np.inf:
                         print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
-                        print('\t\t\t', end='')
+                        print('\t\t', end='')
                     prev_v = self.f_x
 
             # stopping criteria

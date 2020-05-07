@@ -281,7 +281,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                     if prev_v < np.inf:
                         print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
-                        print('\t\t\t', end='')
+                        print('\t\t', end='')
                     prev_v = self.f_x
 
             # stopping criteria
@@ -297,7 +297,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
             if self.iter == 0:  # first iteration is off-line, standard gradient
                 d = -g
                 if self.verbose and not self.iter % self.verbose:
-                    print('\t\t', end='')
+                    print('\t', end='')
             else:  # normal iterations, use appropriate formula
                 if self.r_start > 0 and self.iter % self.f.ndim * self.r_start == 0:
                     # ... unless a restart is being performed

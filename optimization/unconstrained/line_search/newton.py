@@ -126,7 +126,7 @@ class Newton(LineSearchOptimizer):
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
-            print('\t\tls\tit\ta*\t\t\tdelta', end='')
+            print('\t\tdelta\t\tls\tit\ta*', end='')
 
         while True:
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
@@ -147,7 +147,7 @@ class Newton(LineSearchOptimizer):
                     if prev_v < np.inf:
                         print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
-                        print('\t\t\t', end='')
+                        print('\t\t', end='')
                     prev_v = self.f_x
 
             # stopping criteria

@@ -128,7 +128,7 @@ class BFGS(LineSearchOptimizer):
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
                 prev_v = np.inf
-            print('\tls\tit\ta*\t\t\trho', end='')
+            print('\tls\tit\ta*\t\trho', end='')
 
         while True:
             self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
@@ -161,13 +161,13 @@ class BFGS(LineSearchOptimizer):
                     B = np.linalg.inv(B)
 
             if self.verbose and not self.iter % self.verbose:
-                print('\n{:d}\t\t{:d}\t\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
+                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
                         print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
-                        print('\t\t\t', end='')
+                        print('\t\t', end='')
                     prev_v = self.f_x
 
             # stopping criteria
