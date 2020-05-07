@@ -2,6 +2,7 @@ import numpy as np
 from scipy.linalg import ldl
 
 from . import BoxConstrainedOptimizer
+from ..utils import ldl_solve
 
 
 class ActiveSet(BoxConstrainedOptimizer):
