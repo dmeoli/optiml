@@ -1,5 +1,5 @@
-# Machine Learning & Numerical Optimization 
-[![Build Status](https://travis-ci.org/dmeoli/MachineLearningNumericalOptimization.svg?branch=master)](https://travis-ci.org/dmeoli/MachineLearningNumericalOptimization) [![Coverage Status](https://coveralls.io/repos/github/dmeoli/MachineLearningNumericalOptimization/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/MachineLearningNumericalOptimization?branch=master) [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)
+# Yet Another Sklearn Extension
+[![Build Status](https://travis-ci.org/dmeoli/yase.svg?branch=master)](https://travis-ci.org/dmeoli/yase) [![Coverage Status](https://coveralls.io/repos/github/dmeoli/yase/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/yase?branch=master) [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)
 
 This code is a simple and modular implementation of some of the most important optimization algorithms used as core 
 solver for many machine learning models developed during the Machine Learning & Numerical Methods and Optimization 
@@ -9,7 +9,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
 
 - Numerical Optimization
     - Unconstrained Optimization
-        - Line Search Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/optimization/LineSearchMethods.ipynb)
+        - Line Search Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/optimization/LineSearchMethods.ipynb)
             - Exact Line Search Methods
                 - [x] Quadratic Steepest Gradient Descent
                 - [x] Quadratic Conjugate Gradient
@@ -34,7 +34,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
                     - Quasi-Newton
                         - [x] BFGS
                         - [ ] L-BFGS
-        - Stochastic Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/optimization/StochasticMethods.ipynb)
+        - Stochastic Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/optimization/StochasticMethods.ipynb)
             - [x] Stochastic Gradient Descent
                 - [x] standard momentum
                 - [x] Nesterov momentum
@@ -67,7 +67,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
     - Constrained Optimization
         - Quadratic Optimization
-            - Box-Constrained Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/optimization/BoxConstrainedMethods.ipynb)
+            - Box-Constrained Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/optimization/BoxConstrainedMethods.ipynb)
                 - [x] Projected Gradient
                 - [x] Frank-Wolfe or Conditional Gradient
                 - [x] Active Set
@@ -87,7 +87,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] Quadratic Box-Constrained
 
 - Machine Learning Models
-    - [x] Support Vector Machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/ml/SupportVectorMachines.ipynb)
+    - [x] Support Vector Machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/ml/SupportVectorMachines.ipynb)
         - [x] Support Vector Classifier
         - [x] Support Vector Regression
         - Kernels
@@ -114,7 +114,7 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
             - [x] SoftMax
         - Layers
             - [x] Fully Connected
-            - [x] Convolutional [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/MachineLearningNumericalOptimization/blob/master/ml/ConvolutionalNeuralNetworks.ipynb)
+            - [x] Convolutional [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/ml/ConvolutionalNeuralNetworks.ipynb)
                 - [x] Conv 2D
                 - [x] Max Pooling
                 - [x] Avg Pooling
@@ -128,6 +128,14 @@ courses @ [Department of Computer Science](https://www.di.unipi.it/en/) @ [Unive
         - Initializers
             - [x] Xavier or Glorot normal and uniform
             - [x] He normal and uniform
+
+# Install
+
+```
+git clone https://github.com/dmeoli/yase
+cd yase
+pip install .
+```
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

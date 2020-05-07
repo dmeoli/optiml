@@ -42,12 +42,12 @@ class StochasticOptimizer(Optimizer):
         self.step = 0
 
         if batch_size is None:
-            self.batches = itertools.repeat(f.batches())
+            self.batches = itertools.repeat(f.args())
         else:
-            n_samples = f.batches()[0].shape[0]
+            n_samples = f.args()[0].shape[0]
             batch_size = np.clip(batch_size, 1, n_samples)
 
-            n_batches, rest = divmod(len(f.batches()[0]), batch_size)
+            n_batches, rest = divmod(len(f.args()[0]), batch_size)
             if rest:
                 n_batches += 1
 
