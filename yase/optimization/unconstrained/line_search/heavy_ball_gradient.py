@@ -1,6 +1,6 @@
 import numpy as np
 
-from ...unconstrained.line_search.line_search_optimizer import LineSearchOptimizer
+from ...unconstrained.line_search import LineSearchOptimizer
 
 
 class HeavyBallGradient(LineSearchOptimizer):
