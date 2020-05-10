@@ -42,9 +42,9 @@ class StochasticOptimizer(Optimizer):
         self.step = 0
 
         if batch_size is None:
+            self.batch_size = None
             self.batches = itertools.repeat(f.args())
         else:
-
             n_samples = f.args()[0].shape[0]
             self.batch_size = np.clip(batch_size, 1, n_samples)
 
@@ -79,7 +79,7 @@ class StochasticOptimizer(Optimizer):
                     yield [param[slice(start, stop)] for param in self.f.args()]
 
     def is_batch_end(self):
-        return not self.iter % self.batch_size if self.f.args() else True
+        return not self.iter % self.batch_size if self.batch_size else True
 
     def minimize(self):
         raise NotImplementedError

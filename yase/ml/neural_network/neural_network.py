@@ -100,12 +100,13 @@ class NeuralNetwork(BaseEstimator, Layer):
                 self.inter_idx.append((start, end))
                 start = end
 
-    def _store_print_train_val_info(self, packed_coef_inter, loss, X_batch, y_batch, X_val, y_val):
-        assert loss == self.loss.function(packed_coef_inter, X_batch, y_batch)  # TODO remove this at the end
-        self.loss_history['train_loss'].append(loss)
-        val_loss = self.loss.function(packed_coef_inter, X_val, y_val)
+    def _store_print_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
+        assert opt.f_x == self.loss.function(opt.x, X_batch, y_batch)  # TODO remove this at the end
+        self.loss_history['train_loss'].append(opt.f_x)
+        val_loss = self.loss.function(opt.x, X_val, y_val)
         self.loss_history['val_loss'].append(val_loss)
-        print('\tval_loss: {:1.4e}'.format(val_loss), end='')
+        if self.verbose and not opt.epoch % self.verbose:
+            print('\tval_loss: {:1.4e}'.format(val_loss), end='')
 
     def fit(self, X, y):
 
@@ -193,14 +194,15 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
         self.accuracy_history = {'train_acc': [],
                                  'val_acc': []}
 
-    def _store_print_train_val_info(self, packed_coef_inter, loss, X_batch, y_batch, X_val, y_val):
-        super()._store_print_train_val_info(packed_coef_inter, loss, X_batch, y_batch, X_val, y_val)
+    def _store_print_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
+        super()._store_print_train_val_info(opt, X_batch, y_batch, X_val, y_val)
         acc = self.score(X_batch, y_batch)
         self.accuracy_history['train_acc'].append(acc)
-        print('\tacc: {:1.4f}'.format(acc), end='')
         val_acc = self.score(X_val, y_val)
         self.accuracy_history['val_acc'].append(val_acc)
-        print('\tval_acc: {:1.4f}'.format(val_acc), end='')
+        if self.verbose and not opt.epoch % self.verbose:
+            print('\tacc: {:1.4f}'.format(acc), end='')
+            print('\tval_acc: {:1.4f}'.format(val_acc), end='')
 
     def fit(self, X, y):
         if y.ndim == 1:
