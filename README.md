@@ -1,5 +1,5 @@
 # Yet Another Sklearn Extension
-[![Build Status](https://travis-ci.org/dmeoli/yase.svg?branch=master)](https://travis-ci.org/dmeoli/yase) [![Coverage Status](https://coveralls.io/repos/github/dmeoli/yase/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/yase?branch=master) [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)
+[![Build Status](https://travis-ci.org/dmeoli/yase.svg?branch=master)](https://travis-ci.org/dmeoli/yase) [![Coverage Status](https://coveralls.io/repos/github/dmeoli/yase/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/yase?branch=master) [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/yase/master)
 
 ***YASE*** (Yet Another Sklearn Extension) is a custom reimplementation of *Support Vector Machines* and 
 *Deep Neural Networks*, both with some of the most successful features according to the state of art.
