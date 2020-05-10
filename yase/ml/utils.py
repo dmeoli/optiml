@@ -239,12 +239,12 @@ def plot_model_loss(loss_history):
     plt.style.use('ggplot')
 
     fig, loss = plt.subplots()
-    loss.plot(loss_history['training_loss'], color='navy', lw=2)
-    loss.plot(loss_history['validation_loss'], color='darkorange', lw=2)
+    loss.plot(loss_history['train_loss'], color='navy', lw=2)
+    loss.plot(loss_history['val_loss'], color='darkorange', lw=2)
     loss.set_title('model loss')
     loss.set_xlabel('epoch')
     loss.set_ylabel('loss')
-    loss.legend(['training', 'test']).get_frame().set_facecolor('white')
+    loss.legend(['training', 'validation']).get_frame().set_facecolor('white')
     plt.show()
 
 
@@ -257,5 +257,5 @@ def plot_model_accuracy(accuracy_history):
     accuracy.set_title('model accuracy')
     accuracy.set_xlabel('epoch')
     accuracy.set_ylabel('accuracy')
-    accuracy.legend(['training', 'test']).get_frame().set_facecolor('white')
+    accuracy.legend(['training', 'validation']).get_frame().set_facecolor('white')
     plt.show()

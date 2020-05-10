@@ -35,8 +35,8 @@ class NeuralNetwork(BaseEstimator, Layer):
         self.shuffle = shuffle
         self.random_state = random_state
         self.verbose = verbose
-        self.loss_history = {'training_loss': [],
-                             'validation_loss': []}
+        self.loss_history = {'train_loss': [],
+                             'val_loss': []}
 
     def forward(self, X):
         for layer in self.layers:
@@ -100,11 +100,11 @@ class NeuralNetwork(BaseEstimator, Layer):
                 self.inter_idx.append((start, end))
                 start = end
 
-    def _store_plot_data(self, packed_coef_inter, loss, X_batch, y_batch, X_val, y_val):
-        assert loss == self.loss.function(packed_coef_inter, X_batch, y_batch)
-        self.loss_history['training_loss'].append(loss)
+    def _store_print_train_val_info(self, packed_coef_inter, loss, X_batch, y_batch, X_val, y_val):
+        assert loss == self.loss.function(packed_coef_inter, X_batch, y_batch)  # TODO remove this at the end
+        self.loss_history['train_loss'].append(loss)
         val_loss = self.loss.function(packed_coef_inter, X_val, y_val)
-        self.loss_history['validation_loss'].append(val_loss)
+        self.loss_history['val_loss'].append(val_loss)
         print('\tval_loss: {:1.4e}'.format(val_loss), end='')
 
     def fit(self, X, y):
@@ -153,8 +153,7 @@ class NeuralNetwork(BaseEstimator, Layer):
             elif issubclass(self.optimizer, StochasticOptimizer):
 
                 # don't stratify in multi-label classification # TODO fix multi-label case
-                n_classes = y.shape[1] if isinstance(self.loss, CategoricalCrossEntropy) else np.unique(y).size
-                should_stratify = isinstance(self, NeuralNetworkClassifier) and n_classes == 2
+                should_stratify = isinstance(self, NeuralNetworkClassifier) and self.n_classes == 2
                 stratify = y if should_stratify else None
                 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=self.validation_split,
                                                                   stratify=stratify, random_state=self.random_state)
@@ -162,7 +161,7 @@ class NeuralNetwork(BaseEstimator, Layer):
                 self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, step_size=self.learning_rate,
                                                 epochs=self.max_iter, batch_size=self.batch_size,
                                                 momentum_type=self.momentum_type, momentum=self.momentum,
-                                                callback=self._store_plot_data, callback_args=(X_val, y_val),
+                                                callback=self._store_print_train_val_info, callback_args=(X_val, y_val),
                                                 shuffle=self.shuffle, random_state=self.random_state,
                                                 verbose=self.verbose)
                 res = self.optimizer.minimize()
@@ -190,33 +189,34 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
                  max_f_eval=1000, master_solver='ECOS', shuffle=True, random_state=None, verbose=False):
         super().__init__(layers, loss, optimizer, learning_rate, max_iter, momentum_type, momentum, validation_split,
                          batch_size, max_f_eval, master_solver, shuffle, random_state, verbose)
+        self.n_classes = 0
         self.accuracy_history = {'train_acc': [],
                                  'val_acc': []}
 
-    def _store_plot_data(self, packed_coef_inter, loss, X_batch, y_batch, X_val, y_val):
-        super()._store_plot_data(packed_coef_inter, loss, X_batch, y_batch, X_val, y_val)
+    def _store_print_train_val_info(self, packed_coef_inter, loss, X_batch, y_batch, X_val, y_val):
+        super()._store_print_train_val_info(packed_coef_inter, loss, X_batch, y_batch, X_val, y_val)
         acc = self.score(X_batch, y_batch)
         self.accuracy_history['train_acc'].append(acc)
-        print('\tacc: {:1.4e}'.format(acc), end='')
+        print('\tacc: {:1.4f}'.format(acc), end='')
         val_acc = self.score(X_val, y_val)
         self.accuracy_history['val_acc'].append(val_acc)
-        print('\tval_acc: {:1.4e}'.format(val_acc), end='')
+        print('\tval_acc: {:1.4f}'.format(val_acc), end='')
 
     def fit(self, X, y):
         if y.ndim == 1:
             y = y.reshape(-1, 1)
 
         # TODO fix multi-label case
-        n_classes = y.shape[1] if isinstance(self.loss, CategoricalCrossEntropy) else np.unique(y).size
-        if isinstance(self.loss, SparseCategoricalCrossEntropy) or isinstance(self.loss, CategoricalCrossEntropy):
+        self.n_classes = y.shape[1] if self.loss == CategoricalCrossEntropy else np.unique(y).size
+        if self.loss in (SparseCategoricalCrossEntropy, CategoricalCrossEntropy):
             if self.layers[-1].activation != softmax:
                 raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} loss '
                                  'function only works with softmax output layer')
-            if self.layers[-1].fan_out != n_classes:
+            if self.layers[-1].fan_out != self.n_classes:
                 raise ValueError('the number of neurons in the output layer must '
-                                 f'be equal to the number of classes, i.e. {n_classes}')
-        elif isinstance(self.loss, MeanSquaredError) or isinstance(self.loss, BinaryCrossEntropy):
-            if n_classes > 2:
+                                 f'be equal to the number of classes, i.e. {self.n_classes}')
+        elif self.loss in (MeanSquaredError, BinaryCrossEntropy):
+            if self.n_classes > 2:
                 raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} '
                                  'loss function only works for binary classification')
             if self.layers[-1].activation != sigmoid:
@@ -250,7 +250,7 @@ class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
         if self.layers[-1].activation not in (linear, sigmoid):
             raise ValueError('NeuralNetworkRegressor only works with linear or '
                              'sigmoid (for regression between 0 and 1) output layer')
-        if isinstance(self.loss, BinaryCrossEntropy):
+        if self.loss == BinaryCrossEntropy:
             if self.layers[-1].activation != sigmoid:
                 raise ValueError('NeuralNetworkRegressor with binary_cross_entropy loss function only '
                                  'works with sigmoid output layer for regression between 0 and 1')

@@ -1,7 +1,6 @@
 import numpy as np
 from cvxpy import Variable, Problem, Minimize, sum_squares
 
-from ...ml.neural_network.initializers import random_uniform
 from .. import Optimizer
 
 
@@ -74,7 +73,7 @@ class ProximalBundle(Optimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, x=random_uniform, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf, master_solver='ECOS',
+    def __init__(self, f, x, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf, master_solver='ECOS',
                  momentum_type='none', momentum=0.9, callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, callback, callback_args, verbose)
         if not np.isscalar(mu):

@@ -1,13 +1,11 @@
 import numpy as np
 
-from ....ml.neural_network.initializers import random_uniform
 from ... import Optimizer, Quadratic
 from . import LineSearchOptimizer
 
 
 class QuadraticConjugateGradient(Optimizer):
-    def __init__(self, f, x=random_uniform, r_start=0, eps=1e-6, max_iter=1000,
-                 callback=None, callback_args=(), verbose=False):
+    def __init__(self, f, x, r_start=0, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, callback, callback_args, verbose)
         if not isinstance(f, Quadratic):
             raise ValueError('f is not a quadratic function')
@@ -19,7 +17,7 @@ class QuadraticConjugateGradient(Optimizer):
 
     def minimize(self):
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
@@ -106,9 +104,8 @@ class QuadraticConjugateGradient(Optimizer):
 
 
 class ConjugateGradient(LineSearchOptimizer):
-    def __init__(self, f, x=random_uniform, wf=0, r_start=0, eps=1e-6, max_iter=1000, max_f_eval=1000,
-                 m1=0.01, m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
-                 callback_args=(), verbose=False):
+    def __init__(self, f, x, wf=0, r_start=0, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1,
+                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
                          m_inf, min_a, callback, callback_args, verbose)
         if not np.isscalar(wf):
@@ -236,9 +233,8 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, x=random_uniform, wf=0, eps=1e-6, max_iter=1000, max_f_eval=1000, r_start=0,
-                 m1=0.01, m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16,
-                 callback=None, callback_args=(), verbose=False):
+    def __init__(self, f, x, wf=0, eps=1e-6, max_iter=1000, max_f_eval=1000, r_start=0, m1=0.01, m2=0.9, a_start=1,
+                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
                          m_inf, min_a, callback, callback_args, verbose)
         if not np.isscalar(wf):
@@ -255,7 +251,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
         last_g = np.zeros(self.f.ndim)  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')

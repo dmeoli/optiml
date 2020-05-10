@@ -1,15 +1,13 @@
 import numpy as np
 
-from ....ml.neural_network.initializers import random_uniform
 from ... import Optimizer
 from .line_search import ArmijoWolfeLineSearch, BacktrackingLineSearch
 
 
 class LineSearchOptimizer(Optimizer):
 
-    def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
-                 a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
-                 callback_args=(), verbose=False):
+    def __init__(self, f, x, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
+                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None, callback_args=(), verbose=False):
         """
 
         :param f:          the objective function.

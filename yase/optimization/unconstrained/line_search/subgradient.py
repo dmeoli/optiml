@@ -1,6 +1,5 @@
 import numpy as np
 
-from ....ml.neural_network.initializers import random_uniform
 from . import LineSearchOptimizer
 
 
@@ -96,7 +95,7 @@ class Subgradient(LineSearchOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, x=random_uniform, eps=1e-6, a_start=1e-4, tau=0.95, max_iter=1000, max_f_eval=1000,
+    def __init__(self, f, x, eps=1e-6, a_start=1e-4, tau=0.95, max_iter=1000, max_f_eval=1000,
                  m_inf=-np.inf, min_a=1e-16, callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, max_f_eval, a_start=a_start, tau=tau, m_inf=m_inf, min_a=min_a,
                          callback=callback, callback_args=callback_args, verbose=verbose)
@@ -107,7 +106,7 @@ class Subgradient(LineSearchOptimizer):
             # no way of cheating since the true optimal value is unknown
             self.eps = -self.eps  # revert to ordinary target level step size
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')

@@ -1,6 +1,5 @@
 import numpy as np
 
-from ....ml.neural_network.initializers import random_uniform
 from ... import Optimizer, Quadratic
 from . import LineSearchOptimizer
 
@@ -26,8 +25,7 @@ class QuadraticSteepestGradientDescent(Optimizer):
                      x is the best solution found so far, but not necessarily the optimal one.
     """
 
-    def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000,
-                 callback=None, callback_args=(), verbose=False):
+    def __init__(self, f, x, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, callback, callback_args, verbose)
         if not isinstance(f, Quadratic):
             raise ValueError('f is not a quadratic function')
@@ -36,7 +34,7 @@ class QuadraticSteepestGradientDescent(Optimizer):
 
     def minimize(self):
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print('iter\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
@@ -167,9 +165,8 @@ class SteepestGradientDescent(LineSearchOptimizer):
     #   test.
     """
 
-    def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
-                 a_start=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
-                 callback_args=(), verbose=False):
+    def __init__(self, f, x, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
+                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None, callback_args=(), verbose=False):
         """
 
         :param f:          the objective function.

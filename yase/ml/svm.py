@@ -193,7 +193,7 @@ class SVC(ClassifierMixin, SVM):
                                       'x1_history': [],
                                       'f_x_history': []}
 
-                def _save_opt_steps(x):
+                def _store_opt_steps(x):
                     if dual.ndim == 2:
                         self.optimizer['x0_history'].append(x[0])
                         self.optimizer['x1_history'].append(x[1])
@@ -201,7 +201,7 @@ class SVC(ClassifierMixin, SVM):
 
                 res = minimize(fun=dual.function, jac=dual.jacobian,
                                x0=np.zeros(dual.ndim), method=method,
-                               callback=_save_opt_steps,
+                               callback=_store_opt_steps,
                                options={'disp': self.verbose,
                                         'maxiter': self.max_iter,
                                         'maxfun': self.max_f_eval})
@@ -344,7 +344,7 @@ class SVR(RegressorMixin, SVM):
                                           'x1_history': [],
                                           'f_x_history': []}
 
-                    def _save_opt_steps(x):
+                    def _store_opt_steps(x):
                         if dual.ndim == 2:
                             self.optimizer['x0_history'].append(x[0])
                             self.optimizer['x1_history'].append(x[1])
@@ -352,7 +352,7 @@ class SVR(RegressorMixin, SVM):
 
                     res = minimize(fun=dual.function, jac=dual.jacobian,
                                    x0=np.zeros(dual.ndim), method=method,
-                                   callback=_save_opt_steps,
+                                   callback=_store_opt_steps,
                                    options={'disp': self.verbose,
                                             'maxiter': self.max_iter,
                                             'maxfun': self.max_f_eval})

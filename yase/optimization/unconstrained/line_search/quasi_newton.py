@@ -2,7 +2,6 @@ import warnings
 
 import numpy as np
 
-from ....ml.neural_network.initializers import random_uniform
 from . import LineSearchOptimizer
 
 
@@ -109,9 +108,8 @@ class BFGS(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see min_a above)
 
-    def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
-                 a_start=1, delta=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
-                 callback_args=(), verbose=False):
+    def __init__(self, f, x, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, delta=1, tau=0.9,
+                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
                          m_inf, min_a, callback, callback_args, verbose)
         if not np.isscalar(delta):
@@ -123,7 +121,7 @@ class BFGS(LineSearchOptimizer):
         last_g = np.zeros(self.f.ndim)  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
@@ -230,9 +228,8 @@ class BFGS(LineSearchOptimizer):
 
 
 class LBFGS(LineSearchOptimizer):
-    def __init__(self, f, x=random_uniform, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9,
-                 a_start=1, delta=1, tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None,
-                 callback_args=(), verbose=False):
+    def __init__(self, f, x, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, delta=1, tau=0.9,
+                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
                          m_inf, min_a, callback, callback_args, verbose)
         if not np.isscalar(delta):
