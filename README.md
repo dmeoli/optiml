@@ -13,7 +13,7 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
 
 - Numerical Optimization
     - Unconstrained Optimization
-        - Line Search Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/notebooks/optimization/LineSearchMethods.ipynb)
+        - Line Search Methods
             - Exact Line Search Methods
                 - [x] Quadratic Steepest Gradient Descent
                 - [x] Quadratic Conjugate Gradient
@@ -38,7 +38,7 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
                     - Quasi-Newton
                         - [x] BFGS
                         - [ ] L-BFGS
-        - Stochastic Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/notebooks/optimization/StochasticMethods.ipynb)
+        - Stochastic Methods
             - [x] Stochastic Gradient Descent
                 - [x] standard momentum
                 - [x] Nesterov momentum
@@ -71,7 +71,7 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
         - [x] [scipy.optimize](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html) interface
     - Constrained Optimization
         - Quadratic Optimization
-            - Box-Constrained Quadratic Methods [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/notebooks/optimization/BoxConstrainedMethods.ipynb)
+            - Box-Constrained Quadratic Methods
                 - [x] Projected Gradient
                 - [x] Frank-Wolfe or Conditional Gradient
                 - [x] Active Set
@@ -91,7 +91,7 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] Box-Constrained Quadratic
 
 - Machine Learning Models
-    - [x] Support Vector Machines [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/notebooks/ml/SupportVectorMachines.ipynb)
+    - [x] Support Vector Machines
         - [x] Support Vector Classifier
         - [x] Support Vector Regression
         - Kernels
@@ -118,7 +118,7 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] SoftMax
         - Layers
             - [x] Fully Connected
-            - [x] Convolutional [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/yase/blob/master/notebooks/ml/ConvolutionalNeuralNetworks.ipynb)
+            - [x] Convolutional
                 - [x] Conv 2D
                 - [x] Max Pooling
                 - [x] Avg Pooling
