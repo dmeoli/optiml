@@ -6,9 +6,9 @@ python:
   - 3.8
 
 before_install:
-  - pip install --upgrade -r requirements.txt
-  - pip install pytest-cov
-  - pip install coveralls
+  - pip install --user --upgrade -r requirements.txt
+  - pip install --user pytest-cov
+  - pip install --user coveralls
 
 install:
   - pip install .
