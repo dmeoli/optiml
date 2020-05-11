@@ -1,6 +1,6 @@
-import setuptools
+from setuptools import setup, find_packages
 
-setuptools.setup(
+setup(
     name="yase",
     version="0.0.1",
     author="Donato Meoli",
@@ -8,5 +8,6 @@ setuptools.setup(
     description="Yet Another Sklearn Extension",
     license="MIT",
     url="https://github.com/dmeoli/yase",
-    packages=setuptools.find_packages(),
+    include_package_data=True,
+    packages=find_packages(),
     python_requires='>=3.6')
