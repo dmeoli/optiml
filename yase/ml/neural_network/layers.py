@@ -16,7 +16,8 @@ class Layer:
 
 class ParamLayer(Layer):
 
-    def __init__(self, coef_shape, activation, coef_init, inter_init, coef_reg, inter_reg, fit_intercept):
+    def __init__(self, coef_shape, activation, coef_init, inter_init,
+                 coef_reg, inter_reg, fit_intercept, random_state=None):
 
         if isinstance(activation, Activation):
             self.activation = activation
@@ -24,9 +25,9 @@ class ParamLayer(Layer):
             raise TypeError(f'unknown activation function {activation}')
 
         if coef_init is None:
-            self.coef_ = glorot_uniform(coef_shape)
+            self.coef_ = glorot_uniform(coef_shape, random_state=random_state)
         elif callable(coef_init):
-            self.coef_ = coef_init(coef_shape)
+            self.coef_ = coef_init(coef_shape, random_state=random_state)
         else:
             self.coef_ = np.asarray(coef_init, dtype=np.float).reshape(-1, 1)
 
@@ -37,7 +38,7 @@ class ParamLayer(Layer):
             if inter_init is None:
                 self.inter_ = zeros(shape)
             elif callable(inter_init):
-                self.inter_ = inter_init(shape)
+                self.inter_ = inter_init(shape, random_state=random_state)
             else:
                 self.inter_ = np.asarray(inter_init, dtype=np.float).reshape(-1, 1)
 
@@ -53,9 +54,10 @@ class ParamLayer(Layer):
 
 
 class FullyConnected(ParamLayer):
-    def __init__(self, n_in, n_out, activation=linear, coef_init=glorot_uniform,
-                 inter_init=zeros, coef_reg=l2, inter_reg=l2, fit_intercept=True):
-        super().__init__((n_in, n_out), activation, coef_init, inter_init, coef_reg, inter_reg, fit_intercept)
+    def __init__(self, n_in, n_out, activation=linear, coef_init=glorot_uniform, inter_init=zeros,
+                 coef_reg=l2, inter_reg=l2, fit_intercept=True, random_state=None):
+        super().__init__((n_in, n_out), activation, coef_init, inter_init,
+                         coef_reg, inter_reg, fit_intercept, random_state)
         self.fan_in = n_in
         self.fan_out = n_out
 
@@ -80,9 +82,9 @@ class FullyConnected(ParamLayer):
 class Conv2D(ParamLayer):
     def __init__(self, in_channels, out_channels, kernel_size=(3, 3), strides=(1, 1), padding='valid',
                  channels_last=True, activation=linear, coef_init=glorot_uniform, inter_init=zeros,
-                 coef_reg=l2, inter_reg=l2, fit_intercept=True):
-        super().__init__((in_channels,) + kernel_size + (out_channels,),
-                         activation, coef_init, inter_init, coef_reg, inter_reg, fit_intercept)
+                 coef_reg=l2, inter_reg=l2, fit_intercept=True, random_state=None):
+        super().__init__((in_channels,) + kernel_size + (out_channels,), activation,
+                         coef_init, inter_init, coef_reg, inter_reg, fit_intercept, random_state)
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -235,12 +237,13 @@ class Flatten(Layer):
 
 class Dropout(Layer):
 
-    def __init__(self, p=0.5):
+    def __init__(self, p=0.5, random_state=None):
         self.prob = p
         self.params = []
+        self.rs = np.random.RandomState(random_state)
 
     def forward(self, X):
-        self.mask = np.random.binomial(n=1., p=1. - self.prob, size=X.shape)
+        self.mask = self.rs.binomial(n=1., p=1. - self.prob, size=X.shape)
         return (X * self.mask).reshape(X.shape)
 
     def backward(self, delta):

@@ -1,15 +1,15 @@
 import numpy as np
 
 
-def zeros(shape):
+def zeros(shape, random_state=None):
     return np.zeros(shape)
 
 
-def ones(shape):
+def ones(shape, random_state=None):
     return np.ones(shape)
 
 
-def constant(v, shape):
+def constant(v, shape, random_state=None):
     return np.full(shape, v)
 
 
