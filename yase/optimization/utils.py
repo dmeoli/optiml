@@ -21,7 +21,7 @@ def ldl_solve(ldl_factor, b):
     return np.linalg.solve(L.T, (np.linalg.solve(D, np.linalg.solve(L, b[P]))))
 
 
-# external
+# third-party solvers
 
 def solve_qp(f, G, h, A, b, solver='quadprog'):
     return qpsolvers.solve_qp(f.Q, f.q, G, h, A, b, solver=solver)

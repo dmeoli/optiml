@@ -204,6 +204,8 @@ class InteriorPoint(BoxConstrainedOptimizer):
 
             max_t *= 0.9995  # ensure the new iterate remains interior
 
+            self.callback()
+
             self.x += max_t * dx
             lp += max_t * dlp
             lm += max_t * dlm

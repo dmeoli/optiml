@@ -119,7 +119,7 @@ class BoxConstrainedQuadratic(Quadratic):
         self.ub = ub
 
     def x_star(self):
-        raise np.nan
+        return np.full(fill_value=np.nan, shape=self.ndim)
 
     def f_star(self):
         return np.inf
@@ -151,7 +151,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         self.primal_value = np.inf
 
     def x_star(self):
-        raise np.nan
+        raise np.full(fill_value=np.nan, shape=self.ndim)
 
     def f_star(self):
         return np.inf

@@ -150,6 +150,8 @@ class ActiveSet(BoxConstrainedOptimizer):
                 if self.verbose and not self.iter % self.verbose:
                     print('I {:d}+{:d}'.format(sum(nL), sum(nU)))
 
+            self.callback()
+
             self.x = last_x
 
             self.iter += 1

@@ -86,6 +86,8 @@ class ProjectedGradient(BoxConstrainedOptimizer):
                 # optimal unbounded step size restricted to max feasible step
                 t = min(-self.g_x.T.dot(d) / den, max_t)
 
+            self.callback()
+
             self.x += t * d
 
             self.iter += 1

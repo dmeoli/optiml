@@ -70,7 +70,7 @@ class OptimizationFunction:
         self.ndim = ndim
 
     def x_star(self):
-        return np.nan
+        return np.full(fill_value=np.nan, shape=self.ndim)
 
     def f_star(self):
         return np.inf
@@ -161,7 +161,7 @@ class Quadratic(OptimizationFunction):
         try:
             return np.linalg.solve(self.Q, -self.q)  # complexity O(2n^3/3)
         except np.linalg.LinAlgError:  # the Hessian matrix is singular
-            return np.nan
+            return super().x_star()
 
     def f_star(self):
         return self.function(self.x_star())

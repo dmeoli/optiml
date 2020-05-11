@@ -76,7 +76,6 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
                 - [x] Frank-Wolfe or Conditional Gradient
                 - [x] Active Set
                 - [x] Interior Point
-                - [x] Lagrangian Dual
                 - [x] Sequential Minimal Optimization (ad hoc for SVMs)
                 - [x] BCQP solver with [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp) interface
             - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface

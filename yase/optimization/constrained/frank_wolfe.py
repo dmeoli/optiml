@@ -109,6 +109,8 @@ class FrankWolfe(BoxConstrainedOptimizer):
                 # optimal unbounded step size restricted to max feasible step
                 a = min(-self.g_x.T.dot(d) / den, 1)
 
+            self.callback()
+
             self.x += a * d
 
             self.iter += 1
