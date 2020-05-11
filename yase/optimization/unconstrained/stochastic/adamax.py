@@ -37,7 +37,7 @@ class AdaMax(StochasticOptimizer):
                 prev_v = np.inf
 
         for batch in self.batches:
-            self.f_x, g = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
+            self.f_x, self.g_x = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
 
             if self.is_batch_end():
 
@@ -69,10 +69,10 @@ class AdaMax(StochasticOptimizer):
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
 
-            g = self.f.jacobian(self.x, *batch)
-            self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * g  # update biased 1st moment estimate
+            self.g_x = self.f.jacobian(self.x, *batch)
+            self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * self.g_x  # update biased 1st moment estimate
             # update the exponentially weighted infinity norm
-            self.est_mom2 = np.maximum(self.beta2 * est_mom2_m1, np.abs(g))
+            self.est_mom2 = np.maximum(self.beta2 * est_mom2_m1, np.abs(self.g_x))
 
             est_mom1_crt = self.est_mom1 / (1. - self.beta1 ** t)  # compute bias-corrected 1st moment estimate
 

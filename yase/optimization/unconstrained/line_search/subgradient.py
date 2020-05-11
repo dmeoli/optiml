@@ -119,8 +119,8 @@ class Subgradient(LineSearchOptimizer):
             delta = 0  # required displacement from f_ref
 
         while True:
-            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
-            ng = np.linalg.norm(g)
+            self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+            ng = np.linalg.norm(self.g_x)
 
             self.callback()
 
@@ -182,7 +182,7 @@ class Subgradient(LineSearchOptimizer):
                 break
 
             # compute new point
-            last_x = self.x - (a / ng) * g
+            last_x = self.x - (a / ng) * self.g_x
 
             # compute new point
             self.x = last_x

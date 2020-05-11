@@ -59,16 +59,16 @@ class FrankWolfe(BoxConstrainedOptimizer):
             print('iter\tf(x)\t\tlb\t\t\tgap')
 
         while True:
-            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
+            self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
 
             # solve min { <g, y> : 0 <= y <= u }
             y = np.zeros(self.f.ndim)
-            idx = g < 0
+            idx = self.g_x < 0
             y[idx] = self.f.ub[idx]
 
             # compute the lower bound: remember that the first-order approximation
             # is f(x) + g(y - x)
-            lb = self.f_x + g.T.dot(y - self.x)
+            lb = self.f_x + self.g_x.T.dot(y - self.x)
             if lb > best_lb:
                 best_lb = lb
 
@@ -107,7 +107,7 @@ class FrankWolfe(BoxConstrainedOptimizer):
                 a = 1  # just take the maximum possible step size
             else:
                 # optimal unbounded step size restricted to max feasible step
-                a = min(-g.T.dot(d) / den, 1)
+                a = min(-self.g_x.T.dot(d) / den, 1)
 
             self.x += a * d
 

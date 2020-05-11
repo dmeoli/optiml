@@ -125,13 +125,13 @@ class InteriorPoint(BoxConstrainedOptimizer):
 
         # compute a feasible interior dual solution satisfying SKKTS with x for some
         # \mu we don't care much of
-        g = self.f.jacobian(self.x)
+        self.g_x = self.f.jacobian(self.x)
         lp = 1e-6 * np.ones(self.f.ndim)
         lm = np.copy(lp)
-        idx = g >= 0
-        lm[idx] = lm[idx] + g[idx]
+        idx = self.g_x >= 0
+        lm[idx] = lm[idx] + self.g_x[idx]
         idx = np.logical_not(idx)
-        lp[idx] = lp[idx] - g[idx]
+        lp[idx] = lp[idx] - self.g_x[idx]
 
         if self.verbose and not self.iter % self.verbose:
             print('iter\tf(x)\t\t\tp\t\t\tgap')

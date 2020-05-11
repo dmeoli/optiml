@@ -25,8 +25,8 @@ class QuadraticConjugateGradient(Optimizer):
             print('\t\tbeta', end='')
 
         while True:
-            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
-            ng = np.linalg.norm(g)
+            self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+            ng = np.linalg.norm(self.g_x)
 
             self.callback()
 
@@ -49,7 +49,7 @@ class QuadraticConjugateGradient(Optimizer):
 
             # compute search direction
             if self.iter == 0:  # first iteration is off-line, standard gradient
-                d = -g
+                d = -self.g_x
                 if self.verbose and not self.iter % self.verbose:
                     print('\t\t', end='')
             else:  # normal iterations, use appropriate formula
@@ -59,14 +59,14 @@ class QuadraticConjugateGradient(Optimizer):
                     if self.verbose and not self.iter % self.verbose:
                         print('\t(res)', end='')
                 else:
-                    beta = g.T.dot(self.f.Q).dot(past_d) / past_d.T.dot(self.f.Q).dot(past_d)
+                    beta = self.g_x.T.dot(self.f.Q).dot(past_d) / past_d.T.dot(self.f.Q).dot(past_d)
                     if self.verbose and not self.iter % self.verbose:
                         print('\t{:1.4f}'.format(beta), end='')
 
                 if beta != 0:
-                    d = -g + beta * past_d
+                    d = -self.g_x + beta * past_d
                 else:
-                    d = -g
+                    d = -self.g_x
 
             # check if f is unbounded below
             den = d.T.dot(self.f.Q).dot(d)
@@ -260,8 +260,8 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
             print('\tbeta\tls\tit\ta*', end='')
 
         while True:
-            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
-            ng = np.linalg.norm(g)
+            self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+            ng = np.linalg.norm(self.g_x)
 
             self.callback()
 
@@ -291,7 +291,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
             # compute search direction
             if self.iter == 0:  # first iteration is off-line, standard gradient
-                d = -g
+                d = -self.g_x
                 if self.verbose and not self.iter % self.verbose:
                     print('\t', end='')
             else:  # normal iterations, use appropriate formula
@@ -304,25 +304,25 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                     if self.wf == 0:  # Fletcher-Reeves
                         beta = (ng / np.linalg.norm(past_g)) ** 2
                     elif self.wf == 1:  # Polak-Ribière
-                        beta = g.T.dot(g - past_g) / np.linalg.norm(past_g) ** 2
+                        beta = self.g_x.T.dot(self.g_x - past_g) / np.linalg.norm(past_g) ** 2
                         beta = max(beta, 0)
                     elif self.wf == 2:  # Hestenes-Stiefel
-                        beta = g.T.dot(g - past_g) / (g - past_g).T.dot(past_d)
+                        beta = self.g_x.T.dot(self.g_x - past_g) / (self.g_x - past_g).T.dot(past_d)
                     elif self.wf == 3:  # Dai-Yuan
-                        beta = ng ** 2 / (g - past_g).T.dot(past_d)
+                        beta = ng ** 2 / (self.g_x - past_g).T.dot(past_d)
                     if self.verbose and not self.iter % self.verbose:
                         print('\t{:1.4f}'.format(beta), end='')
 
                 if beta != 0:
-                    d = -g + beta * past_d
+                    d = -self.g_x + beta * past_d
                 else:
-                    d = -g
+                    d = -self.g_x
 
-            past_g = g  # previous gradient
+            past_g = self.g_x  # previous gradient
             past_d = d  # previous search direction
 
             # compute step size
-            phi_p0 = g.T.dot(d)
+            phi_p0 = self.g_x.T.dot(d)
 
             # compute step size
             a, self.f_x, last_x, last_g, f_eval = self.line_search.search(

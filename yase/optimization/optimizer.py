@@ -29,6 +29,7 @@ class Optimizer:
         else:
             self.x = np.asarray(x, dtype=np.float)
         self.f_x = np.nan
+        self.g_x = np.zeros(0)
         if self.f.ndim == 2:
             self.x0_history = []
             self.x1_history = []

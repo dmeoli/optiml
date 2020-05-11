@@ -25,7 +25,7 @@ class AdaGrad(StochasticOptimizer):
                 prev_v = np.inf
 
         for batch in self.batches:
-            self.f_x, g = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
+            self.f_x, self.g_x = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
 
             if self.is_batch_end():
 
@@ -52,9 +52,9 @@ class AdaGrad(StochasticOptimizer):
                 step1 = self.momentum * step_m1
                 self.x -= step1
 
-            g = self.f.jacobian(self.x, *batch)
-            self.gms += g ** 2
-            step2 = self.step_size * g / np.sqrt(self.gms + self.offset)
+            self.g_x = self.f.jacobian(self.x, *batch)
+            self.gms += self.g_x ** 2
+            step2 = self.step_size * self.g_x / np.sqrt(self.gms + self.offset)
 
             if self.momentum_type == 'standard':
                 self.x -= step1 + step2

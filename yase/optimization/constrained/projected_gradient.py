@@ -44,8 +44,8 @@ class ProjectedGradient(BoxConstrainedOptimizer):
             print('iter\tf(x)\t\t||g(x)||')
 
         while True:
-            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
-            d = -g
+            self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+            d = -self.g_x
 
             # project the direction over the active constraints
             d[np.logical_and(self.f.ub - self.x <= 1e-12, d > 0)] = 0
@@ -84,7 +84,7 @@ class ProjectedGradient(BoxConstrainedOptimizer):
                 t = max_t  # just take the maximum possible step size
             else:
                 # optimal unbounded step size restricted to max feasible step
-                t = min(-g.T.dot(d) / den, max_t)
+                t = min(-self.g_x.T.dot(d) / den, max_t)
 
             self.x += t * d
 

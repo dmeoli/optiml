@@ -92,13 +92,13 @@ class ActiveSet(BoxConstrainedOptimizer):
                 last_x = xs
 
                 # compute function value and gradient
-                self.f_x, g = self.f.function(last_x), self.f.jacobian(last_x)
+                self.f_x, self.g_x = self.f.function(last_x), self.f.jacobian(last_x)
 
-                h = np.nonzero(np.logical_and(L, g < -1e-12))[0]
+                h = np.nonzero(np.logical_and(L, self.g_x < -1e-12))[0]
                 if h.size > 0:
                     uppr = False
                 else:
-                    h = np.nonzero(np.logical_and(U, g > 1e-12))[0]
+                    h = np.nonzero(np.logical_and(U, self.g_x > 1e-12))[0]
                     uppr = True
 
                 if h.size == 0:

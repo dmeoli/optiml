@@ -112,6 +112,7 @@ class BFGS(LineSearchOptimizer):
                  sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
                          m_inf, min_a, callback, callback_args, verbose)
+        self.H_x = np.zeros(0)
         if not np.isscalar(delta):
             raise ValueError('delta is not a real scalar')
         self.delta = delta
@@ -129,8 +130,8 @@ class BFGS(LineSearchOptimizer):
             print('\tls\tit\ta*\t\trho', end='')
 
         while True:
-            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
-            ng = np.linalg.norm(g)
+            self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+            ng = np.linalg.norm(self.g_x)
 
             self.callback()
 
@@ -142,21 +143,21 @@ class BFGS(LineSearchOptimizer):
             if self.iter == 0:
                 if self.delta > 0:
                     # initial approximation of inverse of Hessian = scaled identity
-                    B = self.delta * np.identity(self.f.ndim)
+                    self.H_x = self.delta * np.identity(self.f.ndim)
                 else:
                     # initial approximation of inverse of Hessian computed by finite differences of gradient
                     small_step = max(-self.delta, 1e-8)
-                    B = np.zeros((self.f.ndim, self.f.ndim))
+                    self.H_x = np.zeros((self.f.ndim, self.f.ndim))
                     for i in range(self.f.ndim):
                         xp = self.x
                         xp[i] = xp[i] + small_step
                         gp = self.f.jacobian(xp)
-                        B[i] = ((gp - g) / small_step).T
-                    B = (B + B.T) / 2  # ensure it is symmetric
-                    lambda_n = min(np.linalg.eigvalsh(B))  # smallest eigenvalue
+                        self.H_x[i] = ((gp - self.g_x) / small_step).T
+                    self.H_x = (self.H_x + self.H_x.T) / 2  # ensure it is symmetric
+                    lambda_n = min(np.linalg.eigvalsh(self.H_x))  # smallest eigenvalue
                     if lambda_n < 1e-6:
-                        B = B + (1e-6 - lambda_n) * np.identity(self.f.ndim)
-                    B = np.linalg.inv(B)
+                        self.H_x = self.H_x + (1e-6 - lambda_n) * np.identity(self.f.ndim)
+                    self.H_x = np.linalg.inv(self.H_x)
 
             if self.verbose and not self.iter % self.verbose:
                 print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
@@ -178,9 +179,9 @@ class BFGS(LineSearchOptimizer):
                 break
 
             # compute approximation to Newton's direction
-            d = -B.dot(g)
+            d = -self.H_x.dot(self.g_x)
 
-            phi_p0 = g.T.dot(d)
+            phi_p0 = self.g_x.T.dot(d)
 
             # compute step size: as in Newton's method, the default initial step size is 1
             a, self.f_x, last_x, last_g, f_eval = self.line_search.search(
@@ -201,7 +202,7 @@ class BFGS(LineSearchOptimizer):
 
             # update approximation of the Hessian using the BFGS formula
             s = (last_x - self.x).reshape(self.f.ndim, 1)  # s^i = x^{i + 1} - x^i
-            y = (last_g - g).reshape(self.f.ndim, 1)  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
+            y = (last_g - self.g_x).reshape(self.f.ndim, 1)  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
 
             rho = y.T.dot(s).item()
             if rho < 1e-16:
@@ -214,8 +215,8 @@ class BFGS(LineSearchOptimizer):
             if self.verbose and not self.iter % self.verbose:
                 print('\t{:1.4e}'.format(rho), end='')
 
-            D = B.dot(y) * s.T
-            B = B + rho * ((1 + rho * y.T.dot(B).dot(y)) * (s.dot(s.T)) - D - D.T)
+            D = self.H_x.dot(y) * s.T
+            self.H_x = self.H_x + rho * ((1 + rho * y.T.dot(self.H_x).dot(y)) * (s.dot(s.T)) - D - D.T)
 
             # update new point
             self.x = last_x

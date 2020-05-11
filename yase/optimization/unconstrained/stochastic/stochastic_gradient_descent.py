@@ -23,7 +23,7 @@ class StochasticGradientDescent(StochasticOptimizer):
                 prev_v = np.inf
 
         for batch in self.batches:
-            self.f_x, g = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
+            self.f_x, self.g_x = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
 
             if self.is_batch_end():
 
@@ -44,18 +44,18 @@ class StochasticGradientDescent(StochasticOptimizer):
 
             if self.momentum_type == 'standard':
                 step_m1 = self.step
-                self.step = next(self.step_size) * -g + next(self.momentum) * step_m1
+                self.step = next(self.step_size) * -self.g_x + next(self.momentum) * step_m1
                 self.x += self.step
             elif self.momentum_type == 'nesterov':
                 step_m1 = self.step
                 big_jump = next(self.momentum) * step_m1
                 self.x += big_jump
-                g = self.f.jacobian(self.x, *batch)
-                correction = next(self.step_size) * -g
+                self.g_x = self.f.jacobian(self.x, *batch)
+                correction = next(self.step_size) * -self.g_x
                 self.x += correction
                 self.step = big_jump + correction
             elif self.momentum_type == 'none':
-                self.step = next(self.step_size) * -g
+                self.step = next(self.step_size) * -self.g_x
                 self.x += self.step
 
             self.iter += 1

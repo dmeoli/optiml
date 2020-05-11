@@ -134,8 +134,8 @@ class HeavyBallGradient(LineSearchOptimizer):
         past_d = np.zeros(self.f.ndim)
 
         while True:
-            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
-            ng = np.linalg.norm(g)
+            self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+            ng = np.linalg.norm(self.g_x)
 
             self.callback()
 
@@ -165,15 +165,15 @@ class HeavyBallGradient(LineSearchOptimizer):
 
             # compute deflected gradient direction
             if self.iter == 0:
-                d = -g
+                d = -self.g_x
             else:
                 if self.beta > 0:
                     beta_i = self.beta
                 else:
                     beta_i = -self.beta * ng / np.linalg.norm(past_d)
-                d = -g + beta_i * past_d
+                d = -self.g_x + beta_i * past_d
 
-            phi_p0 = g.T.dot(d)
+            phi_p0 = self.g_x.T.dot(d)
 
             # compute step size
             a, self.f_x, last_x, last_g, f_eval = self.line_search.search(

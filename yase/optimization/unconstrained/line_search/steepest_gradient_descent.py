@@ -41,8 +41,8 @@ class QuadraticSteepestGradientDescent(Optimizer):
                 prev_v = np.inf
 
         while True:
-            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
-            ng = np.linalg.norm(g)
+            self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+            ng = np.linalg.norm(self.g_x)
 
             self.callback()
 
@@ -63,7 +63,7 @@ class QuadraticSteepestGradientDescent(Optimizer):
                 self.status = 'stopped'
                 break
 
-            d = -g
+            d = -self.g_x
 
             # check if f is unbounded below
             den = d.T.dot(self.f.Q).dot(d)
@@ -244,8 +244,8 @@ class SteepestGradientDescent(LineSearchOptimizer):
             print('\tls\tit\ta*', end='')
 
         while True:
-            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
-            ng = np.linalg.norm(g)
+            self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+            ng = np.linalg.norm(self.g_x)
 
             self.callback()
 
@@ -273,7 +273,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
                 self.status = 'stopped'
                 break
 
-            d = -g
+            d = -self.g_x
 
             phi_p0 = -ng * ng
 

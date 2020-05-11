@@ -108,6 +108,7 @@ class Newton(LineSearchOptimizer):
                  tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
                          m_inf, min_a, callback, callback_args, verbose)
+        self.H_x = np.zeros(0)
         if not np.isscalar(delta):
             raise ValueError('delta is not a real scalar')
         if not delta > 0:
@@ -127,9 +128,8 @@ class Newton(LineSearchOptimizer):
             print('\t\tdelta\t\tls\tit\ta*', end='')
 
         while True:
-            self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
-            H = self.f.hessian(self.x)
-            ng = np.linalg.norm(g)
+            self.f_x, self.g_x, self.H_x = self.f.function(self.x), self.f.jacobian(self.x), self.f.hessian(self.x)
+            ng = np.linalg.norm(self.g_x)
 
             self.callback()
 
@@ -158,18 +158,18 @@ class Newton(LineSearchOptimizer):
                 break
 
             # compute Newton's direction
-            lambda_n = min(np.linalg.eigvalsh(H))  # smallest eigenvalue
+            lambda_n = min(np.linalg.eigvalsh(self.H_x))  # smallest eigenvalue
             if lambda_n < self.delta:
                 if self.verbose and not self.iter % self.verbose:
                     print('\t{:1.4e}'.format(self.delta - lambda_n), end='')
-                H = H + (self.delta - lambda_n) * np.identity(self.f.ndim)
+                self.H_x = self.H_x + (self.delta - lambda_n) * np.identity(self.f.ndim)
             else:
                 if self.verbose and not self.iter % self.verbose:
                     print('\t{:1.4e}'.format(0), end='')
 
-            d = -np.linalg.inv(H).dot(g)  # or np.linalg.solve(H, g)
+            d = -np.linalg.inv(self.H_x).dot(self.g_x)  # or np.linalg.solve(self.H_x, self.g_x)
 
-            phi_p0 = g.T.dot(d)
+            phi_p0 = self.g_x.T.dot(d)
 
             # compute step size: in Newton's method, the default initial step size is 1
             a, self.f_x, last_x, last_g, f_eval = self.line_search.search(

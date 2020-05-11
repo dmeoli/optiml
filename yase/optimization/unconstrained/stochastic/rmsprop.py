@@ -23,7 +23,7 @@ class RMSProp(StochasticOptimizer):
                 prev_v = np.inf
 
         for batch in self.batches:
-            self.f_x, g = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
+            self.f_x, self.g_x = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
 
             if self.is_batch_end():
 
@@ -50,10 +50,10 @@ class RMSProp(StochasticOptimizer):
                 step1 = self.momentum * step_m1
                 self.x -= step1
 
-            g = self.f.jacobian(self.x, *batch)
+            self.g_x = self.f.jacobian(self.x, *batch)
 
-            self.moving_mean_squared = self.decay * self.moving_mean_squared + (1. - self.decay) * g ** 2
-            step2 = self.step_size * g / np.sqrt(self.moving_mean_squared)
+            self.moving_mean_squared = self.decay * self.moving_mean_squared + (1. - self.decay) * self.g_x ** 2
+            step2 = self.step_size * self.g_x / np.sqrt(self.moving_mean_squared)
 
             if self.momentum_type == 'standard':
                 self.x -= step1 + step2

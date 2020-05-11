@@ -37,7 +37,7 @@ class Adam(StochasticOptimizer):
                 prev_v = np.inf
 
         for batch in self.batches:
-            self.f_x, g = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
+            self.f_x, self.g_x = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
 
             if self.is_batch_end():
 
@@ -69,10 +69,10 @@ class Adam(StochasticOptimizer):
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
 
-            g = self.f.jacobian(self.x, *batch)
-            self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * g  # update biased 1st moment estimate
+            self.g_x = self.f.jacobian(self.x, *batch)
+            self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * self.g_x  # update biased 1st moment estimate
             # update biased 2nd raw moment estimate
-            self.est_mom2 = self.beta2 * est_mom2_m1 + (1. - self.beta2) * g ** 2
+            self.est_mom2 = self.beta2 * est_mom2_m1 + (1. - self.beta2) * self.g_x ** 2
 
             est_mom1_crt = self.est_mom1 / (1. - self.beta1 ** t)  # compute bias-corrected 1st moment estimate
             est_mom2_crt = self.est_mom2 / (1. - self.beta2 ** t)  # compute bias-corrected 2nd raw moment estimate

@@ -30,7 +30,7 @@ class AdaDelta(StochasticOptimizer):
                 prev_v = np.inf
 
         for batch in self.batches:
-            self.f_x, g = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
+            self.f_x, self.g_x = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
 
             if self.is_batch_end():
 
@@ -57,9 +57,9 @@ class AdaDelta(StochasticOptimizer):
                 step1 = self.momentum * step_m1
                 self.x -= step1
 
-            g = self.f.jacobian(self.x, *batch)
-            self.gms = self.decay * self.gms + (1. - self.decay) * g ** 2
-            delta = np.sqrt(self.sms + self.offset) / np.sqrt(self.gms + self.offset) * g
+            self.g_x = self.f.jacobian(self.x, *batch)
+            self.gms = self.decay * self.gms + (1. - self.decay) * self.g_x ** 2
+            delta = np.sqrt(self.sms + self.offset) / np.sqrt(self.gms + self.offset) * self.g_x
 
             step2 = self.step_size * delta
 
