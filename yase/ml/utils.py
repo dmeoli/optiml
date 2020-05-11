@@ -215,11 +215,13 @@ def plot_validation_curve(estimator, X, y, param_name, param_range, scorer, cv=5
     plt.show()
 
 
-def plot_learning_curve(estimator, X, y, scorer, cv=5, train_sizes=np.linspace(.1, 1.0, 5)):
+def plot_learning_curve(estimator, X, y, scorer, cv=5, train_sizes=np.linspace(.1, 1.0, 5),
+                        shuffle=False, random_state=None):
     plt.style.use('ggplot')
 
-    train_sizes, train_scores, test_scores = learning_curve(estimator, X, y, train_sizes=train_sizes,
-                                                            cv=cv, scoring=scorer, n_jobs=-1)
+    train_sizes, train_scores, test_scores = learning_curve(estimator, X, y, train_sizes=train_sizes, cv=cv,
+                                                            scoring=scorer, n_jobs=-1, shuffle=shuffle,
+                                                            random_state=random_state)
 
     mean_train_score = np.mean(train_scores, axis=1)
     std_train_score = np.std(train_scores, axis=1)

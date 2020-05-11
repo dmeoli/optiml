@@ -9,5 +9,6 @@ setup(
     license="MIT",
     url="https://github.com/dmeoli/yase",
     include_package_data=True,
+    zip_safe=False,
     packages=find_packages(),
     python_requires='>=3.6')
