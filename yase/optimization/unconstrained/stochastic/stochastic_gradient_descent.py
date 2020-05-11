@@ -11,8 +11,9 @@ class StochasticGradientDescent(StochasticOptimizer):
                  callback_args=(), shuffle=True, random_state=None, verbose=False):
         super().__init__(f, x, step_size, momentum_type, momentum, batch_size, eps, epochs,
                          callback, callback_args, shuffle, random_state, verbose)
-        self.step_size = step_size_schedule(self.step_size)
-        self.momentum = momentum_schedule(self.momentum)
+        self.step_size_schedule = step_size_schedule(self.step_size)
+        if self.momentum_type != 'none':
+            self.momentum_schedule = momentum_schedule(self.momentum)
 
     def minimize(self):
 
@@ -36,6 +37,9 @@ class StochasticGradientDescent(StochasticOptimizer):
                         prev_v = self.f_x
 
                 self.callback(batch)
+                self.step_size = next(self.step_size_schedule)
+                if self.momentum_type != 'none':
+                    self.momentum = next(self.momentum_schedule)
                 self.epoch += 1
 
             if self.epoch >= self.epochs:
@@ -44,18 +48,18 @@ class StochasticGradientDescent(StochasticOptimizer):
 
             if self.momentum_type == 'standard':
                 step_m1 = self.step
-                self.step = next(self.step_size) * -self.g_x + next(self.momentum) * step_m1
+                self.step = self.step_size * -self.g_x + self.momentum * step_m1
                 self.x += self.step
             elif self.momentum_type == 'nesterov':
                 step_m1 = self.step
-                big_jump = next(self.momentum) * step_m1
+                big_jump = self.momentum * step_m1
                 self.x += big_jump
                 self.g_x = self.f.jacobian(self.x, *batch)
-                correction = next(self.step_size) * -self.g_x
+                correction = self.step_size * -self.g_x
                 self.x += correction
                 self.step = big_jump + correction
             elif self.momentum_type == 'none':
-                self.step = next(self.step_size) * -self.g_x
+                self.step = self.step_size * -self.g_x
                 self.x += self.step
 
             self.iter += 1

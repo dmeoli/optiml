@@ -61,7 +61,7 @@ class AdaGrad(StochasticOptimizer):
             else:
                 self.x -= step2
 
-            if self.momentum_type in ('standard', 'nesterov'):
+            if self.momentum_type != 'none':
                 self.step = step1 + step2
             else:
                 self.step = step2
