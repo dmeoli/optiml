@@ -147,11 +147,11 @@ class InteriorPoint(BoxConstrainedOptimizer):
 
             # stopping criteria
             if gap <= self.eps:
-                status = 'optimal'
+                self.status = 'optimal'
                 break
 
             if self.iter >= self.max_iter:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             # solve the SKKTS
@@ -214,4 +214,5 @@ class InteriorPoint(BoxConstrainedOptimizer):
 
         if self.verbose:
             print('\n')
-        return self.x, self.f_x, status
+
+        return self

@@ -42,7 +42,7 @@ class RProp(StochasticOptimizer):
                 self.epoch += 1
 
             if self.epoch >= self.epochs:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             if self.momentum_type == 'standard':
@@ -78,4 +78,5 @@ class RProp(StochasticOptimizer):
 
         if self.verbose:
             print('\n')
-        return self.x, self.f_x, status
+
+        return self

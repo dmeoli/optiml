@@ -36,12 +36,10 @@ class StochasticGradientDescent(StochasticOptimizer):
                         prev_v = self.f_x
 
                 self.callback(batch)
-                self.step_size = next(self.step_size)
-                self.momentum = next(self.momentum)
                 self.epoch += 1
 
             if self.epoch >= self.epochs:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             if self.momentum_type == 'standard':
@@ -64,4 +62,5 @@ class StochasticGradientDescent(StochasticOptimizer):
 
         if self.verbose:
             print('\n')
-        return self.x, self.f_x, status
+
+        return self

@@ -58,11 +58,11 @@ class ProjectedGradient(BoxConstrainedOptimizer):
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng))
 
             if ng <= self.eps:
-                status = 'optimal'
+                self.status = 'optimal'
                 break
 
             if self.iter >= self.max_iter:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             # first, compute the maximum feasible step size max_t such that:
@@ -94,4 +94,5 @@ class ProjectedGradient(BoxConstrainedOptimizer):
 
         if self.verbose:
             print('\n')
-        return self.x, self.f_x, status
+
+        return self

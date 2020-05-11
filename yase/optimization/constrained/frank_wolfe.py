@@ -79,11 +79,11 @@ class FrankWolfe(BoxConstrainedOptimizer):
                 print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, best_lb, gap))
 
             if gap <= self.eps:
-                status = 'optimal'
+                self.status = 'optimal'
                 break
 
             if self.iter >= self.max_iter:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             # in the stabilized case, restrict y in the box
@@ -117,4 +117,5 @@ class FrankWolfe(BoxConstrainedOptimizer):
 
         if self.verbose:
             print('\n')
-        return self.x, self.f_x, status
+
+        return self

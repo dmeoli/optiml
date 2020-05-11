@@ -148,16 +148,16 @@ class Subgradient(LineSearchOptimizer):
             # stopping criteria
             if self.eps < 0 and f_ref - self.f.f_star() <= -self.eps * max(abs(self.f.f_star()), 1):
                 x_ref = self.x
-                status = 'optimal'
+                self.status = 'optimal'
                 break
 
             if ng < 1e-12:  # unlikely, but it could happen
                 x_ref = self.x
-                status = 'optimal'
+                self.status = 'optimal'
                 break
 
             if self.iter >= self.max_iter or self.iter > self.line_search.max_f_eval:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             # compute step size
@@ -174,11 +174,11 @@ class Subgradient(LineSearchOptimizer):
 
             # stopping criteria
             if a <= self.line_search.min_a:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             if self.f_x <= self.m_inf:
-                status = 'unbounded'
+                self.status = 'unbounded'
                 break
 
             # compute new point
@@ -193,4 +193,5 @@ class Subgradient(LineSearchOptimizer):
 
         if self.verbose:
             print('\n')
-        return x, self.f_x, status
+
+        return self

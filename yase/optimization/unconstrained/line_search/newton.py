@@ -150,11 +150,11 @@ class Newton(LineSearchOptimizer):
 
             # stopping criteria
             if ng <= self.eps * ng0:
-                status = 'optimal'
+                self.status = 'optimal'
                 break
 
             if self.iter > self.max_iter or f_eval > self.line_search.max_f_eval:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             # compute Newton's direction
@@ -180,11 +180,11 @@ class Newton(LineSearchOptimizer):
                 print('\t{:1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
-                status = 'error'
+                self.status = 'error'
                 break
 
             if self.f_x <= self.m_inf:
-                status = 'unbounded'
+                self.status = 'unbounded'
                 break
 
             # update new point
@@ -194,4 +194,5 @@ class Newton(LineSearchOptimizer):
 
         if self.verbose:
             print('\n')
-        return self.x, self.f_x, status
+
+        return self

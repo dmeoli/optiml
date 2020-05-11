@@ -159,11 +159,11 @@ class ProximalBundle(Optimizer):
 
             # stopping criteria
             if self.mu * nd <= self.eps * ng0:
-                status = 'optimal'
+                self.status = 'optimal'
                 break
 
             if self.iter >= self.max_iter:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             if self.momentum_type == 'standard':
@@ -180,7 +180,7 @@ class ProximalBundle(Optimizer):
             fd, g = self.f.function(last_x), self.f.jacobian(last_x)
 
             if fd <= self.m_inf:
-                status = 'unbounded'
+                self.status = 'unbounded'
                 break
 
             G = np.vstack((G, g.T))
@@ -200,4 +200,4 @@ class ProximalBundle(Optimizer):
 
         if self.verbose:
             print('\n')
-        return self.x, v, status
+        return self

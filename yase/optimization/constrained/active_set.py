@@ -61,7 +61,7 @@ class ActiveSet(BoxConstrainedOptimizer):
                 print('{:4d}\t{:1.4e}\t{:d}\t'.format(self.iter, self.f_x, sum(L) + sum(U)), end='')
 
             if self.iter >= self.max_iter:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             # solve the unconstrained problem restricted to A the problem reads:
@@ -102,7 +102,7 @@ class ActiveSet(BoxConstrainedOptimizer):
                     uppr = True
 
                 if h.size == 0:
-                    status = 'optimal'
+                    self.status = 'optimal'
                     break
                 else:
                     h = h[0]  # that's probably Bland's anti-cycle rule
@@ -158,4 +158,5 @@ class ActiveSet(BoxConstrainedOptimizer):
 
         if self.verbose:
             print('\n')
-        return self.x, self.f_x, status
+
+        return self

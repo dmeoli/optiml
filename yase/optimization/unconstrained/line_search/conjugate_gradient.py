@@ -40,11 +40,11 @@ class QuadraticConjugateGradient(Optimizer):
 
             # stopping criteria
             if ng <= self.eps:
-                status = 'optimal'
+                self.status = 'optimal'
                 break
 
             if self.iter > self.max_iter:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             # compute search direction
@@ -79,7 +79,7 @@ class QuadraticConjugateGradient(Optimizer):
                 #
                 # - d.T.dot(Q).dot(d) < 0, i.e., d is a direction of negative curvature
                 #   for f, which is then necessarily unbounded below.
-                status = 'unbounded'
+                self.status = 'unbounded'
                 break
 
             # compute step size
@@ -100,7 +100,8 @@ class QuadraticConjugateGradient(Optimizer):
 
         if self.verbose:
             print('\n')
-        return self.x, self.f_x, status
+
+        return self
 
 
 class ConjugateGradient(LineSearchOptimizer):
@@ -281,11 +282,11 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
             # stopping criteria
             if ng <= self.eps * ng0:
-                status = 'optimal'
+                self.status = 'optimal'
                 break
 
             if self.iter > self.max_iter or f_eval > self.line_search.max_f_eval:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             # compute search direction
@@ -333,11 +334,11 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 print('\t{:1.2e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
-                status = 'error'
+                self.status = 'error'
                 break
 
             if self.f_x <= self.m_inf:
-                status = 'unbounded'
+                self.status = 'unbounded'
                 break
 
             # update new point
@@ -347,4 +348,5 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
         if self.verbose:
             print('\n')
-        return self.x, self.f_x, status
+
+        return self

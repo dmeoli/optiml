@@ -170,11 +170,11 @@ class BFGS(LineSearchOptimizer):
 
             # stopping criteria
             if ng <= self.eps * ng0:
-                status = 'optimal'
+                self.status = 'optimal'
                 break
 
             if self.iter > self.max_iter or f_eval > self.line_search.max_f_eval:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             # compute approximation to Newton's direction
@@ -192,11 +192,11 @@ class BFGS(LineSearchOptimizer):
                 print('\t{:1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
-                status = 'error'
+                self.status = 'error'
                 break
 
             if self.f_x <= self.m_inf:
-                status = 'unbounded'
+                self.status = 'unbounded'
                 break
 
             # update approximation of the Hessian using the BFGS formula
@@ -206,7 +206,7 @@ class BFGS(LineSearchOptimizer):
             rho = y.T.dot(s).item()
             if rho < 1e-16:
                 warnings.warn('error: y^i s^i = {:1.4e}'.format(rho))
-                status = 'error'
+                self.status = 'error'
                 break
 
             rho = 1 / rho
@@ -224,7 +224,8 @@ class BFGS(LineSearchOptimizer):
 
         if self.verbose:
             print('\n')
-        return self.x, self.f_x, status
+
+        return self
 
 
 class LBFGS(LineSearchOptimizer):

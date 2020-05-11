@@ -138,7 +138,6 @@ class NeuralNetwork(BaseEstimator, Layer):
             if res.status != 0:
                 warnings.warn('max_iter reached but the optimization has not converged yet')
 
-            self._unpack(res.x)
         else:
             if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -147,7 +146,7 @@ class NeuralNetwork(BaseEstimator, Layer):
                                                 max_f_eval=self.max_f_eval, verbose=self.verbose)
                 res = self.optimizer.minimize()
 
-                if res[2] != 'optimal':
+                if res.status != 'optimal':
                     warnings.warn('max_iter reached but the optimization has not converged yet')
 
             elif issubclass(self.optimizer, StochasticOptimizer):
@@ -177,7 +176,7 @@ class NeuralNetwork(BaseEstimator, Layer):
             else:
                 raise ValueError(f'unknown optimizer {self.optimizer}')
 
-            self._unpack(res[0])
+        self._unpack(res.x)
 
         return self
 

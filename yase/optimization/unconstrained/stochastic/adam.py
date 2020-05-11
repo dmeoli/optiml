@@ -53,7 +53,7 @@ class Adam(StochasticOptimizer):
                 self.epoch += 1
 
             if self.epoch >= self.epochs:
-                status = 'stopped'
+                self.status = 'stopped'
                 break
 
             t = self.iter + 1
@@ -93,4 +93,5 @@ class Adam(StochasticOptimizer):
 
         if self.verbose:
             print('\n')
-        return self.x, self.f_x, status
+
+        return self

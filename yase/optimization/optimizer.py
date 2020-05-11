@@ -46,6 +46,7 @@ class Optimizer:
         self.iter = 0
         self._callback = callback
         self.callback_args = callback_args
+        self.status = 'unknown'
         self.verbose = verbose
 
     def callback(self, args=None):

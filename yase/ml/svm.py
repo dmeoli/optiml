@@ -176,7 +176,7 @@ class SVC(ClassifierMixin, SVM):
         elif issubclass(self.optimizer, BoxConstrainedOptimizer):
 
             self.optimizer = self.optimizer(f=bcqp, max_iter=self.max_iter, verbose=self.verbose)
-            alphas = self.optimizer.minimize()[0]
+            alphas = self.optimizer.minimize().x
 
         elif self.optimizer == scipy_solve_bcqp:
 
@@ -216,7 +216,7 @@ class SVC(ClassifierMixin, SVM):
                                                 max_f_eval=self.max_f_eval, verbose=self.verbose)
                 res = self.optimizer.minimize()
 
-                if res[2] != 'optimal':
+                if res.status != 'optimal':
                     warnings.warn('max_iter reached but the optimization has not converged yet')
 
             elif issubclass(self.optimizer, StochasticOptimizer):
@@ -326,7 +326,7 @@ class SVR(RegressorMixin, SVM):
             if issubclass(self.optimizer, BoxConstrainedOptimizer):
 
                 self.optimizer = self.optimizer(f=bcqp, max_iter=self.max_iter, verbose=self.verbose)
-                alphas = self.optimizer.minimize()[0]
+                alphas = self.optimizer.minimize().x
 
             elif self.optimizer == scipy_solve_bcqp:
 
@@ -366,7 +366,7 @@ class SVR(RegressorMixin, SVM):
                                                     max_f_eval=self.max_f_eval, verbose=self.verbose)
                     res = self.optimizer.minimize()
 
-                    if res[2] != 'optimal':
+                    if res.status != 'optimal':
                         warnings.warn('max_iter reached but the optimization has not converged yet')
 
                 elif issubclass(self.optimizer, StochasticOptimizer):
