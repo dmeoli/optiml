@@ -78,7 +78,7 @@ class MeanSquaredError(LossFunction):
 
 class BinaryCrossEntropy(LossFunction):
     """Binary Cross-Entropy aka Sigmoid Cross-Entropy loss
-    function for binary (possibly multi-label) classification
+    function for binary and multi-label classification
     or regression between 0 and 1 with sigmoid output layer"""
 
     def loss(self, y_pred, y_true):

@@ -101,7 +101,6 @@ class NeuralNetwork(BaseEstimator, Layer):
                 start = end
 
     def _store_print_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
-        assert opt.f_x == self.loss.function(opt.x, X_batch, y_batch)  # TODO remove this at the end
         self.loss_history['train_loss'].append(opt.f_x)
         val_loss = self.loss.function(opt.x, X_val, y_val)
         self.loss_history['val_loss'].append(val_loss)
@@ -153,7 +152,7 @@ class NeuralNetwork(BaseEstimator, Layer):
 
             elif issubclass(self.optimizer, StochasticOptimizer):
 
-                # don't stratify in multi-label classification # TODO fix multi-label case
+                # don't stratify in multi-label classification
                 should_stratify = isinstance(self, NeuralNetworkClassifier) and self.n_classes == 2
                 stratify = y if should_stratify else None
                 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=self.validation_split,

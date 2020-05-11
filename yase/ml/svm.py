@@ -4,6 +4,7 @@ import numpy as np
 import qpsolvers
 from scipy.optimize import minimize
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
+from sklearn.utils.multiclass import unique_labels
 
 from ..optimization import Optimizer
 from ..optimization.constrained import (SMO, SMOClassifier, SMORegression, BoxConstrainedQuadratic,
@@ -144,8 +145,8 @@ class SVC(ClassifierMixin, SVM):
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
         """
-        self.labels = np.unique(y)  # TODO fix multi-label case
-        if self.labels.size > 2:
+        self.labels = unique_labels(y)
+        if len(self.labels) > 2:
             raise ValueError('use OneVsOneClassifier or OneVsRestClassifier from sklearn.multiclass '
                              'to train a model over more than two labels')
         y = np.where(y == self.labels[0], -1., 1.)
@@ -211,8 +212,8 @@ class SVC(ClassifierMixin, SVM):
 
             elif issubclass(self.optimizer, LineSearchOptimizer):
 
-                self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
-                                                verbose=self.verbose)
+                self.optimizer = self.optimizer(f=dual, x=np.zeros(dual.ndim), max_iter=self.max_iter,
+                                                max_f_eval=self.max_f_eval, verbose=self.verbose)
                 res = self.optimizer.minimize()
 
                 if res[2] != 'optimal':
@@ -220,17 +221,16 @@ class SVC(ClassifierMixin, SVM):
 
             elif issubclass(self.optimizer, StochasticOptimizer):
 
-                self.optimizer = self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
-                                                momentum_type=self.momentum_type, momentum=self.momentum,
-                                                verbose=self.verbose)
+                self.optimizer = self.optimizer(f=dual, x=np.zeros(dual.ndim), step_size=self.learning_rate,
+                                                epochs=self.max_iter, momentum_type=self.momentum_type,
+                                                momentum=self.momentum, verbose=self.verbose)
                 self.optimizer.minimize()
 
             elif issubclass(self.optimizer, ProximalBundle):
 
-                self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter,
-                                                master_solver=self.master_solver,
-                                                momentum_type=self.momentum_type, momentum=self.momentum,
-                                                verbose=self.verbose)
+                self.optimizer = self.optimizer(f=dual, x=np.zeros(dual.ndim), max_iter=self.max_iter,
+                                                master_solver=self.master_solver, momentum_type=self.momentum_type,
+                                                momentum=self.momentum, verbose=self.verbose)
                 self.optimizer.minimize()
 
             alphas = dual.primal_solution
@@ -294,7 +294,7 @@ class SVR(RegressorMixin, SVM):
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
         """
-        self.targets = y.shape[1] if y.ndim > 1 else 1  # TODO fix multi-label case
+        self.targets = y.shape[1] if y.ndim > 1 else 1
         if self.targets > 1:
             raise ValueError('use sklearn.multioutput.MultiOutputRegressor to train a model over more than one target')
 
@@ -362,8 +362,8 @@ class SVR(RegressorMixin, SVM):
 
                 elif issubclass(self.optimizer, LineSearchOptimizer):
 
-                    self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
-                                                    verbose=self.verbose)
+                    self.optimizer = self.optimizer(f=dual, x=np.zeros(dual.ndim), max_iter=self.max_iter,
+                                                    max_f_eval=self.max_f_eval, verbose=self.verbose)
                     res = self.optimizer.minimize()
 
                     if res[2] != 'optimal':
@@ -371,16 +371,16 @@ class SVR(RegressorMixin, SVM):
 
                 elif issubclass(self.optimizer, StochasticOptimizer):
 
-                    self.optimizer = self.optimizer(f=dual, step_size=self.learning_rate, epochs=self.max_iter,
-                                                    momentum_type=self.momentum_type, momentum=self.momentum,
-                                                    verbose=self.verbose)
+                    self.optimizer = self.optimizer(f=dual, x=np.zeros(dual.ndim), step_size=self.learning_rate,
+                                                    epochs=self.max_iter, momentum_type=self.momentum_type,
+                                                    momentum=self.momentum, verbose=self.verbose)
                     self.optimizer.minimize()
 
                 elif issubclass(self.optimizer, ProximalBundle):
 
-                    self.optimizer = self.optimizer(f=dual, max_iter=self.max_iter, master_solver=self.master_solver,
-                                                    momentum_type=self.momentum_type, momentum=self.momentum,
-                                                    verbose=self.verbose)
+                    self.optimizer = self.optimizer(f=dual, x=np.zeros(dual.ndim), max_iter=self.max_iter,
+                                                    master_solver=self.master_solver, momentum_type=self.momentum_type,
+                                                    momentum=self.momentum, verbose=self.verbose)
                     self.optimizer.minimize()
 
                 alphas = dual.primal_solution

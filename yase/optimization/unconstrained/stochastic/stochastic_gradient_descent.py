@@ -36,6 +36,8 @@ class StochasticGradientDescent(StochasticOptimizer):
                         prev_v = self.f_x
 
                 self.callback(batch)
+                self.step_size = next(self.step_size)
+                self.momentum = next(self.momentum)
                 self.epoch += 1
 
             if self.epoch >= self.epochs:

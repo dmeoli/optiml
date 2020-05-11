@@ -8,6 +8,7 @@ from sklearn.model_selection import learning_curve, validation_curve
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.svm import SVC as SKLSVC
 from sklearn.svm import SVR as SKLSVR
+from sklearn.utils.multiclass import unique_labels
 
 from .svm import SVM, SVC, SVR
 
@@ -45,54 +46,59 @@ def load_ml_cup_blind():
 
 # data generators
 
-def generate_linearly_separable_data():
+def generate_linearly_separable_data(size=100, random_state=None):
+    rs = np.random.RandomState(random_state)
     mean1 = np.array([0, 2])
     mean2 = np.array([2, 0])
     cov = np.array([[0.8, 0.6], [0.6, 0.8]])
-    X1 = np.random.multivariate_normal(mean1, cov, 100)
+    X1 = rs.multivariate_normal(mean1, cov, size)
     y1 = np.ones(len(X1))
-    X2 = np.random.multivariate_normal(mean2, cov, 100)
+    X2 = rs.multivariate_normal(mean2, cov, size)
     y2 = -np.ones(len(X2))
     return np.vstack((X1, X2)), np.hstack((y1, y2))
 
 
-def generate_linearly_separable_overlap_data():
+def generate_linearly_separable_overlap_data(size=100, random_state=None):
+    rs = np.random.RandomState(random_state)
     mean1 = np.array([0, 2])
     mean2 = np.array([2, 0])
     cov = np.array([[1.5, 1.0], [1.0, 1.5]])
-    X1 = np.random.multivariate_normal(mean1, cov, 100)
+    X1 = rs.multivariate_normal(mean1, cov, size)
     y1 = np.ones(len(X1))
-    X2 = np.random.multivariate_normal(mean2, cov, 100)
+    X2 = rs.multivariate_normal(mean2, cov, size)
     y2 = -np.ones(len(X2))
     return np.vstack((X1, X2)), np.hstack((y1, y2))
 
 
-def generate_non_linearly_separable_data():
+def generate_non_linearly_separable_data(size=50, random_state=None):
+    rs = np.random.RandomState(random_state)
     mean1 = [-1, 2]
     mean2 = [1, -1]
     mean3 = [4, -4]
     mean4 = [-4, 4]
     cov = [[1.0, 0.8], [0.8, 1.0]]
-    X1 = np.random.multivariate_normal(mean1, cov, 50)
-    X1 = np.vstack((X1, np.random.multivariate_normal(mean3, cov, 50)))
+    X1 = rs.multivariate_normal(mean1, cov, size)
+    X1 = np.vstack((X1, rs.multivariate_normal(mean3, cov, size)))
     y1 = np.ones(len(X1))
-    X2 = np.random.multivariate_normal(mean2, cov, 50)
-    X2 = np.vstack((X2, np.random.multivariate_normal(mean4, cov, 50)))
+    X2 = rs.multivariate_normal(mean2, cov, size)
+    X2 = np.vstack((X2, rs.multivariate_normal(mean4, cov, size)))
     y2 = -np.ones(len(X2))
     return np.vstack((X1, X2)), np.hstack((y1, y2))
 
 
-def generate_non_linearly_regression_data():
-    X = np.sort(4 * np.pi * np.random.rand(100)) - 2 * np.pi
+def generate_non_linearly_regression_data(size=100, random_state=None):
+    rs = np.random.RandomState(random_state)
+    X = np.sort(4 * np.pi * rs.uniform(size=size)) - 2 * np.pi
     y = np.sinc(X)
-    y += 0.25 * (0.5 - np.random.rand(100))  # noise
+    y += 0.25 * (0.5 - rs.uniform(size=size))  # noise
     return X.reshape(-1, 1), y
 
 
-def generate_centred_and_normalized_regression_data():
+def generate_centred_and_normalized_regression_data(size=50, random_state=None):
+    rs = np.random.RandomState(random_state)
     # generating sine curve and uniform noise
-    X = np.linspace(0, 1, 50)
-    noise = 1 * np.random.uniform(size=50)
+    X = np.linspace(0, 1, size)
+    noise = 1 * rs.uniform(size=size)
     y = np.sin(X * 1.5 * np.pi)
     y += noise
     # centering the y data to avoid fit the intercept
@@ -114,7 +120,7 @@ def plot_svm_hyperplane(svm, X, y):
 
     # axis labels and limits
     if isinstance(svm, ClassifierMixin):
-        labels = np.unique(y)
+        labels = unique_labels(y)
         X1, X2 = X[y == labels[0]], X[y == labels[1]]
         plt.xlabel('$x_1$', fontsize=9)
         plt.ylabel('$x_2$', fontsize=9)
