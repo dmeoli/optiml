@@ -112,17 +112,17 @@ class ProximalBundle(Optimizer):
 
             if self.iter == 0:
                 # compute first function and subgradient
-                self.f_x, g = self.f.function(self.x), self.f.jacobian(self.x)
+                self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
 
-                G = g.T  # matrix of subgradients
-                F = self.f_x - g.T.dot(self.x)  # vector of translated function values
+                G = self.g_x.T  # matrix of subgradients
+                F = self.f_x - self.g_x.T.dot(self.x)  # vector of translated function values
                 # each (fxi , gi , xi) gives the constraint
                 #
                 #  v >= fxi + gi' * (x + d - xi) = gi' * (x + d) + (fi - gi' * xi)
                 #
                 # so we just keep the single constant fi - gi' * xi instead of xi
 
-                ng = np.linalg.norm(g)
+                ng = np.linalg.norm(self.g_x)
                 if self.eps < 0:
                     ng0 = -ng  # norm of first subgradient
                 else:
@@ -177,14 +177,14 @@ class ProximalBundle(Optimizer):
             last_x = self.x - (step1 + d if self.momentum_type == 'standard' else d)
 
             # compute function and subgradient
-            fd, g = self.f.function(last_x), self.f.jacobian(last_x)
+            fd, self.g_x = self.f.function(last_x), self.f.jacobian(last_x)
 
             if fd <= self.m_inf:
                 self.status = 'unbounded'
                 break
 
-            G = np.vstack((G, g.T))
-            F = np.vstack((F, fd - g.T.dot(last_x)))
+            G = np.vstack((G, self.g_x.T))
+            F = np.vstack((F, fd - self.g_x.T.dot(last_x)))
 
             # SS / NS decision
             if fd <= self.f_x + self.m1 * (v - self.f_x):
