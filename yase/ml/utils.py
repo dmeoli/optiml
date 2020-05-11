@@ -5,7 +5,6 @@ import numpy as np
 from matplotlib.lines import Line2D
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import learning_curve, validation_curve
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.svm import SVC as SKLSVC
 from sklearn.svm import SVR as SKLSVR
 from sklearn.utils.multiclass import unique_labels
@@ -30,8 +29,7 @@ def load_monk(n_dataset):
         raise ValueError(f'unknown monk dataset {n_dataset}')
     monks = [np.delete(np.genfromtxt(path + '/data/monks/monks-' + str(n_dataset) + '.' + type), obj=-1, axis=1)
              for type in ('train', 'test')]
-    return (monks[0][:, 1:], monks[1][:, 1:],  # X_train, X_test
-            monks[0][:, 0].ravel(), monks[1][:, 0].ravel())  # y_train, y_test
+    return monks[0][:, 1:], monks[1][:, 1:], monks[0][:, 0].ravel(), monks[1][:, 0].ravel()
 
 
 def load_ml_cup():
