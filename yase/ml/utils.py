@@ -30,8 +30,7 @@ def load_monk(n_dataset):
         raise ValueError(f'unknown monk dataset {n_dataset}')
     monks = [np.delete(np.genfromtxt(path + '/data/monks/monks-' + str(n_dataset) + '.' + type), obj=-1, axis=1)
              for type in ('train', 'test')]
-    return (OneHotEncoder(sparse=False).fit_transform(monks[0][:, 1:]),  # X_train
-            OneHotEncoder(sparse=False).fit_transform(monks[1][:, 1:]),  # X_test
+    return (monks[0][:, 1:], monks[1][:, 1:],  # X_train, X_test
             monks[0][:, 0].ravel(), monks[1][:, 0].ravel())  # y_train, y_test
 
 
