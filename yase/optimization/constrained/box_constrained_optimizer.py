@@ -116,7 +116,7 @@ class BoxConstrainedQuadratic(Quadratic):
             q = -Q.dot(z)
 
         super().__init__(Q, q)
-        self.ub = ub
+        self.ub = np.asarray(ub, dtype=np.float)
 
     def x_star(self):
         return np.full(fill_value=np.nan, shape=self.ndim)

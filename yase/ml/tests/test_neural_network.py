@@ -4,11 +4,10 @@ from sklearn.datasets import load_iris, load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
+from yase.ml.neural_network import NeuralNetworkRegressor, NeuralNetworkClassifier
 from yase.ml.neural_network.activations import sigmoid, softmax, linear, tanh
 from yase.ml.neural_network.layers import FullyConnected
 from yase.ml.neural_network.losses import mean_squared_error, sparse_categorical_cross_entropy
-from yase.ml.neural_network import NeuralNetworkRegressor, NeuralNetworkClassifier
-from yase.ml.neural_network.regularizers import L2
 from yase.optimization.unconstrained.line_search import BFGS
 from yase.optimization.unconstrained.stochastic import Adam
 

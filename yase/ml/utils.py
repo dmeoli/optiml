@@ -10,13 +10,6 @@ from sklearn.utils.multiclass import unique_labels
 from .svm import SVM, SVC, SVR
 
 
-# metrics
-
-def mean_euclidean_error(y_true, y_pred):
-    assert y_true.shape == y_pred.shape
-    return np.mean(np.linalg.norm(y_pred - y_true, axis=y_true.ndim - 1))  # for multi-output compatibility
-
-
 # data generators
 
 def generate_linearly_separable_data(size=100, random_state=None):

@@ -95,6 +95,6 @@ class ProjectedGradient(BoxConstrainedOptimizer):
             self.callback()
 
         if self.verbose:
-            print('\n')
+            print()
 
         return self

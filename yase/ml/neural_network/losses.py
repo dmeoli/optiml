@@ -16,7 +16,7 @@ class LossFunction(OptimizationFunction):
         self.y = y
 
     def f_star(self):
-        if self.x_star() is not np.nan:
+        if not np.isnan(self.x_star()).all():
             return self.function(self.x_star())
         return super().f_star()
 
