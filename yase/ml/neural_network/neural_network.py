@@ -206,7 +206,6 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
         if y.ndim == 1:
             y = y.reshape(-1, 1)
 
-        # TODO fix multi-label case
         self.n_classes = y.shape[1] if self.loss == CategoricalCrossEntropy else np.unique(y).size
         if self.loss in (SparseCategoricalCrossEntropy, CategoricalCrossEntropy):
             if self.layers[-1].activation != softmax:
