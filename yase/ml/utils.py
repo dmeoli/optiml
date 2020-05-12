@@ -1,5 +1,3 @@
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
@@ -17,28 +15,6 @@ from .svm import SVM, SVC, SVR
 def mean_euclidean_error(y_true, y_pred):
     assert y_true.shape == y_pred.shape
     return np.mean(np.linalg.norm(y_pred - y_true, axis=y_true.ndim - 1))  # for multi-output compatibility
-
-
-# dataset loaders
-
-path = os.path.dirname(os.path.abspath(__file__))
-
-
-def load_monk(n_dataset):
-    if n_dataset not in (1, 2, 3):
-        raise ValueError(f'unknown monk dataset {n_dataset}')
-    monks = [np.delete(np.genfromtxt(path + '/data/monks/monks-' + str(n_dataset) + '.' + type), obj=-1, axis=1)
-             for type in ('train', 'test')]
-    return monks[0][:, 1:], monks[1][:, 1:], monks[0][:, 0].ravel(), monks[1][:, 0].ravel()
-
-
-def load_ml_cup():
-    ml_cup = np.delete(np.genfromtxt(path + '/data/ML-CUP19/ML-CUP19-TR.csv', delimiter=','), obj=0, axis=1)
-    return ml_cup[:, :-2], ml_cup[:, -2:]
-
-
-def load_ml_cup_blind():
-    return np.delete(np.genfromtxt(path + '/data/ML-CUP19/ML-CUP19-TS.csv', delimiter=','), obj=0, axis=1)
 
 
 # data generators
