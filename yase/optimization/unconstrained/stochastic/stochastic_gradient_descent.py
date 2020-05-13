@@ -36,11 +36,12 @@ class StochasticGradientDescent(StochasticOptimizer):
                             print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                         prev_v = self.f_x
 
-                try:
-                    self.callback(batch)
-                except StopIteration:
-                    break
+            try:
+                self.callback(batch)
+            except StopIteration:
+                break
 
+            if self.is_batch_end():
                 self.step_size = next(self.step_size_schedule)
                 if self.momentum_type != 'none':
                     self.momentum = next(self.momentum_schedule)

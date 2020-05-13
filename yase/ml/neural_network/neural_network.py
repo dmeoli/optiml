@@ -43,12 +43,14 @@ class NeuralNetwork(BaseEstimator, Layer):
         if issubclass(self.optimizer, StochasticOptimizer):
             self.train_loss_history = []
             self.train_score_history = []
+            self._no_improvement_count = 0
+            self._avg_epoch_loss = 0
             if self.early_stopping:
                 self.val_loss_history = []
                 self.val_score_history = []
                 self.best_val_score = -np.inf
             else:
-                self.best_loss_ = np.inf
+                self.best_loss = np.inf
 
     def forward(self, X):
         for layer in self.layers:
@@ -113,34 +115,45 @@ class NeuralNetwork(BaseEstimator, Layer):
                 start = end
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
-        self.train_loss_history.append(opt.f_x)
-        if self.early_stopping:
-            val_loss = self.loss.function(opt.x, X_val, y_val)
-            self.val_loss_history.append(val_loss)
-            if self.verbose and not opt.epoch % self.verbose:
-                print('\tval_loss: {:1.4e}'.format(val_loss), end='')
+        self._avg_epoch_loss += opt.f_x
+        if opt.is_batch_end():
+            self._avg_epoch_loss /= X_batch.shape[0]
+            self.train_loss_history.append(self._avg_epoch_loss)
+            self._avg_epoch_loss = 0
+            if self.early_stopping:
+                val_loss = self.loss.function(opt.x, X_val, y_val)
+                self.val_loss_history.append(val_loss)
+                if self.verbose and not opt.epoch % self.verbose:
+                    print('\tval_loss: {:1.4e}'.format(val_loss), end='')
 
     def _update_no_improvement_count(self, opt):
         if self.early_stopping:
-
             if self.val_score_history[-1] < self.best_val_score + self.tol:
                 self._no_improvement_count += 1
             else:
                 self._no_improvement_count = 0
-
             if self.val_score_history[-1] > self.best_val_score:
                 self.best_val_score = self.val_score_history[-1]
                 self._best_coefs = [coef.copy() for coef in self.coefs_]
                 self._best_intercepts = [inter.copy() for inter in self.intercepts_]
         else:
-            if self.train_loss_history[-1] > self.best_loss_ - self.tol:
+            if self.train_loss_history[-1] > self.best_loss - self.tol:
                 self._no_improvement_count += 1
             else:
                 self._no_improvement_count = 0
-            if self.train_loss_history[-1] < self.best_loss_:
-                self.best_loss_ = self.train_loss_history[-1]
+            if self.train_loss_history[-1] < self.best_loss:
+                self.best_loss = self.train_loss_history[-1]
 
-        if self._no_improvement_count > self.patience:
+        if self.early_stopping and self.train_score_history[-1] == 1. and self.best_val_score == 1.:
+
+            opt.x = self._pack(self._best_coefs, self._best_intercepts)
+
+            if self.verbose:
+                print(f'\ntraining stopped since train and validation score cannot be further improved')
+
+            raise StopIteration
+
+        if self._no_improvement_count >= self.patience:
 
             if self.early_stopping:
                 opt.x = self._pack(self._best_coefs, self._best_intercepts)
@@ -195,8 +208,6 @@ class NeuralNetwork(BaseEstimator, Layer):
 
             elif issubclass(self.optimizer, StochasticOptimizer):
 
-                self._no_improvement_count = 0
-
                 # don't stratify in multi-label classification
                 should_stratify = isinstance(self, NeuralNetworkClassifier) and self.layers[-1].fan_out == 1
                 stratify = y if should_stratify else None
@@ -241,16 +252,17 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
         super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
-        acc = self.score(X_batch, y_batch)
-        self.train_score_history.append(acc)
-        if self.verbose and not opt.epoch % self.verbose:
-            print('\tacc: {:1.4f}'.format(acc), end='')
-        if self.early_stopping:
-            val_acc = self.score(X_val, y_val)
-            self.val_score_history.append(val_acc)
+        if opt.is_batch_end():
+            acc = self.score(X_batch, y_batch)
+            self.train_score_history.append(acc)
             if self.verbose and not opt.epoch % self.verbose:
-                print('\tval_acc: {:1.4f}'.format(val_acc), end='')
-        self._update_no_improvement_count(opt)
+                print('\tacc: {:1.4f}'.format(acc), end='')
+            if self.early_stopping:
+                val_acc = self.score(X_val, y_val)
+                self.val_score_history.append(val_acc)
+                if self.verbose and not opt.epoch % self.verbose:
+                    print('\tval_acc: {:1.4f}'.format(val_acc), end='')
+            self._update_no_improvement_count(opt)
 
     def fit(self, X, y):
         if y.ndim == 1:
@@ -294,16 +306,17 @@ class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
         super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
-        r2 = self.score(X_batch, y_batch)
-        self.train_score_history.append(r2)
-        if self.verbose and not opt.epoch % self.verbose:
-            print('\tr2: {:1.4f}'.format(r2), end='')
-        if self.early_stopping:
-            val_r2 = self.score(X_val, y_val)
-            self.val_score_history.append(val_r2)
+        if opt.is_batch_end():
+            r2 = self.score(X_batch, y_batch)
+            self.train_score_history.append(r2)
             if self.verbose and not opt.epoch % self.verbose:
-                print('\tval_r2: {:1.4f}'.format(val_r2), end='')
-        self._update_no_improvement_count(opt)
+                print('\tr2: {:1.4f}'.format(r2), end='')
+            if self.early_stopping:
+                val_r2 = self.score(X_val, y_val)
+                self.val_score_history.append(val_r2)
+                if self.verbose and not opt.epoch % self.verbose:
+                    print('\tval_r2: {:1.4f}'.format(val_r2), end='')
+            self._update_no_improvement_count(opt)
 
     def fit(self, X, y):
         if y.ndim == 1:

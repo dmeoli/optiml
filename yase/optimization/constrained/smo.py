@@ -2,6 +2,7 @@ import sys
 import warnings
 
 import numpy as np
+from sklearn.exceptions import PositiveSpectrumWarning
 
 from ..utils import clip
 
@@ -135,7 +136,7 @@ class SMOClassifier(SMO):
             else:
                 a2 = alpha2
 
-            warnings.warn('kernel matrix is not positive definite')
+            warnings.warn('kernel matrix is not positive definite', PositiveSpectrumWarning)
 
         # if examples can't be optimized within tol, skip this pair
         if abs(a2 - alpha2) < 1e-12 * (a2 + alpha2 + 1e-12):
@@ -406,7 +407,7 @@ class SMORegression(SMO):
                         Lobj = -L * delta_E
                         Hobj = -H * delta_E
                         a2 = L if Lobj > Hobj else H
-                        warnings.warn('kernel matrix is not positive definite')
+                        warnings.warn('kernel matrix is not positive definite', PositiveSpectrumWarning)
                     a1 = alpha1_p - (a2 - alpha2_p)
                     # update alpha1, alpha2_p if change is larger than some eps
                     if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
@@ -429,7 +430,7 @@ class SMORegression(SMO):
                         Lobj = L * (-2 * self.epsilon + delta_E)
                         Hobj = H * (-2 * self.epsilon + delta_E)
                         a2 = L if Lobj > Hobj else H
-                        warnings.warn('kernel matrix is not positive definite')
+                        warnings.warn('kernel matrix is not positive definite', PositiveSpectrumWarning)
                     a1 = alpha1_p + (a2 - alpha2_n)
                     # update alpha1, alpha2_n if change is larger than some eps
                     if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
@@ -452,7 +453,7 @@ class SMORegression(SMO):
                         Lobj = -L * (2 * self.epsilon + delta_E)
                         Hobj = -H * (2 * self.epsilon + delta_E)
                         a2 = L if Lobj > Hobj else H
-                        warnings.warn('kernel matrix is not positive definite')
+                        warnings.warn('kernel matrix is not positive definite', PositiveSpectrumWarning)
                     a1 = alpha1_n + (a2 - alpha2_p)
                     # update alpha1_n, alpha2_p if change is larger than some eps
                     if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
@@ -475,7 +476,7 @@ class SMORegression(SMO):
                         Lobj = L * delta_E
                         Hobj = H * delta_E
                         a2 = L if Lobj > Hobj else H
-                        warnings.warn('kernel matrix is not positive definite')
+                        warnings.warn('kernel matrix is not positive definite', PositiveSpectrumWarning)
                     a1 = alpha1_n - (a2 - alpha2_n)
                     # update alpha1_n, alpha2_n if change is larger than some eps
                     if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:

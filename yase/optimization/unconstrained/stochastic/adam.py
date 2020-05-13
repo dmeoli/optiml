@@ -49,11 +49,12 @@ class Adam(StochasticOptimizer):
                             print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                         prev_v = self.f_x
 
-                try:
-                    self.callback(batch)
-                except StopIteration:
-                    break
+            try:
+                self.callback(batch)
+            except StopIteration:
+                break
 
+            if self.is_batch_end():
                 self.epoch += 1
 
             if self.epoch >= self.epochs:
