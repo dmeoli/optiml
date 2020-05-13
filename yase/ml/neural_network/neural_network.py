@@ -22,7 +22,7 @@ class NeuralNetwork(BaseEstimator, Layer):
     def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent,
                  learning_rate=0.01, max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4,
                  validation_split=0.2, batch_size=None, max_f_eval=1000, master_solver='ECOS',
-                 early_stopping=True, n_iter_no_change=5, shuffle=True, random_state=None, verbose=False):
+                 early_stopping=True, patience=5, shuffle=True, random_state=None, verbose=False):
         self.layers = layers
         self.loss = loss
         self.optimizer = optimizer
@@ -36,7 +36,7 @@ class NeuralNetwork(BaseEstimator, Layer):
         self.max_f_eval = max_f_eval
         self.master_solver = master_solver
         self.early_stopping = early_stopping
-        self.n_iter_no_change = n_iter_no_change
+        self.patience = patience
         self.shuffle = shuffle
         self.random_state = random_state
         self.verbose = verbose
@@ -140,18 +140,18 @@ class NeuralNetwork(BaseEstimator, Layer):
             if self.train_loss_history[-1] < self.best_loss_:
                 self.best_loss_ = self.train_loss_history[-1]
 
-        if self._no_improvement_count > self.n_iter_no_change:
+        if self._no_improvement_count > self.patience:
 
             if self.early_stopping:
                 opt.x = self._pack(self._best_coefs, self._best_intercepts)
 
             if self.verbose:
                 if self.early_stopping:
-                    print(f'\ntraining stopped since validation accuracy did not improve more than '
-                          f'tol={self.tol} for {self.n_iter_no_change} consecutive epochs')
+                    print(f'\ntraining stopped since validation score did not improve more than '
+                          f'tol={self.tol} for {self.patience} consecutive epochs')
                 else:
                     print('\ntraining stopped since training loss did not improve more than '
-                          f'tol={self.tol} for {self.n_iter_no_change} consecutive epochs')
+                          f'tol={self.tol} for {self.patience} consecutive epochs')
 
             raise StopIteration
 
