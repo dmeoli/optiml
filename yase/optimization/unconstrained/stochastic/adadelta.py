@@ -24,7 +24,7 @@ class AdaDelta(StochasticOptimizer):
     def minimize(self):
 
         if self.verbose:
-            print('epoch\tf(x)\t', end='')
+            print('epoch\titer\tf(x)\t', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate', end='')
                 prev_v = np.inf
@@ -35,14 +35,18 @@ class AdaDelta(StochasticOptimizer):
             if self.is_batch_end():
 
                 if self.verbose and not self.epoch % self.verbose:
-                    print('\n{:4d}\t{:1.4e}'.format(self.epoch, self.f_x), end='')
+                    print('\n{:4d}\t{:4d}\t{:1.4e}'.format(self.epoch, self.iter, self.f_x), end='')
                     if self.f.f_star() < np.inf:
                         print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
                         if prev_v < np.inf:
                             print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                         prev_v = self.f_x
 
-                self.callback(batch)
+                try:
+                    self.callback(batch)
+                except StopIteration:
+                    break
+
                 self.epoch += 1
 
             if self.epoch >= self.epochs:

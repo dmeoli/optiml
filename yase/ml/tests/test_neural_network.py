@@ -8,6 +8,7 @@ from yase.ml.neural_network import NeuralNetworkRegressor, NeuralNetworkClassifi
 from yase.ml.neural_network.activations import sigmoid, softmax, linear, tanh
 from yase.ml.neural_network.layers import FullyConnected
 from yase.ml.neural_network.losses import mean_squared_error, sparse_categorical_cross_entropy
+from yase.ml.neural_network.regularizers import L2
 from yase.optimization.unconstrained.line_search import BFGS
 from yase.optimization.unconstrained.stochastic import Adam
 
@@ -24,17 +25,17 @@ def test_perceptron_regressor():
                        np.linalg.inv(X_train.T.dot(X_train)).dot(X_train.T).dot(y_train), rtol=0.1)
 
 
-# def test_perceptron_ridge_regressor():
-#     # aka ridge regression
-#     X, y = load_boston(return_X_y=True)
-#     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75)
-#     lmbda = 0.1
-#     net = NeuralNetworkRegressor((FullyConnected(13, 1, linear, coef_reg=L2(lmbda), fit_intercept=False),),
-#                                  loss=mean_squared_error, optimizer=BFGS)
-#     net.fit(X_train, y_train)
-#     assert net.score(X_test, y_test) >= 0.55
-#     assert np.allclose(net.coefs_[0].ravel(), np.linalg.inv(X_train.T.dot(X_train) + np.identity(net.loss.ndim) *
-#                                                             lmbda).dot(X_train.T).dot(y_train), rtol=0.1)
+def test_perceptron_ridge_regressor():
+    # aka ridge regression
+    X, y = load_boston(return_X_y=True)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75)
+    lmbda = 0.1
+    net = NeuralNetworkRegressor((FullyConnected(13, 1, linear, coef_reg=L2(lmbda), fit_intercept=False),),
+                                 loss=mean_squared_error, optimizer=BFGS)
+    net.fit(X_train, y_train)
+    assert net.score(X_test, y_test) >= 0.55
+    assert np.allclose(net.coefs_[0].ravel(), np.linalg.inv(X_train.T.dot(X_train) + np.identity(net.loss.ndim) *
+                                                            lmbda).dot(X_train.T).dot(y_train), rtol=0.1)
 
 
 def test_neural_network_regressor():

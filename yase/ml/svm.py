@@ -4,6 +4,7 @@ import numpy as np
 import qpsolvers
 from scipy.optimize import minimize
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.utils.multiclass import unique_labels
 
 from ..optimization import Optimizer
@@ -200,24 +201,23 @@ class SVC(ClassifierMixin, SVM):
                         self.optimizer['x1_history'].append(x[1])
                         self.optimizer['f_x_history'].append(dual.function(x))
 
-                res = minimize(fun=dual.function, jac=dual.jacobian,
-                               x0=np.zeros(dual.ndim), method=method,
-                               callback=_store_opt_steps,
-                               options={'disp': self.verbose,
-                                        'maxiter': self.max_iter,
-                                        'maxfun': self.max_f_eval})
+                self.optimizer = minimize(fun=dual.function, jac=dual.jacobian,
+                                          x0=np.zeros(dual.ndim), method=method,
+                                          callback=_store_opt_steps,
+                                          options={'disp': self.verbose,
+                                                   'maxiter': self.max_iter,
+                                                   'maxfun': self.max_f_eval})
 
-                if res.status != 0:
-                    warnings.warn('max_iter reached but the optimization has not converged yet')
+                if self.optimizer.status != 0:
+                    warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
 
             elif issubclass(self.optimizer, LineSearchOptimizer):
 
                 self.optimizer = self.optimizer(f=dual, x=np.zeros(dual.ndim), max_iter=self.max_iter,
-                                                max_f_eval=self.max_f_eval, verbose=self.verbose)
-                res = self.optimizer.minimize()
+                                                max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
 
-                if res.status != 'optimal':
-                    warnings.warn('max_iter reached but the optimization has not converged yet')
+                if self.optimizer.status == 'stopped':
+                    warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
 
             elif issubclass(self.optimizer, StochasticOptimizer):
 
@@ -350,24 +350,23 @@ class SVR(RegressorMixin, SVM):
                             self.optimizer['x1_history'].append(x[1])
                             self.optimizer['f_x_history'].append(dual.function(x))
 
-                    res = minimize(fun=dual.function, jac=dual.jacobian,
-                                   x0=np.zeros(dual.ndim), method=method,
-                                   callback=_store_opt_steps,
-                                   options={'disp': self.verbose,
-                                            'maxiter': self.max_iter,
-                                            'maxfun': self.max_f_eval})
+                    self.optimizer = minimize(fun=dual.function, jac=dual.jacobian,
+                                              x0=np.zeros(dual.ndim), method=method,
+                                              callback=_store_opt_steps,
+                                              options={'disp': self.verbose,
+                                                       'maxiter': self.max_iter,
+                                                       'maxfun': self.max_f_eval})
 
-                    if res.status != 0:
-                        warnings.warn('max_iter reached but the optimization has not converged yet')
+                    if self.optimizer.status != 0:
+                        warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
 
                 elif issubclass(self.optimizer, LineSearchOptimizer):
 
                     self.optimizer = self.optimizer(f=dual, x=np.zeros(dual.ndim), max_iter=self.max_iter,
-                                                    max_f_eval=self.max_f_eval, verbose=self.verbose)
-                    res = self.optimizer.minimize()
+                                                    max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
 
-                    if res.status != 'optimal':
-                        warnings.warn('max_iter reached but the optimization has not converged yet')
+                    if self.optimizer.status != 'optimal':
+                        warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
 
                 elif issubclass(self.optimizer, StochasticOptimizer):
 

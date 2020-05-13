@@ -3,6 +3,7 @@ import warnings
 import autograd.numpy as np
 from scipy.optimize import minimize
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
@@ -18,25 +19,36 @@ from ...optimization.unconstrained.stochastic import StochasticOptimizer, Stocha
 
 class NeuralNetwork(BaseEstimator, Layer):
 
-    def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent, learning_rate=0.01,
-                 max_iter=1000, momentum_type='none', momentum=0.9, validation_split=0.1, batch_size=None,
-                 max_f_eval=1000, master_solver='ECOS', shuffle=True, random_state=None, verbose=False):
+    def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent,
+                 learning_rate=0.01, max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4,
+                 validation_split=0.2, batch_size=None, max_f_eval=1000, master_solver='ECOS',
+                 early_stopping=True, n_iter_no_change=5, shuffle=True, random_state=None, verbose=False):
         self.layers = layers
         self.loss = loss
         self.optimizer = optimizer
         self.learning_rate = learning_rate
         self.momentum_type = momentum_type
         self.momentum = momentum
+        self.tol = tol
         self.max_iter = max_iter
         self.batch_size = batch_size
         self.validation_split = validation_split
         self.max_f_eval = max_f_eval
         self.master_solver = master_solver
+        self.early_stopping = early_stopping
+        self.n_iter_no_change = n_iter_no_change
         self.shuffle = shuffle
         self.random_state = random_state
         self.verbose = verbose
-        self.loss_history = {'train_loss': [],
-                             'val_loss': []}
+        if issubclass(self.optimizer, StochasticOptimizer):
+            self.train_loss_history = []
+            self.train_score_history = []
+            if self.early_stopping:
+                self.val_loss_history = []
+                self.val_score_history = []
+                self.best_val_score = -np.inf
+            else:
+                self.best_loss_ = np.inf
 
     def forward(self, X):
         for layer in self.layers:
@@ -100,12 +112,48 @@ class NeuralNetwork(BaseEstimator, Layer):
                 self.inter_idx.append((start, end))
                 start = end
 
-    def _store_print_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
-        self.loss_history['train_loss'].append(opt.f_x)
-        val_loss = self.loss.function(opt.x, X_val, y_val)
-        self.loss_history['val_loss'].append(val_loss)
-        if self.verbose and not opt.epoch % self.verbose:
-            print('\tval_loss: {:1.4e}'.format(val_loss), end='')
+    def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
+        self.train_loss_history.append(opt.f_x)
+        if self.early_stopping:
+            val_loss = self.loss.function(opt.x, X_val, y_val)
+            self.val_loss_history.append(val_loss)
+            if self.verbose and not opt.epoch % self.verbose:
+                print('\tval_loss: {:1.4e}'.format(val_loss), end='')
+
+    def _update_no_improvement_count(self, opt):
+        if self.early_stopping:
+
+            if self.val_score_history[-1] < self.best_val_score + self.tol:
+                self._no_improvement_count += 1
+            else:
+                self._no_improvement_count = 0
+
+            if self.val_score_history[-1] > self.best_val_score:
+                self.best_val_score = self.val_score_history[-1]
+                self._best_coefs = [coef.copy() for coef in self.coefs_]
+                self._best_intercepts = [inter.copy() for inter in self.intercepts_]
+        else:
+            if self.train_loss_history[-1] > self.best_loss_ - self.tol:
+                self._no_improvement_count += 1
+            else:
+                self._no_improvement_count = 0
+            if self.train_loss_history[-1] < self.best_loss_:
+                self.best_loss_ = self.train_loss_history[-1]
+
+        if self._no_improvement_count > self.n_iter_no_change:
+
+            if self.early_stopping:
+                opt.x = self._pack(self._best_coefs, self._best_intercepts)
+
+            if self.verbose:
+                if self.early_stopping:
+                    print(f'\ntraining stopped since validation accuracy did not improve more than '
+                          f'tol={self.tol} for {self.n_iter_no_change} consecutive epochs')
+                else:
+                    print('\ntraining stopped since training loss did not improve more than '
+                          f'tol={self.tol} for {self.n_iter_no_change} consecutive epochs')
+
+            raise StopIteration
 
     def fit(self, X, y):
 
@@ -128,94 +176,96 @@ class NeuralNetwork(BaseEstimator, Layer):
                     self.optimizer['x1_history'].append(x[1])
                     self.optimizer['f_x_history'].append(self.loss.function(x))
 
-            res = minimize(fun=self.loss.function, jac=self.loss.jacobian,
-                           x0=packed_coef_inter, method=method,
-                           callback=_save_opt_steps,
-                           options={'disp': self.verbose,
-                                    'maxiter': self.max_iter,
-                                    'maxfun': self.max_f_eval})
+            self.optimizer = minimize(fun=self.loss.function, jac=self.loss.jacobian,
+                                      x0=packed_coef_inter, method=method,
+                                      callback=_save_opt_steps,
+                                      options={'disp': self.verbose,
+                                               'maxiter': self.max_iter,
+                                               'maxfun': self.max_f_eval})
 
-            if res.status != 0:
-                warnings.warn('max_iter reached but the optimization has not converged yet')
+            if self.optimizer.status != 0:
+                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
 
         else:
             if issubclass(self.optimizer, LineSearchOptimizer):
 
                 self.loss = self.loss(self, X, y)
                 self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
-                                                max_f_eval=self.max_f_eval, verbose=self.verbose)
-                res = self.optimizer.minimize()
-
-                if res.status != 'optimal':
-                    warnings.warn('max_iter reached but the optimization has not converged yet')
+                                                max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
 
             elif issubclass(self.optimizer, StochasticOptimizer):
 
+                self._no_improvement_count = 0
+
                 # don't stratify in multi-label classification
-                should_stratify = isinstance(self, NeuralNetworkClassifier) and self.n_classes == 2
+                should_stratify = isinstance(self, NeuralNetworkClassifier) and self.layers[-1].fan_out == 1
                 stratify = y if should_stratify else None
                 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=self.validation_split,
                                                                   stratify=stratify, random_state=self.random_state)
+
                 self.loss = self.loss(self, X_train, y_train)
                 self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, step_size=self.learning_rate,
                                                 epochs=self.max_iter, batch_size=self.batch_size,
                                                 momentum_type=self.momentum_type, momentum=self.momentum,
-                                                callback=self._store_print_train_val_info, callback_args=(X_val, y_val),
+                                                callback=self._store_train_val_info, callback_args=(X_val, y_val),
                                                 shuffle=self.shuffle, random_state=self.random_state,
-                                                verbose=self.verbose)
-                res = self.optimizer.minimize()
+                                                verbose=self.verbose).minimize()
 
             elif issubclass(self.optimizer, ProximalBundle):
 
                 self.loss = self.loss(self, X, y)
                 self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
                                                 master_solver=self.master_solver, momentum_type=self.momentum_type,
-                                                momentum=self.momentum, verbose=self.verbose)
-                res = self.optimizer.minimize()
+                                                momentum=self.momentum, verbose=self.verbose).minimize()
 
             else:
                 raise ValueError(f'unknown optimizer {self.optimizer}')
 
-        self._unpack(res.x)
+        if self.optimizer.status == 'stopped':
+            warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
+
+        self._unpack(self.optimizer.x)
 
         return self
 
 
 class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
-    def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent, learning_rate=0.01,
-                 max_iter=1000, momentum_type='none', momentum=0.9, validation_split=0.1, batch_size=None,
-                 max_f_eval=1000, master_solver='ECOS', shuffle=True, random_state=None, verbose=False):
-        super().__init__(layers, loss, optimizer, learning_rate, max_iter, momentum_type, momentum, validation_split,
-                         batch_size, max_f_eval, master_solver, shuffle, random_state, verbose)
-        self.n_classes = 0
-        self.accuracy_history = {'train_acc': [],
-                                 'val_acc': []}
+    def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent,
+                 learning_rate=0.01, max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4,
+                 validation_split=0.2, batch_size=None, max_f_eval=1000, master_solver='ECOS',
+                 early_stopping=True, patience=5, shuffle=True, random_state=None, verbose=False):
+        super().__init__(layers, loss, optimizer, learning_rate, max_iter, momentum_type,
+                         momentum, tol, validation_split, batch_size, max_f_eval, master_solver,
+                         early_stopping, patience, shuffle, random_state, verbose)
 
-    def _store_print_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
-        super()._store_print_train_val_info(opt, X_batch, y_batch, X_val, y_val)
+    def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
+        super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
         acc = self.score(X_batch, y_batch)
-        self.accuracy_history['train_acc'].append(acc)
-        val_acc = self.score(X_val, y_val)
-        self.accuracy_history['val_acc'].append(val_acc)
+        self.train_score_history.append(acc)
         if self.verbose and not opt.epoch % self.verbose:
             print('\tacc: {:1.4f}'.format(acc), end='')
-            print('\tval_acc: {:1.4f}'.format(val_acc), end='')
+        if self.early_stopping:
+            val_acc = self.score(X_val, y_val)
+            self.val_score_history.append(val_acc)
+            if self.verbose and not opt.epoch % self.verbose:
+                print('\tval_acc: {:1.4f}'.format(val_acc), end='')
+        self._update_no_improvement_count(opt)
 
     def fit(self, X, y):
         if y.ndim == 1:
             y = y.reshape(-1, 1)
 
-        self.n_classes = y.shape[1] if self.loss == CategoricalCrossEntropy else np.unique(y).size
+        n_classes = y.shape[1] if self.loss == CategoricalCrossEntropy else np.unique(y).size
         if self.loss in (SparseCategoricalCrossEntropy, CategoricalCrossEntropy):
             if self.layers[-1].activation != softmax:
                 raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} loss '
                                  'function only works with softmax output layer')
-            if self.layers[-1].fan_out != self.n_classes:
+            if self.layers[-1].fan_out != n_classes:
                 raise ValueError('the number of neurons in the output layer must '
-                                 f'be equal to the number of classes, i.e. {self.n_classes}')
+                                 f'be equal to the number of classes, i.e. {n_classes}')
         elif self.loss in (MeanSquaredError, BinaryCrossEntropy):
-            if self.n_classes > 2:
+            if n_classes > 2:
                 raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} '
                                  'loss function only works for binary classification')
             if self.layers[-1].activation != sigmoid:
@@ -241,6 +291,19 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
 
 class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
+
+    def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
+        super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
+        r2 = self.score(X_batch, y_batch)
+        self.train_score_history.append(r2)
+        if self.verbose and not opt.epoch % self.verbose:
+            print('\tr2: {:1.4f}'.format(r2), end='')
+        if self.early_stopping:
+            val_r2 = self.score(X_val, y_val)
+            self.val_score_history.append(val_r2)
+            if self.verbose and not opt.epoch % self.verbose:
+                print('\tval_r2: {:1.4f}'.format(val_r2), end='')
+        self._update_no_improvement_count(opt)
 
     def fit(self, X, y):
         if y.ndim == 1:

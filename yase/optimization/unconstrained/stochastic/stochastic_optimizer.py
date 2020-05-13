@@ -79,7 +79,7 @@ class StochasticOptimizer(Optimizer):
                     yield [param[slice(start, stop)] for param in self.f.args()]
 
     def is_batch_end(self):
-        return not self.iter % self.batch_size if self.batch_size else True
+        return self.iter and not self.iter % self.batch_size if self.batch_size else True
 
     def minimize(self):
         raise NotImplementedError

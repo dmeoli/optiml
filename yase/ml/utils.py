@@ -209,12 +209,12 @@ def plot_learning_curve(estimator, X, y, scorer, cv=5, train_sizes=np.linspace(.
     plt.show()
 
 
-def plot_model_loss(loss_history):
+def plot_model_loss(train_loss_history, val_loss_history):
     plt.style.use('ggplot')
 
     fig, loss = plt.subplots()
-    loss.plot(loss_history['train_loss'], color='navy', lw=2)
-    loss.plot(loss_history['val_loss'], color='darkorange', lw=2)
+    loss.plot(train_loss_history, color='navy', lw=2)
+    loss.plot(val_loss_history, color='darkorange', lw=2)
     loss.set_title('model loss')
     loss.set_xlabel('epoch')
     loss.set_ylabel('loss')
@@ -222,12 +222,12 @@ def plot_model_loss(loss_history):
     plt.show()
 
 
-def plot_model_accuracy(accuracy_history):
+def plot_model_accuracy(train_score_history, val_score_history):
     plt.style.use('ggplot')
 
     fig, accuracy = plt.subplots()
-    accuracy.plot(accuracy_history['train_acc'], color='navy', lw=2)
-    accuracy.plot(accuracy_history['val_acc'], color='darkorange', lw=2)
+    accuracy.plot(train_score_history, color='navy', lw=2)
+    accuracy.plot(val_score_history, color='darkorange', lw=2)
     accuracy.set_title('model accuracy')
     accuracy.set_xlabel('epoch')
     accuracy.set_ylabel('accuracy')
