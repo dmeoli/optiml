@@ -157,7 +157,6 @@ class SVC(ClassifierMixin, SVM):
         P = (P + P.T) / 2  # ensure P is symmetric
         q = -np.ones(n_samples)
 
-        A = y.astype(np.float32)  # equality matrix
         ub = np.ones(n_samples) * self.C  # upper bounds
 
         bcqp = BoxConstrainedQuadratic(P, q, ub)
@@ -176,6 +175,7 @@ class SVC(ClassifierMixin, SVM):
             lb = np.zeros(n_samples)  # lower bounds
             h = np.hstack((lb, ub))  # inequality vector
 
+            A = y  # equality matrix
             b = np.zeros(1)  # equality vector
 
             if self.optimizer == 'cvxopt':
@@ -273,7 +273,6 @@ class SVR(RegressorMixin, SVM):
         P = (P + P.T) / 2  # ensure P is symmetric
         q = np.hstack((-y, y)) + self.epsilon
 
-        A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
         bcqp = BoxConstrainedQuadratic(P, q, ub)
@@ -294,6 +293,7 @@ class SVR(RegressorMixin, SVM):
                 lb = np.zeros(2 * n_samples)  # lower bounds
                 h = np.hstack((lb, ub))  # inequality vector
 
+                A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
                 b = np.zeros(1)  # equality vector
 
                 if self.optimizer == 'cvxopt':
