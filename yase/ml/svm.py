@@ -1,7 +1,7 @@
 import warnings
 
 import numpy as np
-import qpsolvers
+from qpsolvers import solve_qp, cvxopt_
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.utils.multiclass import unique_labels
@@ -179,8 +179,8 @@ class SVC(ClassifierMixin, SVM):
             b = np.zeros(1)  # equality vector
 
             if self.optimizer == 'cvxopt':
-                qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-            alphas = qpsolvers.solve_qp(bcqp.Q, bcqp.q, G, h, A, b, solver=self.optimizer)
+                cvxopt_.options['show_progress'] = self.verbose
+            alphas = solve_qp(bcqp.Q, bcqp.q, G, h, A, b, solver=self.optimizer)
 
         elif issubclass(self.optimizer, BoxConstrainedOptimizer):
 
@@ -297,8 +297,8 @@ class SVR(RegressorMixin, SVM):
                 b = np.zeros(1)  # equality vector
 
                 if self.optimizer == 'cvxopt':
-                    qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-                alphas = qpsolvers.solve_qp(bcqp.Q, bcqp.q, G, h, A, b, solver=self.optimizer)
+                    cvxopt_.options['show_progress'] = self.verbose
+                alphas = solve_qp(bcqp.Q, bcqp.q, G, h, A, b, solver=self.optimizer)
 
             elif issubclass(self.optimizer, BoxConstrainedOptimizer):
 
