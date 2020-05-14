@@ -102,7 +102,7 @@ class ProximalBundle(Optimizer):
 
     def minimize(self):
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             if self.f.f_star() < np.inf:
                 print('iter\tf(x)\t\tf(x) - f*\t||d||', end='')
             else:
@@ -150,7 +150,7 @@ class ProximalBundle(Optimizer):
             nd = np.linalg.norm(d)
 
             # output statistics
-            if self.verbose and not self.iter % self.verbose:
+            if self.is_verbose():
                 if self.f.f_star() < np.inf:
                     print('\n{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(
                         self.iter, self.f_x, (self.f_x - self.f.f_star()) / max(abs(self.f.f_star()), 1), nd), end='')

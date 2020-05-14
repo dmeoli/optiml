@@ -1,4 +1,5 @@
 import itertools
+import warnings
 
 import numpy as np
 from sklearn.utils import shuffle
@@ -45,18 +46,21 @@ class StochasticOptimizer(Optimizer):
             self.batch_size = None
             self.batches = itertools.repeat(f.args())
         else:
-            n_samples = f.args()[0].shape[0]
+            n_samples = len(f.args()[0])
+
+            if batch_size < 1 or batch_size > n_samples:
+                warnings.warn('Got `batch_size` less than 1 or larger than sample size. It is going to be clipped.')
             self.batch_size = np.clip(batch_size, 1, n_samples)
 
-            n_batches, rest = divmod(len(f.args()[0]), self.batch_size)
+            self.n_batches, rest = divmod(len(f.args()[0]), self.batch_size)
             if rest:
-                n_batches += 1
+                self.n_batches += 1
 
-            self.max_iter *= n_batches
+            self.max_iter *= self.n_batches
 
-            self.batches = (i for i in self.iter_mini_batches(n_batches))
+            self.batches = (i for i in self.iter_mini_batches())
 
-    def iter_mini_batches(self, n_batches):
+    def iter_mini_batches(self):
         """Return an iterator that successively yields tuples containing aligned
         mini batches of size batch_size from sliceable objects given in f.args(), in
         random order without replacement.
@@ -69,7 +73,7 @@ class StochasticOptimizer(Optimizer):
         """
 
         while True:
-            idx = list(range(n_batches))
+            idx = list(range(self.n_batches))
             while True:
                 if self.shuffle:
                     shuffle(idx, random_state=self.random_state)
@@ -79,7 +83,11 @@ class StochasticOptimizer(Optimizer):
                     yield [param[slice(start, stop)] for param in self.f.args()]
 
     def is_batch_end(self):
-        return self.iter and not self.iter % self.batch_size if self.batch_size else True
+        return (self.batch_size is None or self.batch_size == len(self.f.args()[0])
+                or (self.iter and not self.iter % self.n_batches))
+
+    def is_verbose(self):
+        return self.verbose and not self.epoch % self.verbose
 
     def minimize(self):
         raise NotImplementedError

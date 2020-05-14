@@ -46,7 +46,7 @@ class QuadraticSteepestGradientDescent(Optimizer):
 
             self.callback()
 
-            if self.verbose and not self.iter % self.verbose:
+            if self.is_verbose():
                 print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
@@ -236,7 +236,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
         last_g = np.zeros(self.f.ndim)  # gradient of last_x
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
             if self.f.f_star() < np.inf:
                 print('\tf(x) - f*\trate\t', end='')
@@ -254,7 +254,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
             else:
                 ng0 = 1  # un-scaled stopping criterion
 
-            if self.verbose and not self.iter % self.verbose:
+            if self.is_verbose():
                 print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
@@ -279,11 +279,10 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
             # compute step size
             a, self.f_x, last_x, last_g, f_eval = self.line_search.search(
-                d, self.x, last_x, last_g, f_eval, self.f_x, phi_p0,
-                self.verbose and not self.iter % self.verbose)
+                d, self.x, last_x, last_g, f_eval, self.f_x, phi_p0, self.is_verbose())
 
             # output statistics
-            if self.verbose and not self.iter % self.verbose:
+            if self.is_verbose():
                 print('\t{:1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:

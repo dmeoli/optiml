@@ -45,7 +45,7 @@ class NeuralNetwork(BaseEstimator, Layer):
             self.train_score_history = []
             self._no_improvement_count = 0
             self._avg_epoch_loss = 0
-            if self.early_stopping:
+            if self.validation_split:
                 self.val_loss_history = []
                 self.val_score_history = []
                 self.best_val_score = -np.inf
@@ -122,38 +122,43 @@ class NeuralNetwork(BaseEstimator, Layer):
             if self.verbose and not opt.epoch % self.verbose:
                 print('\tloss: {:1.4e}'.format(self._avg_epoch_loss), end='')
             self._avg_epoch_loss = 0.
-            if self.early_stopping:
+            if self.validation_split:
                 val_loss = self.loss.function(opt.x, X_val, y_val)
                 self.val_loss_history.append(val_loss)
                 if self.verbose and not opt.epoch % self.verbose:
                     print('\tval_loss: {:1.4e}'.format(val_loss), end='')
 
     def _update_no_improvement_count(self, opt):
-        if self.early_stopping:
-            if self.val_score_history[-1] < self.best_val_score + self.tol:
-                self._no_improvement_count += 1
-            else:
-                self._no_improvement_count = 0
-            if self.val_score_history[-1] > self.best_val_score:
-                self.best_val_score = self.val_score_history[-1]
-                self._best_coefs = [coef.copy() for coef in self.coefs_]
-                self._best_intercepts = [inter.copy() for inter in self.intercepts_]
+        if self.validation_split:
+
+            if self.early_stopping:
+
+                if self.val_score_history[-1] < self.best_val_score + self.tol:
+                    self._no_improvement_count += 1
+                else:
+                    self._no_improvement_count = 0
+                if self.val_score_history[-1] > self.best_val_score:
+                    self.best_val_score = self.val_score_history[-1]
+                    self._best_coefs = [coef.copy() for coef in self.coefs_]
+                    self._best_intercepts = [inter.copy() for inter in self.intercepts_]
+
+                if self.train_score_history[-1] == 1. and self.best_val_score == 1.:
+
+                    opt.x = self._pack(self._best_coefs, self._best_intercepts)
+
+                    if self.verbose:
+                        print(f'\ntraining stopped since train and validation scores cannot be further improved')
+
+                    raise StopIteration
+
         else:
+
             if self.train_loss_history[-1] > self.best_loss - self.tol:
                 self._no_improvement_count += 1
             else:
                 self._no_improvement_count = 0
             if self.train_loss_history[-1] < self.best_loss:
                 self.best_loss = self.train_loss_history[-1]
-
-        if self.early_stopping and self.train_score_history[-1] == 1. and self.best_val_score == 1.:
-
-            opt.x = self._pack(self._best_coefs, self._best_intercepts)
-
-            if self.verbose:
-                print(f'\ntraining stopped since train and validation scores cannot be further improved')
-
-            raise StopIteration
 
         if self._no_improvement_count >= self.patience:
 
@@ -210,13 +215,17 @@ class NeuralNetwork(BaseEstimator, Layer):
 
             elif issubclass(self.optimizer, StochasticOptimizer):
 
-                # don't stratify in multi-label classification
-                should_stratify = isinstance(self, NeuralNetworkClassifier) and self.layers[-1].fan_out == 1
-                stratify = y if should_stratify else None
-                X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=self.validation_split,
-                                                                  stratify=stratify, random_state=self.random_state)
+                if self.validation_split:
+                    # don't stratify in multi-label classification
+                    should_stratify = isinstance(self, NeuralNetworkClassifier) and self.layers[-1].fan_out == 1
+                    stratify = y if should_stratify else None
+                    X, X_val, y, y_val = train_test_split(X, y, test_size=self.validation_split,
+                                                          stratify=stratify, random_state=self.random_state)
+                else:
+                    X_val = None
+                    y_val = None
 
-                self.loss = self.loss(self, X_train, y_train)
+                self.loss = self.loss(self, X, y)
                 self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, step_size=self.learning_rate,
                                                 epochs=self.max_iter, batch_size=self.batch_size,
                                                 momentum_type=self.momentum_type, momentum=self.momentum,
@@ -259,7 +268,7 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
             self.train_score_history.append(acc)
             if self.verbose and not opt.epoch % self.verbose:
                 print('\tacc: {:1.4f}'.format(acc), end='')
-            if self.early_stopping:
+            if self.validation_split:
                 val_acc = self.score(X_val, y_val)
                 self.val_score_history.append(val_acc)
                 if self.verbose and not opt.epoch % self.verbose:

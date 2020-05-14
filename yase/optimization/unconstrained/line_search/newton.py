@@ -138,7 +138,7 @@ class Newton(LineSearchOptimizer):
             else:
                 ng0 = 1  # un-scaled stopping criterion
 
-            if self.verbose and not self.iter % self.verbose:
+            if self.is_verbose():
                 print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
@@ -160,11 +160,11 @@ class Newton(LineSearchOptimizer):
             # compute Newton's direction
             lambda_n = min(np.linalg.eigvalsh(self.H_x))  # smallest eigenvalue
             if lambda_n < self.delta:
-                if self.verbose and not self.iter % self.verbose:
+                if self.is_verbose():
                     print('\t{:1.4e}'.format(self.delta - lambda_n), end='')
                 self.H_x = self.H_x + (self.delta - lambda_n) * np.identity(self.f.ndim)
             else:
-                if self.verbose and not self.iter % self.verbose:
+                if self.is_verbose():
                     print('\t{:1.4e}'.format(0), end='')
 
             d = -np.linalg.inv(self.H_x).dot(self.g_x)  # or np.linalg.solve(self.H_x, self.g_x)
@@ -173,10 +173,10 @@ class Newton(LineSearchOptimizer):
 
             # compute step size: in Newton's method, the default initial step size is 1
             a, self.f_x, last_x, last_g, f_eval = self.line_search.search(
-                d, self.x, last_x, last_g, f_eval, self.f_x, phi_p0, self.verbose and not self.iter % self.verbose)
+                d, self.x, last_x, last_g, f_eval, self.f_x, phi_p0, self.is_verbose())
 
             # output statistics
-            if self.verbose and not self.iter % self.verbose:
+            if self.is_verbose():
                 print('\t{:1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:

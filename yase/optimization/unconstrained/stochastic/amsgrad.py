@@ -43,7 +43,7 @@ class AMSGrad(StochasticOptimizer):
 
             if self.is_batch_end():
 
-                if self.verbose and not self.epoch % self.verbose:
+                if self.is_verbose():
                     print('\n{:4d}\t{:4d}\t{:1.4e}'.format(self.epoch, self.iter, self.f_x), end='')
                     if self.f.f_star() < np.inf:
                         print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')

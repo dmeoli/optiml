@@ -40,7 +40,7 @@ class ProjectedGradient(BoxConstrainedOptimizer):
 
     def minimize(self):
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print('iter\tf(x)\t\t||g(x)||')
 
         while True:
@@ -54,7 +54,7 @@ class ProjectedGradient(BoxConstrainedOptimizer):
             # compute the norm of the (projected) gradient
             ng = np.linalg.norm(d)
 
-            if self.verbose and not self.iter % self.verbose:
+            if self.is_verbose():
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng))
 
             if ng <= self.eps:

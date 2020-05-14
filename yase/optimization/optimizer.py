@@ -58,6 +58,9 @@ class Optimizer:
         if callable(self._callback):
             self._callback(self, *args, *self.callback_args)
 
+    def is_verbose(self):
+        return self.verbose and not self.iter % self.verbose
+
     def minimize(self):
         raise NotImplementedError
 

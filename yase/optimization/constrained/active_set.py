@@ -53,11 +53,11 @@ class ActiveSet(BoxConstrainedOptimizer):
         # 1 : n of L union U; since L and U are empty now, A = 1 : n
         A = np.full(self.f.ndim, True)
 
-        if self.verbose and not self.iter % self.verbose:
+        if self.verbose:
             print('iter\tf(x)\t\t|B|\tI/O')
 
         while True:
-            if self.verbose and not self.iter % self.verbose:
+            if self.is_verbose():
                 print('{:4d}\t{:1.4e}\t{:d}\t'.format(self.iter, self.f_x, sum(L) + sum(U)), end='')
 
             if self.iter >= self.max_iter:
@@ -109,11 +109,11 @@ class ActiveSet(BoxConstrainedOptimizer):
                     A[h] = True
                     if uppr:
                         U[h] = False
-                        if self.verbose and not self.iter % self.verbose:
+                        if self.is_verbose():
                             print('O {:d}(U)'.format(h))
                     else:
                         L[h] = False
-                        if self.verbose and not self.iter % self.verbose:
+                        if self.is_verbose():
                             print('O {:d}(L)'.format(h))
             else:
                 # the solution of the unconstrained problem is not feasible
@@ -147,7 +147,7 @@ class ActiveSet(BoxConstrainedOptimizer):
                 U[nU] = True
                 A[nU] = False
 
-                if self.verbose and not self.iter % self.verbose:
+                if self.is_verbose():
                     print('I {:d}+{:d}'.format(sum(nL), sum(nU)))
 
             self.callback()

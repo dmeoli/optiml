@@ -135,7 +135,7 @@ class Subgradient(LineSearchOptimizer):
                 x_ref = self.x  # this is the incumbent solution
 
             # output statistics
-            if self.verbose and not self.iter % self.verbose:
+            if self.is_verbose():
                 print('\n{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
@@ -169,7 +169,7 @@ class Subgradient(LineSearchOptimizer):
                 a = self.line_search.a_start * (1 / self.iter)
 
             # output statistics
-            if self.verbose and not self.iter % self.verbose:
+            if self.is_verbose():
                 print('\t{:1.4e}'.format(a), end='')
 
             # stopping criteria
