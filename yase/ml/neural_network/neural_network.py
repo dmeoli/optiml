@@ -20,8 +20,8 @@ class NeuralNetwork(BaseEstimator, Layer):
 
     def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent,
                  learning_rate=0.01, max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4,
-                 validation_split=0.2, batch_size=None, max_f_eval=1000, master_solver='ECOS',
-                 early_stopping=True, patience=5, shuffle=True, random_state=None, verbose=False):
+                 validation_split=0., batch_size=None, max_f_eval=1000, master_solver='ECOS',
+                 early_stopping=False, patience=5, shuffle=True, random_state=None, verbose=False):
         self.layers = layers
         self.loss = loss
         self.optimizer = optimizer
@@ -220,8 +220,8 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
     def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent,
                  learning_rate=0.01, max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4,
-                 validation_split=0.2, batch_size=None, max_f_eval=1000, master_solver='ECOS',
-                 early_stopping=True, patience=5, shuffle=True, random_state=None, verbose=False):
+                 validation_split=0., batch_size=None, max_f_eval=1000, master_solver='ECOS',
+                 early_stopping=False, patience=5, shuffle=True, random_state=None, verbose=False):
         super().__init__(layers, loss, optimizer, learning_rate, max_iter, momentum_type,
                          momentum, tol, validation_split, batch_size, max_f_eval, master_solver,
                          early_stopping, patience, shuffle, random_state, verbose)

@@ -2,12 +2,12 @@ import numpy as np
 import pytest
 from sklearn.datasets import load_iris, load_boston
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder
 
 from yase.ml.neural_network import NeuralNetworkRegressor, NeuralNetworkClassifier
-from yase.ml.neural_network.activations import sigmoid, softmax, linear, tanh
+from yase.ml.neural_network.activations import sigmoid, softmax, linear
 from yase.ml.neural_network.layers import FullyConnected
-from yase.ml.neural_network.losses import mean_squared_error, sparse_categorical_cross_entropy
+from yase.ml.neural_network.losses import mean_squared_error, categorical_cross_entropy
 from yase.ml.neural_network.regularizers import L2
 from yase.optimization.unconstrained.line_search import BFGS
 from yase.optimization.unconstrained.stochastic import Adam
@@ -47,19 +47,20 @@ def test_neural_network_regressor():
                                   FullyConnected(13, 1, linear)),
                                  loss=mean_squared_error, optimizer=Adam, learning_rate=0.01)
     net.fit(X_train, y_train)
-    assert net.score(X_test, y_test) >= 0.7
+    assert net.score(X_test, y_test) >= 0.75
 
 
 def test_neural_network_classifier():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
+    ohe = OneHotEncoder(sparse=False).fit(y.reshape(-1, 1))
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75)
-    net = NeuralNetworkClassifier((FullyConnected(4, 4, tanh),
-                                   FullyConnected(4, 4, tanh),
+    net = NeuralNetworkClassifier((FullyConnected(4, 4, sigmoid),
+                                   FullyConnected(4, 4, sigmoid),
                                    FullyConnected(4, 3, softmax)),
-                                  loss=sparse_categorical_cross_entropy, optimizer=Adam, learning_rate=0.01)
-    net.fit(X_train, y_train)
-    assert net.score(X_test, y_test) >= 0.9
+                                  loss=categorical_cross_entropy, optimizer=Adam, learning_rate=0.01)
+    net.fit(X_train, ohe.transform(y_train.reshape(-1, 1)))
+    assert net.score(X_test, ohe.transform(y_test.reshape(-1, 1))) >= 0.9
 
 
 if __name__ == "__main__":
