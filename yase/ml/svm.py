@@ -1,8 +1,6 @@
 import warnings
 
 import numpy as np
-import qpsolvers
-
 from qpsolvers import solve_qp, cvxopt_
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 from sklearn.exceptions import ConvergenceWarning
@@ -316,7 +314,7 @@ class SVR(RegressorMixin, SVM):
                     self.optimizer = self.optimizer(f=dual, x=np.zeros(dual.ndim), max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
 
-                    if self.optimizer.status != 'optimal':
+                    if self.optimizer.status == 'stopped':
                         warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
 
                 elif issubclass(self.optimizer, StochasticOptimizer):
