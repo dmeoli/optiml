@@ -115,11 +115,13 @@ class NeuralNetwork(BaseEstimator, Layer):
                 start = end
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
-        self._avg_epoch_loss += opt.f_x
+        self._avg_epoch_loss += opt.f_x * X_batch.shape[0]  # weighted avg
         if opt.is_batch_end():
-            self._avg_epoch_loss /= X_batch.shape[0]
+            self._avg_epoch_loss /= opt.f.X.shape[0]  # n_samples
             self.train_loss_history.append(self._avg_epoch_loss)
-            self._avg_epoch_loss = 0
+            if self.verbose and not opt.epoch % self.verbose:
+                print('\tloss: {:1.4e}'.format(self._avg_epoch_loss), end='')
+            self._avg_epoch_loss = 0.
             if self.early_stopping:
                 val_loss = self.loss.function(opt.x, X_val, y_val)
                 self.val_loss_history.append(val_loss)
@@ -149,7 +151,7 @@ class NeuralNetwork(BaseEstimator, Layer):
             opt.x = self._pack(self._best_coefs, self._best_intercepts)
 
             if self.verbose:
-                print(f'\ntraining stopped since train and validation score cannot be further improved')
+                print(f'\ntraining stopped since train and validation scores cannot be further improved')
 
             raise StopIteration
 
