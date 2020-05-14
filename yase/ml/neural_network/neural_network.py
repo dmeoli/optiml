@@ -129,9 +129,9 @@ class NeuralNetwork(BaseEstimator, Layer):
                     print('\tval_loss: {:1.4e}'.format(val_loss), end='')
 
     def _update_no_improvement_count(self, opt):
-        if self.validation_split:
+        if self.early_stopping:
 
-            if self.early_stopping:
+            if self.validation_split:  # monitor val_score
 
                 if self.val_score_history[-1] < self.best_val_score + self.tol:
                     self._no_improvement_count += 1
@@ -142,38 +142,29 @@ class NeuralNetwork(BaseEstimator, Layer):
                     self._best_coefs = [coef.copy() for coef in self.coefs_]
                     self._best_intercepts = [inter.copy() for inter in self.intercepts_]
 
-                if self.train_score_history[-1] == 1. and self.best_val_score == 1.:
+            else:  # monitor train_loss
 
+                if self.train_loss_history[-1] > self.best_loss - self.tol:
+                    self._no_improvement_count += 1
+                else:
+                    self._no_improvement_count = 0
+                if self.train_loss_history[-1] < self.best_loss:
+                    self.best_loss = self.train_loss_history[-1]
+
+            if self._no_improvement_count >= self.patience:
+
+                if self.validation_split:
                     opt.x = self._pack(self._best_coefs, self._best_intercepts)
 
-                    if self.verbose:
-                        print(f'\ntraining stopped since train and validation scores cannot be further improved')
+                if self.verbose:
+                    if self.validation_split:
+                        print(f'\ntraining stopped since validation score did not improve more than '
+                              f'tol={self.tol} for {self.patience} consecutive epochs')
+                    else:
+                        print('\ntraining stopped since training loss did not improve more than '
+                              f'tol={self.tol} for {self.patience} consecutive epochs')
 
-                    raise StopIteration
-
-        else:
-
-            if self.train_loss_history[-1] > self.best_loss - self.tol:
-                self._no_improvement_count += 1
-            else:
-                self._no_improvement_count = 0
-            if self.train_loss_history[-1] < self.best_loss:
-                self.best_loss = self.train_loss_history[-1]
-
-        if self._no_improvement_count >= self.patience:
-
-            if self.early_stopping:
-                opt.x = self._pack(self._best_coefs, self._best_intercepts)
-
-            if self.verbose:
-                if self.early_stopping:
-                    print(f'\ntraining stopped since validation score did not improve more than '
-                          f'tol={self.tol} for {self.patience} consecutive epochs')
-                else:
-                    print('\ntraining stopped since training loss did not improve more than '
-                          f'tol={self.tol} for {self.patience} consecutive epochs')
-
-            raise StopIteration
+                raise StopIteration
 
     def fit(self, X, y):
 
