@@ -20,7 +20,6 @@ def test_perceptron_regressor():
     net = NeuralNetworkRegressor((FullyConnected(13, 1, linear, fit_intercept=False),),
                                  loss=mean_squared_error, optimizer=BFGS)
     net.fit(X_train, y_train)
-    assert net.score(X_test, y_test) >= 0.5
     assert np.allclose(net.coefs_[0].ravel(),
                        np.linalg.inv(X_train.T.dot(X_train)).dot(X_train.T).dot(y_train), rtol=0.1)
 
@@ -33,7 +32,6 @@ def test_perceptron_ridge_regressor():
     net = NeuralNetworkRegressor((FullyConnected(13, 1, linear, coef_reg=L2(lmbda), fit_intercept=False),),
                                  loss=mean_squared_error, optimizer=BFGS)
     net.fit(X_train, y_train)
-    assert net.score(X_test, y_test) >= 0.55
     assert np.allclose(net.coefs_[0].ravel(), np.linalg.inv(X_train.T.dot(X_train) + np.identity(net.loss.ndim) *
                                                             lmbda).dot(X_train.T).dot(y_train), rtol=0.1)
 
