@@ -46,6 +46,10 @@ class RProp(StochasticOptimizer):
             if self.is_batch_end():
                 self.epoch += 1
 
+            if self.epoch >= self.epochs:
+                self.status = 'stopped'
+                break
+
             if self.momentum_type == 'standard':
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
