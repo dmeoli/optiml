@@ -2,7 +2,6 @@ import warnings
 
 import numpy as np
 import qpsolvers
-from scipy.optimize import minimize
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.utils.multiclass import unique_labels
@@ -10,7 +9,6 @@ from sklearn.utils.multiclass import unique_labels
 from ..optimization import Optimizer
 from ..optimization.constrained import (SMO, SMOClassifier, SMORegression, BoxConstrainedQuadratic,
                                         BoxConstrainedOptimizer, LagrangianBoxConstrainedQuadratic)
-from ..optimization.constrained import solve_qp, scipy_solve_qp, scipy_solve_bcqp
 from ..optimization.unconstrained import ProximalBundle
 from ..optimization.unconstrained.line_search import LineSearchOptimizer
 from ..optimization.unconstrained.stochastic import StochasticOptimizer
@@ -19,7 +17,7 @@ from ..optimization.unconstrained.stochastic import StochasticOptimizer
 class SVM(BaseEstimator):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer=SMO,
                  max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, max_f_eval=1000,
-                 master_solver='cvxopt', verbose=False):
+                 master_solver='ECOS', verbose=False):
         self.kernels = {'linear': self.linear,
                         'poly': self.poly,
                         'rbf': self.rbf,
@@ -55,9 +53,7 @@ class SVM(BaseEstimator):
         if not tol > 0:
             raise ValueError('tol must be > 0')
         self.tol = tol  # tolerance for KKT conditions
-        if (optimizer not in (solve_qp, scipy_solve_qp, scipy_solve_bcqp) and
-                not issubclass(optimizer, SMO) and
-                not issubclass(optimizer, Optimizer)):
+        if not isinstance(optimizer, str) and not issubclass(optimizer, SMO) and not issubclass(optimizer, Optimizer):
             raise TypeError('optimizer is not an allowed optimizer')
         self.optimizer = optimizer
         self.max_iter = max_iter
@@ -136,7 +132,7 @@ class SVM(BaseEstimator):
 class SVC(ClassifierMixin, SVM):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, optimizer=SMOClassifier,
                  max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, max_f_eval=1000,
-                 master_solver='cvxopt', verbose=False):
+                 master_solver='ECOS', verbose=False):
         super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, max_iter, learning_rate,
                          momentum_type, momentum, max_f_eval, master_solver, verbose)
 
@@ -174,44 +170,28 @@ class SVC(ClassifierMixin, SVM):
                 self.coef_ = smo.w
             self.intercept_ = smo.b
 
+        elif isinstance(self.optimizer, str):
+
+            G = np.vstack((-np.identity(n_samples), np.identity(n_samples)))  # inequality matrix
+            lb = np.zeros(n_samples)  # lower bounds
+            h = np.hstack((lb, ub))  # inequality vector
+
+            b = np.zeros(1)  # equality vector
+
+            if self.optimizer == 'cvxopt':
+                qpsolvers.cvxopt_.options['show_progress'] = self.verbose
+            alphas = qpsolvers.solve_qp(bcqp.Q, bcqp.q, G, h, A, b, solver=self.optimizer)
+
         elif issubclass(self.optimizer, BoxConstrainedOptimizer):
 
             self.optimizer = self.optimizer(f=bcqp, max_iter=self.max_iter, verbose=self.verbose)
             alphas = self.optimizer.minimize().x
 
-        elif self.optimizer == scipy_solve_bcqp:
-
-            alphas = scipy_solve_bcqp(bcqp, A, ub, self.max_iter, self.verbose)
-
-        elif issubclass(self.optimizer, Optimizer) or isinstance(self.optimizer, str):
+        elif issubclass(self.optimizer, Optimizer):
 
             dual = LagrangianBoxConstrainedQuadratic(bcqp)
 
-            if isinstance(self.optimizer, str):  # scipy optimization
-
-                method = self.optimizer
-                if dual.ndim == 2:
-                    self.optimizer = {'x0_history': [],
-                                      'x1_history': [],
-                                      'f_x_history': []}
-
-                def _store_opt_steps(x):
-                    if dual.ndim == 2:
-                        self.optimizer['x0_history'].append(x[0])
-                        self.optimizer['x1_history'].append(x[1])
-                        self.optimizer['f_x_history'].append(dual.function(x))
-
-                self.optimizer = minimize(fun=dual.function, jac=dual.jacobian,
-                                          x0=np.zeros(dual.ndim), method=method,
-                                          callback=_store_opt_steps,
-                                          options={'disp': self.verbose,
-                                                   'maxiter': self.max_iter,
-                                                   'maxfun': self.max_f_eval})
-
-                if self.optimizer.status != 0:
-                    warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
-
-            elif issubclass(self.optimizer, LineSearchOptimizer):
+            if issubclass(self.optimizer, LineSearchOptimizer):
 
                 self.optimizer = self.optimizer(f=dual, x=np.zeros(dual.ndim), max_iter=self.max_iter,
                                                 max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
@@ -234,21 +214,6 @@ class SVC(ClassifierMixin, SVM):
                 self.optimizer.minimize()
 
             alphas = dual.primal_solution
-
-        elif self.optimizer in (solve_qp, scipy_solve_qp):
-
-            G = np.vstack((-np.identity(n_samples), np.identity(n_samples)))  # inequality matrix
-            lb = np.zeros(n_samples)  # lower bounds
-            h = np.hstack((lb, ub))  # inequality vector
-
-            b = np.zeros(1)  # equality vector
-
-            if self.optimizer == solve_qp:
-                qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-                alphas = solve_qp(bcqp, G, h, A, b, solver=self.master_solver)
-
-            else:
-                alphas = scipy_solve_qp(bcqp, G, h, A, b, self.max_iter, self.verbose)
 
         else:
 
@@ -283,7 +248,7 @@ class SVC(ClassifierMixin, SVM):
 class SVR(RegressorMixin, SVM):
     def __init__(self, kernel='rbf', degree=3., gamma='scale', coef0=0., C=1., tol=1e-3, epsilon=0.1,
                  optimizer=SMORegression, max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9,
-                 max_f_eval=1000, master_solver='cvxopt', verbose=False):
+                 max_f_eval=1000, master_solver='ECOS', verbose=False):
         super().__init__(kernel, degree, gamma, coef0, C, tol, optimizer, max_iter, learning_rate,
                          momentum_type, momentum, max_f_eval, master_solver, verbose)
         self.epsilon = epsilon  # epsilon insensitive loss value
@@ -323,44 +288,28 @@ class SVR(RegressorMixin, SVM):
 
         else:
 
-            if issubclass(self.optimizer, BoxConstrainedOptimizer):
+            if isinstance(self.optimizer, str):
+
+                G = np.vstack((-np.identity(2 * n_samples), np.identity(2 * n_samples)))  # inequality matrix
+                lb = np.zeros(2 * n_samples)  # lower bounds
+                h = np.hstack((lb, ub))  # inequality vector
+
+                b = np.zeros(1)  # equality vector
+
+                if self.optimizer == 'cvxopt':
+                    qpsolvers.cvxopt_.options['show_progress'] = self.verbose
+                alphas = qpsolvers.solve_qp(bcqp.Q, bcqp.q, G, h, A, b, solver=self.optimizer)
+
+            elif issubclass(self.optimizer, BoxConstrainedOptimizer):
 
                 self.optimizer = self.optimizer(f=bcqp, max_iter=self.max_iter, verbose=self.verbose)
                 alphas = self.optimizer.minimize().x
 
-            elif self.optimizer == scipy_solve_bcqp:
-
-                alphas = scipy_solve_bcqp(bcqp, A, ub, self.max_iter, self.verbose)
-
-            elif issubclass(self.optimizer, Optimizer) or isinstance(self.optimizer, str):
+            elif issubclass(self.optimizer, Optimizer):
 
                 dual = LagrangianBoxConstrainedQuadratic(bcqp)
 
-                if isinstance(self.optimizer, str):  # scipy optimization
-
-                    method = self.optimizer
-                    if dual.ndim == 2:
-                        self.optimizer = {'x0_history': [],
-                                          'x1_history': [],
-                                          'f_x_history': []}
-
-                    def _store_opt_steps(x):
-                        if dual.ndim == 2:
-                            self.optimizer['x0_history'].append(x[0])
-                            self.optimizer['x1_history'].append(x[1])
-                            self.optimizer['f_x_history'].append(dual.function(x))
-
-                    self.optimizer = minimize(fun=dual.function, jac=dual.jacobian,
-                                              x0=np.zeros(dual.ndim), method=method,
-                                              callback=_store_opt_steps,
-                                              options={'disp': self.verbose,
-                                                       'maxiter': self.max_iter,
-                                                       'maxfun': self.max_f_eval})
-
-                    if self.optimizer.status != 0:
-                        warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
-
-                elif issubclass(self.optimizer, LineSearchOptimizer):
+                if issubclass(self.optimizer, LineSearchOptimizer):
 
                     self.optimizer = self.optimizer(f=dual, x=np.zeros(dual.ndim), max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
@@ -383,21 +332,6 @@ class SVR(RegressorMixin, SVM):
                     self.optimizer.minimize()
 
                 alphas = dual.primal_solution
-
-            elif self.optimizer in (solve_qp, scipy_solve_qp):
-
-                G = np.vstack((-np.identity(2 * n_samples), np.identity(2 * n_samples)))  # inequality matrix
-                lb = np.zeros(2 * n_samples)  # lower bounds
-                h = np.hstack((lb, ub))  # inequality vector
-
-                b = np.zeros(1)  # equality vector
-
-                if self.optimizer == solve_qp:
-                    qpsolvers.cvxopt_.options['show_progress'] = self.verbose
-                    alphas = solve_qp(bcqp, G, h, A, b, solver=self.master_solver)
-
-                else:
-                    alphas = scipy_solve_qp(bcqp, G, h, A, b, self.max_iter, self.verbose)
 
             else:
 

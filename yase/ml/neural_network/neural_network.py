@@ -1,7 +1,6 @@
 import warnings
 
 import autograd.numpy as np
-from scipy.optimize import minimize
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import accuracy_score
@@ -172,67 +171,42 @@ class NeuralNetwork(BaseEstimator, Layer):
 
         packed_coef_inter = self._pack(self.coefs_, self.intercepts_)
 
-        if isinstance(self.optimizer, str):  # scipy optimization
+        if issubclass(self.optimizer, LineSearchOptimizer):
+
             self.loss = self.loss(self, X, y)
+            self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
+                                            max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
 
-            method = self.optimizer
-            if self.loss.ndim == 2:
-                self.optimizer = {'x0_history': [],
-                                  'x1_history': [],
-                                  'f_x_history': []}
+        elif issubclass(self.optimizer, StochasticOptimizer):
 
-            def _save_opt_steps(x):
-                if self.loss.ndim == 2:
-                    self.optimizer['x0_history'].append(x[0])
-                    self.optimizer['x1_history'].append(x[1])
-                    self.optimizer['f_x_history'].append(self.loss.function(x))
+            if self.validation_split:
+                # don't stratify in multi-label classification
+                should_stratify = isinstance(self, NeuralNetworkClassifier) and self.layers[-1].fan_out == 1
+                stratify = y if should_stratify else None
+                X, X_val, y, y_val = train_test_split(X, y, test_size=self.validation_split,
+                                                      stratify=stratify, random_state=self.random_state)
+            else:
+                X_val = None
+                y_val = None
 
-            self.optimizer = minimize(fun=self.loss.function, jac=self.loss.jacobian,
-                                      x0=packed_coef_inter, method=method,
-                                      callback=_save_opt_steps,
-                                      options={'disp': self.verbose,
-                                               'maxiter': self.max_iter,
-                                               'maxfun': self.max_f_eval})
+            self.loss = self.loss(self, X, y)
+            self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, step_size=self.learning_rate,
+                                            epochs=self.max_iter, batch_size=self.batch_size,
+                                            momentum_type=self.momentum_type, momentum=self.momentum,
+                                            callback=self._store_train_val_info, callback_args=(X_val, y_val),
+                                            shuffle=self.shuffle, random_state=self.random_state,
+                                            verbose=self.verbose).minimize()
 
-            if self.optimizer.status != 0:
-                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
+        elif issubclass(self.optimizer, ProximalBundle):
+
+            self.loss = self.loss(self, X, y)
+            self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
+                                            master_solver=self.master_solver, momentum_type=self.momentum_type,
+                                            momentum=self.momentum, verbose=self.verbose).minimize()
 
         else:
-            if issubclass(self.optimizer, LineSearchOptimizer):
 
-                self.loss = self.loss(self, X, y)
-                self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
-                                                max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
-
-            elif issubclass(self.optimizer, StochasticOptimizer):
-
-                if self.validation_split:
-                    # don't stratify in multi-label classification
-                    should_stratify = isinstance(self, NeuralNetworkClassifier) and self.layers[-1].fan_out == 1
-                    stratify = y if should_stratify else None
-                    X, X_val, y, y_val = train_test_split(X, y, test_size=self.validation_split,
-                                                          stratify=stratify, random_state=self.random_state)
-                else:
-                    X_val = None
-                    y_val = None
-
-                self.loss = self.loss(self, X, y)
-                self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, step_size=self.learning_rate,
-                                                epochs=self.max_iter, batch_size=self.batch_size,
-                                                momentum_type=self.momentum_type, momentum=self.momentum,
-                                                callback=self._store_train_val_info, callback_args=(X_val, y_val),
-                                                shuffle=self.shuffle, random_state=self.random_state,
-                                                verbose=self.verbose).minimize()
-
-            elif issubclass(self.optimizer, ProximalBundle):
-
-                self.loss = self.loss(self, X, y)
-                self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
-                                                master_solver=self.master_solver, momentum_type=self.momentum_type,
-                                                momentum=self.momentum, verbose=self.verbose).minimize()
-
-            else:
-                raise ValueError(f'unknown optimizer {self.optimizer}')
+            raise ValueError(f'unknown optimizer {self.optimizer}')
 
         if self.optimizer.status == 'stopped':
             warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
