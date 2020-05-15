@@ -20,7 +20,7 @@ class NeuralNetwork(BaseEstimator, Layer):
 
     def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent,
                  learning_rate=0.01, max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4,
-                 validation_split=0., batch_size=None, max_f_eval=1000, master_solver='ECOS',
+                 validation_split=0., batch_size=None, max_f_eval=1000, master_solver='ecos',
                  early_stopping=False, patience=5, shuffle=True, random_state=None, verbose=False):
         self.layers = layers
         self.loss = loss
@@ -39,7 +39,7 @@ class NeuralNetwork(BaseEstimator, Layer):
         self.shuffle = shuffle
         self.random_state = random_state
         self.verbose = verbose
-        if issubclass(self.optimizer, StochasticOptimizer):
+        if isinstance(self.optimizer, str) or issubclass(self.optimizer, StochasticOptimizer):
             self.train_loss_history = []
             self.train_score_history = []
             self._no_improvement_count = 0
@@ -220,7 +220,7 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
     def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent,
                  learning_rate=0.01, max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4,
-                 validation_split=0., batch_size=None, max_f_eval=1000, master_solver='ECOS',
+                 validation_split=0., batch_size=None, max_f_eval=1000, master_solver='ecos',
                  early_stopping=False, patience=5, shuffle=True, random_state=None, verbose=False):
         super().__init__(layers, loss, optimizer, learning_rate, max_iter, momentum_type,
                          momentum, tol, validation_split, batch_size, max_f_eval, master_solver,

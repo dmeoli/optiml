@@ -143,7 +143,7 @@ class BFGS(LineSearchOptimizer):
             if self.iter == 0:
                 if self.delta > 0:
                     # initial approximation of inverse of Hessian = scaled identity
-                    self.H_x = self.delta * np.identity(self.f.ndim)
+                    self.H_x = self.delta * np.identity(len(self.g_x))
                 else:
                     # initial approximation of inverse of Hessian computed by finite differences of gradient
                     small_step = max(-self.delta, 1e-8)
@@ -200,8 +200,8 @@ class BFGS(LineSearchOptimizer):
                 break
 
             # update approximation of the Hessian using the BFGS formula
-            s = (last_x - self.x).reshape(self.f.ndim, 1)  # s^i = x^{i + 1} - x^i
-            y = (last_g - self.g_x).reshape(self.f.ndim, 1)  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
+            s = (last_x - self.x).reshape(len(self.g_x), 1)  # s^i = x^{i + 1} - x^i
+            y = (last_g - self.g_x).reshape(len(self.g_x), 1)  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
 
             rho = y.T.dot(s).item()
             if rho < 1e-16:
