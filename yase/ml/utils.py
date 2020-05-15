@@ -10,6 +10,12 @@ from sklearn.utils.multiclass import unique_labels
 from .svm import SVM, SVC, SVR
 
 
+def not_test(func):
+    """Decorator to mark a function or method as *not* a test"""
+    func.__test__ = False
+    return func
+
+
 # data generators
 
 def generate_linearly_separable_data(size=100, random_state=None):

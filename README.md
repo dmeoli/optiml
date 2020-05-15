@@ -42,8 +42,7 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] Stochastic Gradient Descent
                 - [x] standard momentum
                 - [x] Nesterov momentum
-                - [x] step rate schedules
-                - [x] momentum schedules
+                - [x] step size and momentum schedules
             - [x] Adam
                 - [x] standard momentum
                 - [x] Nesterov momentum (Nadam)

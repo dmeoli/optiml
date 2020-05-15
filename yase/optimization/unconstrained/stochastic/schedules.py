@@ -1,6 +1,6 @@
 """
 This module holds various schedules for parameters such as the step
-rate or momentum for gradient descent.
+size or momentum for gradient descent.
 
 A schedule is implemented as an iterator. This allows it to have iterators
 of infinite length. It also makes it possible to manipulate scheduls with
