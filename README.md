@@ -64,7 +64,8 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] RMSProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
-        - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface
+        - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface to 
+        [cvxopt](https://github.com/cvxopt/cvxopt), [osqp](https://github.com/oxfordcontrol/osqp), [ecos](https://github.com/embotech/ecos), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
              - [x] standard momentum
              - [x] Nesterov momentum
     - Constrained Optimization
@@ -76,7 +77,7 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
                 - [x] Interior Point
                 - [x] Sequential Minimal Optimization (ad hoc for SVMs)
             - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
-            [cvxopt](http://cvxopt.org/), [quadprog](https://pypi.org/project/quadprog/), [qpOASES](https://github.com/coin-or/qpOASES), etc.
+            [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
 
     - Optimization Functions
         - Unconstrained
