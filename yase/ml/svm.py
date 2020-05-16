@@ -53,7 +53,9 @@ class SVM(BaseEstimator):
         if not tol > 0:
             raise ValueError('tol must be > 0')
         self.tol = tol  # tolerance for KKT conditions
-        if not isinstance(optimizer, str) and not issubclass(optimizer, SMO) and not issubclass(optimizer, Optimizer):
+        if (not isinstance(optimizer, str) and
+                not issubclass(optimizer, SMO) and
+                not issubclass(optimizer, Optimizer)):
             raise TypeError('optimizer is not an allowed optimizer')
         self.optimizer = optimizer
         self.max_iter = max_iter

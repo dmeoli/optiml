@@ -131,7 +131,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         """
         Construct the lagrangian relaxation of a box-constrained quadratic function defined as:
 
-                       1/2 x^T Q x + q^T x - lambda^+ (u - x) - lambda^- x
+                       1/2 x^T Q x + q^T x - lambda^+ (ub - x) - lambda^- x
                     1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ ub
 
         where lambda^+ are the first n components of lmbda, and lambda^- the last n components;
