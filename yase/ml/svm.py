@@ -174,14 +174,12 @@ class SVC(ClassifierMixin, SVM):
 
         elif isinstance(self.optimizer, str):
 
-            G = np.vstack((-np.identity(n_samples), np.identity(n_samples)))  # inequality matrix
             lb = np.zeros(n_samples)  # lower bounds
-            h = np.hstack((lb, ub))  # inequality vector
 
             A = y  # equality matrix
             b = np.zeros(1)  # equality vector
 
-            alphas = solve_qp(bcq.Q, bcq.q, G, h, A, b, solver=self.optimizer, verbose=self.verbose)
+            alphas = solve_qp(bcq.Q, bcq.q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
 
         elif issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
@@ -290,14 +288,12 @@ class SVR(RegressorMixin, SVM):
 
             if isinstance(self.optimizer, str):
 
-                G = np.vstack((-np.identity(2 * n_samples), np.identity(2 * n_samples)))  # inequality matrix
                 lb = np.zeros(2 * n_samples)  # lower bounds
-                h = np.hstack((lb, ub))  # inequality vector
 
                 A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
                 b = np.zeros(1)  # equality vector
 
-                alphas = solve_qp(bcq.Q, bcq.q, G, h, A, b, solver=self.optimizer, verbose=self.verbose)
+                alphas = solve_qp(bcq.Q, bcq.q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
 
             elif issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
