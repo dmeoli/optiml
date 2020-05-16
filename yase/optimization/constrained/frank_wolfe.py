@@ -1,9 +1,9 @@
 import numpy as np
 
-from . import BoxConstrainedOptimizer
+from . import BoxConstrainedQuadraticOptimizer
 
 
-class FrankWolfe(BoxConstrainedOptimizer):
+class FrankWolfe(BoxConstrainedQuadraticOptimizer):
     # Apply the (possibly, stabilized) Frank-Wolfe algorithm with exact line
     # search to the convex Box-Constrained Quadratic program:
     #

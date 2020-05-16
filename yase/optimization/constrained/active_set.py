@@ -1,11 +1,11 @@
 import numpy as np
 from scipy.linalg import ldl
 
-from . import BoxConstrainedOptimizer
+from . import BoxConstrainedQuadraticOptimizer
 from ..utils import ldl_solve
 
 
-class ActiveSet(BoxConstrainedOptimizer):
+class ActiveSet(BoxConstrainedQuadraticOptimizer):
     # Apply the Active Set Method to the convex Box-Constrained Quadratic
     # program:
     #

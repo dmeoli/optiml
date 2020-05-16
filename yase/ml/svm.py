@@ -8,7 +8,7 @@ from sklearn.utils.multiclass import unique_labels
 
 from ..optimization import Optimizer
 from ..optimization.constrained import (SMO, SMOClassifier, SMORegression, BoxConstrainedQuadratic,
-                                        BoxConstrainedOptimizer, LagrangianBoxConstrainedQuadratic)
+                                        BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic)
 from ..optimization.unconstrained import ProximalBundle
 from ..optimization.unconstrained.line_search import LineSearchOptimizer
 from ..optimization.unconstrained.stochastic import StochasticOptimizer
@@ -153,13 +153,13 @@ class SVC(ClassifierMixin, SVM):
         # kernel matrix
         K = self.kernels[self.kernel](X)
 
-        P = K * np.outer(y, y)
-        P = (P + P.T) / 2  # ensure P is symmetric
+        Q = K * np.outer(y, y)
+        Q = (Q + Q.T) / 2  # ensure Q is symmetric
         q = -np.ones(n_samples)
 
         ub = np.ones(n_samples) * self.C  # upper bounds
 
-        bcqp = BoxConstrainedQuadratic(P, q, ub)
+        bcqp = BoxConstrainedQuadratic(Q, q, ub)
 
         if self.optimizer == SMOClassifier:
 
@@ -180,7 +180,7 @@ class SVC(ClassifierMixin, SVM):
 
             alphas = solve_qp(bcqp.Q, bcqp.q, G, h, A, b, solver=self.optimizer, verbose=self.verbose)
 
-        elif issubclass(self.optimizer, BoxConstrainedOptimizer):
+        elif issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
             self.optimizer = self.optimizer(f=bcqp, max_iter=self.max_iter, verbose=self.verbose)
             alphas = self.optimizer.minimize().x
@@ -266,14 +266,14 @@ class SVR(RegressorMixin, SVM):
         # kernel matrix
         K = self.kernels[self.kernel](X)
 
-        P = np.vstack((np.hstack((K, -K)),  # alphas_p, alphas_n
+        Q = np.vstack((np.hstack((K, -K)),  # alphas_p, alphas_n
                        np.hstack((-K, K))))  # alphas_n, alphas_p
-        P = (P + P.T) / 2  # ensure P is symmetric
+        Q = (Q + Q.T) / 2  # ensure Q is symmetric
         q = np.hstack((-y, y)) + self.epsilon
 
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
-        bcqp = BoxConstrainedQuadratic(P, q, ub)
+        bcqp = BoxConstrainedQuadratic(Q, q, ub)
 
         if self.optimizer == SMORegression:
 
@@ -296,7 +296,7 @@ class SVR(RegressorMixin, SVM):
 
                 alphas = solve_qp(bcqp.Q, bcqp.q, G, h, A, b, solver=self.optimizer, verbose=self.verbose)
 
-            elif issubclass(self.optimizer, BoxConstrainedOptimizer):
+            elif issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
                 self.optimizer = self.optimizer(f=bcqp, max_iter=self.max_iter, verbose=self.verbose)
                 alphas = self.optimizer.minimize().x

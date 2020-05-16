@@ -5,7 +5,7 @@ from .. import Optimizer, Quadratic
 from ..utils import ldl_solve
 
 
-class BoxConstrainedOptimizer(Optimizer):
+class BoxConstrainedQuadraticOptimizer(Optimizer):
     def __init__(self, f, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
         if not isinstance(f, BoxConstrainedQuadratic):
             raise TypeError('f is not a box-constrained quadratic function')

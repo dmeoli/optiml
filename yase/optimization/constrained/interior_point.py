@@ -1,10 +1,10 @@
 import numpy as np
 
-from . import BoxConstrainedOptimizer
+from . import BoxConstrainedQuadraticOptimizer
 from ..utils import cholesky_solve
 
 
-class InteriorPoint(BoxConstrainedOptimizer):
+class InteriorPoint(BoxConstrainedQuadraticOptimizer):
     # Apply the Primal-Dual (feasible) Interior (barrier) Method to the convex
     # Box-Constrained Quadratic program:
     #

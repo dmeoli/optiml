@@ -75,7 +75,8 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
                 - [x] Active Set
                 - [x] Interior Point
                 - [x] Sequential Minimal Optimization (ad hoc for SVMs)
-            - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface
+            - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
+            [cvxopt](http://cvxopt.org/), [quadprog](https://pypi.org/project/quadprog/), [qpOASES](https://github.com/coin-or/qpOASES), etc.
 
     - Optimization Functions
         - Unconstrained

@@ -1,9 +1,9 @@
 import numpy as np
 
-from . import BoxConstrainedOptimizer
+from . import BoxConstrainedQuadraticOptimizer
 
 
-class ProjectedGradient(BoxConstrainedOptimizer):
+class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
     # Apply the Projected Gradient algorithm with exact line search to the
     # convex Box-Constrained Quadratic program:
     #
