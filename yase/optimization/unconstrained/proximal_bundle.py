@@ -187,7 +187,6 @@ class ProximalBundle(Optimizer):
             G = np.vstack((G, self.g_x.T))
             F = np.vstack((F, fd - self.g_x.T.dot(last_x)))
 
-            # SS / NS decision
             if fd <= self.f_x + self.m1 * (v - self.f_x):
                 self.x = last_x
                 self.step = d if self.momentum_type == 'none' else step1 + d

@@ -18,10 +18,10 @@ from ...optimization.unconstrained.stochastic import StochasticOptimizer, Stocha
 
 class NeuralNetwork(BaseEstimator, Layer):
 
-    def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent,
-                 learning_rate=0.01, max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4,
-                 validation_split=0., batch_size=None, max_f_eval=1000, master_solver='ecos',
-                 early_stopping=False, patience=5, shuffle=True, random_state=None, verbose=False):
+    def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent, learning_rate=0.01,
+                 max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4, validation_split=0., batch_size=None,
+                 max_f_eval=1000, master_solver='ecos', early_stopping=False, patience=5, shuffle=True,
+                 random_state=None, verbose=False, master_verbose=False):
         self.layers = layers
         self.loss = loss
         self.optimizer = optimizer
@@ -39,6 +39,7 @@ class NeuralNetwork(BaseEstimator, Layer):
         self.shuffle = shuffle
         self.random_state = random_state
         self.verbose = verbose
+        self.master_verbose = master_verbose
         if isinstance(self.optimizer, str) or issubclass(self.optimizer, StochasticOptimizer):
             self.train_loss_history = []
             self.train_score_history = []
@@ -205,7 +206,8 @@ class NeuralNetwork(BaseEstimator, Layer):
             self.loss = self.loss(self, X, y)
             self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
                                             master_solver=self.master_solver, momentum_type=self.momentum_type,
-                                            momentum=self.momentum, verbose=self.verbose).minimize()
+                                            momentum=self.momentum, verbose=self.verbose,
+                                            master_verbose=self.master_verbose).minimize()
 
         else:
 
@@ -218,13 +220,13 @@ class NeuralNetwork(BaseEstimator, Layer):
 
 class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
-    def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent,
-                 learning_rate=0.01, max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4,
-                 validation_split=0., batch_size=None, max_f_eval=1000, master_solver='ecos',
-                 early_stopping=False, patience=5, shuffle=True, random_state=None, verbose=False):
+    def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent, learning_rate=0.01,
+                 max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4, validation_split=0., batch_size=None,
+                 max_f_eval=1000, master_solver='ecos', early_stopping=False, patience=5, shuffle=True,
+                 random_state=None, verbose=False, master_verbose=False):
         super().__init__(layers, loss, optimizer, learning_rate, max_iter, momentum_type,
                          momentum, tol, validation_split, batch_size, max_f_eval, master_solver,
-                         early_stopping, patience, shuffle, random_state, verbose)
+                         early_stopping, patience, shuffle, random_state, verbose, master_verbose)
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
         super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
