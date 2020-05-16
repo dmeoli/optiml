@@ -73,8 +73,8 @@ class ProximalBundle(Optimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, x, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf, master_solver='ecos',
-                 momentum_type='none', momentum=0.9, callback=None, callback_args=(), verbose=False):
+    def __init__(self, f, x, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf, master_solver='ecos', momentum=0.9,
+                 momentum_type='none', callback=None, callback_args=(), verbose=False, master_verbose=False):
         super().__init__(f, x, eps, max_iter, callback, callback_args, verbose)
         if not np.isscalar(mu):
             raise ValueError('mu is not a real scalar')
@@ -98,6 +98,7 @@ class ProximalBundle(Optimizer):
             raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type
         self.master_solver = master_solver
+        self.master_verbose = master_verbose
         self.step = 0
 
     def minimize(self):
@@ -142,7 +143,7 @@ class ProximalBundle(Optimizer):
             c = v + self.mu * sum_squares(d) / 2
 
             # solve the master problem
-            Problem(Minimize(c), M).solve(solver=self.master_solver.upper())
+            Problem(Minimize(c), M).solve(solver=self.master_solver.upper(), verbose=self.master_verbose)
 
             d = -d.value.ravel()
             v = v.value.item()
