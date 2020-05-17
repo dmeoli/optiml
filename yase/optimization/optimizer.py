@@ -228,3 +228,24 @@ class Rosenbrock(OptimizationFunction):
         :return:  the value of the Rosenbrock function at x.
         """
         return np.sum(self.b * (x[1:] - x[:-1] ** 2) ** 2 + (self.a - x[:-1]) ** 2)
+
+
+class Ackley(OptimizationFunction):
+
+    def __init__(self, ndim=2):
+        super().__init__(ndim)
+
+    def x_star(self):
+        return np.zeros(self.ndim)
+
+    def f_star(self):
+        return self.function(self.x_star())
+
+    def function(self, x):
+        """
+        The Ackley function.
+        :param x: 1D array of points at which the Ackley function is to be computed.
+        :return:  the value of the Ackley function.
+        """
+        return (-20 * np.exp(-0.2 * np.sqrt(np.sum(np.square(x)) / x.size)) -
+                np.exp((np.sum(np.cos(2 * np.pi * x))) / x.size) + np.e + 20)

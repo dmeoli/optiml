@@ -31,9 +31,9 @@ class Adam(StochasticOptimizer):
     def minimize(self):
 
         if self.verbose:
-            print('epoch\titer\tf(x)\t', end='')
+            print('epoch\titer\tcost\t', end='')
             if self.f.f_star() < np.inf:
-                print('\tf(x) - f*\trate', end='')
+                print('\tgap\trate', end='')
                 prev_v = np.inf
 
         for batch in self.batches:

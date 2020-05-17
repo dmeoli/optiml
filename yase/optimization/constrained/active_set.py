@@ -54,7 +54,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
         A = np.full(self.f.ndim, True)
 
         if self.verbose:
-            print('iter\tf(x)\t\t|B|\tI/O')
+            print('iter\tcost\t\t|B|\tI/O')
 
         while True:
             if self.is_verbose():

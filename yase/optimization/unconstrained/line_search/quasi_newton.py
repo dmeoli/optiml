@@ -123,9 +123,9 @@ class BFGS(LineSearchOptimizer):
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
-            print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
+            print('iter\tfeval\tcost\t\tgnorm', end='')
             if self.f.f_star() < np.inf:
-                print('\tf(x) - f*\trate\t', end='')
+                print('\tgap\trate\t', end='')
                 prev_v = np.inf
             print('\tls\tit\ta*\t\trho', end='')
 

@@ -121,9 +121,9 @@ class Newton(LineSearchOptimizer):
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
-            print('iter\tf eval\tf(x)\t\t||g(x)||', end='')
+            print('iter\tfeval\tcost\t\tgnorm', end='')
             if self.f.f_star() < np.inf:
-                print('\tf(x) - f*\trate', end='')
+                print('\tgap\trate', end='')
                 prev_v = np.inf
             print('\t\tdelta\t\tls\tit\ta*', end='')
 

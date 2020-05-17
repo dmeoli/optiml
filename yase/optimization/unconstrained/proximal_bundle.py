@@ -105,9 +105,9 @@ class ProximalBundle(Optimizer):
 
         if self.verbose:
             if self.f.f_star() < np.inf:
-                print('iter\tf(x)\t\tf(x) - f*\t||d||', end='')
+                print('iter\tcost\t\tgap\tdnorm', end='')
             else:
-                print('iter\tf(x)\t\t||d||', end='')
+                print('iter\tcost\t\tdnorm', end='')
 
         while True:
 
