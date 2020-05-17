@@ -20,7 +20,7 @@ class StochasticGradientDescent(StochasticOptimizer):
         if self.verbose:
             print('epoch\titer\tcost\t', end='')
             if self.f.f_star() < np.inf:
-                print('\tgap\trate', end='')
+                print('\tgap\t\trate', end='')
                 prev_v = np.inf
 
         for batch in self.batches:

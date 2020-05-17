@@ -107,11 +107,11 @@ class Subgradient(LineSearchOptimizer):
             self.eps = -self.eps  # revert to ordinary target level step size
 
         if self.verbose:
-            print('iter\tcost\t\tgnorm', end='')
+            print('iter\tcost\t\tgnorm\t', end='')
             if self.f.f_star() < np.inf:
-                print('\tgap\trate\t', end='')
+                print('\tgap\t\trate\t', end='')
                 prev_v = np.inf
-            print('\ta*', end='')
+            print('\tastar', end='')
 
         x_ref = self.x
         f_ref = np.inf  # best f-value found so far

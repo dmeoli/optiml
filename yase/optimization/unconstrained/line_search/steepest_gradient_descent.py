@@ -37,7 +37,7 @@ class QuadraticSteepestGradientDescent(Optimizer):
         if self.verbose:
             print('iter\tcost\t\tgnorm', end='')
             if self.f.f_star() < np.inf:
-                print('\tgap\trate', end='')
+                print('\t\tgap\t\trate', end='')
                 prev_v = np.inf
 
         while True:
@@ -239,11 +239,11 @@ class SteepestGradientDescent(LineSearchOptimizer):
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
-            print('iter\tfeval\tcost\t\tgnorm', end='')
+            print('iter\tfeval\tcost\t\tgnorm\t', end='')
             if self.f.f_star() < np.inf:
-                print('\tgap\trate\t', end='')
+                print('\tgap\t\trate\t', end='')
                 prev_v = np.inf
-            print('\tls\tit\ta*', end='')
+            print('\tls\tit\tastar', end='')
 
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)

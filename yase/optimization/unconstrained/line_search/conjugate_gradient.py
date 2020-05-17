@@ -18,9 +18,9 @@ class QuadraticConjugateGradient(Optimizer):
     def minimize(self):
 
         if self.verbose:
-            print('iter\tcost\t\tgnorm', end='')
+            print('iter\tcost\t\tgnorm\t', end='')
             if self.f.f_star() < np.inf:
-                print('\tgap\trate', end='')
+                print('\tgap\t\trate', end='')
                 prev_v = np.inf
             print('\t\tbeta', end='')
 
@@ -257,9 +257,9 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
         if self.verbose:
             print('iter\tfeval\tcost\t\tgnorm', end='')
             if self.f.f_star() < np.inf:
-                print('\tgap\trate\t', end='')
+                print('\t\tgap\t\trate\t', end='')
                 prev_v = np.inf
-            print('\tbeta\tls\tit\ta*', end='')
+            print('\tbeta\tls\tit\tastar', end='')
 
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)

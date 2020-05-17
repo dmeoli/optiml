@@ -121,11 +121,11 @@ class Newton(LineSearchOptimizer):
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
-            print('iter\tfeval\tcost\t\tgnorm', end='')
+            print('iter\tfeval\tcost\t\tgnorm\t', end='')
             if self.f.f_star() < np.inf:
-                print('\tgap\trate', end='')
+                print('\tgap\t\trate\t', end='')
                 prev_v = np.inf
-            print('\t\tdelta\t\tls\tit\ta*', end='')
+            print('\tdelta\t\tls\tit\tastar', end='')
 
         while True:
             self.f_x, self.g_x, self.H_x = self.f.function(self.x), self.f.jacobian(self.x), self.f.hessian(self.x)
