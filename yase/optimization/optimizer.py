@@ -67,7 +67,7 @@ class Optimizer:
 
 class OptimizationFunction:
 
-    def __init__(self, ndim):
+    def __init__(self, ndim=2):
         self.jac = jacobian(self.function)
         self.hes = hessian(self.function)
         self.ndim = ndim
@@ -118,8 +118,8 @@ class OptimizationFunction:
 
         # 2D contour plot
         ax = fig.add_subplot(1, 2, 2)
-        ax.contour(X, Y, Z, 70, cmap='jet')
-        ax.plot(*self.x_star(), marker='*', color='r', markersize=10)
+        ax.contour(X, Y, Z, 70, cmap='jet', alpha=0.5)
+        ax.plot(*self.x_star(), marker='*', color='r', linestyle='None', markersize=10)
         ax.set_xlabel('$x_1$')
         ax.set_ylabel('$x_2$')
 
@@ -232,11 +232,8 @@ class Rosenbrock(OptimizationFunction):
 
 class Ackley(OptimizationFunction):
 
-    def __init__(self, ndim=2):
-        super().__init__(ndim)
-
     def x_star(self):
-        return np.zeros(self.ndim)
+        return np.zeros(2)
 
     def f_star(self):
         return self.function(self.x_star())
@@ -247,5 +244,25 @@ class Ackley(OptimizationFunction):
         :param x: 1D array of points at which the Ackley function is to be computed.
         :return:  the value of the Ackley function.
         """
-        return (-20 * np.exp(-0.2 * np.sqrt(np.sum(np.square(x)) / x.size)) -
-                np.exp((np.sum(np.cos(2 * np.pi * x))) / x.size) + np.e + 20)
+        return (-20 * np.exp(-0.2 * np.sqrt(np.sum(np.square(x)) / 2)) -
+                np.exp((np.sum(np.cos(2 * np.pi * x))) / 2) + np.e + 20)
+
+
+class SixHumpCamel(OptimizationFunction):
+
+    def x_star(self):
+        return np.array([[-0.0898, 0.0898],
+                         [0.7126, -0.7126]])
+
+    def f_star(self):
+        return (self.function(self.x_star()[:, 0]) or
+                self.function(self.x_star()[:, 1]))
+
+    def function(self, x):
+        """
+        The Six-Hump Camel function.
+        :param x: 1D array of points at which the Six-Hump Camel function is to be computed.
+        :return:  the value of the Six-Hump Camel function.
+        """
+        return ((4 - 2.1 * x[0] ** 2 + x[0] ** 4 / 3.) * x[0] ** 2 +
+                x[0] * x[1] + (-4 + 4 * x[1] ** 2) * x[1] ** 2)

@@ -82,6 +82,8 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
     - Optimization Functions
         - Unconstrained
             - [x] Rosenbrock
+            - [x] Ackley
+            - [x] Six-Hump Camel
             - [x] Quadratic
                 - [x] Lagrangian Box-Constrained Quadratic
         - Constrained
