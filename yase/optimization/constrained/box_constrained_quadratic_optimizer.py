@@ -124,6 +124,15 @@ class BoxConstrainedQuadratic(Quadratic):
     def f_star(self):
         return np.inf
 
+    def plot(self, x_min, x_max, y_min, y_max):
+        fig = super().plot(x_min, x_max, y_min, y_max)
+        fig.axes[1].plot([0, 0, self.ub[0], self.ub[0], 0],
+                         [0, self.ub[1], self.ub[1], 0, 0], color='k', linewidth=1.5)
+        fig.axes[1].fill_between([0, self.ub[0]],
+                                 [0, 0],
+                                 [self.ub[1], self.ub[1]], color='0.8')
+        return fig
+
 
 class LagrangianBoxConstrainedQuadratic(Quadratic):
 
