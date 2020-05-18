@@ -57,6 +57,8 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
             if self.is_verbose():
                 print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng))
 
+            self.callback()
+
             if ng <= self.eps:
                 self.status = 'optimal'
                 break
@@ -86,13 +88,9 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
                 # optimal unbounded step size restricted to max feasible step
                 t = min(-self.g_x.T.dot(d) / den, max_t)
 
-            self.callback()
-
             self.x += t * d
 
             self.iter += 1
-
-            self.callback()
 
         if self.verbose:
             print()

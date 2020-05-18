@@ -145,6 +145,8 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
             if self.is_verbose():
                 print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, p, gap))
 
+            self.callback()
+
             # stopping criteria
             if gap <= self.eps:
                 self.status = 'optimal'
@@ -204,15 +206,11 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
 
             max_t *= 0.9995  # ensure the new iterate remains interior
 
-            self.callback()
-
             self.x += max_t * dx
             lp += max_t * dlp
             lm += max_t * dlm
 
             self.iter += 1
-
-            self.callback()
 
         if self.verbose:
             print()

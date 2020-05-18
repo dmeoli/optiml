@@ -78,6 +78,8 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
             if self.is_verbose():
                 print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, best_lb, gap))
 
+            self.callback()
+
             if gap <= self.eps:
                 self.status = 'optimal'
                 break
@@ -109,13 +111,9 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
                 # optimal unbounded step size restricted to max feasible step
                 a = min(-self.g_x.T.dot(d) / den, 1)
 
-            self.callback()
-
             self.x += a * d
 
             self.iter += 1
-
-            self.callback()
 
         if self.verbose:
             print()
