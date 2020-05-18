@@ -7,8 +7,8 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.utils.multiclass import unique_labels
 
 from ..optimization import Optimizer
-from ..optimization.constrained import (SMO, SMOClassifier, SMORegression, BoxConstrainedQuadratic,
-                                        BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic)
+from ..optimization.box_constrained import (SMO, SMOClassifier, SMORegression, BoxConstrainedQuadratic,
+                                            BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic)
 from ..optimization.unconstrained import ProximalBundle
 from ..optimization.unconstrained.line_search import LineSearchOptimizer
 from ..optimization.unconstrained.stochastic import StochasticOptimizer
@@ -58,6 +58,7 @@ class SVM(BaseEstimator):
                 not issubclass(optimizer, Optimizer)):
             raise TypeError('optimizer is not an allowed optimizer')
         self.optimizer = optimizer
+        self.bcq = None
         self.max_iter = max_iter
         self.verbose = verbose
         self.learning_rate = learning_rate
@@ -141,7 +142,7 @@ class SVC(ClassifierMixin, SVM):
 
     def fit(self, X, y):
         """
-        Trains the model by solving a constrained quadratic programming problem.
+        Trains the model by solving a box-constrained quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
         """
@@ -162,11 +163,11 @@ class SVC(ClassifierMixin, SVM):
 
         ub = np.ones(n_samples) * self.C  # upper bounds
 
-        bcq = BoxConstrainedQuadratic(Q, q, ub)
+        self.bcq = BoxConstrainedQuadratic(Q, q, ub)
 
         if self.optimizer == SMOClassifier:
 
-            smo = SMOClassifier(bcq, X, y, K, self.kernel, self.C, self.tol, self.verbose).minimize()
+            smo = SMOClassifier(self.bcq, X, y, K, self.kernel, self.C, self.tol, self.verbose).minimize()
             alphas = smo.alphas
             if self.kernel == 'linear':
                 self.coef_ = smo.w
@@ -179,16 +180,17 @@ class SVC(ClassifierMixin, SVM):
             A = y  # equality matrix
             b = np.zeros(1)  # equality vector
 
-            alphas = solve_qp(bcq.Q, bcq.q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
+            alphas = solve_qp(self.bcq.Q, self.bcq.q, A=A, b=b, lb=lb, ub=ub,
+                              solver=self.optimizer, verbose=self.verbose)
 
         elif issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-            self.optimizer = self.optimizer(f=bcq, max_iter=self.max_iter, verbose=self.verbose)
+            self.optimizer = self.optimizer(f=self.bcq, max_iter=self.max_iter, verbose=self.verbose)
             alphas = self.optimizer.minimize().x
 
         elif issubclass(self.optimizer, Optimizer):
 
-            dual = LagrangianBoxConstrainedQuadratic(bcq)
+            dual = LagrangianBoxConstrainedQuadratic(self.bcq)
 
             if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -254,7 +256,7 @@ class SVR(RegressorMixin, SVM):
 
     def fit(self, X, y):
         """
-        Trains the model by solving a constrained quadratic programming problem.
+        Trains the model by solving a box-constrained quadratic programming problem.
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
         """
@@ -274,11 +276,11 @@ class SVR(RegressorMixin, SVM):
 
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
-        bcq = BoxConstrainedQuadratic(Q, q, ub)
+        self.bcq = BoxConstrainedQuadratic(Q, q, ub)
 
         if self.optimizer == SMORegression:
 
-            smo = SMORegression(bcq, X, y, K, self.kernel, self.C, self.epsilon, self.tol, self.verbose).minimize()
+            smo = SMORegression(self.bcq, X, y, K, self.kernel, self.C, self.epsilon, self.tol, self.verbose).minimize()
             alphas_p, alphas_n = smo.alphas_p, smo.alphas_n
             if self.kernel == 'linear':
                 self.coef_ = smo.w
@@ -293,16 +295,17 @@ class SVR(RegressorMixin, SVM):
                 A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
                 b = np.zeros(1)  # equality vector
 
-                alphas = solve_qp(bcq.Q, bcq.q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
+                alphas = solve_qp(self.bcq.Q, self.bcq.q, A=A, b=b, lb=lb, ub=ub,
+                                  solver=self.optimizer, verbose=self.verbose)
 
             elif issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                self.optimizer = self.optimizer(f=bcq, max_iter=self.max_iter, verbose=self.verbose)
+                self.optimizer = self.optimizer(f=self.bcq, max_iter=self.max_iter, verbose=self.verbose)
                 alphas = self.optimizer.minimize().x
 
             elif issubclass(self.optimizer, Optimizer):
 
-                dual = LagrangianBoxConstrainedQuadratic(bcq)
+                dual = LagrangianBoxConstrainedQuadratic(self.bcq)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
 

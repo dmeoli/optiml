@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from yase.optimization.constrained import ProjectedGradient, BoxConstrainedQuadratic
+from yase.optimization.box_constrained import ProjectedGradient, BoxConstrainedQuadratic
 
 
 def test():

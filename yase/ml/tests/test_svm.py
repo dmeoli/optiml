@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 from yase.ml.svm import SVC, SVR
 from yase.ml.utils import not_test
-from yase.optimization.constrained import ProjectedGradient
+from yase.optimization.box_constrained import ProjectedGradient
 from yase.optimization.unconstrained.line_search import SteepestGradientDescent
 from yase.optimization.unconstrained.stochastic import Adam
 

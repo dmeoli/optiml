@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from yase.optimization.constrained import ActiveSet, BoxConstrainedQuadratic
+from yase.optimization.box_constrained import ActiveSet, BoxConstrainedQuadratic
 
 
 def test():

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from yase.optimization.constrained import FrankWolfe, BoxConstrainedQuadratic
+from yase.optimization.box_constrained import FrankWolfe, BoxConstrainedQuadratic
 
 
 def test():

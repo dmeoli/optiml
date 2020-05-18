@@ -126,17 +126,12 @@ class BoxConstrainedQuadratic(Quadratic):
         return np.inf
 
     def plot(self, x_min, x_max, y_min, y_max):
-        fig = super().plot(x_min, x_max, y_min, y_max)
-
-        # 3D linear equalities plot
-        X, Y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
-        Z = np.zeros_like(X)
-        fig.axes[0].plot_surface(X, Y, Z, color='k', alpha=0.4)
+        fig = super(BoxConstrainedQuadratic, self).plot(x_min, x_max, y_min, y_max)
 
         # 3D box-constraints plot
-        # vertices of a box
         z_min = self.function(np.array([x_min, y_min]))
         z_max = self.function(np.array([x_max, y_max]))
+        # vertices of the box
         v = np.array([[self.ub[0], 0, z_min], [0, 0, z_min],
                       [0, self.ub[1], z_min], [self.ub[0], self.ub[1], z_min],
                       [self.ub[0], 0, z_max], [0, 0, z_max],
@@ -151,9 +146,6 @@ class BoxConstrainedQuadratic(Quadratic):
         # plot sides
         fig.axes[0].add_collection3d(Poly3DCollection(verts, facecolors='black', linewidths=1.,
                                                       edgecolors='k', alpha=0.1))
-
-        # 2D linear equalities plot
-        fig.axes[1].axhline(y=0, color='k', linewidth=1.5)
 
         # 2D box-constraints plot
         fig.axes[1].plot([0, 0, self.ub[0], self.ub[0], 0],

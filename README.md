@@ -68,28 +68,16 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
         [cvxopt](https://github.com/cvxopt/cvxopt), [osqp](https://github.com/oxfordcontrol/osqp), [ecos](https://github.com/embotech/ecos), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
              - [x] standard momentum
              - [x] Nesterov momentum
-    - Constrained Optimization
-        - Quadratic Optimization
-            - Box-Constrained Quadratic Methods
-                - [x] Projected Gradient
-                - [x] Frank-Wolfe or Conditional Gradient
-                - [x] Active Set
-                - [x] Interior Point
-                - [x] Sequential Minimal Optimization (ad hoc for SVMs)
-            - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
-            [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
+    - Box-Constrained Quadratic Optimization Methods
+        - [x] Projected Gradient
+        - [x] Frank-Wolfe or Conditional Gradient
+        - [x] Active Set
+        - [x] Interior Point
+        - [x] Sequential Minimal Optimization (ad hoc for SVMs)
+        - [x] BCQP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
+        [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
 
-    - Optimization Functions
-        - Unconstrained
-            - [x] Rosenbrock
-            - [x] Ackley
-            - [x] Six-Hump Camel
-            - [x] Quadratic
-                - [x] Lagrangian Box-Constrained Quadratic
-        - Constrained
-            - [x] Box-Constrained Quadratic
-
-- Machine Learning Models
+- Machine Learning
     - [x] Support Vector Machines
         - [x] Support Vector Classifier
         - [x] Support Vector Regression
