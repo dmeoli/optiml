@@ -115,6 +115,9 @@ class BoxConstrainedQuadratic(Quadratic):
             z[out_b] = np.random.rand(sum(out_b)) * ub[out_b]
 
             q = -Q.dot(z)
+        else:
+            if any(u < 0 for u in ub):
+                raise ValueError('the lower bound must be > 0')
 
         super().__init__(Q, q)
         self.ub = np.asarray(ub, dtype=np.float)
