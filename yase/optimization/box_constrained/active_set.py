@@ -9,7 +9,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
     # Apply the Active Set Method to the convex Box-Constrained Quadratic
     # program:
     #
-    #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub }
     #
     # - max_iter (integer scalar, optional, default value 1000): the maximum
     #   number of iterations

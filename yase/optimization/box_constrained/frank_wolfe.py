@@ -7,7 +7,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
     # Apply the (possibly, stabilized) Frank-Wolfe algorithm with exact line
     # search to the convex Box-Constrained Quadratic program:
     #
-    #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
+    #  (P) min { 1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub }
     #
     # - eps (real scalar, optional, default value 1e-6): the accuracy in the
     #   stopping criterion: the algorithm is stopped when the relative gap
