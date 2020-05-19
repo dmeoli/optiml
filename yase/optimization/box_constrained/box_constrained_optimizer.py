@@ -19,17 +19,40 @@ class BoxConstrainedQuadraticOptimizer(Optimizer):
 
 class BoxConstrainedQuadratic(Quadratic):
 
-    def __init__(self, Q=None, q=None, ub=None, ndim=2, actv=0.5, rank=1.1, ecc=0.99, u_min=8, u_max=12):
+    def __init__(self, Q=None, q=None, ub=None, ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_min=8, ub_max=12, seed=None):
         """
         Construct a box-constrained quadratic function defined as:
 
                     1/2 x^T Q x + q^T x : 0 <= x <= ub
 
-        :param Q:  ([n x n] real symmetric matrix, not necessarily positive semidefinite):
-                            the Hessian (i.e., the quadratic part) of f. If it is not
-                            positive semidefinite, f(x) will be unbounded below.
-        :param q:  ([n x 1] real column vector): the linear part of f.
+        :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
+                           the Hessian (i.e., the quadratic part) of f. If it is not
+                           positive semidefinite, f(x) will be unbounded below.
+        :param q: ([n x 1] real column vector): the linear part of f.
         :param ub: ([n x 1] real column vector): the upper bound of the box.
+        :param ndim: (integer, scalar): the size of the problem
+        :param actv: (real, scalar, default 0.5): how many box constraints (as a
+                     fraction of the number of variables n of the problems) the
+                     unconstrained optimum will violate, and therefore we expect to be
+                     active in the constrained optimum; note that there is no guarantee that
+                     exactly acvt constraints will be active, they may be less or (more
+                     likely) more, except when actv = 0 because then the unconstrained
+                     optimum is surely feasible and therefore it will be the constrained
+                     optimum as well
+        :param rank: (real, scalar, default 1.1): Q will be obtained as Q = G^T G, with
+                     G a m \times n random matrix with m = rank * n. If rank > 1 then Q can
+                     be expected to be full-rank, if rank < 1 it will not
+        :param ecc: (real, scalar, default 0.99): the eccentricity of Q, i.e., the
+                    ratio ( \lambda_1 - \lambda_n ) / ( \lambda_1 + \lambda_n ), with
+                    \lambda_1 the largest eigenvalue and \lambda_n the smallest one. Note
+                    that this makes sense only if \lambda_n > 0, for otherwise the
+                    eccentricity is always 1; hence, this setting is ignored if
+                    \lambda_n = 0, i.e., Q is not full-rank (see above). An eccentricity of
+                    0 means that all eigenvalues are equal, as eccentricity -> 1 the
+                    largest eigenvalue gets larger and larger w.r.t. the smallest one
+        :param seed: (integer, default 0): the seed for the random number generator
+        :param ub_min: (real, scalar, default 8): the minimum value of each ub_i
+        :param ub_max: (real, scalar, default 12): the maximum value of each ub_i
         """
         if Q is None and q is None:
             if not np.isscalar(ndim) or not np.isreal(ndim):
@@ -49,18 +72,18 @@ class BoxConstrainedQuadratic(Quadratic):
                 raise ValueError('ecc not a real scalar')
             if not 0 <= ecc < 1:
                 raise ValueError('ecc must be in [0, 1)')
-            if not np.isscalar(u_min) or not np.isreal(u_min):
-                raise ValueError('u_min not a real scalar')
-            if u_min <= 0:
-                raise ValueError('u_min must be > 0')
-            if not np.isscalar(u_max) or not np.isreal(u_max):
-                raise ValueError('u_min not a real scalar')
-            if u_max <= u_min:
-                raise ValueError('u_max must be > u_min')
+            if not np.isscalar(ub_min) or not np.isreal(ub_min):
+                raise ValueError('ub_min not a real scalar')
+            if ub_min <= 0:
+                raise ValueError('ub_min must be > 0')
+            if not np.isscalar(ub_max) or not np.isreal(ub_max):
+                raise ValueError('ub_min not a real scalar')
+            if ub_max <= ub_min:
+                raise ValueError('ub_max must be > ub_min')
 
-            np.random.seed(ndim)
+            np.random.seed(seed)
 
-            ub = u_min * np.ones(ndim) + (u_max - u_min) * np.random.rand(ndim)
+            ub = ub_min * np.ones(ndim) + (ub_max - ub_min) * np.random.rand(ndim)
 
             G = np.random.rand(round(rank * ndim), ndim)
             Q = G.T.dot(G)
@@ -122,18 +145,11 @@ class BoxConstrainedQuadratic(Quadratic):
         super().__init__(Q, q)
         self.ub = np.asarray(ub, dtype=np.float)
 
-    def x_star(self):
-        return np.full(fill_value=np.nan, shape=self.ndim)
-
-    def f_star(self):
-        return np.inf
-
     def plot(self, x_min, x_max, y_min, y_max):
-        fig = super(BoxConstrainedQuadratic, self).plot(x_min, x_max, y_min, y_max)
+        fig = super().plot(x_min, x_max, y_min, y_max)
 
         # 3D box-constraints plot
-        z_min = self.function(np.array([x_min, y_min]))
-        z_max = self.function(np.array([x_max, y_max]))
+        z_min, z_max = fig.axes[0].get_zlim()
         # vertices of the box
         v = np.array([[self.ub[0], 0, z_min], [0, 0, z_min],
                       [0, self.ub[1], z_min], [self.ub[0], self.ub[1], z_min],

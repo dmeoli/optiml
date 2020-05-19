@@ -58,7 +58,7 @@ class SVM(BaseEstimator):
                 not issubclass(optimizer, Optimizer)):
             raise TypeError('optimizer is not an allowed optimizer')
         self.optimizer = optimizer
-        self.bcq = None
+        self.bcq = BoxConstrainedQuadratic
         self.max_iter = max_iter
         self.verbose = verbose
         self.learning_rate = learning_rate
@@ -163,7 +163,7 @@ class SVC(ClassifierMixin, SVM):
 
         ub = np.ones(n_samples) * self.C  # upper bounds
 
-        self.bcq = BoxConstrainedQuadratic(Q, q, ub)
+        self.bcq = self.bcq(Q, q, ub)
 
         if self.optimizer == SMOClassifier:
 
@@ -276,7 +276,7 @@ class SVR(RegressorMixin, SVM):
 
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
-        self.bcq = BoxConstrainedQuadratic(Q, q, ub)
+        self.bcq = self.bcq(Q, q, ub)
 
         if self.optimizer == SMORegression:
 
