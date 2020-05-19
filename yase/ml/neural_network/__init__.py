@@ -1,3 +1,3 @@
 __all__ = ['NeuralNetworkClassifier', 'NeuralNetworkRegressor']
 
-from .neural_network import NeuralNetworkClassifier, NeuralNetworkRegressor
+from ._base import NeuralNetworkClassifier, NeuralNetworkRegressor

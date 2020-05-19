@@ -5,7 +5,7 @@ from yase.optimization.box_constrained import BoxConstrainedQuadratic, InteriorP
 
 
 def test():
-    assert np.allclose(InteriorPoint(BoxConstrainedQuadratic()).minimize().x, 0.)
+    assert np.allclose(InteriorPoint(BoxConstrainedQuadratic(seed=2)).minimize().x, 0.)
 
 
 if __name__ == "__main__":

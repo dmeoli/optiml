@@ -2,8 +2,8 @@ __all__ = ['BoxConstrainedQuadraticOptimizer', 'BoxConstrainedQuadratic', 'Lagra
            'ProjectedGradient', 'ActiveSet', 'FrankWolfe', 'InteriorPoint',
            'SMO', 'SMOClassifier', 'SMORegression']
 
-from .box_constrained_optimizer import (BoxConstrainedQuadraticOptimizer, BoxConstrainedQuadratic,
-                                        LagrangianBoxConstrainedQuadratic)
+from ._base import (BoxConstrainedQuadraticOptimizer, BoxConstrainedQuadratic,
+                    LagrangianBoxConstrainedQuadratic)
 
 from .projected_gradient import ProjectedGradient
 from .active_set import ActiveSet

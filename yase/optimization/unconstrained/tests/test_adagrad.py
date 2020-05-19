@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from yase.optimization.optimizer import quad1, quad2, Rosenbrock
+from yase.optimization.unconstrained import quad1, quad2, Rosenbrock
 from yase.optimization.unconstrained.stochastic import AdaGrad
 
 

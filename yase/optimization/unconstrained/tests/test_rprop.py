@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from yase.optimization.optimizer import quad2, quad1, Rosenbrock
+from yase.optimization.unconstrained import quad2, quad1, Rosenbrock
 from yase.optimization.unconstrained.stochastic import RProp
 
 

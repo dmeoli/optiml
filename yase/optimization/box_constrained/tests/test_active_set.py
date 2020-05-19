@@ -5,7 +5,7 @@ from yase.optimization.box_constrained import ActiveSet, BoxConstrainedQuadratic
 
 
 def test():
-    assert np.allclose(ActiveSet(BoxConstrainedQuadratic()).minimize().x, 0.)
+    assert np.allclose(ActiveSet(BoxConstrainedQuadratic(seed=2)).minimize().x, 0.)
 
 
 if __name__ == "__main__":

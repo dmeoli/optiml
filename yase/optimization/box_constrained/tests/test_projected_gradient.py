@@ -5,7 +5,7 @@ from yase.optimization.box_constrained import ProjectedGradient, BoxConstrainedQ
 
 
 def test():
-    assert np.allclose(ProjectedGradient(BoxConstrainedQuadratic()).minimize().x, 0.)
+    assert np.allclose(ProjectedGradient(BoxConstrainedQuadratic(seed=2)).minimize().x, 0.)
 
 
 if __name__ == "__main__":

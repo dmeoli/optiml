@@ -1,7 +1,8 @@
 import numpy as np
 
-from ... import Optimizer, Quadratic
 from . import LineSearchOptimizer
+from .. import Quadratic
+from ... import Optimizer
 
 
 class QuadraticSteepestGradientDescent(Optimizer):

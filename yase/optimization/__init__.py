@@ -1,4 +1,3 @@
-__all__ = ['Optimizer', 'OptimizationFunction',
-           'Quadratic', 'Rosenbrock', 'Ackley', 'SixHumpCamel']
+__all__ = ['Optimizer', 'OptimizationFunction']
 
-from .optimizer import Optimizer, OptimizationFunction, Quadratic, Rosenbrock, Ackley, SixHumpCamel
+from ._base import Optimizer, OptimizationFunction
