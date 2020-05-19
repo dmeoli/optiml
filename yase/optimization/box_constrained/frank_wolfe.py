@@ -56,7 +56,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
         best_lb = -np.inf  # best lower bound so far (= none, really)
 
         if self.verbose:
-            print('iter\tcost\t\tlb\t\t\tgap')
+            print('iter\tcost\t\tlb\t\tgap')
 
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
