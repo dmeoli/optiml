@@ -10,8 +10,8 @@ from ...ml.svm.kernels import rbf, LinearKernel
 
 class SMO:
 
-    def __init__(self, f, X, y, K, kernel=rbf, C=1., tol=1e-3, verbose=False):
-        self.f = f
+    def __init__(self, quad, X, y, K, kernel=rbf, C=1., tol=1e-3, verbose=False):
+        self.quad = quad
         self.X = X
         self.y = y
         self.K = K
@@ -55,9 +55,9 @@ class SMOClassifier(SMO):
     Algorithm for SVM Classifier Design. Technical Report CD-99-14.
     """
 
-    def __init__(self, f, X, y, K, kernel=rbf, C=1., tol=1e-3, verbose=False):
+    def __init__(self, quad, X, y, K, kernel=rbf, C=1., tol=1e-3, verbose=False):
         self.alphas = np.zeros(len(X))
-        super().__init__(f, X, y, K, kernel, C, tol, verbose)
+        super().__init__(quad, X, y, K, kernel, C, tol, verbose)
 
         # initialize variables and structures to implement improvements
         # on the original Platt's SMO algorithm described in Keerthi et
@@ -305,7 +305,7 @@ class SMOClassifier(SMO):
                 examine_all = True
 
             if self.verbose and not loop_counter % self.verbose:
-                print('{:4d}\t{:1.4e}'.format(loop_counter, self.f.function(self.alphas)))
+                print('{:4d}\t{:1.4e}'.format(loop_counter, self.quad(self.alphas)))
 
             loop_counter += 1
 
@@ -342,10 +342,10 @@ class SMORegression(SMO):
     Algorithm for SVM Regression. Technical Report CD-99-16.
     """
 
-    def __init__(self, f, X, y, K, kernel=rbf, C=1., epsilon=0.1, tol=1e-3, verbose=False):
+    def __init__(self, quad, X, y, K, kernel=rbf, C=1., epsilon=0.1, tol=1e-3, verbose=False):
         self.alphas_p = np.zeros(len(X))
         self.alphas_n = np.zeros(len(X))
-        super().__init__(f, X, y, K, kernel, C, tol, verbose)
+        super().__init__(quad, X, y, K, kernel, C, tol, verbose)
         self.epsilon = epsilon
 
         # initialize variables and structures to implement improvements
@@ -703,7 +703,7 @@ class SMORegression(SMO):
 
             if self.verbose and not loop_counter % self.verbose:
                 print('{:4d}\t{:1.4e}'.format(
-                    loop_counter, self.f.function(np.hstack((self.alphas_p, self.alphas_n)))))
+                    loop_counter, self.quad(np.hstack((self.alphas_p, self.alphas_n)))))
 
             loop_counter += 1
 

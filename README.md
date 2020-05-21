@@ -1,5 +1,5 @@
 # OptiML
-[![Build Status](https://travis-ci.org/dmeoli/yase.svg?branch=master)](https://travis-ci.org/dmeoli/yase) [![Coverage Status](https://coveralls.io/repos/github/dmeoli/yase/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/yase?branch=master) [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/yase/master)
+[![Build Status](https://travis-ci.org/dmeoli/optiml.svg?branch=master)](https://travis-ci.org/dmeoli/optiml) [![Coverage Status](https://coveralls.io/repos/github/dmeoli/optiml/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/optiml?branch=master) [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/optiml/master)
 
 ***OptiML*** is a custom reimplementation of *Support Vector Machines* and *Deep Neural Networks*, both with 
 some of the most successful features according to the state of art.
@@ -75,17 +75,17 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
         - [x] Support Vector Classifier
             - Formulations
                 - [x] Primal
-                - Losses
-                    - [x] Hinge
-                    - [x] Squared Hinge
+                    - Losses
+                        - [x] Hinge
+                        - [x] Squared Hinge
                 - [x] Dual
                     - [x] Lagrangian Dual
         - [x] Support Vector Regression
             - Formulations
                 - [x] Primal
-                - Losses
-                    - [x] Epsilon Insensitive
-                    - [x] Squared Epsilon Insensitive
+                    - Losses
+                        - [x] Epsilon Insensitive
+                        - [x] Squared Epsilon Insensitive
                 - [x] Dual
                     - [x] Lagrangian Dual
         - Kernels

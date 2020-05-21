@@ -101,35 +101,36 @@ class DualSVC(ClassifierMixin, DualSVM):
         Q = (Q + Q.T) / 2  # ensure Q is symmetric
         q = -np.ones(n_samples)
 
-        self.obj = Quadratic(Q, q)
+        self.quad = Quadratic(Q, q)
 
         if self.optimizer == SMOClassifier:
 
-            self.optimizer = SMOClassifier(self.obj, X, y, K, self.kernel, self.C, self.tol, self.verbose).minimize()
+            self.optimizer = SMOClassifier(self.quad, X, y, K, self.kernel, self.C,
+                                           self.tol, self.verbose).minimize()
             alphas = self.optimizer.alphas
             if isinstance(self.kernel, LinearKernel):
                 self.coef_ = self.optimizer.w
             self.intercept_ = self.optimizer.b
 
-        elif isinstance(self.optimizer, str):
+        else:
 
             A = y  # equality matrix
-            b = np.zeros(1)  # equality vector
-
             ub = np.ones(n_samples) * self.C  # upper bounds
-            lb = np.zeros(n_samples)  # lower bounds
 
-            alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
+            if isinstance(self.optimizer, str):
 
-        elif issubclass(self.optimizer, ConstrainedQuadraticOptimizer):
+                b = np.zeros(1)  # equality vector
+                lb = np.zeros(n_samples)  # lower bounds
 
-            if issubclass(self.optimizer, LagrangianDual):
+                alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
 
-                self.obj = LagrangianConstrainedQuadratic(self.obj)
+            elif issubclass(self.optimizer, Optimizer):
+
+                self.quad = LagrangianConstrainedQuadratic(self.quad, A, ub)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
 
-                    self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
+                    self.optimizer = self.optimizer(f=self.quad, x=np.zeros(self.quad.ndim), max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
 
                     if self.optimizer.status == 'stopped':
@@ -137,36 +138,9 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 elif issubclass(self.optimizer, StochasticOptimizer):
 
-                    self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), step_size=self.learning_rate,
-                                                    epochs=self.max_iter, batch_size=self.batch_size,
-                                                    momentum_type=self.momentum_type, momentum=self.momentum,
-                                                    shuffle=self.shuffle, random_state=self.random_state,
-                                                    verbose=self.verbose).minimize()
-
-            else:
-
-                self.obj = ConstrainedQuadratic(Q, q, A, ub)
-
-                self.optimizer = self.optimizer(f=self.obj, max_iter=self.max_iter, verbose=self.verbose)
-                alphas = self.optimizer.minimize().x
-
-        elif issubclass(self.optimizer, Optimizer):
-
-            self.obj = self.obj(self, X, y)
-
-            if issubclass(self.optimizer, LineSearchOptimizer):
-
-                self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
-                                                max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
-
-                if self.optimizer.status == 'stopped':
-                    warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
-
-            elif issubclass(self.optimizer, StochasticOptimizer):
-
-                self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), step_size=self.learning_rate,
-                                                epochs=self.max_iter, momentum_type=self.momentum_type,
-                                                momentum=self.momentum, verbose=self.verbose).minimize()
+                    self.optimizer = self.optimizer(f=self.quad, x=np.zeros(self.quad.ndim), epochs=self.max_iter,
+                                                    step_size=self.learning_rate, momentum_type=self.momentum_type,
+                                                    momentum=self.momentum, verbose=self.verbose).minimize()
 
         sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
@@ -186,7 +160,7 @@ class DualSVC(ClassifierMixin, DualSVM):
         return self
 
     def decision_function(self, X):
-        if isinstance(self.kernel, LinearKernel):
+        if not isinstance(self.kernel, LinearKernel):
             return np.dot(self.dual_coef_, self.kernel(self.support_vectors_, X)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_
 
@@ -228,14 +202,11 @@ class DualSVR(RegressorMixin, DualSVM):
         Q = (Q + Q.T) / 2  # ensure Q is symmetric
         q = np.hstack((-y, y)) + self.epsilon
 
-        A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
-        ub = np.ones(2 * n_samples) * self.C  # upper bounds
-
-        self.obj = ConstrainedQuadratic(Q, q, A, ub)
+        self.quad = Quadratic(Q, q)
 
         if self.optimizer == SMORegression:
 
-            self.optimizer = SMORegression(self.obj, X, y, K, self.kernel, self.C,
+            self.optimizer = SMORegression(self.quad, X, y, K, self.kernel, self.C,
                                            self.epsilon, self.tol, self.verbose).minimize()
             alphas_p, alphas_n = self.optimizer.alphas_p, self.optimizer.alphas_n
             if isinstance(self.kernel, LinearKernel):
@@ -244,21 +215,23 @@ class DualSVR(RegressorMixin, DualSVM):
 
         else:
 
+            A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
+            ub = np.ones(2 * n_samples) * self.C  # upper bounds
+
             if isinstance(self.optimizer, str):
 
                 lb = np.zeros(2 * n_samples)  # lower bounds
                 b = np.zeros(1)  # equality vector
 
-                alphas = solve_qp(self.obj.Q, self.obj.q, A=A, b=b, lb=lb, ub=ub,
-                                  solver=self.optimizer, verbose=self.verbose)
+                alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
 
             elif issubclass(self.optimizer, Optimizer):
 
-                self.obj = LagrangianConstrainedQuadratic(self.obj)
+                self.quad = LagrangianConstrainedQuadratic(self.quad, A, ub)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
 
-                    self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
+                    self.optimizer = self.optimizer(f=self.quad, x=np.zeros(self.quad.ndim), max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
 
                     if self.optimizer.status == 'stopped':
@@ -266,8 +239,8 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 elif issubclass(self.optimizer, StochasticOptimizer):
 
-                    self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), step_size=self.learning_rate,
-                                                    epochs=self.max_iter, momentum_type=self.momentum_type,
+                    self.optimizer = self.optimizer(f=self.quad, x=np.zeros(self.quad.ndim), epochs=self.max_iter,
+                                                    step_size=self.learning_rate, momentum_type=self.momentum_type,
                                                     momentum=self.momentum, verbose=self.verbose).minimize()
 
             alphas_p = alphas[:n_samples]
@@ -292,6 +265,6 @@ class DualSVR(RegressorMixin, DualSVM):
         return self
 
     def predict(self, X):
-        if isinstance(self.kernel, LinearKernel):
+        if not isinstance(self.kernel, LinearKernel):
             return np.dot(self.dual_coef_, self.kernel(self.support_vectors_, X)) + self.intercept_
         return np.dot(X, self.coef_) + self.intercept_

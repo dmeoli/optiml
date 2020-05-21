@@ -25,7 +25,7 @@ class NeuralNetwork(BaseEstimator, Layer):
         if not issubclass(loss, NeuralNetworkLoss):
             raise TypeError(f'{loss} is not an allowed neural network loss function')
         self.loss = loss
-        if not issubclass(self.optimizer, Optimizer):
+        if not issubclass(optimizer, Optimizer):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
         self.optimizer = optimizer
         self.learning_rate = learning_rate
@@ -124,7 +124,7 @@ class NeuralNetwork(BaseEstimator, Layer):
                 print('\tloss: {:1.4e}'.format(self._avg_epoch_loss), end='')
             self._avg_epoch_loss = 0.
             if self.validation_split:
-                val_loss = self.loss.function(opt.x, X_val, y_val)
+                val_loss = self.loss(opt.x, X_val, y_val)
                 self.val_loss_history.append(val_loss)
                 if self.verbose and not opt.epoch % self.verbose:
                     print(' - val_loss: {:1.4e}'.format(val_loss), end='')
