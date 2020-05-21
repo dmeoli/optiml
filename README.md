@@ -1,8 +1,8 @@
-# Yet Another Sklearn Extension
+# OptiML
 [![Build Status](https://travis-ci.org/dmeoli/yase.svg?branch=master)](https://travis-ci.org/dmeoli/yase) [![Coverage Status](https://coveralls.io/repos/github/dmeoli/yase/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/yase?branch=master) [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/yase/master)
 
-***YASE*** (Yet Another Sklearn Extension) is a custom reimplementation of *Support Vector Machines* and 
-*Deep Neural Networks*, both with some of the most successful features according to the state of art.
+***OptiML*** is a custom reimplementation of *Support Vector Machines* and *Deep Neural Networks*, both with 
+some of the most successful features according to the state of art.
 
 This work was motivated by the possibility of being able to solve the optimization problem deriving from the mathematical 
 formalization of these models through a wide range of optimization algorithms object of study and developed for the 
@@ -64,23 +64,30 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] RMSProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
-        - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface to 
-        [cvxopt](https://github.com/cvxopt/cvxopt), [osqp](https://github.com/oxfordcontrol/osqp), [ecos](https://github.com/embotech/ecos), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
-             - [x] standard momentum
-             - [x] Nesterov momentum
-    - Box-Constrained Quadratic Optimization Methods
-        - [x] Projected Gradient
-        - [x] Frank-Wolfe or Conditional Gradient
-        - [x] Active Set
-        - [x] Interior Point
-        - [x] Sequential Minimal Optimization (ad hoc for SVMs)
-        - [x] BCQP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
+    - Constrained Quadratic Optimization Methods (ad hoc for SVMs)
+        - [x] Sequential Minimal Optimization
+        - [x] Lagrangian Dual Relaxation
+        - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
         [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
 
 - Machine Learning
     - [x] Support Vector Machines
         - [x] Support Vector Classifier
+            - Formulations
+                - [x] Primal
+                - Losses
+                    - [x] Hinge
+                    - [x] Squared Hinge
+                - [x] Dual
+                    - [x] Lagrangian Dual
         - [x] Support Vector Regression
+            - Formulations
+                - [x] Primal
+                - Losses
+                    - [x] Epsilon Insensitive
+                    - [x] Squared Epsilon Insensitive
+                - [x] Dual
+                    - [x] Lagrangian Dual
         - Kernels
             - [x] linear kernel
             - [x] polynomial kernel
@@ -105,17 +112,6 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] SoftMax
         - Layers
             - [x] Fully Connected
-            - [x] Convolutional
-                - [x] Conv 2D
-                - [x] Max Pooling
-                - [x] Avg Pooling
-                - [x] Flatten
-            - [ ] Recurrent
-                - [ ] Long Short-Term Memory (LSTM)
-                - [ ] Gated Recurrent Units (GRU)
-            - Normalization
-                - [x] Dropout
-                - [ ] Batch Normalization
         - Initializers
             - [x] Xavier or Glorot normal and uniform
             - [x] He normal and uniform
@@ -123,8 +119,8 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
 ## Installation
 
 ```
-git clone https://github.com/dmeoli/yase
-cd yase
+git clone https://github.com/dmeoli/optiml
+cd optiml
 pip install .
 ```
 
@@ -133,7 +129,7 @@ pip install .
 After installation, you can launch the test suite from outside the source directory:
 
 ```
-pytest yase
+pytest optiml
 ```
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
