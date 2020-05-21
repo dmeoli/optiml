@@ -7,23 +7,27 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.utils.multiclass import unique_labels
 
 from .kernels import rbf, Kernel, LinearKernel
-from .losses import SVMLoss
+from .losses import SVMLoss, squared_hinge
 from ...optimization import Optimizer
 from ...optimization.constrained import SMO, SMOClassifier, SMORegression, LagrangianConstrainedQuadratic
 from ...optimization.unconstrained import Quadratic
 from ...optimization.unconstrained.line_search import LineSearchOptimizer
-from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
+from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
 
 
 class SVM(BaseEstimator):
-    def __init__(self, kernel=rbf, C=1., optimizer=None, max_iter=1000, learning_rate=0.01, momentum_type='none',
-                 momentum=0.9, batch_size=None, max_f_eval=1000, shuffle=True, random_state=None, verbose=False):
+    def __init__(self, kernel=rbf, C=1., tol=1e-3, optimizer=None, max_iter=1000, learning_rate=0.01,
+                 momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, shuffle=True,
+                 random_state=None, verbose=False):
         if not issubclass(type(kernel), Kernel):
             raise TypeError(f'{kernel} is not an allowed kernel function')
         self.kernel = kernel
         if not C > 0:
             raise ValueError('C must be > 0')
         self.C = C
+        if not tol > 0:
+            raise ValueError('tol must be > 0')
+        self.tol = tol
         self.optimizer = optimizer
         self.max_iter = max_iter
         self.learning_rate = learning_rate
@@ -41,16 +45,18 @@ class SVM(BaseEstimator):
 
 class PrimalSVM(SVM):
 
-    def __init__(self, kernel=rbf, C=1., loss=None, optimizer=StochasticGradientDescent, max_iter=1000,
+    def __init__(self, kernel=rbf, C=1., tol=1e-3, loss=None, optimizer=StochasticGradientDescent, max_iter=1000,
                  learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
-                 shuffle=True, random_state=None, verbose=False):
-        super().__init__(kernel, C, optimizer, max_iter, learning_rate, momentum_type, momentum,
+                 fit_intercept=True, shuffle=True, random_state=None, verbose=False):
+        super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum,
                          batch_size, max_f_eval, shuffle, random_state, verbose)
         if not issubclass(loss, SVMLoss):
             raise TypeError(f'{loss} is not an allowed svm loss function')
         self.loss = loss
         if not issubclass(self.optimizer, Optimizer):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
+        self.coef_ = 0.
+        self.fit_intercept = fit_intercept
 
 
 class DualSVM(SVM):
@@ -58,11 +64,8 @@ class DualSVM(SVM):
     def __init__(self, kernel=rbf, C=1., tol=1e-3, optimizer=SMO, max_iter=1000, learning_rate=0.01,
                  momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, shuffle=True,
                  random_state=None, verbose=False):
-        super().__init__(kernel, C, optimizer, max_iter, learning_rate, momentum_type, momentum,
-                         batch_size, max_f_eval, shuffle, random_state, verbose)
-        if not tol > 0:
-            raise ValueError('tol must be > 0')
-        self.tol = tol
+        super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type,
+                         momentum, batch_size, max_f_eval, shuffle, random_state, verbose)
         if not (isinstance(optimizer, str) or
                 not issubclass(optimizer, SMO) or
                 not issubclass(optimizer, Optimizer)):
@@ -70,7 +73,48 @@ class DualSVM(SVM):
 
 
 class PrimalSVC(ClassifierMixin, PrimalSVM):
-    pass
+
+    def __init__(self, kernel=rbf, C=1., tol=1e-3, loss=squared_hinge, optimizer=AdaGrad, max_iter=1000,
+                 learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
+                 fit_intercept=True, shuffle=True, random_state=None, verbose=False):
+        super().__init__(kernel, C, tol, loss, optimizer, max_iter, learning_rate, momentum_type, momentum,
+                         batch_size, max_f_eval, fit_intercept, shuffle, random_state, verbose)
+
+    def fit(self, X, y):
+        self.labels = unique_labels(y)
+        if len(self.labels) > 2:
+            raise ValueError('use OneVsOneClassifier or OneVsRestClassifier from sklearn.multiclass '
+                             'to train a model over more than two labels')
+        y = np.where(y == self.labels[0], -1., 1.)
+
+        # kernel matrix
+        K = self.kernel(X)
+
+        self.loss = self.loss(self, K, y)
+
+        if issubclass(self.optimizer, LineSearchOptimizer):
+
+            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), max_iter=self.max_iter,
+                                            max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
+
+            if self.optimizer.status == 'stopped':
+                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
+
+        elif issubclass(self.optimizer, StochasticOptimizer):
+
+            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), epochs=self.max_iter,
+                                            step_size=self.learning_rate, momentum_type=self.momentum_type,
+                                            momentum=self.momentum, verbose=self.verbose).minimize()
+
+        self.coef_ = self.optimizer.x
+
+        return self
+
+    def decision_function(self, X):
+        return np.dot(self.kernel(X), self.coef_) + self.intercept_
+
+    def predict(self, X):
+        return np.where(self.decision_function(X) >= 0, self.labels[1], self.labels[0])
 
 
 class DualSVC(ClassifierMixin, DualSVM):
@@ -98,7 +142,6 @@ class DualSVC(ClassifierMixin, DualSVM):
         K = self.kernel(X)
 
         Q = K * np.outer(y, y)
-        Q = (Q + Q.T) / 2  # ensure Q is symmetric
         q = -np.ones(n_samples)
 
         self.quad = Quadratic(Q, q)
@@ -141,6 +184,8 @@ class DualSVC(ClassifierMixin, DualSVM):
                     self.optimizer = self.optimizer(f=self.quad, x=np.zeros(self.quad.ndim), epochs=self.max_iter,
                                                     step_size=self.learning_rate, momentum_type=self.momentum_type,
                                                     momentum=self.momentum, verbose=self.verbose).minimize()
+
+                alphas = self.optimizer.x
 
         sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
@@ -199,7 +244,6 @@ class DualSVR(RegressorMixin, DualSVM):
 
         Q = np.vstack((np.hstack((K, -K)),  # alphas_p, alphas_n
                        np.hstack((-K, K))))  # alphas_n, alphas_p
-        Q = (Q + Q.T) / 2  # ensure Q is symmetric
         q = np.hstack((-y, y)) + self.epsilon
 
         self.quad = Quadratic(Q, q)
@@ -242,6 +286,8 @@ class DualSVR(RegressorMixin, DualSVM):
                     self.optimizer = self.optimizer(f=self.quad, x=np.zeros(self.quad.ndim), epochs=self.max_iter,
                                                     step_size=self.learning_rate, momentum_type=self.momentum_type,
                                                     momentum=self.momentum, verbose=self.verbose).minimize()
+
+                alphas = self.optimizer.x
 
             alphas_p = alphas[:n_samples]
             alphas_n = alphas[n_samples:]

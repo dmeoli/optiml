@@ -44,10 +44,10 @@ class Hinge(SVMLoss):
         return np.maximum(0, 1 - y * np.dot(X, coef))
 
 
-class SquaredHinge(SVMLoss):
+class SquaredHinge(Hinge):
 
     def loss(self, coef, X, y):
-        pass
+        return np.square(super().loss(coef, X, y))
 
 
 class EpsilonInsensitive(SVMLoss):
@@ -56,10 +56,10 @@ class EpsilonInsensitive(SVMLoss):
         return
 
 
-class SquaredEpsilonInsensitive(SVMLoss):
+class SquaredEpsilonInsensitive(EpsilonInsensitive):
 
     def loss(self, coef, X, y):
-        pass
+        return np.square(super().loss(coef, X, y))
 
 
 hinge = Hinge
