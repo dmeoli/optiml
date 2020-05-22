@@ -1,5 +1,6 @@
 import itertools
 import warnings
+from abc import ABC
 
 import numpy as np
 from sklearn.utils import shuffle
@@ -7,7 +8,7 @@ from sklearn.utils import shuffle
 from ... import Optimizer
 
 
-class StochasticOptimizer(Optimizer):
+class StochasticOptimizer(Optimizer, ABC):
     def __init__(self, f, x, step_size=0.01, momentum_type='none', momentum=0.9, batch_size=None, eps=1e-6,
                  epochs=1000, callback=None, callback_args=(), shuffle=True, random_state=None, verbose=False):
         """
@@ -84,6 +85,3 @@ class StochasticOptimizer(Optimizer):
 
     def is_verbose(self):
         return self.verbose and not self.epoch % self.verbose
-
-    def minimize(self):
-        raise NotImplementedError

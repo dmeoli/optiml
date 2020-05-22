@@ -84,8 +84,8 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - Formulations
                 - [x] Primal
                     - Losses
-                        - [x] Epsilon Insensitive
-                        - [x] Squared Epsilon Insensitive
+                        - [x] Epsilon-Insensitive
+                        - [x] Squared Epsilon-Insensitive
                 - [x] Dual
                     - [x] Lagrangian Dual
         - Kernels

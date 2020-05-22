@@ -1,3 +1,5 @@
+from abc import ABC
+
 import numpy as np
 
 from .activations import Activation, linear
@@ -14,7 +16,7 @@ class Layer:
         raise NotImplementedError
 
 
-class ParamLayer(Layer):
+class ParamLayer(Layer, ABC):
 
     def __init__(self, coef_shape, activation, coef_init, inter_init,
                  coef_reg, inter_reg, fit_intercept, random_state=None):

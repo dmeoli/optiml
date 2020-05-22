@@ -5,7 +5,7 @@ __all__ = ['LineSearchOptimizer',
            'SteepestGradientDescent', 'ConjugateGradient', 'NonlinearConjugateGradient', 'HeavyBallGradient',
            'Newton', 'BFGS', 'LBFGS']  # inexact line search, 2nd order methods
 
-from .line_search_optimizer import LineSearchOptimizer
+from ._base import LineSearchOptimizer
 
 from .steepest_gradient_descent import QuadraticSteepestGradientDescent, SteepestGradientDescent
 from .conjugate_gradient import QuadraticConjugateGradient, ConjugateGradient, NonlinearConjugateGradient
