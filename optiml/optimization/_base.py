@@ -4,8 +4,7 @@ from autograd import jacobian, hessian
 
 class Optimizer:
 
-    def __init__(self, f, x, eps=1e-6, max_iter=1000,
-                 callback=None, callback_args=(), verbose=False):
+    def __init__(self, f, x, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
         """
 
         :param f:        the objective function.

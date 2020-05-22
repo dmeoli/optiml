@@ -136,5 +136,5 @@ class SixHumpCamel(OptimizationFunction):
         :param x: 1D array of points at which the Six-Hump Camel function is to be computed.
         :return:  the value of the Six-Hump Camel function.
         """
-        return ((4 - 2.1 * x[0] ** 2 + x[0] ** 4 / 3.) * x[0] ** 2 +
+        return ((4 - 2.1 * x[0] ** 2 + x[0] ** 4 / 3) * x[0] ** 2 +
                 x[0] * x[1] + (-4 + 4 * x[1] ** 2) * x[1] ** 2)
