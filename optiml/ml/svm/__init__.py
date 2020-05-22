@@ -1,3 +1,3 @@
-__all__ = ['SVM', 'PrimalSVC', 'DualSVC', 'PrimalSVR', 'DualSVR']
+__all__ = ['SVM', 'LinearSVC', 'SVC', 'LinearSVR', 'SVR']
 
-from ._base import SVM, PrimalSVC, DualSVC, PrimalSVR, DualSVR
+from ._base import SVM, LinearSVC, SVC, LinearSVR, SVR

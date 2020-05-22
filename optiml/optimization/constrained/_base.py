@@ -5,13 +5,13 @@ from ..unconstrained import Quadratic
 from ..utils import ldl_solve
 
 
-class LagrangianConstrainedQuadratic(Quadratic):
+class LagrangianBoxConstrainedQuadratic(Quadratic):
 
-    def __init__(self, quad, A, ub):
+    def __init__(self, quad, ub):
         """
         Construct the lagrangian relaxation of a constrained quadratic function defined as:
                            
-                           1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub
+                           1/2 x^T Q x + q^T x : 0 <= x <= ub
                            
                        1/2 x^T Q x + q^T x - lambda^+ (ub - x) - lambda^- x
                     1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ ub
@@ -19,14 +19,12 @@ class LagrangianConstrainedQuadratic(Quadratic):
         where lambda^+ are the first n components of lambda, and lambda^- the last n components;
         both are constrained to be >= 0.
         :param quad: constrained quadratic function to be relaxed
-        :param A: equality constraints matrix
         :param ub: upper bounds vector
         """
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
         super().__init__(quad.Q, quad.q)
         self.ndim *= 2
-        self.A = A
         self.ub = ub
         # Compute the LDL^T Cholesky symmetric indefinite factorization
         # of Q because it is symmetric but could be not positive definite.

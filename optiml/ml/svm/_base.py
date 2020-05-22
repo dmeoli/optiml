@@ -4,24 +4,22 @@ import numpy as np
 from qpsolvers import solve_qp
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 from sklearn.exceptions import ConvergenceWarning
+from sklearn.linear_model._base import LinearClassifierMixin, SparseCoefMixin, LinearModel
 from sklearn.utils.multiclass import unique_labels
 
 from .kernels import rbf, Kernel, LinearKernel
-from .losses import SVMLoss, squared_hinge
+from .losses import squared_hinge, squared_epsilon_insensitive, Hinge, SVMLoss, SVCLoss, SVRLoss
 from ...optimization import Optimizer
-from ...optimization.constrained import SMO, SMOClassifier, SMORegression, LagrangianConstrainedQuadratic
+from ...optimization.constrained import SMO, SMOClassifier, SMORegression
 from ...optimization.unconstrained import Quadratic
 from ...optimization.unconstrained.line_search import LineSearchOptimizer
 from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
 
 
 class SVM(BaseEstimator):
-    def __init__(self, kernel=rbf, C=1., tol=1e-3, optimizer=None, max_iter=1000, learning_rate=0.01,
+    def __init__(self, C=1., tol=1e-3, optimizer=None, max_iter=1000, learning_rate=0.01,
                  momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, shuffle=True,
                  random_state=None, verbose=False):
-        if not issubclass(type(kernel), Kernel):
-            raise TypeError(f'{kernel} is not an allowed kernel function')
-        self.kernel = kernel
         if not C > 0:
             raise ValueError('C must be > 0')
         self.C = C
@@ -38,24 +36,20 @@ class SVM(BaseEstimator):
         self.shuffle = shuffle
         self.random_state = random_state
         self.verbose = verbose
-        if isinstance(self.kernel, LinearKernel):
-            self.coef_ = 0.
-        self.intercept_ = 0.
 
 
-class PrimalSVM(SVM):
+class LinearSVM(SVM):
 
-    def __init__(self, kernel=rbf, C=1., tol=1e-3, loss=None, optimizer=StochasticGradientDescent, max_iter=1000,
+    def __init__(self, C=1., tol=1e-4, loss=SVMLoss, optimizer=StochasticGradientDescent, max_iter=1000,
                  learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
                  fit_intercept=True, shuffle=True, random_state=None, verbose=False):
-        super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum,
+        super().__init__(C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum,
                          batch_size, max_f_eval, shuffle, random_state, verbose)
-        if not issubclass(loss, SVMLoss):
-            raise TypeError(f'{loss} is not an allowed svm loss function')
         self.loss = loss
         if not issubclass(self.optimizer, Optimizer):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
         self.coef_ = 0.
+        self.intercept_ = 0.
         self.fit_intercept = fit_intercept
 
 
@@ -64,21 +58,51 @@ class DualSVM(SVM):
     def __init__(self, kernel=rbf, C=1., tol=1e-3, optimizer=SMO, max_iter=1000, learning_rate=0.01,
                  momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, shuffle=True,
                  random_state=None, verbose=False):
-        super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type,
+        super().__init__(C, tol, optimizer, max_iter, learning_rate, momentum_type,
                          momentum, batch_size, max_f_eval, shuffle, random_state, verbose)
+        if not issubclass(type(kernel), Kernel):
+            raise TypeError(f'{kernel} is not an allowed kernel function')
+        self.kernel = kernel
         if not (isinstance(optimizer, str) or
                 not issubclass(optimizer, SMO) or
                 not issubclass(optimizer, Optimizer)):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
+        if isinstance(self.kernel, LinearKernel):
+            self.coef_ = 0.
+        self.intercept_ = 0.
 
 
-class PrimalSVC(ClassifierMixin, PrimalSVM):
+class LinearSVC(LinearClassifierMixin, SparseCoefMixin, LinearSVM):
 
-    def __init__(self, kernel=rbf, C=1., tol=1e-3, loss=squared_hinge, optimizer=AdaGrad, max_iter=1000,
+    def __init__(self, C=1., tol=1e-4, loss=squared_hinge, penalty='l2', optimizer=AdaGrad, max_iter=1000,
                  learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
                  fit_intercept=True, shuffle=True, random_state=None, verbose=False):
-        super().__init__(kernel, C, tol, loss, optimizer, max_iter, learning_rate, momentum_type, momentum,
+        """
+
+        :param C:
+        :param tol:
+        :param loss: the hinge loss is the l1 loss, while the squared hinge loss is the l2 loss
+        :param optimizer:
+        :param max_iter:
+        :param learning_rate:
+        :param momentum_type:
+        :param momentum:
+        :param batch_size:
+        :param max_f_eval:
+        :param fit_intercept:
+        :param shuffle:
+        :param random_state:
+        :param verbose:
+        """
+        super().__init__(C, tol, loss, optimizer, max_iter, learning_rate, momentum_type, momentum,
                          batch_size, max_f_eval, fit_intercept, shuffle, random_state, verbose)
+        if not issubclass(loss, SVCLoss):
+            raise TypeError(f'{loss} is not an allowed LinearSVC loss function')
+        if penalty not in ('l1', 'l2'):
+            raise TypeError(f'{penalty} is not an allowed penalty')
+        if penalty == 'l1' and loss == Hinge:
+            raise ValueError('the combination of l1 hinge loss and l1 penalty is not supported')
+        self.penalty = penalty
 
     def fit(self, X, y):
         self.labels = unique_labels(y)
@@ -87,10 +111,7 @@ class PrimalSVC(ClassifierMixin, PrimalSVM):
                              'to train a model over more than two labels')
         y = np.where(y == self.labels[0], -1., 1.)
 
-        # kernel matrix
-        K = self.kernel(X)
-
-        self.loss = self.loss(self, K, y)
+        self.loss = self.loss(self, X, y, self.penalty)
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -111,13 +132,13 @@ class PrimalSVC(ClassifierMixin, PrimalSVM):
         return self
 
     def decision_function(self, X):
-        return np.dot(self.kernel(X), self.coef_) + self.intercept_
+        return np.dot(X, self.coef_) + self.intercept_
 
     def predict(self, X):
         return np.where(self.decision_function(X) >= 0, self.labels[1], self.labels[0])
 
 
-class DualSVC(ClassifierMixin, DualSVM):
+class SVC(ClassifierMixin, DualSVM):
     def __init__(self, kernel=rbf, C=1., tol=1e-3, optimizer=SMOClassifier, max_iter=1000, learning_rate=0.01,
                  momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, shuffle=True,
                  random_state=None, verbose=False):
@@ -155,37 +176,15 @@ class DualSVC(ClassifierMixin, DualSVM):
                 self.coef_ = self.optimizer.w
             self.intercept_ = self.optimizer.b
 
-        else:
+        elif isinstance(self.optimizer, str):
 
             A = y  # equality matrix
+            b = np.zeros(1)  # equality vector
+
+            lb = np.zeros(n_samples)  # lower bounds
             ub = np.ones(n_samples) * self.C  # upper bounds
 
-            if isinstance(self.optimizer, str):
-
-                b = np.zeros(1)  # equality vector
-                lb = np.zeros(n_samples)  # lower bounds
-
-                alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
-
-            elif issubclass(self.optimizer, Optimizer):
-
-                self.quad = LagrangianConstrainedQuadratic(self.quad, A, ub)
-
-                if issubclass(self.optimizer, LineSearchOptimizer):
-
-                    self.optimizer = self.optimizer(f=self.quad, x=np.zeros(self.quad.ndim), max_iter=self.max_iter,
-                                                    max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
-
-                    if self.optimizer.status == 'stopped':
-                        warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
-
-                elif issubclass(self.optimizer, StochasticOptimizer):
-
-                    self.optimizer = self.optimizer(f=self.quad, x=np.zeros(self.quad.ndim), epochs=self.max_iter,
-                                                    step_size=self.learning_rate, momentum_type=self.momentum_type,
-                                                    momentum=self.momentum, verbose=self.verbose).minimize()
-
-                alphas = self.optimizer.x
+            alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
 
         sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
@@ -213,18 +212,76 @@ class DualSVC(ClassifierMixin, DualSVM):
         return np.where(self.decision_function(X) >= 0, self.labels[1], self.labels[0])
 
 
-class PrimalSVR(RegressorMixin, PrimalSVM):
-    pass
+class LinearSVR(RegressorMixin, LinearModel, LinearSVM):
+
+    def __init__(self, C=1., epsilon=0.1, tol=1e-4, loss=squared_epsilon_insensitive, optimizer=AdaGrad,
+                 max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None,
+                 max_f_eval=1000, fit_intercept=True, shuffle=True, random_state=None, verbose=False):
+        """
+
+        :param C:
+        :param epsilon:
+        :param tol:
+        :param loss: the epsilon-insensitive loss is the l1 loss, while
+                     the squared epsilon-insensitive loss is the l2 loss
+        :param optimizer:
+        :param max_iter:
+        :param learning_rate:
+        :param momentum_type:
+        :param momentum:
+        :param batch_size:
+        :param max_f_eval:
+        :param fit_intercept:
+        :param shuffle:
+        :param random_state:
+        :param verbose:
+        """
+        super().__init__(C, tol, loss, optimizer, max_iter, learning_rate, momentum_type, momentum,
+                         batch_size, max_f_eval, fit_intercept, shuffle, random_state, verbose)
+        if not issubclass(loss, SVRLoss):
+            raise TypeError(f'{loss} is not an allowed LinearSVR loss function')
+        if not epsilon >= 0:
+            raise ValueError('epsilon must be >= 0')
+        self.epsilon = epsilon
+
+    def fit(self, X, y):
+        targets = y.shape[1] if y.ndim > 1 else 1
+        if targets > 1:
+            raise ValueError('use sklearn.multioutput.MultiOutputRegressor '
+                             'to train a model over more than one target')
+
+        self.loss = self.loss(self, X, y, self.epsilon)
+
+        if issubclass(self.optimizer, LineSearchOptimizer):
+
+            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), max_iter=self.max_iter,
+                                            max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
+
+            if self.optimizer.status == 'stopped':
+                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
+
+        elif issubclass(self.optimizer, StochasticOptimizer):
+
+            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), epochs=self.max_iter,
+                                            step_size=self.learning_rate, momentum_type=self.momentum_type,
+                                            momentum=self.momentum, verbose=self.verbose).minimize()
+
+        self.coef_ = self.optimizer.x
+
+        return self
+
+    def predict(self, X):
+        return np.dot(X, self.coef_) + self.intercept_
 
 
-class DualSVR(RegressorMixin, DualSVM):
+class SVR(RegressorMixin, DualSVM):
     def __init__(self, kernel=rbf, C=1., epsilon=0.1, tol=1e-3, optimizer=SMORegression, max_iter=1000,
                  learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
                  shuffle=True, random_state=None, verbose=False):
         super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum,
                          batch_size, max_f_eval, shuffle, random_state, verbose)
-        if not epsilon > 0:
-            raise ValueError('epsilon must be > 0')
+        if not epsilon >= 0:
+            raise ValueError('epsilon must be >= 0')
         self.epsilon = epsilon
 
     def fit(self, X, y):
@@ -233,9 +290,10 @@ class DualSVR(RegressorMixin, DualSVM):
         :param X: array of size [n_samples, n_features] holding the training samples
         :param y: array of size [n_samples] holding the class labels
         """
-        self.targets = y.shape[1] if y.ndim > 1 else 1
-        if self.targets > 1:
-            raise ValueError('use sklearn.multioutput.MultiOutputRegressor to train a model over more than one target')
+        targets = y.shape[1] if y.ndim > 1 else 1
+        if targets > 1:
+            raise ValueError('use sklearn.multioutput.MultiOutputRegressor '
+                             'to train a model over more than one target')
 
         n_samples = len(y)
 
@@ -246,9 +304,9 @@ class DualSVR(RegressorMixin, DualSVM):
                        np.hstack((-K, K))))  # alphas_n, alphas_p
         q = np.hstack((-y, y)) + self.epsilon
 
-        self.quad = Quadratic(Q, q)
-
         if self.optimizer == SMORegression:
+
+            self.quad = Quadratic(Q, q)
 
             self.optimizer = SMORegression(self.quad, X, y, K, self.kernel, self.C,
                                            self.epsilon, self.tol, self.verbose).minimize()
@@ -257,37 +315,15 @@ class DualSVR(RegressorMixin, DualSVM):
                 self.coef_ = self.optimizer.w
             self.intercept_ = self.optimizer.b
 
-        else:
+        elif isinstance(self.optimizer, str):
 
             A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
+            b = np.zeros(1)  # equality vector
+
+            lb = np.zeros(2 * n_samples)  # lower bounds
             ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
-            if isinstance(self.optimizer, str):
-
-                lb = np.zeros(2 * n_samples)  # lower bounds
-                b = np.zeros(1)  # equality vector
-
-                alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
-
-            elif issubclass(self.optimizer, Optimizer):
-
-                self.quad = LagrangianConstrainedQuadratic(self.quad, A, ub)
-
-                if issubclass(self.optimizer, LineSearchOptimizer):
-
-                    self.optimizer = self.optimizer(f=self.quad, x=np.zeros(self.quad.ndim), max_iter=self.max_iter,
-                                                    max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
-
-                    if self.optimizer.status == 'stopped':
-                        warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
-
-                elif issubclass(self.optimizer, StochasticOptimizer):
-
-                    self.optimizer = self.optimizer(f=self.quad, x=np.zeros(self.quad.ndim), epochs=self.max_iter,
-                                                    step_size=self.learning_rate, momentum_type=self.momentum_type,
-                                                    momentum=self.momentum, verbose=self.verbose).minimize()
-
-                alphas = self.optimizer.x
+            alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
 
             alphas_p = alphas[:n_samples]
             alphas_n = alphas[n_samples:]

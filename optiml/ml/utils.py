@@ -2,12 +2,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 from sklearn.base import ClassifierMixin, RegressorMixin
+from sklearn.linear_model._base import LinearClassifierMixin, LinearModel
 from sklearn.model_selection import learning_curve, validation_curve
+from sklearn.svm import LinearSVC as SKLinearSVC
+from sklearn.svm import LinearSVR as SKLinearSVR
 from sklearn.svm import SVC as SKLSVC
 from sklearn.svm import SVR as SKLSVR
 from sklearn.utils.multiclass import unique_labels
 
-from .svm import SVM, DualSVC, DualSVR
+from .svm import SVM, LinearSVC, SVC, LinearSVR, SVR
 
 
 # data generators
@@ -95,9 +98,9 @@ def plot_svm_hyperplane(svm, X, y):
         plt.xlabel('$X$', fontsize=9)
         plt.ylabel('$y$', fontsize=9)
 
-    plt.title(f'{"custom" if isinstance(svm, SVM) else "sklearn"} {svm.__class__.__name__} using '
-              f'{svm.kernel + " kernel" if isinstance(svm.kernel, str) else svm.kernel.__class__.__name__}',
-              fontsize=9)
+    kernel = ('linear kernel' if isinstance(svm, LinearClassifierMixin) or isinstance(svm, LinearModel)
+              else svm.kernel + ' kernel' if isinstance(svm.kernel, str) else svm.kernel.__class__.__name__)
+    plt.title(f'{"custom" if isinstance(svm, SVM) else "sklearn"} {svm.__class__.__name__} using {kernel}', fontsize=9)
 
     # set the legend
     if isinstance(svm, ClassifierMixin):
@@ -133,19 +136,27 @@ def plot_svm_hyperplane(svm, X, y):
         plt.plot(X, y, marker='o', markersize=4, color='darkorange', linestyle='none')
 
     # support vectors
-    if isinstance(svm, DualSVC) or isinstance(svm, SKLSVC):
-        plt.scatter(X[svm.support_][:, 0], X[svm.support_][:, 1], s=60, color='navy')
-    elif isinstance(svm, DualSVR) or isinstance(svm, SKLSVR):
-        plt.scatter(X[svm.support_], y[svm.support_], s=60, color='navy')
+    if isinstance(svm, ClassifierMixin):
+        if isinstance(svm, SVC) or isinstance(svm, SKLSVC):
+            plt.scatter(X[svm.support_][:, 0], X[svm.support_][:, 1], s=60, color='navy')
+        elif isinstance(svm, LinearSVC) or isinstance(svm, SKLinearSVC):
+            support_ = np.where((2 * y - 1) * svm.decision_function(X) <= 1)[0]
+            plt.scatter(X[support_][:, 0], X[support_][:, 1], s=60, color='navy')
+    elif isinstance(svm, RegressorMixin):
+        if isinstance(svm, SVR) or isinstance(svm, SKLSVR):
+            plt.scatter(X[svm.support_], y[svm.support_], s=60, color='navy')
+        elif isinstance(svm, LinearSVR) or isinstance(svm, SKLinearSVR):
+            support_ = np.where((2 * y - 1) * svm.decision_function(X) <= svm.epsilon)[0]
+            plt.scatter(X[support_], y[support_], s=60, color='navy')
 
-    if isinstance(svm, DualSVC) or isinstance(svm, SKLSVC):
+    if isinstance(svm, ClassifierMixin):
         _X1, _X2 = np.meshgrid(np.linspace(X1.min(), X1.max(), 50), np.linspace(X1.min(), X1.max(), 50))
         X = np.array([[x1, x2] for x1, x2 in zip(np.ravel(_X1), np.ravel(_X2))])
         Z = svm.decision_function(X).reshape(_X1.shape)
         plt.contour(_X1, _X2, Z, [0.0], colors='k', linewidths=1, origin='lower')
         plt.contour(_X1, _X2, Z + 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
         plt.contour(_X1, _X2, Z - 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
-    elif isinstance(svm, DualSVR) or isinstance(svm, SKLSVR):
+    elif isinstance(svm, RegressorMixin):
         _X = np.linspace(-2 * np.pi, 2 * np.pi, 10000).reshape(-1, 1)
         Z = svm.predict(_X)
         ax.plot(_X, Z, color='k', linewidth=1)

@@ -91,6 +91,3 @@ class OptimizationFunction:
         :return:  the Hessian matrix of the function at x.
         """
         return self.hes(x)
-
-    def __call__(self, x):
-        return self.function(x)

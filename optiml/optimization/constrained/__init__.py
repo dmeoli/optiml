@@ -1,6 +1,6 @@
-__all__ = ['LagrangianConstrainedQuadratic',
+__all__ = ['LagrangianBoxConstrainedQuadratic',
            'SMO', 'SMOClassifier', 'SMORegression']
 
-from ._base import LagrangianConstrainedQuadratic
+from ._base import LagrangianBoxConstrainedQuadratic
 
 from .smo import SMO, SMOClassifier, SMORegression
