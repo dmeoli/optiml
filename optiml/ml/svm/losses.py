@@ -22,6 +22,9 @@ class SVMLoss(OptimizationFunction, ABC):
     def loss_derivative(self, X, y):
         raise NotImplementedError
 
+    def __call__(self, y_pred, y_true):
+        return self.loss(y_pred, y_true)
+
 
 class SVCLoss(SVMLoss, ABC):
 
@@ -50,9 +53,6 @@ class SVCLoss(SVMLoss, ABC):
         n_samples = X_batch.shape[0]
         return (1 / n_samples * (coef if self.penalty == 'l2' else np.sign(coef)) -
                 self.svm.C / n_samples * self.loss_derivative(X_batch, y_batch))
-
-    def __call__(self, y_pred, y_true):
-        return self.loss(y_pred, y_true)
 
 
 class Hinge(SVCLoss):
@@ -105,9 +105,6 @@ class SVRLoss(SVMLoss, ABC):
 
         n_samples = X_batch.shape[0]
         return 1 / n_samples * coef - self.svm.C / n_samples * self.loss_derivative(X_batch, y_batch)
-
-    def __call__(self, y_pred, y_true):
-        return self.loss(y_pred, y_true)
 
 
 class EpsilonInsensitive(SVRLoss):

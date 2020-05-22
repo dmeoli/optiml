@@ -146,7 +146,7 @@ def plot_svm_hyperplane(svm, X, y):
         if isinstance(svm, SVR) or isinstance(svm, SKLSVR):
             plt.scatter(X[svm.support_], y[svm.support_], s=60, color='navy')
         elif isinstance(svm, LinearSVR) or isinstance(svm, SKLinearSVR):
-            support_ = np.where((2 * y - 1) * svm.decision_function(X) <= svm.epsilon)[0]
+            support_ = np.where((2 * y - 1) * svm.predict(X) <= svm.epsilon)[0]
             plt.scatter(X[support_], y[support_], s=60, color='navy')
 
     if isinstance(svm, ClassifierMixin):
