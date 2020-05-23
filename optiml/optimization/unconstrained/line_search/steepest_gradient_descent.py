@@ -29,7 +29,7 @@ class QuadraticSteepestGradientDescent(Optimizer):
     def __init__(self, f, x, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
         super().__init__(f, x, eps, max_iter, callback, callback_args, verbose)
         if not isinstance(f, Quadratic):
-            raise ValueError('f is not a quadratic function')
+            raise ValueError(f'{f} is not an allowed quadratic function')
         if self.x.size != self.f.Q.shape[0]:
             raise ValueError('x size does not match with Q')
 

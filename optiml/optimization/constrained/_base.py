@@ -9,7 +9,7 @@ from ..utils import ldl_solve
 class BoxConstrainedQuadraticOptimizer(Optimizer):
     def __init__(self, f, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
         if not isinstance(f, BoxConstrainedQuadratic):
-            raise TypeError('f is not a box-constrained quadratic function')
+            raise TypeError(f'{f} is not an allowed box-constrained quadratic function')
         super().__init__(f, f.ub / 2,  # starts from the middle of the box
                          eps, max_iter, callback, callback_args, verbose)
 
@@ -136,9 +136,9 @@ class BoxConstrainedQuadratic(Quadratic):
         self.ub = np.asarray(ub, dtype=np.float)
 
 
-class LagrangianBoxConstrainedQuadratic(Quadratic):
+class LagrangianBoxConstrainedQuadratic(BoxConstrainedQuadratic):
 
-    def __init__(self, quad, ub):
+    def __init__(self, bcq):
         """
         Construct the lagrangian relaxation of a constrained quadratic function defined as:
                            
@@ -149,19 +149,17 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
         where lambda^+ are the first n components of lambda, and lambda^- the last n components;
         both are constrained to be >= 0.
-        :param quad: constrained quadratic function to be relaxed
-        :param ub: upper bounds vector
+        :param bcq: constrained quadratic function to be relaxed
         """
-        if not isinstance(quad, Quadratic):
-            raise TypeError(f'{quad} is not an allowed quadratic function')
-        super().__init__(quad.Q, quad.q)
+        if not isinstance(bcq, BoxConstrainedQuadratic):
+            raise TypeError(f'{bcq} is not an allowed quadratic function')
+        super().__init__(bcq.Q, bcq.q, bcq.ub)
         self.ndim *= 2
-        self.ub = ub
         # Compute the LDL^T Cholesky symmetric indefinite factorization
         # of Q because it is symmetric but could be not positive definite.
         # This will be used at each iteration to solve the Lagrangian relaxation.
         self.L, self.D, self.P = ldl(self.Q)
-        self.primal = quad
+        self.primal = bcq
         self.primal_solution = np.inf
         self.primal_value = np.inf
 
@@ -188,7 +186,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         """
         ql = self.q.T + lmbda[:self.primal.ndim] - lmbda[self.primal.ndim:]
         x = ldl_solve((self.L, self.D, self.P), -ql)
-        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.ndim].T.dot(self.ub)
+        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.ndim].T.dot(self.primal.ub)
 
     def jacobian(self, lmbda):
         """
@@ -201,13 +199,13 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         """
         ql = self.q.T + lmbda[:self.primal.ndim] - lmbda[self.primal.ndim:]
         x = ldl_solve((self.L, self.D, self.P), -ql)
-        g = np.hstack((self.ub - x, x))
+        g = np.hstack((self.primal.ub - x, x))
 
         # compute an heuristic solution out of the solution x of
         # the Lagrangian relaxation by projecting x on the box
         x[x < 0] = 0
-        idx = x > self.ub
-        x[idx] = self.ub[idx]
+        idx = x > self.primal.ub
+        x[idx] = self.primal.ub[idx]
 
         v = self.primal.function(x)
         if v < self.primal_value:
