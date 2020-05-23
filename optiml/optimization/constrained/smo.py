@@ -305,7 +305,7 @@ class SMOClassifier(SMO):
                 examine_all = True
 
             if self.verbose and not loop_counter % self.verbose:
-                print('{:4d}\t{:1.4e}'.format(loop_counter, self.quad(self.alphas)))
+                print('{:4d}\t{:1.4e}'.format(loop_counter, self.quad.function(self.alphas)))
 
             loop_counter += 1
 
@@ -703,7 +703,7 @@ class SMORegression(SMO):
 
             if self.verbose and not loop_counter % self.verbose:
                 print('{:4d}\t{:1.4e}'.format(
-                    loop_counter, self.quad(np.hstack((self.alphas_p, self.alphas_n)))))
+                    loop_counter, self.quad.function(np.hstack((self.alphas_p, self.alphas_n)))))
 
             loop_counter += 1
 

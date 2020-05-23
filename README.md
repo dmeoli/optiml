@@ -1,8 +1,8 @@
 # OptiML
 [![Build Status](https://travis-ci.org/dmeoli/optiml.svg?branch=master)](https://travis-ci.org/dmeoli/optiml) [![Coverage Status](https://coveralls.io/repos/github/dmeoli/optiml/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/optiml?branch=master) [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/optiml/master)
 
-***OptiML*** is a custom reimplementation of *Support Vector Machines* and *Deep Neural Networks*, both with 
-some of the most successful features according to the state of art.
+OptiML is a sklearn compatible custom reimplementation of *Support Vector Machines* and *Deep Neural Networks*, 
+both with some of the most successful features according to the state of art.
 
 This work was motivated by the possibility of being able to solve the optimization problem deriving from the mathematical 
 formalization of these models through a wide range of optimization algorithms object of study and developed for the 
@@ -64,9 +64,14 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] RMSProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
-    - Constrained Quadratic Optimization Methods (ad hoc for SVMs)
+    - Constrained Quadratic Optimization Methods
+        - Box-Constrained Quadratic Methods
+            - [x] Projected Gradient
+            - [x] Frank-Wolfe or Conditional Gradient
+            - [x] Active Set
+            - [x] Interior Point
+            - [x] Lagrangian Dual Relaxation
         - [x] Sequential Minimal Optimization
-        - [x] Lagrangian Dual Relaxation
         - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
         [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
 
@@ -74,26 +79,30 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
     - [x] Support Vector Machines
         - [x] Support Vector Classifier
             - Formulations
-                - [x] Primal
+                - [x] Linear Unconstrained
                     - Losses
                         - [x] Hinge
                         - [x] Squared Hinge
-                - [x] Dual
-                    - [x] Lagrangian Dual
+                - [x] Constrained
+                    - Kernels
+                        - [x] linear kernel
+                        - [x] polynomial kernel
+                        - [x] rbf kernel
+                        - [x] laplacian kernel
+                        - [x] sigmoid kernel
         - [x] Support Vector Regression
             - Formulations
-                - [x] Primal
+                - [x] Linear Unconstrained
                     - Losses
                         - [x] Epsilon-Insensitive
                         - [x] Squared Epsilon-Insensitive
-                - [x] Dual
-                    - [x] Lagrangian Dual
-        - Kernels
-            - [x] linear kernel
-            - [x] polynomial kernel
-            - [x] rbf kernel
-            - [x] laplacian kernel
-            - [x] sigmoid kernel
+                - [x] Constrained
+                    - Kernels
+                        - [x] linear kernel
+                        - [x] polynomial kernel
+                        - [x] rbf kernel
+                        - [x] laplacian kernel
+                        - [x] sigmoid kernel
     - [x] Neural Networks
         - [x] Neural Network Classifier
         - [x] Neural Network Regressor
@@ -112,6 +121,11 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] SoftMax
         - Layers
             - [x] Fully Connected
+            - [x] Convolutional
+                - [x] Conv 2D
+                - [x] Max Pooling
+                - [x] Avg Pooling
+                - [x] Flatten
         - Initializers
             - [x] Xavier or Glorot normal and uniform
             - [x] He normal and uniform

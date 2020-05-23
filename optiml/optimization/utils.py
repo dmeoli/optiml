@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
 from matplotlib.colors import SymLogNorm
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+# from .constrained import BoxConstrainedQuadratic
 
 
 # linear algebra utils
@@ -44,12 +46,39 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max):
     ax.set_ylabel('$x_2$')
     ax.set_zlabel(f'${type(f).__name__}$')
 
+    if isinstance(f, BoxConstrainedQuadratic):
+        # 3D box-constraints plot
+        z_min, z_max = Z.min(), Z.max()
+        # vertices of the box
+        v = np.array([[f.ub[0], 0, z_min], [0, 0, z_min],
+                      [0, f.ub[1], z_min], [f.ub[0], f.ub[1], z_min],
+                      [f.ub[0], 0, z_max], [0, 0, z_max],
+                      [0, f.ub[1], z_max], [f.ub[0], f.ub[1], z_max]])
+        # generate list of sides' polygons of our box
+        verts = [[v[0], v[1], v[2], v[3]],
+                 [v[4], v[5], v[6], v[7]],
+                 [v[0], v[1], v[5], v[4]],
+                 [v[2], v[3], v[7], v[6]],
+                 [v[1], v[2], v[6], v[5]],
+                 [v[4], v[7], v[3], v[0]]]
+        # plot sides
+        ax.add_collection3d(Poly3DCollection(verts, facecolors='black', linewidths=1.,
+                                             edgecolors='k', alpha=0.1))
+
     # 2D contour plot
     ax = fig.add_subplot(1, 2, 2)
     ax.contour(X, Y, Z, 70, cmap='jet', alpha=0.5)
     ax.plot(*f.x_star(), marker='*', color='r', linestyle='None', markersize=10)
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
+
+    if isinstance(f, BoxConstrainedQuadratic):
+        # 2D box-constraints plot
+        ax.plot([0, 0, f.ub[0], f.ub[0], 0],
+                [0, f.ub[1], f.ub[1], 0, 0], color='k', linewidth=1.5)
+        ax.fill_between([0, f.ub[0]],
+                        [0, 0],
+                        [f.ub[1], f.ub[1]], color='0.8')
 
     return fig
 

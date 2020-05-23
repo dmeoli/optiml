@@ -30,13 +30,13 @@ class LineSearch:
             raise ValueError('max_f_eval must be > 0')
         self.max_f_eval = max_f_eval
         if not 0 < m1 < 1:
-            raise ValueError('m1 must be in (0,1)')
+            raise ValueError('m1 has to lie in (0,1)')
         self.m1 = m1
         if not a_start > 0:
             raise ValueError('a_start must be > 0')
         self.a_start = a_start
         if not 0 < tau < 1:
-            raise ValueError('tau must be in (0,1)')
+            raise ValueError('tau has to lie in (0,1)')
         self.tau = tau
         if not min_a >= 0:
             raise ValueError('min_a must be >= 0')
@@ -155,10 +155,10 @@ class ArmijoWolfeLineSearch(LineSearch):
         """
         super().__init__(f, max_f_eval, m1, a_start, tau, min_a)
         if not 0 < sfgrd < 1:
-            raise ValueError('sfgrd must be in (0,1)')
+            raise ValueError('sfgrd has to lie in (0,1)')
         self.sfgrd = sfgrd
         if not 0 < m2 < 1:
-            raise ValueError('m2 must be in (0,1)')
+            raise ValueError('m2 has to lie in (0,1)')
         self.m2 = m2
 
     def search(self, d, x, last_x, last_g, f_eval, phi0=None, phi_p0=None, verbose=False):

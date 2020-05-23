@@ -10,13 +10,15 @@ from sklearn.utils.multiclass import unique_labels
 from .kernels import rbf, Kernel, LinearKernel
 from .losses import squared_hinge, squared_epsilon_insensitive, Hinge, SVMLoss, SVCLoss, SVRLoss
 from ...optimization import Optimizer
-from ...optimization.constrained import SMO, SMOClassifier, SMORegression
+from ...optimization.constrained import SMO, SMOClassifier, SMORegression, BoxConstrainedQuadraticOptimizer, \
+    BoxConstrainedQuadratic
 from ...optimization.unconstrained import Quadratic
 from ...optimization.unconstrained.line_search import LineSearchOptimizer
 from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
 
 
 class SVM(BaseEstimator):
+
     def __init__(self, C=1., tol=1e-3, optimizer=None, max_iter=1000, learning_rate=0.01,
                  momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, shuffle=True,
                  random_state=None, verbose=False):
@@ -77,23 +79,6 @@ class LinearSVC(LinearClassifierMixin, SparseCoefMixin, LinearSVM):
     def __init__(self, C=1., tol=1e-4, loss=squared_hinge, penalty='l2', optimizer=AdaGrad, max_iter=1000,
                  learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
                  fit_intercept=True, shuffle=True, random_state=None, verbose=False):
-        """
-
-        :param C:
-        :param tol:
-        :param loss: the hinge loss is the l1 loss, while the squared hinge loss is the l2 loss
-        :param optimizer:
-        :param max_iter:
-        :param learning_rate:
-        :param momentum_type:
-        :param momentum:
-        :param batch_size:
-        :param max_f_eval:
-        :param fit_intercept:
-        :param shuffle:
-        :param random_state:
-        :param verbose:
-        """
         super().__init__(C, tol, loss, optimizer, max_iter, learning_rate, momentum_type, momentum,
                          batch_size, max_f_eval, fit_intercept, shuffle, random_state, verbose)
         if not issubclass(loss, SVCLoss):
@@ -139,6 +124,7 @@ class LinearSVC(LinearClassifierMixin, SparseCoefMixin, LinearSVM):
 
 
 class SVC(ClassifierMixin, DualSVM):
+
     def __init__(self, kernel=rbf, C=1., tol=1e-3, optimizer=SMOClassifier, max_iter=1000, learning_rate=0.01,
                  momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, shuffle=True,
                  random_state=None, verbose=False):
@@ -146,11 +132,6 @@ class SVC(ClassifierMixin, DualSVM):
                          batch_size, max_f_eval, shuffle, random_state, verbose)
 
     def fit(self, X, y):
-        """
-        Trains the model by solving a constrained quadratic programming problem.
-        :param X: array of size [n_samples, n_features] holding the training samples
-        :param y: array of size [n_samples] holding the class labels
-        """
         self.labels = unique_labels(y)
         if len(self.labels) > 2:
             raise ValueError('use OneVsOneClassifier or OneVsRestClassifier from sklearn.multiclass '
@@ -176,15 +157,28 @@ class SVC(ClassifierMixin, DualSVM):
                 self.coef_ = self.optimizer.w
             self.intercept_ = self.optimizer.b
 
-        elif isinstance(self.optimizer, str):
+        else:
 
-            A = y  # equality matrix
-            b = np.zeros(1)  # equality vector
-
-            lb = np.zeros(n_samples)  # lower bounds
             ub = np.ones(n_samples) * self.C  # upper bounds
 
-            alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
+            if isinstance(self.optimizer, str):
+
+                A = y  # equality matrix
+                b = np.zeros(1)  # equality vector
+
+                lb = np.zeros(n_samples)  # lower bounds
+
+                alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
+
+            elif issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
+
+                bcq = BoxConstrainedQuadratic(Q, q, ub)
+                self.optimizer = self.optimizer(f=bcq, max_iter=self.max_iter, verbose=self.verbose)
+                alphas = self.optimizer.minimize().x
+
+            else:
+
+                raise ValueError(f'unknown optimizer {self.optimizer}')
 
         sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
@@ -217,25 +211,6 @@ class LinearSVR(RegressorMixin, LinearModel, LinearSVM):
     def __init__(self, C=1., epsilon=0.1, tol=1e-4, loss=squared_epsilon_insensitive, optimizer=AdaGrad,
                  max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None,
                  max_f_eval=1000, fit_intercept=True, shuffle=True, random_state=None, verbose=False):
-        """
-
-        :param C:
-        :param epsilon:
-        :param tol:
-        :param loss: the epsilon-insensitive loss is the l1 loss, while
-                     the squared epsilon-insensitive loss is the l2 loss
-        :param optimizer:
-        :param max_iter:
-        :param learning_rate:
-        :param momentum_type:
-        :param momentum:
-        :param batch_size:
-        :param max_f_eval:
-        :param fit_intercept:
-        :param shuffle:
-        :param random_state:
-        :param verbose:
-        """
         super().__init__(C, tol, loss, optimizer, max_iter, learning_rate, momentum_type, momentum,
                          batch_size, max_f_eval, fit_intercept, shuffle, random_state, verbose)
         if not issubclass(loss, SVRLoss):
@@ -274,6 +249,29 @@ class LinearSVR(RegressorMixin, LinearModel, LinearSVM):
         return np.dot(X, self.coef_) + self.intercept_
 
 
+class SVRBoxConstrainedQuadratic(BoxConstrainedQuadratic):
+    """
+    Construct a quadratic function from its linear and quadratic part defined as:
+
+        1/2 a^T Q a - y^T (a^+ - a^-) + \epsilon q^T (a^+ + a^-) : 0 <= a <= ub
+
+    :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
+                       the Hessian (i.e. the quadratic part) of f. If it is not
+                       positive semidefinite, f(x) will be unbounded below.
+    :param q: ([n x 1] real column vector): the linear part of f.
+    """
+
+    def __init__(self, Q, y, ub, epsilon):
+        super().__init__(Q, np.ones(len(Q)), ub)
+        self.y = y
+        self.epsilon = epsilon
+
+    def function(self, alpha):
+        alphas_p, alphas_n = np.split(alpha, 2)
+        return (0.5 * alpha.T.dot(self.Q).dot(alpha) - self.y.T.dot(alphas_p - alphas_n) +
+                self.epsilon * self.q.T.dot(alphas_p + alphas_n))
+
+
 class SVR(RegressorMixin, DualSVM):
     def __init__(self, kernel=rbf, C=1., epsilon=0.1, tol=1e-3, optimizer=SMORegression, max_iter=1000,
                  learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
@@ -300,14 +298,13 @@ class SVR(RegressorMixin, DualSVM):
         # kernel matrix
         K = self.kernel(X)
 
-        Q = np.vstack((np.hstack((K, -K)),  # alphas_p, alphas_n
-                       np.hstack((-K, K))))  # alphas_n, alphas_p
+        Q = np.vstack((np.hstack((K, -K)),
+                       np.hstack((-K, K))))
         q = np.hstack((-y, y)) + self.epsilon
 
         if self.optimizer == SMORegression:
 
             self.quad = Quadratic(Q, q)
-
             self.optimizer = SMORegression(self.quad, X, y, K, self.kernel, self.C,
                                            self.epsilon, self.tol, self.verbose).minimize()
             alphas_p, alphas_n = self.optimizer.alphas_p, self.optimizer.alphas_n
@@ -315,15 +312,28 @@ class SVR(RegressorMixin, DualSVM):
                 self.coef_ = self.optimizer.w
             self.intercept_ = self.optimizer.b
 
-        elif isinstance(self.optimizer, str):
+        else:
 
-            A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
-            b = np.zeros(1)  # equality vector
-
-            lb = np.zeros(2 * n_samples)  # lower bounds
             ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
-            alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
+            if isinstance(self.optimizer, str):
+
+                A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
+                b = np.zeros(1)  # equality vector
+
+                lb = np.zeros(2 * n_samples)  # lower bounds
+
+                alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
+
+            elif issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
+
+                bcq = SVRBoxConstrainedQuadratic(Q, y, ub, self.epsilon)
+                self.optimizer = self.optimizer(f=bcq, max_iter=self.max_iter, verbose=self.verbose)
+                alphas = self.optimizer.minimize().x
+
+            else:
+
+                raise ValueError(f'unknown optimizer {self.optimizer}')
 
             alphas_p = alphas[:n_samples]
             alphas_n = alphas[n_samples:]
