@@ -15,7 +15,7 @@ from ...optimization.box_constrained import BoxConstrainedQuadraticOptimizer, La
 from ...optimization.box_constrained._base import LagrangianEqualityConstrainedQuadratic
 from ...optimization.unconstrained import Quadratic
 from ...optimization.unconstrained.line_search import LineSearchOptimizer
-from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
+from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
 
 
 class SVM(BaseEstimator):
@@ -55,6 +55,26 @@ class PrimalSVM(SVM):
         self.intercept_ = 0.
         self.fit_intercept = fit_intercept
 
+    def fit(self, X, y):
+
+        if issubclass(self.optimizer, LineSearchOptimizer):
+
+            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), max_iter=self.max_iter,
+                                            max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
+
+            if self.optimizer.status == 'stopped':
+                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
+
+        elif issubclass(self.optimizer, StochasticOptimizer):
+
+            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), epochs=self.max_iter,
+                                            step_size=self.learning_rate, momentum_type=self.momentum_type,
+                                            momentum=self.momentum, verbose=self.verbose).minimize()
+
+        self.coef_ = self.optimizer.x
+
+        return self
+
 
 class DualSVM(SVM):
 
@@ -77,9 +97,9 @@ class DualSVM(SVM):
 
 class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
-    def __init__(self, C=1., tol=1e-4, loss=squared_hinge, penalty='l2', optimizer=AdaGrad, max_iter=1000,
-                 learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
-                 fit_intercept=True, shuffle=True, random_state=None, verbose=False):
+    def __init__(self, C=1., tol=1e-4, loss=squared_hinge, penalty='l2', optimizer=StochasticGradientDescent,
+                 max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None,
+                 max_f_eval=1000, fit_intercept=True, shuffle=True, random_state=None, verbose=False):
         super().__init__(C, tol, loss, optimizer, max_iter, learning_rate, momentum_type, momentum,
                          batch_size, max_f_eval, fit_intercept, shuffle, random_state, verbose)
         if not issubclass(loss, SVCLoss):
@@ -99,23 +119,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
         self.loss = self.loss(self, X, y, self.penalty)
 
-        if issubclass(self.optimizer, LineSearchOptimizer):
-
-            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), max_iter=self.max_iter,
-                                            max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
-
-            if self.optimizer.status == 'stopped':
-                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
-
-        elif issubclass(self.optimizer, StochasticOptimizer):
-
-            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), epochs=self.max_iter,
-                                            step_size=self.learning_rate, momentum_type=self.momentum_type,
-                                            momentum=self.momentum, verbose=self.verbose).minimize()
-
-        self.coef_ = self.optimizer.x
-
-        return self
+        return super().fit(X, y)
 
     def decision_function(self, X):
         return np.dot(X, self.coef_) + self.intercept_
@@ -225,9 +229,10 @@ class DualSVC(ClassifierMixin, DualSVM):
 
 class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
-    def __init__(self, C=1., epsilon=0.1, tol=1e-4, loss=squared_epsilon_insensitive, optimizer=AdaGrad,
-                 max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None,
-                 max_f_eval=1000, fit_intercept=True, shuffle=True, random_state=None, verbose=False):
+    def __init__(self, C=1., epsilon=0.1, tol=1e-4, loss=squared_epsilon_insensitive,
+                 optimizer=StochasticGradientDescent, max_iter=1000, learning_rate=0.01,
+                 momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
+                 fit_intercept=True, shuffle=True, random_state=None, verbose=False):
         super().__init__(C, tol, loss, optimizer, max_iter, learning_rate, momentum_type, momentum,
                          batch_size, max_f_eval, fit_intercept, shuffle, random_state, verbose)
         if not issubclass(loss, SVRLoss):
@@ -244,23 +249,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
         self.loss = self.loss(self, X, y, self.epsilon)
 
-        if issubclass(self.optimizer, LineSearchOptimizer):
-
-            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), max_iter=self.max_iter,
-                                            max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
-
-            if self.optimizer.status == 'stopped':
-                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
-
-        elif issubclass(self.optimizer, StochasticOptimizer):
-
-            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), epochs=self.max_iter,
-                                            step_size=self.learning_rate, momentum_type=self.momentum_type,
-                                            momentum=self.momentum, verbose=self.verbose).minimize()
-
-        self.coef_ = self.optimizer.x
-
-        return self
+        return super().fit(X, y)
 
     def predict(self, X):
         return np.dot(X, self.coef_) + self.intercept_
