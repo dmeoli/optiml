@@ -269,29 +269,6 @@ class LinearSVR(RegressorMixin, LinearModel, LinearSVM):
         return np.dot(X, self.coef_) + self.intercept_
 
 
-class SVRBoxConstrainedQuadratic(BoxConstrainedQuadratic):
-    """
-    Construct a quadratic function from its linear and quadratic part defined as:
-
-        1/2 a^T Q a - y^T (a^+ - a^-) + \epsilon q^T (a^+ + a^-) : 0 <= a <= ub
-
-    :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
-                       the Hessian (i.e. the quadratic part) of f. If it is not
-                       positive semidefinite, f(x) will be unbounded below.
-    :param q: ([n x 1] real column vector): the linear part of f.
-    """
-
-    def __init__(self, Q, y, ub, epsilon):
-        super().__init__(Q, np.ones(len(Q)), ub)
-        self.y = y
-        self.epsilon = epsilon
-
-    def function(self, alpha):
-        alphas_p, alphas_n = np.split(alpha, 2)
-        return (0.5 * alpha.T.dot(self.Q).dot(alpha) - self.y.T.dot(alphas_p - alphas_n) +
-                self.epsilon * self.q.T.dot(alphas_p + alphas_n))
-
-
 class SVR(RegressorMixin, DualSVM):
     def __init__(self, kernel=rbf, C=1., epsilon=0.1, tol=1e-3, optimizer=SMORegression, max_iter=1000,
                  learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
@@ -347,7 +324,7 @@ class SVR(RegressorMixin, DualSVM):
 
             elif issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                self.bcq = SVRBoxConstrainedQuadratic(Q, y, ub, self.epsilon)
+                self.bcq = BoxConstrainedQuadratic(Q, q, ub)
                 self.optimizer = self.optimizer(f=self.bcq, max_iter=self.max_iter, verbose=self.verbose)
                 alphas = self.optimizer.minimize().x
 

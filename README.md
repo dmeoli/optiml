@@ -77,32 +77,30 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
 
 - Machine Learning
     - [x] Support Vector Machines
+        - Formulations
+            - [x] Primal
+                - Kernels
+                    - [x] linear kernel
+            - [x] Dual
+                - Kernels
+                    - [x] linear kernel
+                    - [x] polynomial kernel
+                    - [x] rbf kernel
+                    - [x] laplacian kernel
+                    - [x] sigmoid kernel
         - [x] Support Vector Classifier
-            - Formulations
-                - [x] Linear Unconstrained
-                    - Losses
-                        - [x] Hinge
-                        - [x] Squared Hinge
-                - [x] Constrained
-                    - Kernels
-                        - [x] linear kernel
-                        - [x] polynomial kernel
-                        - [x] rbf kernel
-                        - [x] laplacian kernel
-                        - [x] sigmoid kernel
+            - Losses
+                - [x] Hinge (L1 Loss)
+                - [x] Squared Hinge (L2 Loss)                            
+            - Regularizers
+                - [x] L1
+                - [x] L2
         - [x] Support Vector Regression
-            - Formulations
-                - [x] Linear Unconstrained
-                    - Losses
-                        - [x] Epsilon-Insensitive
-                        - [x] Squared Epsilon-Insensitive
-                - [x] Constrained
-                    - Kernels
-                        - [x] linear kernel
-                        - [x] polynomial kernel
-                        - [x] rbf kernel
-                        - [x] laplacian kernel
-                        - [x] sigmoid kernel
+            - Losses
+                - [x] Epsilon-Insensitive (L1 Loss)
+                - [x] Squared Epsilon-Insensitive (L2 Loss)
+            - Regularizers
+                - [x] L2
     - [x] Neural Networks
         - [x] Neural Network Classifier
         - [x] Neural Network Regressor
