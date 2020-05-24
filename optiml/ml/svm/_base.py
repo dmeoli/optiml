@@ -9,9 +9,10 @@ from sklearn.utils.multiclass import unique_labels
 
 from .kernels import rbf, Kernel, LinearKernel
 from .losses import squared_hinge, squared_epsilon_insensitive, Hinge, SVMLoss, SVCLoss, SVRLoss
+from .smo import SMO, SMOClassifier, SMORegression
 from ...optimization import Optimizer
-from ...optimization.constrained import (SMO, SMOClassifier, SMORegression, BoxConstrainedQuadraticOptimizer,
-                                         BoxConstrainedQuadratic, LagrangianBoxConstrainedQuadratic)
+from ...optimization.box_constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
+from ...optimization.box_constrained._base import LagrangianConstrainedQuadratic
 from ...optimization.unconstrained import Quadratic
 from ...optimization.unconstrained.line_search import LineSearchOptimizer
 from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
@@ -146,42 +147,43 @@ class SVC(ClassifierMixin, DualSVM):
         Q = K * np.outer(y, y)
         q = -np.ones(n_samples)
 
+        A = y  # equality matrix
+
         ub = np.ones(n_samples) * self.C  # upper bounds
+
+        self.obj = Quadratic(Q, q)
 
         if self.optimizer == SMOClassifier:
 
-            self.bcq = BoxConstrainedQuadratic(Q, q, ub)
-            self.optimizer = SMOClassifier(self.bcq, X, y, K, self.kernel, self.C,
+            self.optimizer = SMOClassifier(self.obj, X, y, K, self.kernel, self.C,
                                            self.tol, self.verbose).minimize()
             alphas = self.optimizer.alphas
             if isinstance(self.kernel, LinearKernel):
                 self.coef_ = self.optimizer.w
             self.intercept_ = self.optimizer.b
 
+        elif isinstance(self.optimizer, str):
+
+            b = np.zeros(1)  # equality vector
+            lb = np.zeros(n_samples)  # lower bounds
+            alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
+
         else:
 
-            if isinstance(self.optimizer, str):
+            self.obj = LagrangianConstrainedQuadratic(self.obj, A)
 
-                A = y  # equality matrix
-                b = np.zeros(1)  # equality vector
+            if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                lb = np.zeros(n_samples)  # lower bounds
-
-                alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
-
-            elif issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
-
-                self.bcq = BoxConstrainedQuadratic(Q, q, ub)
-                self.optimizer = self.optimizer(f=self.bcq, max_iter=self.max_iter, verbose=self.verbose)
-                alphas = self.optimizer.minimize().x
+                self.optimizer = self.optimizer(f=self.obj, ub=ub, max_iter=self.max_iter,
+                                                verbose=self.verbose).minimize()
 
             elif issubclass(self.optimizer, Optimizer):
 
-                self.bcq = LagrangianBoxConstrainedQuadratic(BoxConstrainedQuadratic(Q, q, ub))
+                self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
 
-                    self.optimizer = self.optimizer(f=self.bcq, x=np.zeros(self.bcq.ndim), max_iter=self.max_iter,
+                    self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
 
                     if self.optimizer.status == 'stopped':
@@ -189,16 +191,12 @@ class SVC(ClassifierMixin, DualSVM):
 
                 elif issubclass(self.optimizer, StochasticOptimizer):
 
-                    self.optimizer = self.optimizer(f=self.bcq, x=np.zeros(self.bcq.ndim), epochs=self.max_iter,
+                    self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), epochs=self.max_iter,
                                                     step_size=self.learning_rate, momentum_type=self.momentum_type,
                                                     momentum=self.momentum, verbose=self.verbose)
                     self.optimizer.minimize()
 
-                alphas = self.bcq.primal_solution
-
-            else:
-
-                raise ValueError(f'unknown optimizer {self.optimizer}')
+            alphas = self.obj.primal_solution
 
         sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
@@ -299,12 +297,15 @@ class SVR(RegressorMixin, DualSVM):
                        np.hstack((-K, K))))
         q = np.hstack((-y, y)) + self.epsilon
 
+        A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
+
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
+
+        self.obj = Quadratic(Q, q)
 
         if self.optimizer == SMORegression:
 
-            self.bcq = BoxConstrainedQuadratic(Q, q, ub)
-            self.optimizer = SMORegression(self.bcq, X, y, K, self.kernel, self.C,
+            self.optimizer = SMORegression(self.obj, X, y, K, self.kernel, self.C,
                                            self.epsilon, self.tol, self.verbose).minimize()
             alphas_p, alphas_n = self.optimizer.alphas_p, self.optimizer.alphas_n
             if isinstance(self.kernel, LinearKernel):
@@ -315,43 +316,40 @@ class SVR(RegressorMixin, DualSVM):
 
             if isinstance(self.optimizer, str):
 
-                A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
                 b = np.zeros(1)  # equality vector
-
                 lb = np.zeros(2 * n_samples)  # lower bounds
-
                 alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
-
-            elif issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
-
-                self.bcq = BoxConstrainedQuadratic(Q, q, ub)
-                self.optimizer = self.optimizer(f=self.bcq, max_iter=self.max_iter, verbose=self.verbose)
-                alphas = self.optimizer.minimize().x
-
-            elif issubclass(self.optimizer, Optimizer):
-
-                self.bcq = LagrangianBoxConstrainedQuadratic(BoxConstrainedQuadratic(Q, q, ub))
-
-                if issubclass(self.optimizer, LineSearchOptimizer):
-
-                    self.optimizer = self.optimizer(f=self.bcq, x=np.zeros(self.bcq.ndim), max_iter=self.max_iter,
-                                                    max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
-
-                    if self.optimizer.status == 'stopped':
-                        warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
-
-                elif issubclass(self.optimizer, StochasticOptimizer):
-
-                    self.optimizer = self.optimizer(f=self.bcq, x=np.zeros(self.bcq.ndim), epochs=self.max_iter,
-                                                    step_size=self.learning_rate, momentum_type=self.momentum_type,
-                                                    momentum=self.momentum, verbose=self.verbose)
-                    self.optimizer.minimize()
-
-                alphas = self.bcq.primal_solution
 
             else:
 
-                raise ValueError(f'unknown optimizer {self.optimizer}')
+                self.obj = LagrangianConstrainedQuadratic(self.obj, A)
+
+                if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
+
+                    self.optimizer = self.optimizer(f=self.obj, ub=ub, max_iter=self.max_iter,
+                                                    verbose=self.verbose).minimize()
+
+                elif issubclass(self.optimizer, Optimizer):
+
+                    self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
+
+                    if issubclass(self.optimizer, LineSearchOptimizer):
+
+                        self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
+                                                        max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
+
+                        if self.optimizer.status == 'stopped':
+                            warnings.warn('max_iter reached but the optimization has not converged yet',
+                                          ConvergenceWarning)
+
+                    elif issubclass(self.optimizer, StochasticOptimizer):
+
+                        self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), epochs=self.max_iter,
+                                                        step_size=self.learning_rate, momentum_type=self.momentum_type,
+                                                        momentum=self.momentum, verbose=self.verbose)
+                        self.optimizer.minimize()
+
+                alphas = self.obj.primal_solution
 
             alphas_p = alphas[:n_samples]
             alphas_n = alphas[n_samples:]

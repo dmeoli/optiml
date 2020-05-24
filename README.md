@@ -14,30 +14,26 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
 - Numerical Optimization
     - Unconstrained Optimization
         - Line Search Methods
-            - Exact Line Search Methods
-                - [x] Quadratic Steepest Gradient Descent
-                - [x] Quadratic Conjugate Gradient
-            - Inexact Line Search Methods
-                - 0th Order Methods
-                    - [x] Subgradient
-                - 1st Order Methods
-                    - [x] Steepest Gradient Descent
-                    - [ ] Conjugate Gradient
-                        - [ ] Fletcher–Reeves formula
-                        - [ ] Polak–Ribière formula
-                        - [ ] Hestenes-Stiefel formula
-                        - [ ] Dai-Yuan formula
-                    - [x] Nonlinear Conjugate Gradient
-                        - [x] Fletcher–Reeves formula
-                        - [x] Polak–Ribière formula
-                        - [x] Hestenes-Stiefel formula
-                        - [x] Dai-Yuan formula
-                    - [x] Heavy Ball Gradient
-                - 2nd Order Methods
-                    - [x] Newton
-                    - Quasi-Newton
-                        - [x] BFGS
-                        - [ ] L-BFGS
+            - 0th Order Methods
+                - [x] Subgradient
+            - 1st Order Methods
+                - [x] Steepest Gradient Descent
+                - [ ] Conjugate Gradient
+                    - [ ] Fletcher–Reeves formula
+                    - [ ] Polak–Ribière formula
+                    - [ ] Hestenes-Stiefel formula
+                    - [ ] Dai-Yuan formula
+                - [x] Nonlinear Conjugate Gradient
+                    - [x] Fletcher–Reeves formula
+                    - [x] Polak–Ribière formula
+                    - [x] Hestenes-Stiefel formula
+                    - [x] Dai-Yuan formula
+                - [x] Heavy Ball Gradient
+            - 2nd Order Methods
+                - [x] Newton
+                - Quasi-Newton
+                    - [x] BFGS
+                    - [ ] L-BFGS
         - Stochastic Methods
             - [x] Stochastic Gradient Descent
                 - [x] standard momentum

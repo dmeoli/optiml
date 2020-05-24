@@ -2,12 +2,7 @@ import numpy as np
 import pytest
 
 from optiml.optimization.unconstrained import quad2, quad1, Rosenbrock
-from optiml.optimization.unconstrained.line_search import QuadraticConjugateGradient, NonlinearConjugateGradient
-
-
-def test_QuadraticConjugateGradient():
-    assert np.allclose(QuadraticConjugateGradient(f=quad1, x=np.random.uniform(size=2)).minimize().x, quad1.x_star())
-    assert np.allclose(QuadraticConjugateGradient(f=quad2, x=np.random.uniform(size=2)).minimize().x, quad2.x_star())
+from optiml.optimization.unconstrained.line_search import NonlinearConjugateGradient
 
 
 def test_NonlinearConjugateGradient_quadratic_FletcherReeves():

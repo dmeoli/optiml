@@ -2,7 +2,7 @@ from abc import ABC
 
 import numpy as np
 
-from optiml.optimization import OptimizationFunction
+from ...optimization import OptimizationFunction
 
 
 class SVMLoss(OptimizationFunction, ABC):

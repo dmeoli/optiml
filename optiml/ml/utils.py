@@ -10,7 +10,7 @@ from sklearn.svm import SVC as SKLSVC
 from sklearn.svm import SVR as SKLSVR
 from sklearn.utils.multiclass import unique_labels
 
-from optiml.ml.svm import SVM, LinearSVC, SVC, LinearSVR, SVR
+from .svm import SVM, LinearSVC, SVC, LinearSVR, SVR
 
 
 # data generators
