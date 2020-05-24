@@ -14,23 +14,27 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
             raise TypeError(f'{f} is not an allowed quadratic function')
         super().__init__(f, ub / 2,  # starts from the middle of the box
                          eps, max_iter, callback, callback_args, verbose)
+        if any(u < 0 for u in ub):
+            raise ValueError('the lower bound must be > 0')
+        self.ub = ub
 
 
-class LagrangianConstrainedQuadratic(Quadratic):
+class LagrangianEqualityConstrainedQuadratic(Quadratic):
 
     def __init__(self, quad, A):
         """
-        Construct the lagrangian relaxation of a constrained quadratic function defined as:
+        Construct the lagrangian relaxation of a equality constrained quadratic function defined as:
 
                             1/2 x^T Q x + q^T x : A x = 0
 
-                        1/2 x^T Q x + q^T x - lambda^T (A x - b)
+                        1/2 x^T Q x + q^T x + lambda^T (A x)
 
-        :param quad: constrained quadratic function to be relaxed
+        :param quad: equality constrained quadratic function to be relaxed
         """
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
         super().__init__(quad.Q, quad.q)
+        self.ndim *= 2
         # Compute the LDL^T Cholesky symmetric indefinite factorization
         # of Q because it is symmetric but could be not positive definite.
         # This will be used at each iteration to solve the Lagrangian relaxation.
@@ -61,9 +65,9 @@ class LagrangianConstrainedQuadratic(Quadratic):
         :param lmbda:
         :return: the function value
         """
-        ql = self.q.T + lmbda[:self.primal.ndim] - lmbda[self.primal.ndim:]
+        ql = self.q.T + self.A.dot(lmbda)
         x = ldl_solve((self.L, self.D, self.P), -ql)
-        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda[:self.primal.ndim].T.dot(self.A)
+        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x)
 
     def jacobian(self, lmbda):
         """
@@ -74,7 +78,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
         :param lmbda:
         :return:
         """
-        ql = self.q.T + lmbda[:self.primal.ndim] - lmbda[self.primal.ndim:]
+        ql = self.q.T + self.A.dot(lmbda)
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = np.hstack((self.A - x, x))
 
@@ -150,7 +154,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
     def jacobian(self, lmbda):
         """
         Compute the jacobian of the lagrangian relaxation as follow: with x the optimal
-        solution of the minimization problem, the gradient at lambda is [x - u, -x].
+        solution of the minimization problem, the gradient at lambda is [x - ub, -x].
         However, we rather want to maximize the lagrangian relaxation, hence we have to
         change the sign of both function values and gradient entries.
         :param lmbda:

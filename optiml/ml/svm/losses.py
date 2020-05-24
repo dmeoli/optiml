@@ -66,7 +66,7 @@ class Hinge(SVCLoss):
         return np.maximum(0, 1 - y_true * y_pred)
 
     def loss_derivative(self, X, y):
-        one_rows = np.where(y * self.svm.decision_function(X) < 1.)[0]
+        one_rows = y * self.svm.decision_function(X) < 1.
         return np.dot(y[one_rows], X[one_rows])
 
 
@@ -122,9 +122,8 @@ class EpsilonInsensitive(SVRLoss):
         return np.maximum(0, np.abs(y_pred - y_true) - self.epsilon)
 
     def loss_derivative(self, X, y):
-        y_pred = self.svm.predict(X)
-        one_rows = np.where(np.abs(y - y_pred) > self.epsilon)[0]
-        return np.sign(y_pred[one_rows] - y[one_rows])
+        one_rows = np.abs(y - self.svm.predict(X)) > self.epsilon
+        return np.dot(y[one_rows], X[one_rows])
 
 
 class SquaredEpsilonInsensitive(EpsilonInsensitive):

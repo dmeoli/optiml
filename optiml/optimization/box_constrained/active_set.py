@@ -33,8 +33,8 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
-        super().__init__(f, eps, max_iter, callback, callback_args, verbose)
+    def __init__(self, f, ub, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
+        super().__init__(f, ub, eps, max_iter, callback, callback_args, verbose)
 
     def minimize(self):
 
@@ -81,13 +81,13 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
             # unconstrained one)
 
             xs = np.zeros(self.f.ndim)
-            xs[U] = self.f.ub[U]
+            xs[U] = self.ub[U]
 
             # use the LDL^T Cholesky symmetric indefinite factorization to solve the
             # linear system since Q_{AA} is symmetric but could be not positive definite
-            xs[A] = ldl_solve(ldl(self.f.Q[A, :][:, A]), -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.f.ub[U])))
+            xs[A] = ldl_solve(ldl(self.f.Q[A, :][:, A]), -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
 
-            if np.logical_and(xs[A] <= self.f.ub[A] + 1e-12, xs[A] >= -1e-12).all():
+            if np.logical_and(xs[A] <= self.ub[A] + 1e-12, xs[A] >= -1e-12).all():
                 # the solution of the unconstrained problem is actually feasible
 
                 # move the current point right there
@@ -129,7 +129,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 #   0 <= self.x[i] + max_t d[i] <= u[i]   for all i
 
                 idx = np.logical_and(A, d > 0)  # positive gradient entries
-                max_t = min((self.f.ub[idx] - self.x[idx]) / d[idx], default=np.inf)
+                max_t = min((self.ub[idx] - self.x[idx]) / d[idx], default=np.inf)
                 idx = np.logical_and(A, d < 0)  # negative gradient entries
                 max_t = min(max_t, min(-self.x[idx] / d[idx], default=np.inf))
 
@@ -145,7 +145,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 L[nL] = True
                 A[nL] = False
 
-                nU = np.logical_and(A, last_x >= self.f.ub - 1e-12)
+                nU = np.logical_and(A, last_x >= self.ub - 1e-12)
                 U[nU] = True
                 A[nU] = False
 

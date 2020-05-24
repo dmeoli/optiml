@@ -10,7 +10,7 @@ from sklearn.svm import SVC as SKLSVC
 from sklearn.svm import SVR as SKLSVR
 from sklearn.utils.multiclass import unique_labels
 
-from .svm import SVM, LinearSVC, SVC, LinearSVR, SVR
+from .svm import SVM, PrimalSVC, DualSVC, PrimalSVR, DualSVR
 
 
 # data generators
@@ -137,15 +137,15 @@ def plot_svm_hyperplane(svm, X, y):
 
     # support vectors
     if isinstance(svm, ClassifierMixin):
-        if isinstance(svm, SVC) or isinstance(svm, SKLSVC):
+        if isinstance(svm, DualSVC) or isinstance(svm, SKLSVC):
             plt.scatter(X[svm.support_][:, 0], X[svm.support_][:, 1], s=60, color='navy')
-        elif isinstance(svm, LinearSVC) or isinstance(svm, SKLinearSVC):
+        elif isinstance(svm, PrimalSVC) or isinstance(svm, SKLinearSVC):
             support_ = np.where((2 * y - 1) * svm.decision_function(X) <= 1)[0]
             plt.scatter(X[support_][:, 0], X[support_][:, 1], s=60, color='navy')
     elif isinstance(svm, RegressorMixin):
-        if isinstance(svm, SVR) or isinstance(svm, SKLSVR):
+        if isinstance(svm, DualSVR) or isinstance(svm, SKLSVR):
             plt.scatter(X[svm.support_], y[svm.support_], s=60, color='navy')
-        elif isinstance(svm, LinearSVR) or isinstance(svm, SKLinearSVR):
+        elif isinstance(svm, PrimalSVR) or isinstance(svm, SKLinearSVR):
             support_ = np.where((2 * y - 1) * svm.predict(X) <= svm.epsilon)[0]
             plt.scatter(X[support_], y[support_], s=60, color='navy')
 

@@ -37,8 +37,8 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, eps=1e-10, max_iter=1000, callback=None, callback_args=(), verbose=False):
-        super().__init__(f, eps, max_iter, callback, callback_args, verbose)
+    def __init__(self, f, ub, eps=1e-10, max_iter=1000, callback=None, callback_args=(), verbose=False):
+        super().__init__(f, ub, eps, max_iter, callback, callback_args, verbose)
 
     def minimize(self):
 
@@ -139,7 +139,7 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
         while True:
             self.f_x = self.f.function(self.x)
             xQx = self.x.dot(self.f.Q).dot(self.x)
-            p = -lp.T.dot(self.f.ub) - 0.5 * xQx
+            p = -lp.T.dot(self.ub) - 0.5 * xQx
             gap = (self.f_x - p) / max(abs(self.f_x), 1)
 
             if self.is_verbose():
@@ -169,10 +169,10 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
 
             mu = (self.f_x - p) / (4 * self.f.ndim * self.f.ndim)  # use \rho = 1 / (# of constraints)
 
-            umx = self.f.ub - self.x
+            umx = self.ub - self.x
             H = self.f.Q + np.diag(lp / umx + lm / self.x)
             # w = \mu (np.ones(n) / umx - np.ones(n) / self.x) + lp - lm
-            w = mu * (self.f.ub - 2 * self.x) / (umx * self.x) + lp - lm
+            w = mu * (self.ub - 2 * self.x) / (umx * self.x) + lp - lm
 
             # and use Cholesky to solve the system
             # because H is symmetric positive definite matrix

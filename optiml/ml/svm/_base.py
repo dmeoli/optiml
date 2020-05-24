@@ -12,7 +12,7 @@ from .losses import squared_hinge, squared_epsilon_insensitive, Hinge, SVMLoss, 
 from .smo import SMO, SMOClassifier, SMORegression
 from ...optimization import Optimizer
 from ...optimization.box_constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
-from ...optimization.box_constrained._base import LagrangianConstrainedQuadratic
+from ...optimization.box_constrained._base import LagrangianEqualityConstrainedQuadratic
 from ...optimization.unconstrained import Quadratic
 from ...optimization.unconstrained.line_search import LineSearchOptimizer
 from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
@@ -41,7 +41,7 @@ class SVM(BaseEstimator):
         self.verbose = verbose
 
 
-class LinearSVM(SVM):
+class PrimalSVM(SVM):
 
     def __init__(self, C=1., tol=1e-4, loss=SVMLoss, optimizer=StochasticGradientDescent, max_iter=1000,
                  learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
@@ -75,7 +75,7 @@ class DualSVM(SVM):
         self.intercept_ = 0.
 
 
-class LinearSVC(LinearClassifierMixin, SparseCoefMixin, LinearSVM):
+class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
     def __init__(self, C=1., tol=1e-4, loss=squared_hinge, penalty='l2', optimizer=AdaGrad, max_iter=1000,
                  learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
@@ -124,7 +124,7 @@ class LinearSVC(LinearClassifierMixin, SparseCoefMixin, LinearSVM):
         return np.where(self.decision_function(X) >= 0, self.labels[1], self.labels[0])
 
 
-class SVC(ClassifierMixin, DualSVM):
+class DualSVC(ClassifierMixin, DualSVM):
 
     def __init__(self, kernel=rbf, C=1., tol=1e-3, optimizer=SMOClassifier, max_iter=1000, learning_rate=0.01,
                  momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, shuffle=True,
@@ -170,7 +170,7 @@ class SVC(ClassifierMixin, DualSVM):
 
         else:
 
-            self.obj = LagrangianConstrainedQuadratic(self.obj, A)
+            self.obj = LagrangianEqualityConstrainedQuadratic(self.obj, A)
 
             if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
@@ -193,8 +193,7 @@ class SVC(ClassifierMixin, DualSVM):
 
                     self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), epochs=self.max_iter,
                                                     step_size=self.learning_rate, momentum_type=self.momentum_type,
-                                                    momentum=self.momentum, verbose=self.verbose)
-                    self.optimizer.minimize()
+                                                    momentum=self.momentum, verbose=self.verbose).minimize()
 
             alphas = self.obj.primal_solution
 
@@ -224,7 +223,7 @@ class SVC(ClassifierMixin, DualSVM):
         return np.where(self.decision_function(X) >= 0, self.labels[1], self.labels[0])
 
 
-class LinearSVR(RegressorMixin, LinearModel, LinearSVM):
+class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
     def __init__(self, C=1., epsilon=0.1, tol=1e-4, loss=squared_epsilon_insensitive, optimizer=AdaGrad,
                  max_iter=1000, learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None,
@@ -267,7 +266,7 @@ class LinearSVR(RegressorMixin, LinearModel, LinearSVM):
         return np.dot(X, self.coef_) + self.intercept_
 
 
-class SVR(RegressorMixin, DualSVM):
+class DualSVR(RegressorMixin, DualSVM):
     def __init__(self, kernel=rbf, C=1., epsilon=0.1, tol=1e-3, optimizer=SMORegression, max_iter=1000,
                  learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
                  shuffle=True, random_state=None, verbose=False):
@@ -322,7 +321,7 @@ class SVR(RegressorMixin, DualSVM):
 
             else:
 
-                self.obj = LagrangianConstrainedQuadratic(self.obj, A)
+                self.obj = LagrangianEqualityConstrainedQuadratic(self.obj, A)
 
                 if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
@@ -346,8 +345,7 @@ class SVR(RegressorMixin, DualSVM):
 
                         self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), epochs=self.max_iter,
                                                         step_size=self.learning_rate, momentum_type=self.momentum_type,
-                                                        momentum=self.momentum, verbose=self.verbose)
-                        self.optimizer.minimize()
+                                                        momentum=self.momentum, verbose=self.verbose).minimize()
 
                 alphas = self.obj.primal_solution
 

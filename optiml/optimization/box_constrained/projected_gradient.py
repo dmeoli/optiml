@@ -35,8 +35,8 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
-        super().__init__(f, eps, max_iter, callback, callback_args, verbose)
+    def __init__(self, f, ub, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
+        super().__init__(f, ub, eps, max_iter, callback, callback_args, verbose)
 
     def minimize(self):
 
@@ -48,7 +48,7 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
             d = -self.g_x
 
             # project the direction over the active constraints
-            d[np.logical_and(self.f.ub - self.x <= 1e-12, d > 0)] = 0
+            d[np.logical_and(self.ub - self.x <= 1e-12, d > 0)] = 0
             d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
             # compute the norm of the (projected) gradient
@@ -71,7 +71,7 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
             #   0 <= x[i] + max_t d[i] <= ub[i]   for all i
 
             idx = d > 0  # positive gradient entries
-            max_t = min((self.f.ub[idx] - self.x[idx]) / d[idx], default=np.inf)
+            max_t = min((self.ub[idx] - self.x[idx]) / d[idx], default=np.inf)
             idx = d < 0  # negative gradient entries
             max_t = min(max_t, min(-self.x[idx] / d[idx], default=np.inf))
 

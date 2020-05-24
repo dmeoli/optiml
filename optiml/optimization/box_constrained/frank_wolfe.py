@@ -43,8 +43,8 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, t=0., eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
-        super().__init__(f, eps, max_iter, callback, callback_args, verbose)
+    def __init__(self, f, ub, t=0., eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
+        super().__init__(f, ub, eps, max_iter, callback, callback_args, verbose)
         if not 0 <= t < 1:
             raise ValueError('t has to lie in [0, 1)')
         self.t = t
@@ -62,7 +62,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
             # solve min { <g, y> : 0 <= y <= u }
             y = np.zeros(self.f.ndim)
             idx = self.g_x < 0
-            y[idx] = self.f.ub[idx]
+            y[idx] = self.ub[idx]
 
             # compute the lower bound: remember that the first-order approximation
             # is f(x) + g(y - x)
@@ -88,7 +88,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
 
             # in the stabilized case, restrict y in the box
             if self.t > 0:
-                y = max(self.x - self.t * self.f.ub, min(self.x + self.t * self.f.ub, y))
+                y = max(self.x - self.t * self.ub, min(self.x + self.t * self.ub, y))
 
             # compute step size
             # we are taking direction d = y - x and y is feasible, hence the

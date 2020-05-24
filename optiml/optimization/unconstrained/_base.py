@@ -19,7 +19,7 @@ class Quadratic(OptimizationFunction):
         Q = np.array(Q)
         q = np.array(q)
 
-        n = Q.shape[1]
+        n = len(Q)
         super().__init__(n)
 
         if n <= 1:
