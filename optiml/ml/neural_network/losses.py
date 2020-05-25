@@ -77,6 +77,13 @@ class MeanSquaredError(NeuralNetworkLoss):
         return np.mean(np.square(y_pred - y_true))
 
 
+class MeanAbsoluteError(NeuralNetworkLoss):
+
+    def loss(self, y_pred, y_true):
+        assert y_pred.shape == y_true.shape
+        return np.mean(np.abs(y_pred - y_true))
+
+
 class BinaryCrossEntropy(NeuralNetworkLoss):
     """Binary Cross-Entropy aka Sigmoid Cross-Entropy loss
     function for binary and multi-label classification

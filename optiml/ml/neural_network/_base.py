@@ -180,7 +180,8 @@ class NeuralNetwork(BaseEstimator, Layer):
                                             max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'stopped':
-                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
+                if self.optimizer.iter >= self.max_iter:
+                    warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
 
         elif issubclass(self.optimizer, StochasticOptimizer):
 

@@ -101,7 +101,8 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
         - [x] Neural Network Classifier
         - [x] Neural Network Regressor
         - Losses
-            - [x] Mean Squared Error
+            - [x] Mean Squared Error (L2 Loss)
+            - [x] Mean Absolute Error (L1 Loss)
             - [x] Binary Cross Entropy
             - [x] Categorical Cross Entropy
             - [x] Sparse Categorical Cross Entropy
