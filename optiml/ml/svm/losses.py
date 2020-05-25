@@ -40,12 +40,13 @@ class SVCLoss(SVMLoss, ABC):
 
         self.svm.coef_ = coef
 
+        n_samples = X_batch.shape[0]
         if self.penalty == 'l1':
-            return (0.5 * np.linalg.norm(coef, ord=1) + self.svm.C *
-                    np.mean(self.loss(self.svm.decision_function(X_batch), y_batch)))
+            return (1 / (2 * n_samples) * np.linalg.norm(coef, ord=1) + self.svm.C / n_samples *
+                    np.sum(self.loss(self.svm.decision_function(X_batch), y_batch)))
         elif self.penalty == 'l2':
-            return (0.5 * np.linalg.norm(coef, ord=2) ** 2 + self.svm.C *
-                    np.mean(self.loss(self.svm.decision_function(X_batch), y_batch)))
+            return (1 / (2 * n_samples) * np.linalg.norm(coef, ord=2) ** 2 + self.svm.C / n_samples *
+                    np.sum(self.loss(self.svm.decision_function(X_batch), y_batch)))
 
     def jacobian(self, coef, X_batch=None, y_batch=None):
         if X_batch is None:
@@ -54,7 +55,7 @@ class SVCLoss(SVMLoss, ABC):
             y_batch = self.y
 
         n_samples = X_batch.shape[0]
-        return ((coef if self.penalty == 'l2' else np.sign(coef)) -
+        return ((1 / n_samples * coef if self.penalty == 'l2' else np.where(coef > 0, 1., -1.)) -
                 self.svm.C / n_samples * self.loss_jacobian(X_batch, y_batch))
 
 
@@ -97,8 +98,9 @@ class SVRLoss(SVMLoss, ABC):
 
         self.svm.coef_ = coef
 
-        return (0.5 * np.linalg.norm(coef) ** 2 + self.svm.C *
-                np.mean(self.loss(self.svm.predict(X_batch), y_batch)))
+        n_samples = X_batch.shape[0]
+        return (1 / (2 * n_samples) * np.linalg.norm(coef) ** 2 + self.svm.C / n_samples *
+                np.sum(self.loss(self.svm.predict(X_batch), y_batch)))
 
     def jacobian(self, coef, X_batch=None, y_batch=None):
         if X_batch is None:
@@ -107,7 +109,7 @@ class SVRLoss(SVMLoss, ABC):
             y_batch = self.y
 
         n_samples = X_batch.shape[0]
-        return coef - self.svm.C / n_samples * self.loss_jacobian(X_batch, y_batch)
+        return 1 / n_samples * coef - self.svm.C / n_samples * self.loss_jacobian(X_batch, y_batch)
 
 
 class EpsilonInsensitive(SVRLoss):
@@ -127,7 +129,7 @@ class EpsilonInsensitive(SVRLoss):
     def loss_jacobian(self, X_batch, y_batch):
         y_pred = self.svm.predict(X_batch)
         mask = np.abs(y_pred - y_batch) > self.epsilon
-        return np.dot(y_batch[mask], X_batch[mask])
+        return np.dot(y_batch[mask] - y_pred[mask], X_batch[mask])
 
 
 class SquaredEpsilonInsensitive(EpsilonInsensitive):
