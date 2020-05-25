@@ -11,8 +11,8 @@ from .kernels import rbf, Kernel, LinearKernel
 from .losses import squared_hinge, squared_epsilon_insensitive, Hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
 from .smo import SMO, SMOClassifier, SMORegression
 from ...optimization import Optimizer
-from ...optimization.box_constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
-from ...optimization.box_constrained._base import LagrangianEqualityConstrainedQuadratic
+from ...optimization.box_constrained import BoxConstrainedQuadraticOptimizer, LagrangianConstrainedQuadraticRelaxation
+from ...optimization.box_constrained._base import LagrangianEqualityConstrainedQuadraticRelaxation
 from ...optimization.unconstrained import Quadratic
 from ...optimization.unconstrained.line_search import LineSearchOptimizer
 from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
@@ -171,16 +171,15 @@ class DualSVC(ClassifierMixin, DualSVM):
 
         else:
 
-            self.obj = LagrangianEqualityConstrainedQuadratic(self.obj, A)
-
             if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
+                self.obj = LagrangianEqualityConstrainedQuadraticRelaxation(self.obj, A)
                 self.optimizer = self.optimizer(f=self.obj, ub=ub, max_iter=self.max_iter,
                                                 verbose=self.verbose).minimize()
 
             elif issubclass(self.optimizer, Optimizer):
 
-                self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
+                self.obj = LagrangianConstrainedQuadraticRelaxation(self.obj, A, ub)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -325,16 +324,15 @@ class DualSVR(RegressorMixin, DualSVM):
 
             else:
 
-                self.obj = LagrangianEqualityConstrainedQuadratic(self.obj, A)
-
                 if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
+                    self.obj = LagrangianEqualityConstrainedQuadraticRelaxation(self.obj, A)
                     self.optimizer = self.optimizer(f=self.obj, ub=ub, max_iter=self.max_iter,
                                                     verbose=self.verbose).minimize()
 
                 elif issubclass(self.optimizer, Optimizer):
 
-                    self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
+                    self.obj = LagrangianConstrainedQuadraticRelaxation(self.obj, A, ub)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 

@@ -1,9 +1,9 @@
 __all__ = ['BoxConstrainedQuadraticOptimizer',
-           'LagrangianEqualityConstrainedQuadratic', 'LagrangianBoxConstrainedQuadratic',
+           'LagrangianEqualityConstrainedQuadraticRelaxation', 'LagrangianConstrainedQuadraticRelaxation',
            'ProjectedGradient', 'ActiveSet', 'FrankWolfe', 'InteriorPoint']
 
 from ._base import (BoxConstrainedQuadraticOptimizer,
-                    LagrangianEqualityConstrainedQuadratic, LagrangianBoxConstrainedQuadratic)
+                    LagrangianEqualityConstrainedQuadraticRelaxation, LagrangianConstrainedQuadraticRelaxation)
 
 from .projected_gradient import ProjectedGradient
 from .active_set import ActiveSet
