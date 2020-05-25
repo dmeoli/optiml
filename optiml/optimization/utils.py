@@ -133,6 +133,8 @@ def generate_box_constrained_quadratic_function(ndim=2, actv=0.5, rank=1.1, ecc=
 # plot functions
 
 def plot_surface_contour(f, x_min, x_max, y_min, y_max):
+    plt.style.use('seaborn-white')
+
     X, Y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
     Z = np.array([f.function(np.array([x, y]))
