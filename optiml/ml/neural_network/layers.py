@@ -105,7 +105,7 @@ class Conv2D(ParamLayer):
                 x_seg_matrix = x[:, i * s0:i * s0 + k0, j * s1:j * s1 + k1, :].reshape(
                     (batch_size, -1))  # [n,h,w,c] => [n, h*w*c]
                 flt_matrix = t_flt.reshape((-1, flt.shape[-1]))  # [h,w,c, out] => [h*w*c, out]
-                filtered = np.dot(x_seg_matrix, flt_matrix)  # sum of filtered window [n, out]
+                filtered = x_seg_matrix.dot(flt_matrix)  # sum of filtered window [n, out]
                 conved[:, i, j, :] = filtered
         return conved
 

@@ -85,6 +85,9 @@ class MeanAbsoluteError(NeuralNetworkLoss):
         assert y_pred.shape == y_true.shape
         return np.sum(np.abs(y_pred - y_true))
 
+    def delta(self, y_pred, y_true):
+        return np.sign(y_pred - y_true)
+
 
 class BinaryCrossEntropy(NeuralNetworkLoss):
     """Binary Cross-Entropy aka Sigmoid Cross-Entropy loss
@@ -93,7 +96,8 @@ class BinaryCrossEntropy(NeuralNetworkLoss):
 
     def loss(self, y_pred, y_true):
         assert y_pred.shape == y_true.shape
-        return -np.sum(xlogy(y_true, y_pred) + xlogy(1. - y_true, 1. - y_pred))
+        return -np.sum(xlogy(y_true, y_pred) +
+                       xlogy(1. - y_true, 1. - y_pred))
 
 
 class CategoricalCrossEntropy(NeuralNetworkLoss):
