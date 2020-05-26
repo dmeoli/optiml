@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from optiml.optimization.unconstrained import quad1, quad2, Rosenbrock
+from optiml.optimization import quad1, quad2
+from optiml.optimization.unconstrained import Rosenbrock
 from optiml.optimization.unconstrained.line_search import Newton
 
 

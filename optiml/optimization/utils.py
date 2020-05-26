@@ -132,7 +132,7 @@ def generate_box_constrained_quadratic_function(ndim=2, actv=0.5, rank=1.1, ecc=
 
 # plot functions
 
-def plot_surface_contour(f, x_min, x_max, y_min, y_max):
+def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max):
     plt.style.use('seaborn-white')
 
     X, Y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
@@ -150,14 +150,14 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max):
     ax.set_ylabel('$x_2$')
     ax.set_zlabel(f'${type(f).__name__}$')
 
-    if hasattr(f, 'ub'):
+    if hasattr(opt, 'ub'):
         # 3D box-constraints plot
         z_min, z_max = Z.min(), Z.max()
         # vertices of the box
-        v = np.array([[f.ub[0], 0, z_min], [0, 0, z_min],
-                      [0, f.ub[1], z_min], [f.ub[0], f.ub[1], z_min],
-                      [f.ub[0], 0, z_max], [0, 0, z_max],
-                      [0, f.ub[1], z_max], [f.ub[0], f.ub[1], z_max]])
+        v = np.array([[opt.ub[0], 0, z_min], [0, 0, z_min],
+                      [0, opt.ub[1], z_min], [opt.ub[0], opt.ub[1], z_min],
+                      [opt.ub[0], 0, z_max], [0, 0, z_max],
+                      [0, opt.ub[1], z_max], [opt.ub[0], opt.ub[1], z_max]])
         # generate list of sides' polygons of our box
         verts = [[v[0], v[1], v[2], v[3]],
                  [v[4], v[5], v[6], v[7]],
@@ -176,19 +176,19 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max):
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
 
-    if hasattr(f, 'ub'):
+    if hasattr(opt, 'ub'):
         # 2D box-constraints plot
-        ax.plot([0, 0, f.ub[0], f.ub[0], 0],
-                [0, f.ub[1], f.ub[1], 0, 0], color='k', linewidth=1.5)
-        ax.fill_between([0, f.ub[0]],
+        ax.plot([0, 0, opt.ub[0], opt.ub[0], 0],
+                [0, opt.ub[1], opt.ub[1], 0, 0], color='k', linewidth=1.5)
+        ax.fill_between([0, opt.ub[0]],
                         [0, 0],
-                        [f.ub[1], f.ub[1]], color='0.8')
+                        [opt.ub[1], opt.ub[1]], color='0.8')
 
     return fig
 
 
 def plot_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max):
-    fig = plot_surface_contour(f, x_min, x_max, y_min, y_max)
+    fig = plot_surface_contour(f, opt, x_min, x_max, y_min, y_max)
     x0_history = opt['x0_history'] if isinstance(opt, dict) else opt.x0_history
     x1_history = opt['x1_history'] if isinstance(opt, dict) else opt.x1_history
     f_x_history = opt['f_x_history'] if isinstance(opt, dict) else opt.f_x_history

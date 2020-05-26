@@ -13,7 +13,7 @@ from .smo import SMO, SMOClassifier, SMORegression
 from ...optimization import Optimizer
 from ...optimization.constrained import BoxConstrainedQuadraticOptimizer, LagrangianConstrainedQuadraticRelaxation
 from ...optimization.constrained._base import LagrangianEqualityConstrainedQuadraticRelaxation
-from ...optimization.unconstrained import Quadratic
+from ...optimization import Quadratic
 from ...optimization.unconstrained.line_search import LineSearchOptimizer
 from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
 
