@@ -134,7 +134,7 @@ class EpsilonInsensitive(SVRLoss):
     def loss_jacobian(self, X_batch, y_batch):
         y_pred = self.svm.predict(X_batch)
         mask = np.abs(y_pred - y_batch) > self.epsilon
-        return np.dot(np.sign(y_pred[mask] - y_batch[mask]), X_batch[mask])
+        return np.dot(np.sign(y_batch[mask] - y_pred[mask]), X_batch[mask])
 
 
 class SquaredEpsilonInsensitive(EpsilonInsensitive):
