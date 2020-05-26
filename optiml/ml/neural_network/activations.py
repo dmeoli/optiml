@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.special import expit
+from autograd.scipy.special import expit
 
 
 class Activation:

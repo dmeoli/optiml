@@ -34,7 +34,7 @@ class L2(Regularizer):
         return self.lmbda * np.sum(np.square(theta))
 
     def jacobian(self, theta):
-        return self.lmbda * 2 * theta
+        return self.lmbda * theta
 
 
 l1 = L1()

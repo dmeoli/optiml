@@ -125,6 +125,7 @@ class SparseCategoricalCrossEntropy(NeuralNetworkLoss):
 
 
 mean_squared_error = MeanSquaredError
+mean_absolute_error = MeanAbsoluteError
 binary_cross_entropy = BinaryCrossEntropy
 categorical_cross_entropy = CategoricalCrossEntropy
 sparse_categorical_cross_entropy = SparseCategoricalCrossEntropy

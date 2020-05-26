@@ -1,6 +1,6 @@
 from abc import ABC
 
-import numpy as np
+import autograd.numpy as np
 
 from .activations import Activation, linear
 from .initializers import glorot_uniform, zeros
@@ -65,7 +65,7 @@ class FullyConnected(ParamLayer):
 
     def forward(self, X):
         self._X = X
-        self._WX_b = self._X.dot(self.coef_)
+        self._WX_b = np.dot(self._X, self.coef_)
         if self.fit_intercept:
             self._WX_b += self.inter_
         return self.activation(self._WX_b)
@@ -105,7 +105,7 @@ class Conv2D(ParamLayer):
                 x_seg_matrix = x[:, i * s0:i * s0 + k0, j * s1:j * s1 + k1, :].reshape(
                     (batch_size, -1))  # [n,h,w,c] => [n, h*w*c]
                 flt_matrix = t_flt.reshape((-1, flt.shape[-1]))  # [h,w,c, out] => [h*w*c, out]
-                filtered = x_seg_matrix.dot(flt_matrix)  # sum of filtered window [n, out]
+                filtered = np.dot(x_seg_matrix, flt_matrix)  # sum of filtered window [n, out]
                 conved[:, i, j, :] = filtered
         return conved
 
