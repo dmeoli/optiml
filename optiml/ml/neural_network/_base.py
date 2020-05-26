@@ -65,9 +65,9 @@ class NeuralNetwork(BaseEstimator, Layer):
         for layer in self.layers[::-1]:
             if isinstance(layer, ParamLayer):
                 delta, grads = layer.backward(delta)
-                coef_grads.append((grads['dW'] + layer.coef_reg.jacobian(layer.coef_)) / layer._X.shape[0])
+                coef_grads.append(grads['dW'] + layer.coef_reg.jacobian(layer.coef_) / (2 * layer._X.shape[0]))
                 if layer.fit_intercept:
-                    inter_grads.append((grads['db'] + layer.inter_reg.jacobian(layer.inter_)) / layer._X.shape[0])
+                    inter_grads.append(grads['db'] + layer.inter_reg.jacobian(layer.inter_) / (2 * layer._X.shape[0]))
             else:
                 delta = layer.backward(delta)
         return coef_grads[::-1], inter_grads[::-1]

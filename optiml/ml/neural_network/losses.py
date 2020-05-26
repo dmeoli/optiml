@@ -37,11 +37,12 @@ class NeuralNetworkLoss(OptimizationFunction):
 
         self.neural_net._unpack(packed_coef_inter)
 
+        n_samples = X_batch.shape[0]
         coef_regs = np.sum(layer.coef_reg(layer.coef_) for layer in self.neural_net.layers
-                           if isinstance(layer, ParamLayer)) / X_batch.shape[0]
+                           if isinstance(layer, ParamLayer)) / (2 * n_samples)
         inter_regs = np.sum(layer.inter_reg(layer.inter_) for layer in self.neural_net.layers
-                            if isinstance(layer, ParamLayer) and layer.fit_intercept) / X_batch.shape[0]
-        return self.loss(self.neural_net.forward(X_batch), y_batch) + coef_regs + inter_regs
+                            if isinstance(layer, ParamLayer) and layer.fit_intercept) / (2 * n_samples)
+        return 1 / (2 * n_samples) * self.loss(self.neural_net.forward(X_batch), y_batch) + coef_regs + inter_regs
 
     def jacobian(self, packed_coef_inter, X_batch=None, y_batch=None):
         if X_batch is None:
@@ -49,7 +50,8 @@ class NeuralNetworkLoss(OptimizationFunction):
         if y_batch is None:
             y_batch = self.y
 
-        delta = self.delta(self.neural_net.forward(X_batch), y_batch)
+        n_samples = X_batch.shape[0]
+        delta = 1 / n_samples * self.delta(self.neural_net.forward(X_batch), y_batch)
         return self.neural_net._pack(*self.neural_net.backward(delta))
 
     def __call__(self, y_pred, y_true):
@@ -74,14 +76,14 @@ class MeanSquaredError(NeuralNetworkLoss):
 
     def loss(self, y_pred, y_true):
         assert y_pred.shape == y_true.shape
-        return np.mean(np.square(y_pred - y_true))
+        return np.sum(np.square(y_pred - y_true))
 
 
 class MeanAbsoluteError(NeuralNetworkLoss):
 
     def loss(self, y_pred, y_true):
         assert y_pred.shape == y_true.shape
-        return np.mean(np.abs(y_pred - y_true))
+        return np.sum(np.abs(y_pred - y_true))
 
 
 class BinaryCrossEntropy(NeuralNetworkLoss):
@@ -91,7 +93,7 @@ class BinaryCrossEntropy(NeuralNetworkLoss):
 
     def loss(self, y_pred, y_true):
         assert y_pred.shape == y_true.shape
-        return -np.mean(xlogy(y_true, y_pred) + xlogy(1. - y_true, 1. - y_pred))
+        return -np.sum(xlogy(y_true, y_pred) + xlogy(1. - y_true, 1. - y_pred))
 
 
 class CategoricalCrossEntropy(NeuralNetworkLoss):
@@ -100,13 +102,13 @@ class CategoricalCrossEntropy(NeuralNetworkLoss):
 
     def loss(self, y_pred, y_true):
         assert y_pred.shape == y_true.shape
-        return -np.mean(xlogy(y_true, y_pred))
+        return -np.sum(xlogy(y_true, y_pred))
 
     def delta(self, y_pred, y_true):
         # according to: https://deepnotes.io/softmax-crossentropy
         one_hot_mask = y_true.astype(np.bool)
         y_pred[one_hot_mask] -= 1.
-        return y_pred / len(y_pred)
+        return y_pred
 
 
 class SparseCategoricalCrossEntropy(NeuralNetworkLoss):
@@ -115,11 +117,11 @@ class SparseCategoricalCrossEntropy(NeuralNetworkLoss):
 
     def loss(self, y_pred, y_true):
         assert y_pred.shape[0] == y_true.shape[0]
-        return -np.mean(np.log(y_pred[np.arange(y_pred.shape[0]), y_true.astype(np.int32).ravel()]))
+        return -np.sum(np.log(y_pred[np.arange(y_pred.shape[0]), y_true.astype(np.int32).ravel()]))
 
     def delta(self, y_pred, y_true):
         y_pred[np.arange(y_pred.shape[0]), y_true.astype(np.int32).ravel()] -= 1.
-        return y_pred / len(y_pred)
+        return y_pred
 
 
 mean_squared_error = MeanSquaredError

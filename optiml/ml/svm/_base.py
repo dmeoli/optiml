@@ -11,8 +11,8 @@ from .kernels import rbf, Kernel, LinearKernel
 from .losses import squared_hinge, squared_epsilon_insensitive, Hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
 from .smo import SMO, SMOClassifier, SMORegression
 from ...optimization import Optimizer
-from ...optimization.box_constrained import BoxConstrainedQuadraticOptimizer, LagrangianConstrainedQuadraticRelaxation
-from ...optimization.box_constrained._base import LagrangianEqualityConstrainedQuadraticRelaxation
+from ...optimization.constrained import BoxConstrainedQuadraticOptimizer, LagrangianConstrainedQuadraticRelaxation
+from ...optimization.constrained._base import LagrangianEqualityConstrainedQuadraticRelaxation
 from ...optimization.unconstrained import Quadratic
 from ...optimization.unconstrained.line_search import LineSearchOptimizer
 from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
@@ -55,6 +55,12 @@ class PrimalSVM(SVM):
         self.intercept_ = 0.
         self.fit_intercept = fit_intercept
 
+    def _unpack(self, packed_coef_inter):
+        if self.fit_intercept:
+            self.coef_, self.intercept_ = packed_coef_inter[:-1], packed_coef_inter[-1]
+        else:
+            self.coef_ = packed_coef_inter
+
 
 class DualSVM(SVM):
 
@@ -63,7 +69,7 @@ class DualSVM(SVM):
                  random_state=None, verbose=False):
         super().__init__(C, tol, optimizer, max_iter, learning_rate, momentum_type,
                          momentum, batch_size, max_f_eval, shuffle, random_state, verbose)
-        if not issubclass(type(kernel), Kernel):
+        if not isinstance(kernel, Kernel):
             raise TypeError(f'{kernel} is not an allowed kernel function')
         self.kernel = kernel
         if not (isinstance(optimizer, str) or
@@ -98,10 +104,11 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         y = np.where(y == self.labels[0], -1., 1.)
 
         self.loss = self.loss(self, X, y, self.penalty)
+        packed_coef_inter = np.zeros(X.shape[1] + 1 if self.fit_intercept else X.shape[1])
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
-            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), max_iter=self.max_iter,
+            self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'stopped':
@@ -110,11 +117,11 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
         elif issubclass(self.optimizer, StochasticOptimizer):
 
-            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), epochs=self.max_iter,
+            self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, epochs=self.max_iter,
                                             step_size=self.learning_rate, momentum_type=self.momentum_type,
                                             momentum=self.momentum, verbose=self.verbose).minimize()
 
-        self.coef_ = self.optimizer.x
+        self._unpack(self.optimizer.x)
 
         return self
 
@@ -261,7 +268,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                                             step_size=self.learning_rate, momentum_type=self.momentum_type,
                                             momentum=self.momentum, verbose=self.verbose).minimize()
 
-        self.coef_ = self.optimizer.x
+        self._unpack(self.optimizer.x)
 
         return self
 

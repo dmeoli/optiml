@@ -100,7 +100,7 @@ class LagrangianConstrainedQuadraticRelaxation(Quadratic):
         """
         Construct the lagrangian relaxation of a box-constrained quadratic function defined as:
                            
-                                1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub
+                1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub
 
         :param quad: box-constrained quadratic function to be relaxed
         """

@@ -32,30 +32,31 @@ class SVCLoss(SVMLoss, ABC):
         super().__init__(svm, X, y)
         self.penalty = penalty
 
-    def function(self, coef, X_batch=None, y_batch=None):
+    def function(self, packed_coef_inter, X_batch=None, y_batch=None):
         if X_batch is None:
             X_batch = self.X
         if y_batch is None:
             y_batch = self.y
 
-        self.svm.coef_ = coef
+        self.svm._unpack(packed_coef_inter)
 
         n_samples = X_batch.shape[0]
         if self.penalty == 'l1':
-            return (1 / (2 * n_samples) * np.linalg.norm(coef, ord=1) + self.svm.C / n_samples *
-                    np.sum(self.loss(self.svm.decision_function(X_batch), y_batch)))
+            return (1 / (2 * n_samples) * np.linalg.norm(packed_coef_inter, ord=1) +
+                    self.svm.C / n_samples * np.sum(self.loss(self.svm.decision_function(X_batch), y_batch)))
         elif self.penalty == 'l2':
-            return (1 / (2 * n_samples) * np.linalg.norm(coef, ord=2) ** 2 + self.svm.C / n_samples *
-                    np.sum(self.loss(self.svm.decision_function(X_batch), y_batch)))
+            return (1 / (2 * n_samples) * np.linalg.norm(packed_coef_inter) ** 2 +
+                    self.svm.C / n_samples * np.sum(self.loss(self.svm.decision_function(X_batch), y_batch)))
 
-    def jacobian(self, coef, X_batch=None, y_batch=None):
+    def jacobian(self, packed_coef_inter, X_batch=None, y_batch=None):
         if X_batch is None:
             X_batch = self.X
         if y_batch is None:
             y_batch = self.y
 
         n_samples = X_batch.shape[0]
-        return ((1 / n_samples * coef if self.penalty == 'l2' else np.where(coef > 0, 1., -1.)) -
+        return ((1 / n_samples * packed_coef_inter if self.penalty == 'l2'
+                 else np.where(packed_coef_inter > 0, 1., -1.)) -
                 self.svm.C / n_samples * self.loss_jacobian(X_batch, y_batch))
 
 
@@ -90,26 +91,27 @@ class SquaredHinge(Hinge):
 
 class SVRLoss(SVMLoss, ABC):
 
-    def function(self, coef, X_batch=None, y_batch=None):
+    def function(self, packed_coef_inter, X_batch=None, y_batch=None):
         if X_batch is None:
             X_batch = self.X
         if y_batch is None:
             y_batch = self.y
 
-        self.svm.coef_ = coef
+        self.svm._unpack(packed_coef_inter)
 
         n_samples = X_batch.shape[0]
-        return (1 / (2 * n_samples) * np.linalg.norm(coef) ** 2 + self.svm.C / n_samples *
-                np.sum(self.loss(self.svm.predict(X_batch), y_batch)))
+        return (1 / (2 * n_samples) * np.linalg.norm(packed_coef_inter) ** 2 +
+                self.svm.C / n_samples * np.sum(self.loss(self.svm.predict(X_batch), y_batch)))
 
-    def jacobian(self, coef, X_batch=None, y_batch=None):
+    def jacobian(self, packed_coef_inter, X_batch=None, y_batch=None):
         if X_batch is None:
             X_batch = self.X
         if y_batch is None:
             y_batch = self.y
 
         n_samples = X_batch.shape[0]
-        return 1 / n_samples * coef - self.svm.C / n_samples * self.loss_jacobian(X_batch, y_batch)
+        return (1 / n_samples * packed_coef_inter -
+                self.svm.C / n_samples * self.loss_jacobian(X_batch, y_batch))
 
 
 class EpsilonInsensitive(SVRLoss):
