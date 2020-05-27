@@ -132,7 +132,7 @@ def generate_box_constrained_quadratic_function(ndim=2, actv=0.5, rank=1.1, ecc=
 
 # plot functions
 
-def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max):
+def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max, ub=None):
     plt.style.use('seaborn-white')
 
     X, Y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
@@ -150,14 +150,16 @@ def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max):
     ax.set_ylabel('$x_2$')
     ax.set_zlabel(f'${type(f).__name__}$')
 
-    if hasattr(opt, 'ub'):
+    ub = opt.ub if hasattr(opt, 'ub') else opt.f.ub if hasattr(opt.f, 'ub') else None
+
+    if ub is not None:
         # 3D box-constraints plot
         z_min, z_max = Z.min(), Z.max()
         # vertices of the box
-        v = np.array([[opt.ub[0], 0, z_min], [0, 0, z_min],
-                      [0, opt.ub[1], z_min], [opt.ub[0], opt.ub[1], z_min],
-                      [opt.ub[0], 0, z_max], [0, 0, z_max],
-                      [0, opt.ub[1], z_max], [opt.ub[0], opt.ub[1], z_max]])
+        v = np.array([[ub[0], 0, z_min], [0, 0, z_min],
+                      [0, ub[1], z_min], [ub[0], ub[1], z_min],
+                      [ub[0], 0, z_max], [0, 0, z_max],
+                      [0, ub[1], z_max], [ub[0], ub[1], z_max]])
         # generate list of sides' polygons of our box
         verts = [[v[0], v[1], v[2], v[3]],
                  [v[4], v[5], v[6], v[7]],
@@ -176,13 +178,13 @@ def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max):
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
 
-    if hasattr(opt, 'ub'):
+    if ub is not None:
         # 2D box-constraints plot
-        ax.plot([0, 0, opt.ub[0], opt.ub[0], 0],
-                [0, opt.ub[1], opt.ub[1], 0, 0], color='k', linewidth=1.5)
-        ax.fill_between([0, opt.ub[0]],
+        ax.plot([0, 0, ub[0], ub[0], 0],
+                [0, ub[1], ub[1], 0, 0], color='k', linewidth=1.5)
+        ax.fill_between([0, ub[0]],
                         [0, 0],
-                        [opt.ub[1], opt.ub[1]], color='0.8')
+                        [ub[1], ub[1]], color='0.8')
 
     return fig
 

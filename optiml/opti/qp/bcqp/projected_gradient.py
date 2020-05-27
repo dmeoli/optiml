@@ -55,9 +55,12 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
             ng = np.linalg.norm(d)
 
             if self.is_verbose():
-                print('{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, ng))
+                print('{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, ng))
 
-            self.callback()
+            try:
+                self.callback()
+            except StopIteration:
+                break
 
             if ng <= self.eps:
                 self.status = 'optimal'

@@ -148,19 +148,17 @@ class SteepestGradientDescent(LineSearchOptimizer):
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(self.g_x)
 
-            self.callback()
-
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
             else:
                 ng0 = 1  # un-scaled stopping criterion
 
             if self.is_verbose():
-                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
+                print('\n{:4d}\t{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
+                    print('\t{: 1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                        print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
                         print('\t\t', end='')
                     prev_v = self.f_x
@@ -184,7 +182,12 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
             # output statistics
             if self.is_verbose():
-                print('\t{:1.4e}'.format(a), end='')
+                print('\t{: 1.4e}'.format(a), end='')
+
+            try:
+                self.callback()
+            except StopIteration:
+                break
 
             if a <= self.line_search.min_a:
                 self.status = 'error'

@@ -48,12 +48,12 @@ def test_solve_svr_as_qp_with_cvxopt():
     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_svr_as_bcqp_lagrangian_relaxation_with_projected_gradient():
-    X, y = load_boston(return_X_y=True)
-    X_scaled = StandardScaler().fit_transform(X)
-    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
-    svr = DualSVR(kernel=linear, optimizer=ProjectedGradient).fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.77
+# def test_solve_svr_as_bcqp_lagrangian_relaxation_with_projected_gradient():
+#     X, y = load_boston(return_X_y=True)
+#     X_scaled = StandardScaler().fit_transform(X)
+#     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+#     svr = DualSVR(kernel=linear, optimizer=ProjectedGradient).fit(X_train, y_train)
+#     assert svr.score(X_test, y_test) >= 0.77
 
 
 # def test_solve_svr_as_bcqp_lagrangian_relaxation_with_active_set():

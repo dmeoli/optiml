@@ -58,9 +58,12 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
 
         while True:
             if self.is_verbose():
-                print('{:4d}\t{:1.4e}\t{:d}\t'.format(self.iter, self.f_x, sum(L) + sum(U)), end='')
+                print('{:4d}\t{: 1.4e}\t{:d}\t'.format(self.iter, self.f_x, sum(L) + sum(U)), end='')
 
-            self.callback()
+            try:
+                self.callback()
+            except StopIteration:
+                break
 
             if self.iter >= self.max_iter:
                 self.status = 'stopped'

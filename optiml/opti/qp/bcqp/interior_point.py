@@ -143,9 +143,12 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
             gap = (self.f_x - p) / max(abs(self.f_x), 1)
 
             if self.is_verbose():
-                print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, p, gap))
+                print('{:4d}\t{: 1.4e}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, p, gap))
 
-            self.callback()
+            try:
+                self.callback()
+            except StopIteration:
+                break
 
             # stopping criteria
             if gap <= self.eps:

@@ -129,7 +129,10 @@ class Newton(LineSearchOptimizer):
             self.f_x, self.g_x, self.H_x = self.f.function(self.x), self.f.jacobian(self.x), self.f.hessian(self.x)
             ng = np.linalg.norm(self.g_x)
 
-            self.callback()
+            try:
+                self.callback()
+            except StopIteration:
+                break
 
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
@@ -137,11 +140,11 @@ class Newton(LineSearchOptimizer):
                 ng0 = 1  # un-scaled stopping criterion
 
             if self.is_verbose():
-                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
+                print('\n{:4d}\t{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
+                    print('\t{: 1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                        print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
                         print('\t\t', end='')
                     prev_v = self.f_x
@@ -159,11 +162,11 @@ class Newton(LineSearchOptimizer):
             lambda_n = min(np.linalg.eigvalsh(self.H_x))  # smallest eigenvalue
             if lambda_n < self.delta:
                 if self.is_verbose():
-                    print('\t{:1.4e}'.format(self.delta - lambda_n), end='')
+                    print('\t{: 1.4e}'.format(self.delta - lambda_n), end='')
                 self.H_x = self.H_x + (self.delta - lambda_n) * np.identity(len(self.g_x))
             else:
                 if self.is_verbose():
-                    print('\t{:1.4e}'.format(self.delta), end='')
+                    print('\t{: 1.4e}'.format(self.delta), end='')
 
             d = -np.linalg.inv(self.H_x).dot(self.g_x)  # or np.linalg.solve(self.H_x, self.g_x)
 
@@ -175,7 +178,7 @@ class Newton(LineSearchOptimizer):
 
             # output statistics
             if self.is_verbose():
-                print('\t{:1.4e}'.format(a), end='')
+                print('\t{: 1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
                 self.status = 'error'

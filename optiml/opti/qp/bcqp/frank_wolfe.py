@@ -74,9 +74,12 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
             gap = (self.f_x - best_lb) / max(abs(self.f_x), 1)
 
             if self.is_verbose():
-                print('{:4d}\t{:1.4e}\t{:1.4e}\t{:1.4e}'.format(self.iter, self.f_x, best_lb, gap))
+                print('{:4d}\t{: 1.4e}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, best_lb, gap))
 
-            self.callback()
+            try:
+                self.callback()
+            except StopIteration:
+                break
 
             if gap <= self.eps:
                 self.status = 'optimal'

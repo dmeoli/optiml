@@ -122,10 +122,12 @@ class Quadratic(OptimizationFunction):
         self.q = q
 
     def x_star(self):
-        try:
-            return np.linalg.solve(self.Q, -self.q)  # complexity O(2n^3/3)
-        except np.linalg.LinAlgError:  # the Hessian matrix is singular
-            return super().x_star()
+        if not hasattr(self, 'x_opt'):
+            try:
+                self.x_opt = np.linalg.solve(self.Q, -self.q)  # complexity O(2n^3/3)
+            except np.linalg.LinAlgError:  # the Hessian matrix is singular
+                self.x_opt = np.full(fill_value=np.nan, shape=self.ndim)
+        return self.x_opt
 
     def f_star(self):
         return self.function(self.x_star())

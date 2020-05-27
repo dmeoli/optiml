@@ -131,7 +131,10 @@ class BFGS(LineSearchOptimizer):
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(self.g_x)
 
-            self.callback()
+            try:
+                self.callback()
+            except StopIteration:
+                break
 
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
@@ -158,11 +161,11 @@ class BFGS(LineSearchOptimizer):
                     self.H_x = np.linalg.inv(self.H_x)
 
             if self.is_verbose():
-                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
+                print('\n{:4d}\t{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
+                    print('\t{: 1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                        print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
                         print('\t\t', end='')
                     prev_v = self.f_x
@@ -187,7 +190,7 @@ class BFGS(LineSearchOptimizer):
 
             # output statistics
             if self.is_verbose():
-                print('\t{:1.4e}'.format(a), end='')
+                print('\t{: 1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
                 self.status = 'error'
@@ -203,14 +206,14 @@ class BFGS(LineSearchOptimizer):
 
             rho = y.T.dot(s).item()
             if rho < 1e-16:
-                warnings.warn('error: y^i s^i = {:1.4e}'.format(rho))
+                warnings.warn('error: y^i s^i = {: 1.4e}'.format(rho))
                 self.status = 'error'
                 break
 
             rho = 1 / rho
 
             if self.is_verbose():
-                print('\t{:1.4e}'.format(rho), end='')
+                print('\t{: 1.4e}'.format(rho), end='')
 
             D = self.H_x.dot(y) * s.T
             self.H_x = self.H_x + rho * ((1 + rho * y.T.dot(self.H_x).dot(y)) * (s.dot(s.T)) - D - D.T)

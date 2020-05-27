@@ -285,11 +285,6 @@ class DualSVR(RegressorMixin, DualSVM):
         self.epsilon = epsilon
 
     def fit(self, X, y):
-        """
-        Trains the model by solving a constrained quadratic programming problem.
-        :param X: array of size [n_samples, n_features] holding the training samples
-        :param y: array of size [n_samples] holding the class labels
-        """
         targets = y.shape[1] if y.ndim > 1 else 1
         if targets > 1:
             raise ValueError('use sklearn.multioutput.MultiOutputRegressor '

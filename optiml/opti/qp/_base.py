@@ -1,15 +1,88 @@
 import numpy as np
 from scipy.linalg import ldl
 
+from .. import Optimizer
 from .. import Quadratic
+from ..unconstrained.line_search import LineSearchOptimizer
+from ..unconstrained.stochastic import StochasticOptimizer, AdaGrad
 from ..utils import ldl_solve
+
+
+class LagrangianDual(Optimizer):
+
+    def __init__(self, dual, optimizer=AdaGrad, eps=1e-6, step_size=0.01, momentum_type='none', momentum=0.9,
+                 batch_size=None, max_iter=1000, max_f_eval=1000, callback=None, callback_args=(), shuffle=True,
+                 random_state=None, verbose=False):
+        super().__init__(f=dual, x=np.zeros(dual.ndim), eps=eps, max_iter=max_iter,
+                         callback=callback, callback_args=callback_args, verbose=verbose)
+        if self.f.primal.ndim == 2:
+            self.x0_history = []
+            self.x1_history = []
+            self.f_x_history = []
+        self.optimizer = optimizer
+        self.step_size = step_size
+        self.momentum_type = momentum_type
+        self.momentum = momentum
+        self.batch_size = batch_size
+        self.max_f_eval = max_f_eval
+        self.shuffle = shuffle
+        self.random_state = random_state
+
+    def _print_dual_info(self, opt):
+        gap = (self.f.primal_value - self.f_x) / max(abs(self.f_x), 1)
+
+        if ((isinstance(opt, LineSearchOptimizer) and opt.is_verbose()) or
+                (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())):
+            print('\tub:{: 1.4e}'.format(self.f.primal_value), end='')
+            print(' - pcost:{: 1.4e}'.format(self.f_x), end='')
+            print(' - gap:{: 1.4e}'.format(gap), end='')
+
+        try:
+            self.callback()
+        except StopIteration:
+            raise StopIteration
+
+        if gap <= self.eps:
+            self.status = 'optimal'
+            raise StopIteration
+
+        self.x, self.f_x = self.f.primal_solution, self.f.primal_value
+
+        self.iter += 1
+
+    def minimize(self):
+
+        self.f_x = self.f.function(self.x)
+
+        if issubclass(self.optimizer, LineSearchOptimizer):
+
+            self.optimizer = self.optimizer(f=self.f, x=self.x, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
+                                            callback=self._print_dual_info, verbose=self.verbose).minimize()
+
+        elif issubclass(self.optimizer, StochasticOptimizer):
+
+            self.optimizer = self.optimizer(f=self.f, x=self.x, step_size=self.step_size, epochs=self.max_iter,
+                                            batch_size=self.batch_size, momentum_type=self.momentum_type,
+                                            momentum=self.momentum, callback=self._print_dual_info,
+                                            shuffle=self.shuffle, random_state=self.random_state,
+                                            verbose=self.verbose).minimize()
+
+        return self
+
+    def callback(self, args=()):
+        if self.f.primal.ndim == 2:
+            self.x0_history.append(self.f.primal_solution[0])
+            self.x1_history.append(self.f.primal_solution[1])
+            self.f_x_history.append(self.f.primal_value)
+        if callable(self._callback):
+            self._callback(self, *args, *self.callback_args)
 
 
 class LagrangianEqualityConstrainedQuadratic(Quadratic):
 
     def __init__(self, quad, A):
         """
-        Construct the lagrangian relaxation of a equality constrained quadratic function defined as:
+        Construct the lagrangian relaxation of an equality constrained quadratic function defined as:
 
                          1/2 x^T Q x + q^T x : A x = 0
 
@@ -30,10 +103,28 @@ class LagrangianEqualityConstrainedQuadratic(Quadratic):
         self.primal_value = np.inf
 
     def x_star(self):
-        raise np.full(fill_value=np.nan, shape=self.ndim)
+        """
+        By using Lagrange multipliers and seeking the extremum of the Lagrangian, it may be readily
+        shown that the solution to the equality constrained problem is given by the linear system:
+
+                                | Q -A^T | |    x*   | = | -q |
+                                | A   0  | | lambda* |   |  0 |
+
+        where lambda is a set of Lagrange multipliers which come out of the solution alongside x.
+        :return:
+        """
+        if not hasattr(self, 'x_opt'):
+            try:
+                self.x_opt = np.linalg.solve(np.vstack((np.hstack((self.Q, -self.A.T)),
+                                                        np.hstack((self.A, np.zeros_like(self.A))))),
+                                             np.vstack((np.full(fill_value=-self.q, shape=self.primal.ndim),
+                                                        np.zeros(self.primal.ndim))))[:self.primal.ndim]
+            except np.linalg.LinAlgError:
+                self.x_opt = np.full(fill_value=np.nan, shape=self.primal.ndim)
+        return self.x_opt
 
     def f_star(self):
-        return np.inf
+        return self.function(self.x_star())
 
     def function(self, lmbda):
         """

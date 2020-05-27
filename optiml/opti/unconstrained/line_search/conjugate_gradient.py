@@ -158,7 +158,10 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(self.g_x)
 
-            self.callback()
+            try:
+                self.callback()
+            except StopIteration:
+                break
 
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
@@ -166,11 +169,11 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 ng0 = 1  # un-scaled stopping criterion
 
             if self.is_verbose():
-                print('\n{:4d}\t{:4d}\t{:1.4e}\t{:1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
+                print('\n{:4d}\t{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
-                    print('\t{:1.4e}'.format(self.f_x - self.f.f_star()), end='')
+                    print('\t{: 1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
-                        print('\t{:1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                        print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
                         print('\t\t', end='')
                     prev_v = self.f_x
@@ -206,7 +209,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                     elif self.wf == 3:  # Dai-Yuan
                         beta = ng ** 2 / (self.g_x - past_g).T.dot(past_d)
                     if self.is_verbose():
-                        print('\t{:1.4f}'.format(beta), end='')
+                        print('\t{: 1.4f}'.format(beta), end='')
 
                 if beta != 0:
                     d = -self.g_x + beta * past_d
