@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from optiml.ml.svm import PrimalSVC, DualSVC, PrimalSVR, DualSVR
 from optiml.ml.svm.kernels import linear, rbf
 from optiml.ml.svm.losses import hinge, squared_hinge, epsilon_insensitive, squared_epsilon_insensitive
-from optiml.opti.constrained.bcqp import ProjectedGradient, ActiveSet, InteriorPoint, FrankWolfe
+from optiml.opti.qp.bcqp import ProjectedGradient, ActiveSet, InteriorPoint, FrankWolfe
 from optiml.opti.unconstrained.line_search import SteepestGradientDescent
 from optiml.opti.unconstrained.stochastic import StochasticGradientDescent
 
