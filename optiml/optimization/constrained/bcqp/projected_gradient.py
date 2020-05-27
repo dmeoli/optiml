@@ -1,6 +1,6 @@
 import numpy as np
 
-from . import BoxConstrainedQuadraticOptimizer
+from optiml.optimization.constrained import BoxConstrainedQuadraticOptimizer
 
 
 class ProjectedGradient(BoxConstrainedQuadraticOptimizer):

@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.linalg import ldl
 
-from . import BoxConstrainedQuadraticOptimizer
-from ..utils import ldl_solve
+from optiml.optimization.constrained import BoxConstrainedQuadraticOptimizer
+from optiml.optimization.utils import ldl_solve
 
 
 class ActiveSet(BoxConstrainedQuadraticOptimizer):
