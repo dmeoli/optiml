@@ -132,7 +132,7 @@ def test_solve_svc_as_qp_with_cvxopt():
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_bcqp_lagrangian_relaxation_with_projected_gradient():
+def test_solve_svc_as_bcqp_with_projected_gradient():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
@@ -140,7 +140,7 @@ def test_solve_svc_as_bcqp_lagrangian_relaxation_with_projected_gradient():
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_bcqp_lagrangian_relaxation_with_active_set():
+def test_solve_svc_as_bcqp_with_active_set():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
@@ -148,7 +148,7 @@ def test_solve_svc_as_bcqp_lagrangian_relaxation_with_active_set():
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_bcqp_lagrangian_relaxation_with_interior_point():
+def test_solve_svc_as_bcqp_with_interior_point():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
@@ -156,7 +156,7 @@ def test_solve_svc_as_bcqp_lagrangian_relaxation_with_interior_point():
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_bcqp_lagrangian_relaxation_with_frank_wolfe():
+def test_solve_svc_as_bcqp_with_frank_wolfe():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)

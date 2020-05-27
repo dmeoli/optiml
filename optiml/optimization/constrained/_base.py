@@ -19,7 +19,7 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
         self.ub = ub
 
 
-class LagrangianEqualityConstrainedQuadraticRelaxation(Quadratic):
+class LagrangianEqualityConstrainedQuadratic(Quadratic):
 
     def __init__(self, quad, A):
         """
@@ -94,7 +94,7 @@ class LagrangianEqualityConstrainedQuadraticRelaxation(Quadratic):
         return g
 
 
-class LagrangianBoxConstrainedQuadraticRelaxation(Quadratic):
+class LagrangianBoxConstrainedQuadratic(Quadratic):
 
     def __init__(self, quad, ub):
         """
@@ -185,15 +185,15 @@ class LagrangianBoxConstrainedQuadraticRelaxation(Quadratic):
         return g
 
 
-class LagrangianConstrainedQuadraticRelaxation(Quadratic):
+class LagrangianConstrainedQuadratic(Quadratic):
 
     def __init__(self, quad, A, ub):
         """
-        Construct the lagrangian relaxation of a box-constrained quadratic function defined as:
+        Construct the lagrangian relaxation of a constrained quadratic function defined as:
                            
                 1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub
 
-        :param quad: box-constrained quadratic function to be relaxed
+        :param quad: constrained quadratic function to be relaxed
         """
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')

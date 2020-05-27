@@ -11,8 +11,8 @@ from .kernels import rbf, Kernel, LinearKernel
 from .losses import squared_hinge, squared_epsilon_insensitive, Hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
 from .smo import SMO, SMOClassifier, SMORegression
 from ...optimization import Optimizer
-from ...optimization.constrained import BoxConstrainedQuadraticOptimizer, LagrangianConstrainedQuadraticRelaxation
-from ...optimization.constrained._base import LagrangianEqualityConstrainedQuadraticRelaxation
+from ...optimization.constrained import BoxConstrainedQuadraticOptimizer, LagrangianConstrainedQuadratic
+from ...optimization.constrained._base import LagrangianEqualityConstrainedQuadratic
 from ...optimization import Quadratic
 from ...optimization.unconstrained.line_search import LineSearchOptimizer
 from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
@@ -180,13 +180,13 @@ class DualSVC(ClassifierMixin, DualSVM):
 
             if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                self.obj = LagrangianEqualityConstrainedQuadraticRelaxation(self.obj, A)
                 self.optimizer = self.optimizer(f=self.obj, ub=ub, max_iter=self.max_iter,
                                                 verbose=self.verbose).minimize()
+                alphas = self.optimizer.x
 
             elif issubclass(self.optimizer, Optimizer):
 
-                self.obj = LagrangianConstrainedQuadraticRelaxation(self.obj, A, ub)
+                self.obj = LagrangianConstrainedQuadratic(self.obj, A, ub)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -204,7 +204,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     step_size=self.learning_rate, momentum_type=self.momentum_type,
                                                     momentum=self.momentum, verbose=self.verbose).minimize()
 
-            alphas = self.obj.primal_solution
+                alphas = self.obj.primal_solution
 
         sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
@@ -333,13 +333,13 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                    self.obj = LagrangianEqualityConstrainedQuadraticRelaxation(self.obj, A)
+                    self.obj = LagrangianEqualityConstrainedQuadratic(self.obj, A)
                     self.optimizer = self.optimizer(f=self.obj, ub=ub, max_iter=self.max_iter,
                                                     verbose=self.verbose).minimize()
 
                 elif issubclass(self.optimizer, Optimizer):
 
-                    self.obj = LagrangianConstrainedQuadraticRelaxation(self.obj, A, ub)
+                    self.obj = LagrangianConstrainedQuadratic(self.obj, A, ub)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
