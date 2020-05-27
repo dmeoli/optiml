@@ -1,6 +1,6 @@
 import numpy as np
 
-from optiml.optimization.constrained import BoxConstrainedQuadraticOptimizer
+from . import BoxConstrainedQuadraticOptimizer
 
 
 class FrankWolfe(BoxConstrainedQuadraticOptimizer):

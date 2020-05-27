@@ -1,7 +1,7 @@
 import numpy as np
 
-from optiml.optimization.constrained import BoxConstrainedQuadraticOptimizer
-from optiml.optimization.utils import cholesky_solve
+from . import BoxConstrainedQuadraticOptimizer
+from optiml.opti.utils import cholesky_solve
 
 
 class InteriorPoint(BoxConstrainedQuadraticOptimizer):

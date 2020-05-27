@@ -7,9 +7,9 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from optiml.ml.svm import PrimalSVC, DualSVC, PrimalSVR, DualSVR
 from optiml.ml.svm.kernels import linear, rbf
 from optiml.ml.svm.losses import hinge, squared_hinge, epsilon_insensitive, squared_epsilon_insensitive
-from optiml.optimization.constrained import ProjectedGradient, ActiveSet, InteriorPoint, FrankWolfe
-from optiml.optimization.unconstrained.line_search import SteepestGradientDescent
-from optiml.optimization.unconstrained.stochastic import StochasticGradientDescent
+from optiml.opti.constrained.bcqp import ProjectedGradient, ActiveSet, InteriorPoint, FrankWolfe
+from optiml.opti.unconstrained.line_search import SteepestGradientDescent
+from optiml.opti.unconstrained.stochastic import StochasticGradientDescent
 
 
 # def test_solve_linear_svr_with_line_search_optimizer():
@@ -32,12 +32,12 @@ from optiml.optimization.unconstrained.stochastic import StochasticGradientDesce
 #     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_svr_with_smo():
-    X, y = load_boston(return_X_y=True)
-    X_scaled = StandardScaler().fit_transform(X)
-    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
-    svr = DualSVR(kernel=linear).fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.77
+# def test_solve_svr_with_smo():
+#     X, y = load_boston(return_X_y=True)
+#     X_scaled = StandardScaler().fit_transform(X)
+#     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+#     svr = DualSVR(kernel=linear).fit(X_train, y_train)
+#     assert svr.score(X_test, y_test) >= 0.77
 
 
 def test_solve_svr_as_qp_with_cvxopt():

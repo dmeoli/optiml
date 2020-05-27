@@ -10,12 +10,13 @@ from sklearn.utils.multiclass import unique_labels
 from .kernels import rbf, Kernel, LinearKernel
 from .losses import squared_hinge, Hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
 from .smo import SMO, SMOClassifier, SMORegression
-from ...optimization import Optimizer
-from ...optimization import Quadratic
-from ...optimization.constrained import BoxConstrainedQuadraticOptimizer, LagrangianConstrainedQuadratic
-from ...optimization.constrained._base import LagrangianEqualityConstrainedQuadratic, LagrangianBoxConstrainedQuadratic
-from ...optimization.unconstrained.line_search import LineSearchOptimizer
-from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
+from ...opti import Optimizer
+from ...opti import Quadratic
+from ...opti.constrained import LagrangianConstrainedQuadratic
+from ...opti.constrained.bcqp import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
+from ...opti.constrained._base import LagrangianEqualityConstrainedQuadratic
+from ...opti.unconstrained.line_search import LineSearchOptimizer
+from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
 
 
 class SVM(BaseEstimator):

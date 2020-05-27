@@ -11,9 +11,9 @@ from .initializers import compute_fans
 from .layers import Layer, ParamLayer
 from .losses import (CategoricalCrossEntropy, SparseCategoricalCrossEntropy,
                      MeanSquaredError, BinaryCrossEntropy, mean_squared_error, NeuralNetworkLoss)
-from ...optimization import Optimizer
-from ...optimization.unconstrained.line_search import LineSearchOptimizer
-from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
+from ...opti import Optimizer
+from ...opti.unconstrained.line_search import LineSearchOptimizer
+from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
 
 
 class NeuralNetwork(BaseEstimator, Layer):

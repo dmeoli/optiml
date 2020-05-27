@@ -4,7 +4,7 @@ from scipy.special import xlogy
 from .activations import Linear
 from .layers import ParamLayer
 from .regularizers import L2
-from ...optimization import OptimizationFunction
+from ...opti import OptimizationFunction
 
 
 class NeuralNetworkLoss(OptimizationFunction):

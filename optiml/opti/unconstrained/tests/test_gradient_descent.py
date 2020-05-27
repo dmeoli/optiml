@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
 
-from optiml.optimization import quad1, quad2
-from optiml.optimization.unconstrained import Rosenbrock
-from optiml.optimization.unconstrained.line_search import SteepestGradientDescent
-from optiml.optimization.unconstrained.stochastic import StochasticGradientDescent
+from optiml.opti import quad1, quad2
+from optiml.opti.unconstrained import Rosenbrock
+from optiml.opti.unconstrained.line_search import SteepestGradientDescent
+from optiml.opti.unconstrained.stochastic import StochasticGradientDescent
 
 
 def test_SteepestGradientDescent_quadratic():

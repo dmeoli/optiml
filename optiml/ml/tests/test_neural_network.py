@@ -9,8 +9,8 @@ from optiml.ml.neural_network.activations import sigmoid, softmax, linear
 from optiml.ml.neural_network.layers import FullyConnected
 from optiml.ml.neural_network.losses import mean_squared_error, categorical_cross_entropy
 from optiml.ml.neural_network.regularizers import L2
-from optiml.optimization.unconstrained.line_search import BFGS
-from optiml.optimization.unconstrained.stochastic import Adam
+from optiml.opti.unconstrained.line_search import BFGS
+from optiml.opti.unconstrained.stochastic import Adam
 
 
 def test_perceptron_regressor():
