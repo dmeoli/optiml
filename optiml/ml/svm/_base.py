@@ -8,12 +8,12 @@ from sklearn.linear_model._base import LinearClassifierMixin, SparseCoefMixin, L
 from sklearn.utils.multiclass import unique_labels
 
 from .kernels import rbf, Kernel, LinearKernel
-from .losses import squared_hinge, squared_epsilon_insensitive, Hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
+from .losses import squared_hinge, Hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
 from .smo import SMO, SMOClassifier, SMORegression
 from ...optimization import Optimizer
-from ...optimization.constrained import BoxConstrainedQuadraticOptimizer, LagrangianConstrainedQuadratic
-from ...optimization.constrained._base import LagrangianEqualityConstrainedQuadratic
 from ...optimization import Quadratic
+from ...optimization.constrained import BoxConstrainedQuadraticOptimizer, LagrangianConstrainedQuadratic
+from ...optimization.constrained._base import LagrangianEqualityConstrainedQuadratic, LagrangianBoxConstrainedQuadratic
 from ...optimization.unconstrained.line_search import LineSearchOptimizer
 from ...optimization.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
 
@@ -155,8 +155,6 @@ class DualSVC(ClassifierMixin, DualSVM):
         Q = K * np.outer(y, y)
         q = -np.ones(n_samples)
 
-        A = y  # equality matrix
-
         ub = np.ones(n_samples) * self.C  # upper bounds
 
         self.obj = Quadratic(Q, q)
@@ -172,9 +170,8 @@ class DualSVC(ClassifierMixin, DualSVM):
 
         elif isinstance(self.optimizer, str):
 
-            b = np.zeros(1)  # equality vector
             lb = np.zeros(n_samples)  # lower bounds
-            alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
+            alphas = solve_qp(Q, q, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
 
         else:
 
@@ -186,7 +183,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
             elif issubclass(self.optimizer, Optimizer):
 
-                self.obj = LagrangianConstrainedQuadratic(self.obj, A, ub)
+                self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
 

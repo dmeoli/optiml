@@ -59,17 +59,17 @@ class LagrangianEqualityConstrainedQuadratic(Quadratic):
         The optimal solution of the Lagrangian relaxation is the unique
         solution of the linear system:
 
-                            Q x = q^T + lambda A
+                            Q x = q^T - lambda A
 
         Since we have saved the LDL^T Cholesky factorization of Q,
         i.e., Q = L D L^T, we obtain this by solving:
 
-                        L D L^T x = q^T + lambda A
+                        L D L^T x = q^T - lambda A
 
         :param lmbda:
         :return: the function value
         """
-        ql = self.q.T + lmbda.dot(self.A)
+        ql = self.q.T - lmbda.dot(self.A)
         x = ldl_solve((self.L, self.D, self.P), -ql)
         return (0.5 * x.T.dot(self.Q) + ql.T).dot(x)
 
@@ -82,7 +82,7 @@ class LagrangianEqualityConstrainedQuadratic(Quadratic):
         :param lmbda:
         :return:
         """
-        ql = self.q.T + lmbda.dot(self.A)
+        ql = self.q.T - lmbda.dot(self.A)
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = self.A * x
 
