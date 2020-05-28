@@ -93,8 +93,6 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
             raise TypeError(f'{loss} is not an allowed LinearSVC loss function')
         if penalty not in ('l1', 'l2'):
             raise TypeError(f'{penalty} is not an allowed penalty')
-        if penalty == 'l1' and loss == Hinge:
-            raise ValueError('the combination of l1 hinge loss and l1 penalty is not supported')
         self.penalty = penalty
 
     def fit(self, X, y):
