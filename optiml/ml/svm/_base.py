@@ -8,13 +8,13 @@ from sklearn.linear_model._base import LinearClassifierMixin, SparseCoefMixin, L
 from sklearn.utils.multiclass import unique_labels
 
 from .kernels import rbf, Kernel, LinearKernel
-from .losses import squared_hinge, Hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
+from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
 from ...opti.qp import LagrangianConstrainedQuadratic
+from ...opti.qp import LagrangianEqualityConstrainedQuadratic
 from ...opti.qp.bcqp import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
-from ...opti.qp._base import LagrangianEqualityConstrainedQuadratic
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
 
