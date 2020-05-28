@@ -50,6 +50,8 @@ class NeuralNetworkLoss(OptimizationFunction):
         if y_batch is None:
             y_batch = self.y
 
+        self.neural_net._unpack(packed_coef_inter)
+
         n_samples = X_batch.shape[0]
         delta = 1 / n_samples * self.delta(self.neural_net.forward(X_batch), y_batch)
         return self.neural_net._pack(*self.neural_net.backward(delta))

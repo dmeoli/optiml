@@ -22,8 +22,8 @@ from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGrad
 class SVM(BaseEstimator):
 
     def __init__(self, C=1., tol=1e-3, optimizer=None, max_iter=1000, learning_rate=0.01,
-                 momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, shuffle=True,
-                 random_state=None, verbose=False):
+                 momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
+                 shuffle=True, random_state=None, verbose=False):
         if not C > 0:
             raise ValueError('C must be > 0')
         self.C = C
@@ -52,7 +52,7 @@ class PrimalSVM(SVM):
         self.loss = loss
         if not issubclass(self.optimizer, Optimizer):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
-        self.coef_ = 0.
+        self.coef_ = np.zeros(0)
         self.intercept_ = 0.
         self.fit_intercept = fit_intercept
 
@@ -78,7 +78,7 @@ class DualSVM(SVM):
                 not issubclass(optimizer, Optimizer)):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
         if isinstance(self.kernel, LinearKernel):
-            self.coef_ = 0.
+            self.coef_ = np.zeros(0)
         self.intercept_ = 0.
 
 
@@ -104,12 +104,16 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                              'to train a model over more than two labels')
         y = np.where(y == self.labels[0], -1., 1.)
 
-        self.loss = self.loss(self, X, y, self.penalty)
-        packed_coef_inter = np.zeros(X.shape[1] + 1 if self.fit_intercept else X.shape[1])
+        if self.fit_intercept:
+            X_train = np.c_[X, np.ones_like(y)]
+        else:
+            X_train = X
+
+        self.loss = self.loss(self, X_train, y, self.penalty)
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
-            self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, max_iter=self.max_iter,
+            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'stopped':
@@ -118,11 +122,14 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
         elif issubclass(self.optimizer, StochasticOptimizer):
 
-            self.optimizer = self.optimizer(f=self.loss, x=packed_coef_inter, epochs=self.max_iter,
+            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), epochs=self.max_iter,
                                             step_size=self.learning_rate, momentum_type=self.momentum_type,
                                             momentum=self.momentum, verbose=self.verbose).minimize()
 
         self._unpack(self.optimizer.x)
+
+        if self.fit_intercept:
+            self.loss.X = X
 
         return self
 
@@ -249,7 +256,12 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
             raise ValueError('use sklearn.multioutput.MultiOutputRegressor '
                              'to train a model over more than one target')
 
-        self.loss = self.loss(self, X, y, self.epsilon)
+        if self.fit_intercept:
+            X_train = np.c_[X, np.ones_like(y)]
+        else:
+            X_train = X
+
+        self.loss = self.loss(self, X_train, y, self.epsilon)
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -267,6 +279,9 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                                             momentum=self.momentum, verbose=self.verbose).minimize()
 
         self._unpack(self.optimizer.x)
+
+        if self.fit_intercept:
+            self.loss.X = X
 
         return self
 

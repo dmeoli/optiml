@@ -19,7 +19,7 @@ class SVMLoss(OptimizationFunction, ABC):
     def loss(self, y_pred, y_true):
         raise NotImplementedError
 
-    def loss_jacobian(self, X_batch, y_batch):
+    def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
         raise NotImplementedError
 
     def __call__(self, y_pred, y_true):
@@ -38,15 +38,13 @@ class SVCLoss(SVMLoss, ABC):
         if y_batch is None:
             y_batch = self.y
 
-        self.svm._unpack(packed_coef_inter)
-
         n_samples = X_batch.shape[0]
         if self.penalty == 'l1':
             return (1 / (2 * n_samples) * np.linalg.norm(packed_coef_inter, ord=1) +
-                    self.svm.C / n_samples * np.sum(self.loss(self.svm.decision_function(X_batch), y_batch)))
+                    self.svm.C / n_samples * np.sum(self.loss(np.dot(X_batch, packed_coef_inter), y_batch)))
         elif self.penalty == 'l2':
             return (1 / (2 * n_samples) * np.linalg.norm(packed_coef_inter) ** 2 +
-                    self.svm.C / n_samples * np.sum(self.loss(self.svm.decision_function(X_batch), y_batch)))
+                    self.svm.C / n_samples * np.sum(self.loss(np.dot(X_batch, packed_coef_inter), y_batch)))
 
     def jacobian(self, packed_coef_inter, X_batch=None, y_batch=None):
         if X_batch is None:
@@ -57,10 +55,10 @@ class SVCLoss(SVMLoss, ABC):
         n_samples = X_batch.shape[0]
         if self.penalty == 'l1':
             return (1 / n_samples * np.sign(packed_coef_inter) -
-                    self.svm.C / n_samples * self.loss_jacobian(X_batch, y_batch))
+                    self.svm.C / n_samples * self.loss_jacobian(packed_coef_inter, X_batch, y_batch))
         elif self.penalty == 'l2':
             return ((1 / n_samples) * packed_coef_inter -
-                    self.svm.C / n_samples * self.loss_jacobian(X_batch, y_batch))
+                    self.svm.C / n_samples * self.loss_jacobian(packed_coef_inter, X_batch, y_batch))
 
 
 class Hinge(SVCLoss):
@@ -73,9 +71,9 @@ class Hinge(SVCLoss):
     def loss(self, y_pred, y_true):
         return np.maximum(0, 1 - y_true * y_pred)
 
-    def loss_jacobian(self, X_batch, y_batch):
-        mask = y_batch * self.svm.decision_function(X_batch) < 1.
-        return np.dot(y_batch[mask], X_batch[mask])
+    def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
+        idx = np.argwhere(y_batch * np.dot(X_batch, packed_coef_inter) < 1.).ravel()
+        return np.dot(y_batch[idx], X_batch[idx])
 
 
 class SquaredHinge(Hinge):
@@ -88,8 +86,8 @@ class SquaredHinge(Hinge):
     def loss(self, y_pred, y_true):
         return np.square(super().loss(y_pred, y_true))
 
-    def loss_jacobian(self, X_batch, y_batch):
-        return 2 * super().loss_jacobian(X_batch, y_batch)
+    def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
+        return 2 * super().loss_jacobian(packed_coef_inter, X_batch, y_batch)
 
 
 class SVRLoss(SVMLoss, ABC):
@@ -100,11 +98,9 @@ class SVRLoss(SVMLoss, ABC):
         if y_batch is None:
             y_batch = self.y
 
-        self.svm._unpack(packed_coef_inter)
-
         n_samples = X_batch.shape[0]
         return (1 / (2 * n_samples) * np.linalg.norm(packed_coef_inter) ** 2 +
-                self.svm.C / n_samples * np.sum(self.loss(self.svm.predict(X_batch), y_batch)))
+                self.svm.C / n_samples * np.sum(self.loss(np.dot(X_batch, packed_coef_inter), y_batch)))
 
     def jacobian(self, packed_coef_inter, X_batch=None, y_batch=None):
         if X_batch is None:
@@ -114,7 +110,7 @@ class SVRLoss(SVMLoss, ABC):
 
         n_samples = X_batch.shape[0]
         return ((1 / n_samples) * packed_coef_inter -
-                self.svm.C / n_samples * self.loss_jacobian(X_batch, y_batch))
+                self.svm.C / n_samples * self.loss_jacobian(packed_coef_inter, X_batch, y_batch))
 
 
 class EpsilonInsensitive(SVRLoss):
@@ -131,10 +127,10 @@ class EpsilonInsensitive(SVRLoss):
     def loss(self, y_pred, y_true):
         return np.maximum(0, np.abs(y_pred - y_true) - self.epsilon)
 
-    def loss_jacobian(self, X_batch, y_batch):
-        y_pred = self.svm.predict(X_batch)
-        mask = np.abs(y_pred - y_batch) > self.epsilon
-        return np.dot(np.sign(y_batch[mask] - y_pred[mask]), X_batch[mask])
+    def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
+        y_pred = np.dot(X_batch, packed_coef_inter)
+        idx = np.argwhere(np.abs(y_pred - y_batch) > self.epsilon).ravel()
+        return np.dot(y_batch[idx] - y_pred[idx], X_batch[idx])
 
 
 class SquaredEpsilonInsensitive(EpsilonInsensitive):
@@ -147,8 +143,8 @@ class SquaredEpsilonInsensitive(EpsilonInsensitive):
     def loss(self, y_pred, y_true):
         return np.square(super().loss(y_pred, y_true))
 
-    def loss_jacobian(self, X_batch, y_batch):
-        return 2 * super().loss_jacobian(X_batch, y_batch)
+    def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
+        return 2 * super().loss_jacobian(packed_coef_inter, X_batch, y_batch)
 
 
 hinge = Hinge
