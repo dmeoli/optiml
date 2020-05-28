@@ -16,5 +16,5 @@ setup(name="optiml",
       install_requires=install_requires,
       license="MIT",
       url="https://github.com/dmeoli/optiml",
-      packages=find_packages(),
+      packages=find_packages(exclude=["tests"]),
       python_requires='>=3.6')
