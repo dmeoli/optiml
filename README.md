@@ -61,7 +61,10 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
                 - [x] standard momentum
                 - [x] Nesterov momentum
         - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface to 
-        [cvxopt](https://github.com/cvxopt/cvxopt), [osqp](https://github.com/oxfordcontrol/osqp), [ecos](https://github.com/embotech/ecos), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
+        [cvxopt](https://github.com/cvxopt/cvxopt), [osqp](https://github.com/oxfordcontrol/osqp), 
+        [ecos](https://github.com/embotech/ecos), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
+            - [x] standard momentum
+            - [x] Nesterov momentum
     - Constrained Quadratic Optimization or Quadratic Programming
         - Box-Constrained Quadratic Methods
             - [x] Projected Gradient
@@ -99,7 +102,8 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
         - Optimizers (ad hoc)
             - [x] Sequential Minimal Optimization
             - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
-            [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
+            [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), 
+            [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
     - [x] Neural Networks
         - [x] Neural Network Classifier
         - [x] Neural Network Regressor
