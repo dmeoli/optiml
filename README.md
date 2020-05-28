@@ -1,5 +1,9 @@
 # OptiML
-[![Build Status](https://travis-ci.org/dmeoli/optiml.svg?branch=master)](https://travis-ci.org/dmeoli/optiml) [![Coverage Status](https://coveralls.io/repos/github/dmeoli/optiml/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/optiml?branch=master) [![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/optiml/master)
+[![Build Status](https://travis-ci.org/dmeoli/optiml.svg?branch=master)](https://travis-ci.org/dmeoli/optiml) 
+[![Coverage Status](https://coveralls.io/repos/github/dmeoli/optiml/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/optiml?branch=master) 
+[![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue) 
+[![PyPI Version](https://img.shields.io/pypi/v/github.py.svg?color=blue)](https://pypi.org/project/optiml/)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/optiml/master)
 
 OptiML is a sklearn compatible custom reimplementation of *Support Vector Machines* and *Deep Neural Networks*, 
 both with some of the most successful features according to the state of art.

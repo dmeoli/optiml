@@ -1,8 +1,15 @@
+# PyCharm
 .idea
-__pycache__
 
+__pycache__
 .pytest_cache
 
+# Coverage
 .coverage
 
+# Jupyter Notebook
 .ipynb_checkpoints
+
+# PyPI
+optiml.egg-info
+dist
