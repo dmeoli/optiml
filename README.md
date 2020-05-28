@@ -136,20 +136,10 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] Xavier or Glorot normal and uniform
             - [x] He normal and uniform
 
-## Installation
+## Install
 
 ```
-git clone https://github.com/dmeoli/optiml
-cd optiml
-pip install .
-```
-
-## Testing
-
-After installation, you can launch the test suite from outside the source directory:
-
-```
-pytest optiml
+pip install optiml
 ```
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
