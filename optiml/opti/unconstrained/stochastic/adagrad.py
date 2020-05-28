@@ -17,9 +17,9 @@ class AdaGrad(StochasticOptimizer):
     def minimize(self):
 
         if self.verbose:
-            print('epoch\titer\tcost\t', end='')
+            print('epoch\titer\t cost\t', end='')
             if self.f.f_star() < np.inf:
-                print('\tgap\t\trate', end='')
+                print('\t gap\t\t rate', end='')
                 prev_v = np.inf
 
         for batch in self.batches:

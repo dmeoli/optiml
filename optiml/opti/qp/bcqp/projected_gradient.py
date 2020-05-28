@@ -41,7 +41,7 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
     def minimize(self):
 
         if self.verbose:
-            print('iter\tcost\t\tgnorm')
+            print('iter\t cost\t\t gnorm')
 
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)

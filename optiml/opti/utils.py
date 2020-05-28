@@ -22,7 +22,7 @@ def ldl_solve(ldl_factor, b):
 
 # function generators
 
-def generate_box_constrained_quadratic_function(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_min=8, ub_max=12, seed=None):
+def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_min=8, ub_max=12, seed=None):
     """
     Generate a box-constrained quadratic function defined as:
 
@@ -132,8 +132,7 @@ def generate_box_constrained_quadratic_function(ndim=2, actv=0.5, rank=1.1, ecc=
 
 # plot functions
 
-def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max, ub=None):
-    plt.style.use('seaborn-white')
+def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max):
 
     X, Y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 

@@ -59,7 +59,7 @@ class SVCLoss(SVMLoss, ABC):
             return (1 / n_samples * np.sign(packed_coef_inter) -
                     self.svm.C / n_samples * self.loss_jacobian(X_batch, y_batch))
         elif self.penalty == 'l2':
-            return ((1 / n_samples) * 2 * packed_coef_inter -
+            return ((1 / n_samples) * packed_coef_inter -
                     self.svm.C / n_samples * self.loss_jacobian(X_batch, y_batch))
 
 
@@ -113,7 +113,7 @@ class SVRLoss(SVMLoss, ABC):
             y_batch = self.y
 
         n_samples = X_batch.shape[0]
-        return ((1 / n_samples) * 2 * packed_coef_inter -
+        return ((1 / n_samples) * packed_coef_inter -
                 self.svm.C / n_samples * self.loss_jacobian(X_batch, y_batch))
 
 

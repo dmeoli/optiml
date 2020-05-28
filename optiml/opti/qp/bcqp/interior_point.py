@@ -134,7 +134,7 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
         lp[idx] = lp[idx] - self.g_x[idx]
 
         if self.verbose:
-            print('iter\tcost\t\tp\t\tgap')
+            print('iter\t cost\t\t p\t\t gap')
 
         while True:
             self.f_x = self.f.function(self.x)

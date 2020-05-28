@@ -1,5 +1,6 @@
 autograd
 cvxopt
+cvxpy
 matplotlib
 numpy
 qpsolvers

@@ -9,6 +9,7 @@ from ...utils import ldl_solve
 
 
 class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
+
     def __init__(self, f, ub, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
         if not isinstance(f, Quadratic):
             raise TypeError(f'{f} is not an allowed quadratic function')
@@ -54,20 +55,20 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         """
         Compute the value of the lagrangian relaxation defined as:
 
-             L(x, lambda) = 1/2 x^T Q x + q^T x - lambda^+ (ub - x) - lambda^- x
-            L(x, lambda) = 1/2 x^T Q x + (q^T + lambda^+ - lambda^-) x - lambda^+ ub
+             L(x, lambda) = 1/2 x^T Q x + q^T x - lambda_+^T (ub - x) - lambda_-^T x
+            L(x, lambda) = 1/2 x^T Q x + (q^T + lambda_+^T - lambda_-^T) x - lambda_+^T ub
 
-        where lambda^+ are the second n components of lambda and lambda^- are the last n components;
+        where lambda_+^T are the second n components of lambda and lambda_-^T are the last n components;
         both controls the box-constraints and are constrained to be >= 0.
 
         The optimal solution of the Lagrangian relaxation is the unique solution of the linear system:
 
-                Q x = q^T + lambda^+ - lambda^-
+                Q x = q^T + lambda_+^T - lambda_-^T
 
         Since we have saved the LDL^T Cholesky factorization of Q,
         i.e., Q = L D L^T, we obtain this by solving:
 
-             L D L^T x = q^T + lambda^+ - lambda^-
+             L D L^T x = q^T + lambda_+^T - lambda_-^T
 
         :param lmbda:
         :return: the function value

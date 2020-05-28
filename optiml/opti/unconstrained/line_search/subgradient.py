@@ -107,11 +107,11 @@ class Subgradient(LineSearchOptimizer):
             self.eps = -self.eps  # revert to ordinary target level step size
 
         if self.verbose:
-            print('iter\tcost\t\tgnorm\t', end='')
+            print('iter\t cost\t\t gnorm\t', end='')
             if self.f.f_star() < np.inf:
-                print('\tgap\t\trate\t', end='')
+                print('\t gap\t\t rate\t', end='')
                 prev_v = np.inf
-            print('\tastar', end='')
+            print('\t astar', end='')
 
         x_ref = self.x
         f_ref = np.inf  # best f-value found so far
@@ -192,7 +192,7 @@ class Subgradient(LineSearchOptimizer):
 
             self.iter += 1
 
-        x = x_ref  # return point corresponding to best value found so far
+        self.x = x_ref  # return point corresponding to best value found so far
 
         if self.verbose:
             print('\n')

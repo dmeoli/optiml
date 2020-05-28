@@ -60,16 +60,15 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] RMSProp
                 - [x] standard momentum
                 - [x] Nesterov momentum
-    - Constrained Quadratic Optimization Methods
+        - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface to 
+        [cvxopt](https://github.com/cvxopt/cvxopt), [osqp](https://github.com/oxfordcontrol/osqp), [ecos](https://github.com/embotech/ecos), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
+    - Constrained Quadratic Optimization or Quadratic Programming
         - Box-Constrained Quadratic Methods
             - [x] Projected Gradient
             - [x] Frank-Wolfe or Conditional Gradient
             - [x] Active Set
             - [x] Interior Point
-            - [x] Lagrangian Dual Relaxation
-        - [x] Sequential Minimal Optimization
-        - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
-        [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
+        - [x] Lagrangian Dual Relaxation
 
 - Machine Learning
     - [x] Support Vector Machines
@@ -97,6 +96,10 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
                 - [x] Squared Epsilon-Insensitive (L2 Loss)
             - Regularizers
                 - [x] L2
+        - Optimizers (ad hoc)
+            - [x] Sequential Minimal Optimization
+            - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
+            [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
     - [x] Neural Networks
         - [x] Neural Network Classifier
         - [x] Neural Network Regressor

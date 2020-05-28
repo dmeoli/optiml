@@ -33,9 +33,9 @@ class LagrangianDual(Optimizer):
 
         if ((isinstance(opt, LineSearchOptimizer) and opt.is_verbose()) or
                 (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())):
-            print('\tub:{: 1.4e}'.format(self.f.primal_value), end='')
-            print(' - pcost:{: 1.4e}'.format(self.f_x), end='')
-            print(' - gap:{: 1.4e}'.format(gap), end='')
+            print('\tub: {: 1.4e}'.format(self.f.primal_value), end='')
+            print(' - pcost: {: 1.4e}'.format(self.f_x), end='')
+            print(' - gap: {: 1.4e}'.format(gap), end='')
 
         try:
             self.callback()
@@ -97,7 +97,7 @@ class LagrangianEqualityConstrainedQuadratic(Quadratic):
         # of Q because it is symmetric but could be not positive definite.
         # This will be used at each iteration to solve the Lagrangian relaxation.
         self.L, self.D, self.P = ldl(self.Q)
-        self.A = np.asarray(A, dtype=np.float)
+        self.A = np.atleast_2d(np.asarray(A, dtype=np.float))
         self.primal = quad
         self.primal_solution = np.inf
         self.primal_value = np.inf
@@ -107,18 +107,18 @@ class LagrangianEqualityConstrainedQuadratic(Quadratic):
         By using Lagrange multipliers and seeking the extremum of the Lagrangian, it may be readily
         shown that the solution to the equality constrained problem is given by the linear system:
 
-                                | Q -A^T | |    x*   | = | -q |
-                                | A   0  | | lambda* |   |  0 |
+                                | Q A^T | |    x*   | = | -q |
+                                | A  0  | | lambda* |   |  0 |
 
         where lambda is a set of Lagrange multipliers which come out of the solution alongside x.
         :return:
         """
         if not hasattr(self, 'x_opt'):
             try:
-                self.x_opt = np.linalg.solve(np.vstack((np.hstack((self.Q, -self.A.T)),
-                                                        np.hstack((self.A, np.zeros_like(self.A))))),
-                                             np.vstack((np.full(fill_value=-self.q, shape=self.primal.ndim),
-                                                        np.zeros(self.primal.ndim))))[:self.primal.ndim]
+                Q = np.vstack((np.hstack((self.Q, self.A.T)),
+                               np.hstack((self.A, np.zeros((1, 1))))))
+                q = np.append(-self.q, 0)
+                self.x_opt = ldl_solve(ldl(Q), q)[:self.primal.ndim]
             except np.linalg.LinAlgError:
                 self.x_opt = np.full(fill_value=np.nan, shape=self.primal.ndim)
         return self.x_opt
@@ -130,23 +130,23 @@ class LagrangianEqualityConstrainedQuadratic(Quadratic):
         """
         Compute the value of the lagrangian relaxation defined as:
 
-                    1/2 x^T Q x + q^T x - lambda A x
-                    1/2 x^T Q x + (q^T - lambda A) x
+                    1/2 x^T Q x + q^T x - lambda^T A x
+                    1/2 x^T Q x + (q^T - lambda^T A) x
 
         The optimal solution of the Lagrangian relaxation is the unique
         solution of the linear system:
 
-                            Q x = q^T - lambda A
+                            Q x = q^T - lambda^T A
 
         Since we have saved the LDL^T Cholesky factorization of Q,
         i.e., Q = L D L^T, we obtain this by solving:
 
-                        L D L^T x = q^T - lambda A
+                        L D L^T x = q^T - lambda^T A
 
         :param lmbda:
         :return: the function value
         """
-        ql = self.q.T - lmbda.dot(self.A)
+        ql = self.q.T - lmbda.T.dot(self.A)
         x = ldl_solve((self.L, self.D, self.P), -ql)
         return (0.5 * x.T.dot(self.Q) + ql.T).dot(x)
 
@@ -159,7 +159,7 @@ class LagrangianEqualityConstrainedQuadratic(Quadratic):
         :param lmbda:
         :return:
         """
-        ql = self.q.T - lmbda.dot(self.A)
+        ql = self.q.T - lmbda.T.dot(self.A)
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = self.A * x
 
@@ -207,27 +207,27 @@ class LagrangianConstrainedQuadratic(Quadratic):
         """
         Compute the value of the lagrangian relaxation defined as:
 
-             L(x, lambda) = 1/2 x^T Q x + q^T x - mu A x - lambda^+ (ub - x) - lambda^- x
-            L(x, lambda) = 1/2 x^T Q x + (q^T - mu A + lambda^+ - lambda^-) x - lambda^+ ub
+             L(x, lambda) = 1/2 x^T Q x + q^T x - mu^T A x - lambda_+^T (ub - x) - lambda_^T- x
+            L(x, lambda) = 1/2 x^T Q x + (q^T - mu^T A + lambda_+^T - lambda_-^T) x - lambda_+^T ub
 
         where mu are the first n components of lambda which controls the equality constraints,
-        lambda^+ are the second n components of lambda and lambda^- are the last n components;
+        lambda_+^T are the second n components of lambda and lambda_-^T are the last n components;
         both controls the box-constraints and are constrained to be >= 0.
 
         The optimal solution of the Lagrangian relaxation is the unique solution of the linear system:
 
-                Q x = q^T - mu A + lambda^+ - lambda^-
+                Q x = q^T - mu^T A + lambda_+^T - lambda_-^T
 
         Since we have saved the LDL^T Cholesky factorization of Q,
         i.e., Q = L D L^T, we obtain this by solving:
 
-             L D L^T x = q^T - lambda A + lambda^+ - lambda^-
+             L D L^T x = q^T - mu^T A + lambda_+^T - lambda_-^T
 
         :param lmbda:
         :return: the function value
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-        ql = self.q.T - mu.dot(self.A) + lmbda_p - lmbda_n
+        ql = self.q.T - mu.T.dot(self.A) + lmbda_p.T - lmbda_n.T
         x = ldl_solve((self.L, self.D, self.P), -ql)
         return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda_p.T.dot(self.ub)
 
@@ -246,7 +246,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
         :return:
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-        ql = self.q.T - mu.dot(self.A) + lmbda_p - lmbda_n
+        ql = self.q.T - mu.T.dot(self.A) + lmbda_p.T - lmbda_n.T
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = np.hstack((self.A * x, self.ub - x, x))
 

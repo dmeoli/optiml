@@ -123,11 +123,11 @@ class HeavyBallGradient(LineSearchOptimizer):
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
-            print('iter\tfeval\tcost\t\tgnorm\t', end='')
+            print('iter\tfeval\t cost\t\t gnorm\t', end='')
             if self.f.f_star() < np.inf:
-                print('\tgap\t\trate\t', end='')
+                print('\t gap\t\t rate\t', end='')
                 prev_v = np.inf
-            print('\tls\tit\tastar', end='')
+            print('\tls\tit\t astar', end='')
 
         past_d = np.zeros(self.f.ndim)
 
@@ -182,7 +182,7 @@ class HeavyBallGradient(LineSearchOptimizer):
 
             # output statistics
             if self.is_verbose():
-                print('\t{:1.2e}'.format(a), end='')
+                print('\t{: 1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
                 self.status = 'error'

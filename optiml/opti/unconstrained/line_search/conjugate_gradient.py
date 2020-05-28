@@ -148,11 +148,11 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
         f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
-            print('iter\tfeval\tcost\t\tgnorm', end='')
+            print('iter\tfeval\t cost\t\t gnorm', end='')
             if self.f.f_star() < np.inf:
-                print('\t\tgap\t\trate\t', end='')
+                print('\t\t gap\t\t rate\t', end='')
                 prev_v = np.inf
-            print('\tbeta\tls\tit\tastar', end='')
+            print('\t beta\t\tls\tit\t astar', end='')
 
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
@@ -175,7 +175,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                     if prev_v < np.inf:
                         print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
                     else:
-                        print('\t\t', end='')
+                        print('\t\t\t', end='')
                     prev_v = self.f_x
 
             # stopping criteria
@@ -197,7 +197,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                     # ... unless a restart is being performed
                     beta = 0
                     if self.is_verbose():
-                        print('\t(res)', end='')
+                        print('\t(res)\t', end='')
                 else:
                     if self.wf == 0:  # Fletcher-Reeves
                         beta = (ng / np.linalg.norm(past_g)) ** 2
@@ -209,7 +209,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                     elif self.wf == 3:  # Dai-Yuan
                         beta = ng ** 2 / (self.g_x - past_g).T.dot(past_d)
                     if self.is_verbose():
-                        print('\t{: 1.4f}'.format(beta), end='')
+                        print('\t{: 1.4e}'.format(beta), end='')
 
                 if beta != 0:
                     d = -self.g_x + beta * past_d
@@ -228,7 +228,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
             # output statistics
             if self.is_verbose():
-                print('\t{:1.2e}'.format(a), end='')
+                print('\t{: 1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
                 self.status = 'error'

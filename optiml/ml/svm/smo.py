@@ -278,7 +278,7 @@ class SMOClassifier(SMO):
 
     def minimize(self):
         if self.verbose:
-            print('iter\tcost')
+            print('iter\t cost')
 
         num_changed = 0
         examine_all = True
@@ -675,7 +675,7 @@ class SMORegression(SMO):
 
     def minimize(self):
         if self.verbose:
-            print('iter\tcost')
+            print('iter\t cost')
 
         num_changed = 0
         examine_all = True
