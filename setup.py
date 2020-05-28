@@ -7,7 +7,7 @@ with open("requirements.txt", "r") as file_stream:
     install_requires = file_stream.read().splitlines()
 
 setup(name="optiml",
-      version="0.0.1",
+      version="0.0.2",
       author="Donato Meoli",
       author_email="donato.meoli.95@gmail.com",
       description="Optimizers for/and sklearn compatible Machine Learning models",
