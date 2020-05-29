@@ -15,6 +15,7 @@ from ...opti import Quadratic
 from ...opti.qp import LagrangianConstrainedQuadratic
 from ...opti.qp import LagrangianEqualityConstrainedQuadratic
 from ...opti.qp.bcqp import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
+from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
 
@@ -66,8 +67,8 @@ class PrimalSVM(SVM):
 class DualSVM(SVM):
 
     def __init__(self, kernel=rbf, C=1., tol=1e-3, optimizer=SMO, max_iter=1000, learning_rate=0.01,
-                 momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, shuffle=True,
-                 random_state=None, verbose=False):
+                 momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, master_solver='ecos',
+                 master_verbose=False, shuffle=True, random_state=None, verbose=False):
         super().__init__(C, tol, optimizer, max_iter, learning_rate, momentum_type,
                          momentum, batch_size, max_f_eval, shuffle, random_state, verbose)
         if not isinstance(kernel, Kernel):
@@ -77,6 +78,8 @@ class DualSVM(SVM):
                 not issubclass(optimizer, SMO) or
                 not issubclass(optimizer, Optimizer)):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
+        self.master_solver = master_solver
+        self.master_verbose = master_verbose
         if isinstance(self.kernel, LinearKernel):
             self.coef_ = np.zeros(0)
         self.intercept_ = 0.
@@ -141,10 +144,10 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 class DualSVC(ClassifierMixin, DualSVM):
 
     def __init__(self, kernel=rbf, C=1., tol=1e-3, optimizer=SMOClassifier, max_iter=1000, learning_rate=0.01,
-                 momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, shuffle=True,
-                 random_state=None, verbose=False):
-        super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum,
-                         batch_size, max_f_eval, shuffle, random_state, verbose)
+                 momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, master_solver='ecos',
+                 master_verbose=False, shuffle=True, random_state=None, verbose=False):
+        super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum, batch_size,
+                         max_f_eval, master_solver, master_verbose, shuffle, random_state, verbose)
 
     def fit(self, X, y):
         self.labels = unique_labels(y)
@@ -195,6 +198,18 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                     self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
+
+                    if self.optimizer.status == 'stopped':
+                        if self.optimizer.iter >= self.max_iter:
+                            warnings.warn('max_iter reached but the optimization has not converged yet',
+                                          ConvergenceWarning)
+
+                elif issubclass(self.optimizer, ProximalBundle):
+
+                    self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
+                                                    momentum_type=self.momentum_type, momentum=self.momentum,
+                                                    master_solver=self.master_solver, verbose=self.verbose,
+                                                    master_verbose=self.master_verbose).minimize()
 
                     if self.optimizer.status == 'stopped':
                         if self.optimizer.iter >= self.max_iter:
@@ -290,9 +305,9 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 class DualSVR(RegressorMixin, DualSVM):
     def __init__(self, kernel=rbf, C=1., epsilon=0.1, tol=1e-3, optimizer=SMORegression, max_iter=1000,
                  learning_rate=0.01, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
-                 shuffle=True, random_state=None, verbose=False):
-        super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum,
-                         batch_size, max_f_eval, shuffle, random_state, verbose)
+                 master_solver='ecos', master_verbose=False, shuffle=True, random_state=None, verbose=False):
+        super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum, batch_size,
+                         max_f_eval, master_solver, master_verbose, shuffle, random_state, verbose)
         if not epsilon >= 0:
             raise ValueError('epsilon must be >= 0')
         self.epsilon = epsilon
@@ -356,6 +371,13 @@ class DualSVR(RegressorMixin, DualSVM):
                             if self.optimizer.iter >= self.max_iter:
                                 warnings.warn('max_iter reached but the optimization has not converged yet',
                                               ConvergenceWarning)
+
+                    elif issubclass(self.optimizer, ProximalBundle):
+
+                        self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
+                                                        momentum_type=self.momentum_type, momentum=self.momentum,
+                                                        master_solver=self.master_solver, verbose=self.verbose,
+                                                        master_verbose=self.master_verbose).minimize()
 
                     elif issubclass(self.optimizer, StochasticOptimizer):
 

@@ -76,21 +76,13 @@ class ProximalBundle(Optimizer):
     def __init__(self, f, x, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf, master_solver='ecos', momentum=0.9,
                  momentum_type='none', callback=None, callback_args=(), verbose=False, master_verbose=False):
         super().__init__(f, x, eps, max_iter, callback, callback_args, verbose)
-        if not np.isscalar(mu):
-            raise ValueError('mu is not a real scalar')
         if not mu > 0:
             raise ValueError('mu must be > 0')
         self.mu = mu
-        if not np.isscalar(m1):
-            raise ValueError('m1 is not a real scalar')
         if not 0 < m1 < 1:
-            raise ValueError('m1 is not in (0,1)')
+            raise ValueError('m1 has to lie in (0,1)')
         self.m1 = m1
-        if not np.isscalar(m_inf):
-            raise ValueError('m_inf is not a real scalar')
         self.m_inf = m_inf
-        if not np.isscalar(momentum):
-            raise ValueError('momentum is not a real scalar')
         if not momentum > 0:
             raise ValueError('momentum must be > 0')
         self.momentum = momentum
