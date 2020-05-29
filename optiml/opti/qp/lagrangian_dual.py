@@ -3,6 +3,7 @@ from scipy.linalg import ldl
 
 from .. import Optimizer
 from .. import Quadratic
+from ..unconstrained import ProximalBundle
 from ..unconstrained.line_search import LineSearchOptimizer
 from ..unconstrained.stochastic import StochasticOptimizer, AdaGrad
 from ..utils import ldl_solve
@@ -11,8 +12,8 @@ from ..utils import ldl_solve
 class LagrangianDual(Optimizer):
 
     def __init__(self, dual, optimizer=AdaGrad, eps=1e-6, step_size=0.01, momentum_type='none', momentum=0.9,
-                 batch_size=None, max_iter=1000, max_f_eval=1000, callback=None, callback_args=(), shuffle=True,
-                 random_state=None, verbose=False):
+                 batch_size=None, max_iter=1000, max_f_eval=1000, callback=None, callback_args=(),
+                 master_solver='ecos', master_verbose=False, shuffle=True, random_state=None, verbose=False):
         super().__init__(f=dual, x=np.zeros(dual.ndim), eps=eps, max_iter=max_iter,
                          callback=callback, callback_args=callback_args, verbose=verbose)
         if self.f.primal.ndim == 2:
@@ -25,6 +26,8 @@ class LagrangianDual(Optimizer):
         self.momentum = momentum
         self.batch_size = batch_size
         self.max_f_eval = max_f_eval
+        self.master_solver = master_solver
+        self.master_verbose = master_verbose
         self.shuffle = shuffle
         self.random_state = random_state
 
@@ -67,6 +70,13 @@ class LagrangianDual(Optimizer):
                                             shuffle=self.shuffle, random_state=self.random_state,
                                             verbose=self.verbose).minimize()
 
+        elif issubclass(self.optimizer, ProximalBundle):
+
+            self.optimizer = self.optimizer(f=self.f, x=self.x, max_iter=self.max_iter,
+                                            momentum_type=self.momentum_type, momentum=self.momentum,
+                                            master_solver=self.master_solver, verbose=self.verbose,
+                                            master_verbose=self.master_verbose).minimize()
+
         return self
 
     def callback(self, args=()):
@@ -107,8 +117,8 @@ class LagrangianEqualityConstrainedQuadratic(Quadratic):
         By using Lagrange multipliers and seeking the extremum of the Lagrangian, it may be readily
         shown that the solution to the equality constrained problem is given by the linear system:
 
-                                | Q A^T | |    x*   | = | -q |
-                                | A  0  | | lambda* |   |  0 |
+                                | Q A^T | |    x   | = | -q |
+                                | A  0  | | lambda |   |  0 |
 
         where lambda is a set of Lagrange multipliers which come out of the solution alongside x.
         :return:
@@ -146,7 +156,7 @@ class LagrangianEqualityConstrainedQuadratic(Quadratic):
         :param lmbda:
         :return: the function value
         """
-        ql = self.q.T - lmbda.T.dot(self.A)
+        ql = lmbda.dot(self.A.T) - self.q
         x = ldl_solve((self.L, self.D, self.P), -ql)
         return (0.5 * x.T.dot(self.Q) + ql.T).dot(x)
 
@@ -159,7 +169,7 @@ class LagrangianEqualityConstrainedQuadratic(Quadratic):
         :param lmbda:
         :return:
         """
-        ql = self.q.T - lmbda.T.dot(self.A)
+        ql = lmbda.dot(self.A.T) - self.q
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = self.A * x
 
@@ -168,7 +178,7 @@ class LagrangianEqualityConstrainedQuadratic(Quadratic):
             self.primal_solution = x
             self.primal_value = -v
 
-        return g
+        return g.ravel()
 
 
 class LagrangianConstrainedQuadratic(Quadratic):
@@ -176,7 +186,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
     def __init__(self, quad, A, ub):
         """
         Construct the lagrangian relaxation of a constrained quadratic function defined as:
-                           
+
                 1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub
 
         :param quad: constrained quadratic function to be relaxed
@@ -227,7 +237,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
         :return: the function value
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-        ql = self.q.T - mu.T.dot(self.A) + lmbda_p.T - lmbda_n.T
+        ql = mu.T.dot(self.A) - self.q.T + lmbda_p.T - lmbda_n.T
         x = ldl_solve((self.L, self.D, self.P), -ql)
         return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda_p.T.dot(self.ub)
 
@@ -246,7 +256,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
         :return:
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-        ql = self.q.T - mu.T.dot(self.A) + lmbda_p.T - lmbda_n.T
+        ql =  mu.T.dot(self.A) - self.q.T  + lmbda_p.T - lmbda_n.T
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = np.hstack((self.A * x, self.ub - x, x))
 

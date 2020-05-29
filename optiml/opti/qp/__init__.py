@@ -1,3 +1,3 @@
 __all__ = ['LagrangianDual', 'LagrangianEqualityConstrainedQuadratic', 'LagrangianConstrainedQuadratic']
 
-from ._base import LagrangianDual, LagrangianEqualityConstrainedQuadratic, LagrangianConstrainedQuadratic
+from .lagrangian_dual import LagrangianDual, LagrangianEqualityConstrainedQuadratic, LagrangianConstrainedQuadratic

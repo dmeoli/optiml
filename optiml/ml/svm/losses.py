@@ -1,6 +1,6 @@
 from abc import ABC
 
-import numpy as np
+import autograd.numpy as np
 
 from ...opti import OptimizationFunction
 
