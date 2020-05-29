@@ -11,6 +11,7 @@ from sklearn.svm import SVR as SKLSVR
 from sklearn.utils.multiclass import unique_labels
 
 from .svm import SVM, PrimalSVC, DualSVC, PrimalSVR, DualSVR
+from .svm.kernels import Kernel
 
 
 # data generators
@@ -105,7 +106,8 @@ def plot_svm_hyperplane(svm, X, y):
         plt.ylabel('$y$', fontsize=9)
 
     kernel = ('linear kernel' if isinstance(svm, LinearClassifierMixin) or isinstance(svm, LinearModel)
-              else svm.kernel + ' kernel' if isinstance(svm.kernel, str) else svm.kernel.__class__.__name__)
+              else svm.kernel + ' kernel' if isinstance(svm.kernel, str)
+              else svm.kernel.__class__.__name__ if isinstance(svm.kernel, Kernel) else svm.kernel.__name__)
     plt.title(f'{"custom" if isinstance(svm, SVM) else "sklearn"} {svm.__class__.__name__} using {kernel}', fontsize=9)
 
     # set the legend
