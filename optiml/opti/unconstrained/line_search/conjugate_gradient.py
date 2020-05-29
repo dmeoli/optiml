@@ -145,7 +145,6 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
     def minimize(self):
         last_x = np.zeros(self.f.ndim)  # last point visited in the line search
         last_g = np.zeros(self.f.ndim)  # gradient of last_x
-        f_eval = 1  # f() evaluations count ("common" with LSs)
 
         if self.verbose:
             print('iter\tfeval\t cost\t\t gnorm', end='')
@@ -169,7 +168,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 ng0 = 1  # un-scaled stopping criterion
 
             if self.is_verbose():
-                print('\n{:4d}\t{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, f_eval, self.f_x, ng), end='')
+                print('\n{:4d}\t{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_eval, self.f_x, ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{: 1.4e}'.format(self.f_x - self.f.f_star()), end='')
                     if prev_v < np.inf:
@@ -183,7 +182,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 self.status = 'optimal'
                 break
 
-            if self.iter > self.max_iter or f_eval > self.line_search.max_f_eval:
+            if self.iter > self.max_iter or self.f_eval > self.line_search.max_f_eval:
                 self.status = 'stopped'
                 break
 
@@ -223,8 +222,8 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
             phi_p0 = self.g_x.T.dot(d)
 
             # compute step size
-            a, self.f_x, last_x, last_g, f_eval = self.line_search.search(
-                d, self.x, last_x, last_g, f_eval, self.f_x, phi_p0, self.is_verbose())
+            a, self.f_x, last_x, last_g, self.f_eval = self.line_search.search(
+                d, self.x, last_x, last_g, self.f_eval, self.f_x, phi_p0, self.is_verbose())
 
             # output statistics
             if self.is_verbose():

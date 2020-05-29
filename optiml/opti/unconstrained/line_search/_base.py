@@ -58,3 +58,4 @@ class LineSearchOptimizer(Optimizer, ABC):
             self.line_search = ArmijoWolfeLineSearch(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a)
         else:
             self.line_search = BacktrackingLineSearch(f, max_f_eval, m1, a_start, min_a, tau)
+        self.f_eval = 1
