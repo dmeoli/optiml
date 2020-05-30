@@ -106,9 +106,11 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         y = np.where(y == self.labels[0], -1., 1.)
 
         if self.fit_intercept:
-            X = np.c_[X, np.ones_like(y)]
+            X_train = np.c_[X, np.ones_like(y)]
+        else:
+            X_train = X
 
-        self.loss = self.loss(self, X, y, self.penalty)
+        self.loss = self.loss(self, X_train, y, self.penalty)
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -210,7 +212,6 @@ class DualSVC(ClassifierMixin, DualSVM):
                 elif issubclass(self.optimizer, ProximalBundle):
 
                     self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
-                                                    momentum_type=self.momentum_type, momentum=self.momentum,
                                                     master_solver=self.master_solver, verbose=self.verbose,
                                                     master_verbose=self.master_verbose).minimize()
 
@@ -276,9 +277,11 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                              'to train a model over more than one target')
 
         if self.fit_intercept:
-            X = np.c_[X, np.ones_like(y)]
+            X_train = np.c_[X, np.ones_like(y)]
+        else:
+            X_train = X
 
-        self.loss = self.loss(self, X, y, self.epsilon)
+        self.loss = self.loss(self, X_train, y, self.epsilon)
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -384,7 +387,6 @@ class DualSVR(RegressorMixin, DualSVM):
                     elif issubclass(self.optimizer, ProximalBundle):
 
                         self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
-                                                        momentum_type=self.momentum_type, momentum=self.momentum,
                                                         master_solver=self.master_solver, verbose=self.verbose,
                                                         master_verbose=self.master_verbose).minimize()
 

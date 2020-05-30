@@ -73,7 +73,6 @@ class LagrangianDual(Optimizer):
         elif issubclass(self.optimizer, ProximalBundle):
 
             self.optimizer = self.optimizer(f=self.f, x=self.x, max_iter=self.max_iter,
-                                            momentum_type=self.momentum_type, momentum=self.momentum,
                                             master_solver=self.master_solver, verbose=self.verbose,
                                             master_verbose=self.master_verbose).minimize()
 
@@ -256,7 +255,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
         :return:
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-        ql =  mu.T.dot(self.A) - self.q.T  + lmbda_p.T - lmbda_n.T
+        ql = mu.T.dot(self.A) - self.q.T + lmbda_p.T - lmbda_n.T
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = np.hstack((self.A * x, self.ub - x, x))
 
