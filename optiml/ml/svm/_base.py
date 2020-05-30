@@ -12,7 +12,7 @@ from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitiv
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
-from ...opti.qp import LagrangianConstrainedQuadratic
+from ...opti.qp import LagrangianEqualityConstrainedQuadratic, LagrangianConstrainedQuadratic
 from ...opti.qp.bcqp import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
@@ -362,9 +362,12 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                    self.optimizer = self.optimizer(f=self.obj, ub=ub, max_iter=self.max_iter,
-                                                    verbose=self.verbose).minimize()
-                    alphas = self.optimizer.x
+                    self.obj = LagrangianEqualityConstrainedQuadratic(Q, q, A)
+                    self.optimizer = self.optimizer(f=self.obj, ub=np.append(ub, 0), max_iter=self.max_iter,
+                                                    verbose=self.verbose)
+                    self.optimizer.x = np.zeros(self.obj.ndim)
+                    self.optimizer.minimize()
+                    alphas = self.optimizer.x[:-1]
 
                 elif issubclass(self.optimizer, Optimizer):
 

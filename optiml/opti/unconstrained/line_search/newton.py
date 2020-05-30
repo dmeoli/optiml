@@ -1,6 +1,8 @@
 import numpy as np
+from scipy.linalg import ldl
 
 from . import LineSearchOptimizer
+from ...utils import ldl_solve
 
 
 class Newton(LineSearchOptimizer):
@@ -167,7 +169,7 @@ class Newton(LineSearchOptimizer):
                 if self.is_verbose():
                     print('\t{: 1.4e}'.format(self.delta), end='')
 
-            d = -np.linalg.inv(self.H_x).dot(self.g_x)  # or np.linalg.solve(self.H_x, self.g_x)
+            d = ldl_solve(ldl(self.H_x), -self.g_x)
 
             phi_p0 = self.g_x.T.dot(d)
 

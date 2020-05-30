@@ -40,10 +40,7 @@ class LagrangianDual(Optimizer):
             print(' - pcost: {: 1.4e}'.format(self.f_x), end='')
             print(' - gap: {: 1.4e}'.format(gap), end='')
 
-        try:
-            self.callback()
-        except StopIteration:
-            raise StopIteration
+        self.callback()
 
         if gap <= self.eps:
             self.status = 'optimal'
@@ -87,6 +84,31 @@ class LagrangianDual(Optimizer):
             self._callback(self, *args, *self.callback_args)
 
 
+class LagrangianEqualityConstrainedQuadratic(Quadratic):
+
+    def __init__(self, Q, q, A):
+        """
+        Construct the lagrangian relaxation of an equality constrained quadratic function defined as:
+
+                                1/2 x^T Q x + q^T x : A x = 0
+
+        By using Lagrange multipliers and seeking the extremum of the Lagrangian, it may be readily
+        shown that the solution to the equality constrained problem is given by the linear system:
+
+                                | Q A^T | |    x   | = | -q |
+                                | A  0  | | lambda |   |  0 |
+
+        where lambda is a set of Lagrange multipliers which come out of the solution alongside x.
+
+        :param A: equality constraints matrix to be relaxed
+        """
+        A = np.atleast_2d(np.asarray(A, dtype=np.float))
+        Q = np.vstack((np.hstack((Q, A.T)),
+                       np.hstack((A, np.zeros((A.shape[0], A.shape[0]))))))
+        q = np.hstack((-q, np.zeros(A.shape[0])))
+        super().__init__(Q, q)
+
+
 class LagrangianConstrainedQuadratic(Quadratic):
 
     def __init__(self, quad, A, ub):
@@ -105,7 +127,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
         # of Q because it is symmetric but could be not positive definite.
         # This will be used at each iteration to solve the Lagrangian relaxation.
         self.L, self.D, self.P = ldl(self.Q)
-        self.A = np.asarray(A, dtype=np.float)
+        self.A = np.atleast_2d(np.asarray(A, dtype=np.float))
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
         self.ub = np.asarray(ub, dtype=np.float)

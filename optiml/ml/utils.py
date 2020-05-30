@@ -105,9 +105,9 @@ def plot_svm_hyperplane(svm, X, y):
         plt.xlabel('$X$', fontsize=9)
         plt.ylabel('$y$', fontsize=9)
 
-    kernel = ('' if isinstance(svm, LinearClassifierMixin) or isinstance(svm, LinearModel)
-              else 'using ' + (svm.kernel + ' kernel' if isinstance(svm.kernel, str)
-              else svm.kernel.__class__.__name__ if isinstance(svm.kernel, Kernel) else svm.kernel.__name__))
+    kernel = ('' if isinstance(svm, LinearClassifierMixin) or isinstance(svm, LinearModel) else
+              'using ' + (svm.kernel + ' kernel' if isinstance(svm.kernel, str) else
+                          svm.kernel.__class__.__name__ if isinstance(svm.kernel, Kernel) else svm.kernel.__name__))
     plt.title(f'{"custom" if isinstance(svm, SVM) else "sklearn"} {svm.__class__.__name__} {kernel}', fontsize=9)
 
     # set the legend
@@ -136,14 +136,14 @@ def plot_svm_hyperplane(svm, X, y):
                    ['training data', 'decision boundary', '$\epsilon$-insensitive tube', 'support vectors'],
                    fontsize='7', shadow=True).get_frame().set_facecolor('white')
 
-    # training data
+    # plot training data
     if isinstance(svm, ClassifierMixin):
         plt.plot(X1[:, 0], X1[:, 1], marker='x', markersize=5, color='lightblue', linestyle='none')
         plt.plot(X2[:, 0], X2[:, 1], marker='o', markersize=4, color='darkorange', linestyle='none')
     else:
         plt.plot(X, y, marker='o', markersize=4, color='darkorange', linestyle='none')
 
-    # support vectors
+    # plot support vectors
     if isinstance(svm, ClassifierMixin):
         if isinstance(svm, DualSVC) or isinstance(svm, SKLSVC):
             plt.scatter(X[svm.support_][:, 0], X[svm.support_][:, 1], s=60, color='navy')
@@ -157,6 +157,7 @@ def plot_svm_hyperplane(svm, X, y):
             support_ = np.argwhere((2 * y - 1) * svm.predict(X) <= svm.epsilon).ravel()
             plt.scatter(X[support_], y[support_], s=60, color='navy')
 
+    # plot boundaries
     if isinstance(svm, ClassifierMixin):
         _X1, _X2 = np.meshgrid(np.linspace(X1.min(), X1.max(), 50), np.linspace(X1.min(), X1.max(), 50))
         X = np.array([[x1, x2] for x1, x2 in zip(np.ravel(_X1), np.ravel(_X2))])
