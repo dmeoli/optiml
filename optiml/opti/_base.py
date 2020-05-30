@@ -28,7 +28,7 @@ class Optimizer:
             self.x = np.asarray(x, dtype=np.float)
         self.f_x = np.nan
         self.g_x = np.zeros(0)
-        if self.f.ndim <= 3:
+        if self.f.ndim == 2:
             self.x0_history = []
             self.x1_history = []
             self.f_x_history = []
@@ -45,7 +45,7 @@ class Optimizer:
         self.verbose = verbose
 
     def callback(self, args=()):
-        if self.f.ndim <= 3:
+        if self.f.ndim == 2:
             self.x0_history.append(self.x[0])
             self.x1_history.append(self.x[1])
             self.f_x_history.append(self.f_x)

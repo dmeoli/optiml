@@ -105,11 +105,9 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         y = np.where(y == self.labels[0], -1., 1.)
 
         if self.fit_intercept:
-            X_train = np.c_[X, np.ones_like(y)]
-        else:
-            X_train = X
+            X = np.c_[X, np.ones_like(y)]
 
-        self.loss = self.loss(self, X_train, y, self.penalty)
+        self.loss = self.loss(self, X, y, self.penalty)
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -129,9 +127,6 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                                             momentum=self.momentum, verbose=self.verbose).minimize()
 
         self._unpack(self.optimizer.x)
-
-        if self.fit_intercept:
-            self.loss.X = X
 
         return self
 
@@ -276,11 +271,9 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                              'to train a model over more than one target')
 
         if self.fit_intercept:
-            X_train = np.c_[X, np.ones_like(y)]
-        else:
-            X_train = X
+            X = np.c_[X, np.ones_like(y)]
 
-        self.loss = self.loss(self, X_train, y, self.epsilon)
+        self.loss = self.loss(self, X, y, self.epsilon)
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -300,9 +293,6 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                                             momentum=self.momentum, verbose=self.verbose).minimize()
 
         self._unpack(self.optimizer.x)
-
-        if self.fit_intercept:
-            self.loss.X = X
 
         return self
 
