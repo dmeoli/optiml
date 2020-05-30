@@ -3,7 +3,7 @@ __all__ = ['StochasticOptimizer',
 
 from ._base import StochasticOptimizer
 
-from .stochastic_gradient_descent import StochasticGradientDescent
+from .gradient_descent import StochasticGradientDescent
 from .amsgrad import AMSGrad
 from .adamax import AdaMax
 from .adagrad import AdaGrad

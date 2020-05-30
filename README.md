@@ -67,8 +67,6 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
         - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface to 
         [cvxopt](https://github.com/cvxopt/cvxopt), [osqp](https://github.com/oxfordcontrol/osqp), 
         [ecos](https://github.com/embotech/ecos), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
-            - [x] standard momentum
-            - [x] Nesterov momentum
     - Constrained Quadratic Optimization or Quadratic Programming
         - Box-Constrained Quadratic Methods
             - [x] Projected Gradient

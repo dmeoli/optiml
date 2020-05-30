@@ -73,8 +73,8 @@ class ProximalBundle(Optimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, x, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf, master_solver='ecos', momentum=0.9,
-                 momentum_type='none', callback=None, callback_args=(), verbose=False, master_verbose=False):
+    def __init__(self, f, x, mu=1, m1=0.01, eps=1e-6, max_iter=1000, m_inf=-np.inf, master_solver='ecos',
+                 callback=None, callback_args=(), verbose=False, master_verbose=False):
         super().__init__(f, x, eps, max_iter, callback, callback_args, verbose)
         if not mu > 0:
             raise ValueError('mu must be > 0')
@@ -83,15 +83,8 @@ class ProximalBundle(Optimizer):
             raise ValueError('m1 has to lie in (0,1)')
         self.m1 = m1
         self.m_inf = m_inf
-        if not momentum > 0:
-            raise ValueError('momentum must be > 0')
-        self.momentum = momentum
-        if momentum_type not in ('standard', 'nesterov', 'none'):
-            raise ValueError(f'unknown momentum type {momentum_type}')
-        self.momentum_type = momentum_type
         self.master_solver = master_solver
         self.master_verbose = master_verbose
-        self.step = 0
 
     def minimize(self):
 
@@ -168,15 +161,7 @@ class ProximalBundle(Optimizer):
                 self.status = 'stopped'
                 break
 
-            if self.momentum_type == 'standard':
-                step_m1 = self.step
-                step1 = self.momentum * step_m1
-            elif self.momentum_type == 'nesterov':
-                step_m1 = self.step
-                step1 = self.momentum * step_m1
-                self.x -= step1
-
-            last_x = self.x - (step1 + d if self.momentum_type == 'standard' else d)
+            last_x = self.x - d
 
             # compute function and subgradient
             fd, self.g_x = self.f.function(last_x), self.f.jacobian(last_x)
@@ -190,10 +175,7 @@ class ProximalBundle(Optimizer):
 
             if fd <= self.f_x + self.m1 * (v - self.f_x):
                 self.x = last_x
-                self.step = d if self.momentum_type == 'none' else step1 + d
                 self.f_x = fd
-            else:
-                self.step = 0
 
             self.iter += 1
 

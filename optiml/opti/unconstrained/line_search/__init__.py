@@ -6,7 +6,7 @@ __all__ = ['LineSearchOptimizer',
 
 from ._base import LineSearchOptimizer
 
-from .steepest_gradient_descent import SteepestGradientDescent
+from .gradient_descent import SteepestGradientDescent
 from .conjugate_gradient import ConjugateGradient, NonlinearConjugateGradient
 from .heavy_ball_gradient import HeavyBallGradient
 from .subgradient import Subgradient
