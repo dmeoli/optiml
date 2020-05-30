@@ -13,7 +13,6 @@ from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
 from ...opti.qp import LagrangianConstrainedQuadratic
-from ...opti.qp import LagrangianEqualityConstrainedQuadratic
 from ...opti.qp.bcqp import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
@@ -363,9 +362,9 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                    self.obj = LagrangianEqualityConstrainedQuadratic(self.obj, A)
                     self.optimizer = self.optimizer(f=self.obj, ub=ub, max_iter=self.max_iter,
                                                     verbose=self.verbose).minimize()
+                    alphas = self.optimizer.x
 
                 elif issubclass(self.optimizer, Optimizer):
 
@@ -396,7 +395,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         step_size=self.learning_rate, momentum_type=self.momentum_type,
                                                         momentum=self.momentum, verbose=self.verbose).minimize()
 
-                alphas = self.obj.primal_solution
+                    alphas = self.obj.primal_solution
 
             alphas_p = alphas[:n_samples]
             alphas_n = alphas[n_samples:]

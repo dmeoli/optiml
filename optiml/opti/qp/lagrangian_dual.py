@@ -87,99 +87,6 @@ class LagrangianDual(Optimizer):
             self._callback(self, *args, *self.callback_args)
 
 
-class LagrangianEqualityConstrainedQuadratic(Quadratic):
-
-    def __init__(self, quad, A):
-        """
-        Construct the lagrangian relaxation of an equality constrained quadratic function defined as:
-
-                         1/2 x^T Q x + q^T x : A x = 0
-
-        :param quad: equality constrained quadratic function
-        :param A: equality constraints matrix to be relaxed
-        """
-        if not isinstance(quad, Quadratic):
-            raise TypeError(f'{quad} is not an allowed quadratic function')
-        super().__init__(quad.Q, quad.q)
-        self.ndim *= 2
-        # Compute the LDL^T Cholesky symmetric indefinite factorization
-        # of Q because it is symmetric but could be not positive definite.
-        # This will be used at each iteration to solve the Lagrangian relaxation.
-        self.L, self.D, self.P = ldl(self.Q)
-        self.A = np.atleast_2d(np.asarray(A, dtype=np.float))
-        self.primal = quad
-        self.primal_solution = np.inf
-        self.primal_value = np.inf
-
-    def x_star(self):
-        """
-        By using Lagrange multipliers and seeking the extremum of the Lagrangian, it may be readily
-        shown that the solution to the equality constrained problem is given by the linear system:
-
-                                | Q A^T | |    x   | = | -q |
-                                | A  0  | | lambda |   |  0 |
-
-        where lambda is a set of Lagrange multipliers which come out of the solution alongside x.
-        :return:
-        """
-        if not hasattr(self, 'x_opt'):
-            try:
-                Q = np.vstack((np.hstack((self.Q, self.A.T)),
-                               np.hstack((self.A, np.zeros((1, 1))))))
-                q = np.append(-self.q, 0)
-                self.x_opt = ldl_solve(ldl(Q), q)[:self.primal.ndim]
-            except np.linalg.LinAlgError:
-                self.x_opt = np.full(fill_value=np.nan, shape=self.primal.ndim)
-        return self.x_opt
-
-    def f_star(self):
-        return self.function(self.x_star())
-
-    def function(self, lmbda):
-        """
-        Compute the value of the lagrangian relaxation defined as:
-
-            L(x, lambda) = 1/2 x^T Q x + q^T x - lambda^T A x
-            L(x, lambda) = 1/2 x^T Q x + (q^T - lambda^T A) x
-
-        The optimal solution of the Lagrangian relaxation is the unique
-        solution of the linear system:
-
-                            Q x = q^T - lambda^T A
-
-        Since we have saved the LDL^T Cholesky factorization of Q,
-        i.e., Q = L D L^T, we obtain this by solving:
-
-                        L D L^T x = q^T - lambda^T A
-
-        :param lmbda:
-        :return: the function value
-        """
-        ql = lmbda.dot(self.A.T) - self.q
-        x = ldl_solve((self.L, self.D, self.P), -ql)
-        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x)
-
-    def jacobian(self, lmbda):
-        """
-        Compute the jacobian of the lagrangian relaxation as follow: with x the optimal
-        solution of the minimization problem, the gradient at lambda is -A x.
-        However, we rather want to maximize the lagrangian relaxation, hence we have to
-        change the sign of both function values and gradient entries: A x
-        :param lmbda:
-        :return:
-        """
-        ql = lmbda.dot(self.A.T) - self.q
-        x = ldl_solve((self.L, self.D, self.P), -ql)
-        g = self.A * x
-
-        v = self.primal.function(x)
-        if v < self.primal_value:
-            self.primal_solution = x
-            self.primal_value = -v
-
-        return g.ravel()
-
-
 class LagrangianConstrainedQuadratic(Quadratic):
 
     def __init__(self, quad, A, ub):
@@ -236,7 +143,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
         :return: the function value
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-        ql = mu.T.dot(self.A) - self.q.T + lmbda_p.T - lmbda_n.T
+        ql = self.q.T - mu.T.dot(self.A) + lmbda_p.T - lmbda_n.T
         x = ldl_solve((self.L, self.D, self.P), -ql)
         return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda_p.T.dot(self.ub)
 
@@ -255,7 +162,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
         :return:
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-        ql = mu.T.dot(self.A) - self.q.T + lmbda_p.T - lmbda_n.T
+        ql = self.q.T - mu.T.dot(self.A) + lmbda_p.T - lmbda_n.T
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = np.hstack((self.A * x, self.ub - x, x))
 

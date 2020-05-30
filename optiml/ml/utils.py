@@ -148,13 +148,13 @@ def plot_svm_hyperplane(svm, X, y):
         if isinstance(svm, DualSVC) or isinstance(svm, SKLSVC):
             plt.scatter(X[svm.support_][:, 0], X[svm.support_][:, 1], s=60, color='navy')
         elif isinstance(svm, PrimalSVC) or isinstance(svm, SKLinearSVC):
-            support_ = np.where((2 * y - 1) * svm.decision_function(X) <= 1)[0]
+            support_ = np.argwhere((2 * y - 1) * svm.decision_function(X) <= 1).ravel()
             plt.scatter(X[support_][:, 0], X[support_][:, 1], s=60, color='navy')
     elif isinstance(svm, RegressorMixin):
         if isinstance(svm, DualSVR) or isinstance(svm, SKLSVR):
             plt.scatter(X[svm.support_], y[svm.support_], s=60, color='navy')
         elif isinstance(svm, PrimalSVR) or isinstance(svm, SKLinearSVR):
-            support_ = np.where((2 * y - 1) * svm.predict(X) <= svm.epsilon)[0]
+            support_ = np.argwhere((2 * y - 1) * svm.predict(X) <= svm.epsilon).ravel()
             plt.scatter(X[support_], y[support_], s=60, color='navy')
 
     if isinstance(svm, ClassifierMixin):
