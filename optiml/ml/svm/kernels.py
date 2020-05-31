@@ -48,9 +48,9 @@ class PolyKernel(Kernel):
         return (gamma * np.dot(X, Y.T) + self.coef0) ** self.degree
 
 
-class RBFKernel(Kernel):
+class GaussianKernel(Kernel):
     """
-    Compute the rbf (gaussian) kernel between X and Y:
+    Compute the gaussian RBF kernel between X and Y:
 
         K(x, y) = exp(-gamma ||x-y||_2^2)
     """
@@ -74,7 +74,7 @@ class RBFKernel(Kernel):
 
 class LaplacianKernel(Kernel):
     """
-    Compute the laplacian kernel between X and Y:
+    Compute the laplacian RBF kernel between X and Y:
 
         K(x, y) = exp(-gamma ||x-y||_1)
     """
@@ -123,6 +123,6 @@ class SigmoidKernel(Kernel):
 
 linear = LinearKernel()
 poly = PolyKernel()
-rbf = RBFKernel()
+gaussian = GaussianKernel()
 laplacian = LaplacianKernel()
 sigmoid = SigmoidKernel()

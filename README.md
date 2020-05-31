@@ -83,7 +83,7 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
                 - Kernels
                     - [x] linear kernel
                     - [x] polynomial kernel
-                    - [x] rbf kernel
+                    - [x] gaussian kernel
                     - [x] laplacian kernel
                     - [x] sigmoid kernel
         - [x] Support Vector Classifier

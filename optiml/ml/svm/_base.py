@@ -7,7 +7,7 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model._base import LinearClassifierMixin, SparseCoefMixin, LinearModel
 from sklearn.utils.multiclass import unique_labels
 
-from .kernels import rbf, Kernel, LinearKernel
+from .kernels import gaussian, Kernel, LinearKernel
 from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
@@ -65,7 +65,7 @@ class PrimalSVM(SVM):
 
 class DualSVM(SVM):
 
-    def __init__(self, kernel=rbf, C=1., tol=1e-3, optimizer=SMO, max_iter=1000, learning_rate=0.1,
+    def __init__(self, kernel=gaussian, C=1., tol=1e-3, optimizer=SMO, max_iter=1000, learning_rate=0.1,
                  momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, master_solver='ecos',
                  master_verbose=False, shuffle=True, random_state=None, verbose=False):
         super().__init__(C, tol, optimizer, max_iter, learning_rate, momentum_type,
@@ -144,7 +144,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
 class DualSVC(ClassifierMixin, DualSVM):
 
-    def __init__(self, kernel=rbf, C=1., tol=1e-3, optimizer=SMOClassifier, max_iter=1000, learning_rate=0.1,
+    def __init__(self, kernel=gaussian, C=1., tol=1e-3, optimizer=SMOClassifier, max_iter=1000, learning_rate=0.1,
                  momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, master_solver='ecos',
                  master_verbose=False, shuffle=True, random_state=None, verbose=False):
         super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum, batch_size,
@@ -306,7 +306,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
 
 class DualSVR(RegressorMixin, DualSVM):
-    def __init__(self, kernel=rbf, C=1., epsilon=0.1, tol=1e-3, optimizer=SMORegression, max_iter=1000,
+    def __init__(self, kernel=gaussian, C=1., epsilon=0.1, tol=1e-3, optimizer=SMORegression, max_iter=1000,
                  learning_rate=0.1, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
                  master_solver='ecos', master_verbose=False, shuffle=True, random_state=None, verbose=False):
         super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum, batch_size,
