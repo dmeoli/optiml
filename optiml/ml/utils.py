@@ -166,7 +166,7 @@ def plot_svm_hyperplane(svm, X, y):
         plt.contour(_X1, _X2, Z + 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
         plt.contour(_X1, _X2, Z - 1, [0.0], colors='grey', linestyles='--', linewidths=1, origin='lower')
     elif isinstance(svm, RegressorMixin):
-        _X = np.linspace(-2 * np.pi, 2 * np.pi, 10000).reshape(-1, 1)
+        _X = np.linspace(X.min(), X.max(), 1000).reshape(-1, 1)
         Z = svm.predict(_X)
         ax.plot(_X, Z, color='k', linewidth=1)
         ax.plot(_X, Z + svm.epsilon, color='grey', linestyle='--', linewidth=1)

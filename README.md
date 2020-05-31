@@ -79,8 +79,6 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
     - [x] Support Vector Machines
         - Formulations
             - [x] Primal
-                - Kernels
-                    - [x] linear kernel
             - [x] Dual
                 - Kernels
                     - [x] linear kernel
