@@ -154,7 +154,7 @@ def plot_svm_hyperplane(svm, X, y):
         if isinstance(svm, DualSVR) or isinstance(svm, SKLSVR):
             plt.scatter(X[svm.support_], y[svm.support_], s=60, color='navy')
         elif isinstance(svm, PrimalSVR) or isinstance(svm, SKLinearSVR):
-            support_ = np.argwhere((2 * y - 1) * svm.predict(X) <= svm.epsilon).ravel()
+            support_ = np.argwhere((2 * y - svm.epsilon) * svm.predict(X) <= svm.epsilon).ravel()
             plt.scatter(X[support_], y[support_], s=60, color='navy')
 
     # plot boundaries
