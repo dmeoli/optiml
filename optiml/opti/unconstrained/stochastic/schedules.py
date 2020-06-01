@@ -16,12 +16,12 @@ def constant(start):
     return itertools.repeat(start)
 
 
-def decaying(start, decay):
+def exponential_decay(start, decay):
     """
     Return an iterator of exponentially decaying values.
     The first value is start. Every further value is obtained by multiplying
     the last one by a factor of decay.
-    >>> s = decaying(10, .9)
+    >>> s = exponential_decay(10, .9)
     >>> [next(s) for i in range(5)]
     [10.0, 9.0, 8.100000000000001, 7.290000000000001, 6.561]
     """

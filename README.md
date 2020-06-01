@@ -39,31 +39,25 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
                     - [x] BFGS
                     - [ ] L-BFGS
         - Stochastic Methods
+            - [x] Momentum
+                - [x] standard
+                - [x] Nesterov
+            - [x] Schedules
+                - [x] Constant
+                - [x] Repeater
+                - [x] Time-based decay
+                - [x] Exponential decay
+                - [x] Step decay
+                - [x] Linear Annealing
+                - [x] Sutskever Blend
             - [x] Stochastic Gradient Descent
-                - [x] standard momentum
-                - [x] Nesterov momentum
-                - [x] step size and momentum schedules
             - [x] Adam
-                - [x] standard momentum
-                - [x] Nesterov momentum (Nadam)
             - [x] AMSGrad
-                - [x] standard momentum
-                - [x] Nesterov momentum
             - [x] AdaMax
-                - [x] standard momentum
-                - [x] Nesterov momentum (NadaMax)
             - [x] AdaGrad
-                - [x] standard momentum
-                - [x] Nesterov momentum
             - [x] AdaDelta
-                - [x] standard momentum
-                - [x] Nesterov momentum
             - [x] RProp
-                - [x] standard momentum
-                - [x] Nesterov momentum
             - [x] RMSProp
-                - [x] standard momentum
-                - [x] Nesterov momentum
         - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface to 
         [cvxopt](https://github.com/cvxopt/cvxopt), [osqp](https://github.com/oxfordcontrol/osqp), 
         [ecos](https://github.com/embotech/ecos), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
