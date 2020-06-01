@@ -1,7 +1,8 @@
 import numpy as np
+from sklearn.base import BaseEstimator
 
 
-class Kernel:
+class Kernel(BaseEstimator):
 
     def __call__(self, X, Y=None):
         pass
