@@ -65,7 +65,8 @@ class StochasticOptimizer(Optimizer, ABC):
             n_samples = len(f.args()[0])
 
             if batch_size < 1 or batch_size > n_samples:
-                warnings.warn('Got `batch_size` less than 1 or larger than sample size. It is going to be clipped.')
+                warnings.warn('Got `batch_size` less than 1 or larger than '
+                              'sample size. It is going to be clipped.')
             self.batch_size = np.clip(batch_size, 1, n_samples)
 
             self.n_batches, rest = divmod(len(f.args()[0]), self.batch_size)

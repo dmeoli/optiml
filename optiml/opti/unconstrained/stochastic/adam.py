@@ -86,6 +86,9 @@ class Adam(StochasticOptimizer):
                 break
 
             if self.is_batch_end():
+                self.step_size = next(self.step_size_schedule)
+                if self.momentum_type != 'none':
+                    self.momentum = next(self.momentum_schedule)
                 self.epoch += 1
 
             if self.epoch >= self.epochs:
