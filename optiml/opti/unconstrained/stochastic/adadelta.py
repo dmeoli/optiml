@@ -1,6 +1,7 @@
 import numpy as np
 
 from . import StochasticOptimizer
+from .schedules import constant
 
 
 class AdaDelta(StochasticOptimizer):
@@ -16,6 +17,8 @@ class AdaDelta(StochasticOptimizer):
                  momentum=0.9,
                  decay=0.95,
                  offset=1e-4,
+                 step_size_schedule=constant,
+                 momentum_schedule=constant,
                  callback=None,
                  callback_args=(),
                  shuffle=True,
@@ -29,6 +32,8 @@ class AdaDelta(StochasticOptimizer):
                          batch_size=batch_size,
                          eps=eps,
                          epochs=epochs,
+                         step_size_schedule=step_size_schedule,
+                         momentum_schedule=momentum_schedule,
                          callback=callback,
                          callback_args=callback_args,
                          shuffle=shuffle,

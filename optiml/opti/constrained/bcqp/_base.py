@@ -20,8 +20,13 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
                  verbose=False):
         if not isinstance(f, Quadratic):
             raise TypeError(f'{f} is not an allowed quadratic function')
-        super().__init__(f, ub / 2,  # starts from the middle of the box
-                         eps, max_iter, callback, callback_args, verbose)
+        super().__init__(f=f,
+                         x=ub / 2,  # starts from the middle of the box
+                         eps=eps,
+                         max_iter=max_iter,
+                         callback=callback,
+                         callback_args=callback_args,
+                         verbose=verbose)
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
         self.ub = ub

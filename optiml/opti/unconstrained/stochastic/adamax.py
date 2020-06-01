@@ -3,6 +3,7 @@ import warnings
 import numpy as np
 
 from . import StochasticOptimizer
+from .schedules import constant
 
 
 class AdaMax(StochasticOptimizer):
@@ -19,6 +20,8 @@ class AdaMax(StochasticOptimizer):
                  beta1=0.9,
                  beta2=0.999,
                  offset=1e-8,
+                 step_size_schedule=constant,
+                 momentum_schedule=constant,
                  callback=None,
                  callback_args=(),
                  shuffle=True,
@@ -32,6 +35,8 @@ class AdaMax(StochasticOptimizer):
                          batch_size=batch_size,
                          eps=eps,
                          epochs=epochs,
+                         step_size_schedule=step_size_schedule,
+                         momentum_schedule=momentum_schedule,
                          callback=callback,
                          callback_args=callback_args,
                          shuffle=shuffle,

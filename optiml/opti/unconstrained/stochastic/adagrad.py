@@ -1,6 +1,7 @@
 import numpy as np
 
 from . import StochasticOptimizer
+from .schedules import constant
 
 
 class AdaGrad(StochasticOptimizer):
@@ -15,6 +16,8 @@ class AdaGrad(StochasticOptimizer):
                  momentum_type='none',
                  momentum=0.9,
                  offset=1e-4,
+                 step_size_schedule=constant,
+                 momentum_schedule=constant,
                  callback=None,
                  callback_args=(),
                  shuffle=True,
@@ -28,6 +31,8 @@ class AdaGrad(StochasticOptimizer):
                          batch_size=batch_size,
                          eps=eps,
                          epochs=epochs,
+                         step_size_schedule=step_size_schedule,
+                         momentum_schedule=momentum_schedule,
                          callback=callback,
                          callback_args=callback_args,
                          shuffle=shuffle,
