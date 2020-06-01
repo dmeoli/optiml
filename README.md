@@ -139,7 +139,7 @@ opportunity to deal with some of these algorithms and could be improving their p
 
 ## Future Works
 
-Replace `numpy` with `pytorch` to improve training performance over large datasets by using the GPU support.
+Replace `numpy` with `pytorch` to improve training performance over large datasets by using GPU support.
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
