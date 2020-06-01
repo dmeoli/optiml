@@ -45,9 +45,9 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] Schedules
                 - [x] Constant
                 - [x] Repeater
-                - [x] Time-based decay
+                - [ ] Step decay
+                - [ ] Time-based decay
                 - [x] Exponential decay
-                - [x] Step decay
                 - [x] Linear Annealing
                 - [x] Sutskever Blend
             - [x] Stochastic Gradient Descent

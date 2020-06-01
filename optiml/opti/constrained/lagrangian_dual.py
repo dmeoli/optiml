@@ -11,11 +11,30 @@ from ..utils import ldl_solve
 
 class LagrangianDual(Optimizer):
 
-    def __init__(self, dual, optimizer=AdaGrad, eps=1e-6, step_size=0.01, momentum_type='none', momentum=0.9,
-                 batch_size=None, max_iter=1000, max_f_eval=1000, callback=None, callback_args=(),
-                 master_solver='ecos', master_verbose=False, shuffle=True, random_state=None, verbose=False):
-        super().__init__(f=dual, x=np.zeros(dual.ndim), eps=eps, max_iter=max_iter,
-                         callback=callback, callback_args=callback_args, verbose=verbose)
+    def __init__(self,
+                 dual,
+                 optimizer=AdaGrad,
+                 eps=1e-6,
+                 step_size=0.01,
+                 momentum_type='none',
+                 momentum=0.9,
+                 batch_size=None,
+                 max_iter=1000,
+                 max_f_eval=1000,
+                 callback=None,
+                 callback_args=(),
+                 master_solver='ecos',
+                 master_verbose=False,
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
+        super().__init__(f=dual,
+                         x=np.zeros(dual.ndim),
+                         eps=eps,
+                         max_iter=max_iter,
+                         callback=callback,
+                         callback_args=callback_args,
+                         verbose=verbose)
         if self.f.primal.ndim == 2:
             self.x0_history = []
             self.x1_history = []

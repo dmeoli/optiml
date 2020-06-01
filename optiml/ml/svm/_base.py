@@ -21,9 +21,19 @@ from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGrad
 
 class SVM(BaseEstimator):
 
-    def __init__(self, C=1., tol=1e-3, optimizer=None, max_iter=1000, learning_rate=0.1,
-                 momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
-                 shuffle=True, random_state=None, verbose=False):
+    def __init__(self,
+                 C=1.,
+                 tol=1e-3,
+                 optimizer=None,
+                 max_iter=1000,
+                 learning_rate=0.1,
+                 momentum_type='none',
+                 momentum=0.9,
+                 batch_size=None,
+                 max_f_eval=1000,
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
         if not C > 0:
             raise ValueError('C must be > 0')
         self.C = C
@@ -44,11 +54,33 @@ class SVM(BaseEstimator):
 
 class PrimalSVM(SVM):
 
-    def __init__(self, C=1., tol=1e-4, loss=SVMLoss, optimizer=StochasticGradientDescent, max_iter=1000,
-                 learning_rate=0.1, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
-                 fit_intercept=True, shuffle=True, random_state=None, verbose=False):
-        super().__init__(C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum,
-                         batch_size, max_f_eval, shuffle, random_state, verbose)
+    def __init__(self,
+                 C=1.,
+                 tol=1e-4,
+                 loss=SVMLoss,
+                 optimizer=StochasticGradientDescent,
+                 max_iter=1000,
+                 learning_rate=0.1,
+                 momentum_type='none',
+                 momentum=0.9,
+                 batch_size=None,
+                 max_f_eval=1000,
+                 fit_intercept=True,
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
+        super().__init__(C=C,
+                         tol=tol,
+                         optimizer=optimizer,
+                         max_iter=max_iter,
+                         learning_rate=learning_rate,
+                         momentum_type=momentum_type,
+                         momentum=momentum,
+                         batch_size=batch_size,
+                         max_f_eval=max_f_eval,
+                         shuffle=shuffle,
+                         random_state=random_state,
+                         verbose=verbose)
         self.loss = loss
         if not issubclass(self.optimizer, Optimizer):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
@@ -65,11 +97,34 @@ class PrimalSVM(SVM):
 
 class DualSVM(SVM):
 
-    def __init__(self, kernel=gaussian, C=1., tol=1e-3, optimizer=SMO, max_iter=1000, learning_rate=0.1,
-                 momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, master_solver='ecos',
-                 master_verbose=False, shuffle=True, random_state=None, verbose=False):
-        super().__init__(C, tol, optimizer, max_iter, learning_rate, momentum_type,
-                         momentum, batch_size, max_f_eval, shuffle, random_state, verbose)
+    def __init__(self,
+                 kernel=gaussian,
+                 C=1.,
+                 tol=1e-3,
+                 optimizer=SMO,
+                 max_iter=1000,
+                 learning_rate=0.1,
+                 momentum_type='none',
+                 momentum=0.9,
+                 batch_size=None,
+                 max_f_eval=1000,
+                 master_solver='ecos',
+                 master_verbose=False,
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
+        super().__init__(C=C,
+                         tol=tol,
+                         optimizer=optimizer,
+                         max_iter=max_iter,
+                         learning_rate=learning_rate,
+                         momentum_type=momentum_type,
+                         momentum=momentum,
+                         batch_size=batch_size,
+                         max_f_eval=max_f_eval,
+                         shuffle=shuffle,
+                         random_state=random_state,
+                         verbose=verbose)
         if not isinstance(kernel, Kernel):
             raise TypeError(f'{kernel} is not an allowed kernel function')
         self.kernel = kernel
@@ -86,11 +141,36 @@ class DualSVM(SVM):
 
 class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
-    def __init__(self, C=1., tol=1e-4, loss=squared_hinge, penalty='l2', optimizer=StochasticGradientDescent,
-                 max_iter=1000, learning_rate=0.1, momentum_type='none', momentum=0.9, batch_size=None,
-                 max_f_eval=1000, fit_intercept=True, shuffle=True, random_state=None, verbose=False):
-        super().__init__(C, tol, loss, optimizer, max_iter, learning_rate, momentum_type, momentum,
-                         batch_size, max_f_eval, fit_intercept, shuffle, random_state, verbose)
+    def __init__(self,
+                 C=1.,
+                 tol=1e-4,
+                 loss=squared_hinge,
+                 penalty='l2',
+                 optimizer=StochasticGradientDescent,
+                 max_iter=1000,
+                 learning_rate=0.1,
+                 momentum_type='none',
+                 momentum=0.9,
+                 batch_size=None,
+                 max_f_eval=1000,
+                 fit_intercept=True,
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
+        super().__init__(C=C,
+                         tol=tol,
+                         loss=loss,
+                         optimizer=optimizer,
+                         max_iter=max_iter,
+                         learning_rate=learning_rate,
+                         momentum_type=momentum_type,
+                         momentum=momentum,
+                         batch_size=batch_size,
+                         max_f_eval=max_f_eval,
+                         fit_intercept=fit_intercept,
+                         shuffle=shuffle,
+                         random_state=random_state,
+                         verbose=verbose)
         if not issubclass(loss, SVCLoss):
             raise TypeError(f'{loss} is not an allowed LinearSVC loss function')
         if penalty not in ('l1', 'l2'):
@@ -144,11 +224,37 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
 class DualSVC(ClassifierMixin, DualSVM):
 
-    def __init__(self, kernel=gaussian, C=1., tol=1e-3, optimizer=SMOClassifier, max_iter=1000, learning_rate=0.1,
-                 momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000, master_solver='ecos',
-                 master_verbose=False, shuffle=True, random_state=None, verbose=False):
-        super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum, batch_size,
-                         max_f_eval, master_solver, master_verbose, shuffle, random_state, verbose)
+    def __init__(self,
+                 kernel=gaussian,
+                 C=1.,
+                 tol=1e-3,
+                 optimizer=SMOClassifier,
+                 max_iter=1000,
+                 learning_rate=0.1,
+                 momentum_type='none',
+                 momentum=0.9,
+                 batch_size=None,
+                 max_f_eval=1000,
+                 master_solver='ecos',
+                 master_verbose=False,
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
+        super().__init__(kernel=kernel,
+                         C=C,
+                         tol=tol,
+                         optimizer=optimizer,
+                         max_iter=max_iter,
+                         learning_rate=learning_rate,
+                         momentum_type=momentum_type,
+                         momentum=momentum,
+                         batch_size=batch_size,
+                         max_f_eval=max_f_eval,
+                         master_solver=master_solver,
+                         master_verbose=master_verbose,
+                         shuffle=shuffle,
+                         random_state=random_state,
+                         verbose=verbose)
 
     def fit(self, X, y):
         self.labels = unique_labels(y)
@@ -258,11 +364,36 @@ class DualSVC(ClassifierMixin, DualSVM):
 
 class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
-    def __init__(self, C=1., epsilon=0., tol=1e-4, loss=epsilon_insensitive, optimizer=AdaGrad, max_iter=1000,
-                 learning_rate=0.1, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
-                 fit_intercept=True, shuffle=True, random_state=None, verbose=False):
-        super().__init__(C, tol, loss, optimizer, max_iter, learning_rate, momentum_type, momentum,
-                         batch_size, max_f_eval, fit_intercept, shuffle, random_state, verbose)
+    def __init__(self,
+                 C=1.,
+                 epsilon=0.,
+                 tol=1e-4,
+                 loss=epsilon_insensitive,
+                 optimizer=AdaGrad,
+                 max_iter=1000,
+                 learning_rate=0.1,
+                 momentum_type='none',
+                 momentum=0.9,
+                 batch_size=None,
+                 max_f_eval=1000,
+                 fit_intercept=True,
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
+        super().__init__(C=C,
+                         tol=tol,
+                         loss=loss,
+                         optimizer=optimizer,
+                         max_iter=max_iter,
+                         learning_rate=learning_rate,
+                         momentum_type=momentum_type,
+                         momentum=momentum,
+                         batch_size=batch_size,
+                         max_f_eval=max_f_eval,
+                         fit_intercept=fit_intercept,
+                         shuffle=shuffle,
+                         random_state=random_state,
+                         verbose=verbose)
         if not issubclass(loss, SVRLoss):
             raise TypeError(f'{loss} is not an allowed LinearSVR loss function')
         if not epsilon >= 0:
@@ -306,11 +437,39 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
 
 class DualSVR(RegressorMixin, DualSVM):
-    def __init__(self, kernel=gaussian, C=1., epsilon=0.1, tol=1e-3, optimizer=SMORegression, max_iter=1000,
-                 learning_rate=0.1, momentum_type='none', momentum=0.9, batch_size=None, max_f_eval=1000,
-                 master_solver='ecos', master_verbose=False, shuffle=True, random_state=None, verbose=False):
-        super().__init__(kernel, C, tol, optimizer, max_iter, learning_rate, momentum_type, momentum, batch_size,
-                         max_f_eval, master_solver, master_verbose, shuffle, random_state, verbose)
+
+    def __init__(self,
+                 kernel=gaussian,
+                 C=1.,
+                 epsilon=0.1,
+                 tol=1e-3,
+                 optimizer=SMORegression,
+                 max_iter=1000,
+                 learning_rate=0.1,
+                 momentum_type='none',
+                 momentum=0.9,
+                 batch_size=None,
+                 max_f_eval=1000,
+                 master_solver='ecos',
+                 master_verbose=False,
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
+        super().__init__(kernel=kernel,
+                         C=C,
+                         tol=tol,
+                         optimizer=optimizer,
+                         max_iter=max_iter,
+                         learning_rate=learning_rate,
+                         momentum_type=momentum_type,
+                         momentum=momentum,
+                         batch_size=batch_size,
+                         max_f_eval=max_f_eval,
+                         master_solver=master_solver,
+                         master_verbose=master_verbose,
+                         shuffle=shuffle,
+                         random_state=random_state,
+                         verbose=verbose)
         if not epsilon >= 0:
             raise ValueError('epsilon must be >= 0')
         self.epsilon = epsilon

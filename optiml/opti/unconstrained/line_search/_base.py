@@ -8,8 +8,22 @@ from .line_search import ArmijoWolfeLineSearch, BacktrackingLineSearch
 
 class LineSearchOptimizer(Optimizer, ABC):
 
-    def __init__(self, f, x, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9,
-                 sfgrd=0.01, m_inf=-np.inf, min_a=1e-16, callback=None, callback_args=(), verbose=False):
+    def __init__(self,
+                 f,
+                 x,
+                 eps=1e-6,
+                 max_iter=1000,
+                 max_f_eval=1000,
+                 m1=0.01,
+                 m2=0.9,
+                 a_start=1,
+                 tau=0.9,
+                 sfgrd=0.01,
+                 m_inf=-np.inf,
+                 min_a=1e-16,
+                 callback=None,
+                 callback_args=(),
+                 verbose=False):
         """
 
         :param f:          the objective function.
@@ -52,7 +66,13 @@ class LineSearchOptimizer(Optimizer, ABC):
         :param verbose:    (boolean, optional, default value False): print details about each iteration
                            if True, nothing otherwise.
         """
-        super().__init__(f, x, eps, max_iter, callback, callback_args, verbose)
+        super().__init__(f=f,
+                         x=x,
+                         eps=eps,
+                         max_iter=max_iter,
+                         callback=callback,
+                         callback_args=callback_args,
+                         verbose=verbose)
         self.m_inf = m_inf
         if 0 < m2 < 1:
             self.line_search = ArmijoWolfeLineSearch(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a)

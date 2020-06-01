@@ -33,8 +33,21 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
     #     number of iterations: x is the bast solution found so far, but not
     #     necessarily the optimal one
 
-    def __init__(self, f, ub, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
-        super().__init__(f, ub, eps, max_iter, callback, callback_args, verbose)
+    def __init__(self,
+                 f,
+                 ub,
+                 eps=1e-6,
+                 max_iter=1000,
+                 callback=None,
+                 callback_args=(),
+                 verbose=False):
+        super().__init__(f=f,
+                         ub=ub,
+                         eps=eps,
+                         max_iter=max_iter,
+                         callback=callback,
+                         callback_args=callback_args,
+                         verbose=verbose)
 
     def minimize(self):
 

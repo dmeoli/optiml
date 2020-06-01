@@ -10,7 +10,14 @@ from ...utils import ldl_solve
 
 class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
 
-    def __init__(self, f, ub, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
+    def __init__(self,
+                 f,
+                 ub,
+                 eps=1e-6,
+                 max_iter=1000,
+                 callback=None,
+                 callback_args=(),
+                 verbose=False):
         if not isinstance(f, Quadratic):
             raise TypeError(f'{f} is not an allowed quadratic function')
         super().__init__(f, ub / 2,  # starts from the middle of the box

@@ -5,10 +5,34 @@ from . import StochasticOptimizer
 
 class AdaGrad(StochasticOptimizer):
 
-    def __init__(self, f, x, batch_size=None, eps=1e-6, epochs=1000, step_size=0.01, momentum_type='none', momentum=0.9,
-                 offset=1e-4, callback=None, callback_args=(), shuffle=True, random_state=None, verbose=False):
-        super().__init__(f, x, step_size, momentum_type, momentum, batch_size, eps, epochs,
-                         callback, callback_args, shuffle, random_state, verbose)
+    def __init__(self,
+                 f,
+                 x,
+                 batch_size=None,
+                 eps=1e-6,
+                 epochs=1000,
+                 step_size=0.01,
+                 momentum_type='none',
+                 momentum=0.9,
+                 offset=1e-4,
+                 callback=None,
+                 callback_args=(),
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
+        super().__init__(f=f,
+                         x=x,
+                         step_size=step_size,
+                         momentum_type=momentum_type,
+                         momentum=momentum,
+                         batch_size=batch_size,
+                         eps=eps,
+                         epochs=epochs,
+                         callback=callback,
+                         callback_args=callback_args,
+                         shuffle=shuffle,
+                         random_state=random_state,
+                         verbose=verbose)
         if not offset > 0:
             raise ValueError('offset must be > 0')
         self.offset = offset
@@ -32,7 +56,8 @@ class AdaGrad(StochasticOptimizer):
                     if self.f.f_star() < np.inf:
                         print('\t{: 1.4e}'.format(self.f_x - self.f.f_star()), end='')
                         if prev_v < np.inf:
-                            print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                            print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) /
+                                                      (prev_v - self.f.f_star())), end='')
                         else:
                             print('\t\t', end='')
                         prev_v = self.f_x

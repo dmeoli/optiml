@@ -5,12 +5,28 @@ from abc import ABC
 import numpy as np
 from sklearn.utils import shuffle
 
+from .schedules import constant
 from ... import Optimizer
 
 
 class StochasticOptimizer(Optimizer, ABC):
-    def __init__(self, f, x, step_size=0.01, momentum_type='none', momentum=0.9, batch_size=None, eps=1e-6,
-                 epochs=1000, callback=None, callback_args=(), shuffle=True, random_state=None, verbose=False):
+
+    def __init__(self,
+                 f,
+                 x,
+                 step_size=0.01,
+                 momentum_type='none',
+                 momentum=0.9,
+                 batch_size=None,
+                 eps=1e-6,
+                 epochs=1000,
+                 step_size_schedule=constant,
+                 momentum_schedule=constant,
+                 callback=None,
+                 callback_args=(),
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
         """
 
         :param f: the objective function.
@@ -33,6 +49,9 @@ class StochasticOptimizer(Optimizer, ABC):
         if momentum_type not in ('standard', 'nesterov', 'none'):
             raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type
+        self.step_size_schedule = step_size_schedule(self.step_size)
+        if self.momentum_type != 'none':
+            self.momentum_schedule = momentum_schedule(self.momentum)
         self.epochs = epochs
         self.epoch = 0
         self.shuffle = shuffle

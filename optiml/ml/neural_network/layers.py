@@ -18,8 +18,15 @@ class Layer:
 
 class ParamLayer(Layer, ABC):
 
-    def __init__(self, coef_shape, activation, coef_init, inter_init,
-                 coef_reg, inter_reg, fit_intercept, random_state=None):
+    def __init__(self,
+                 coef_shape,
+                 activation,
+                 coef_init,
+                 inter_init,
+                 coef_reg,
+                 inter_reg,
+                 fit_intercept,
+                 random_state=None):
 
         if isinstance(activation, Activation):
             self.activation = activation
@@ -56,10 +63,25 @@ class ParamLayer(Layer, ABC):
 
 
 class FullyConnected(ParamLayer):
-    def __init__(self, n_in, n_out, activation=linear, coef_init=glorot_uniform, inter_init=zeros,
-                 coef_reg=l2, inter_reg=l2, fit_intercept=True, random_state=None):
-        super().__init__((n_in, n_out), activation, coef_init, inter_init,
-                         coef_reg, inter_reg, fit_intercept, random_state)
+
+    def __init__(self,
+                 n_in,
+                 n_out,
+                 activation=linear,
+                 coef_init=glorot_uniform,
+                 inter_init=zeros,
+                 coef_reg=l2,
+                 inter_reg=l2,
+                 fit_intercept=True,
+                 random_state=None):
+        super().__init__(coef_shape=(n_in, n_out),
+                         activation=activation,
+                         coef_init=coef_init,
+                         inter_init=inter_init,
+                         coef_reg=coef_reg,
+                         inter_reg=inter_reg,
+                         fit_intercept=fit_intercept,
+                         random_state=random_state)
         self.fan_in = n_in
         self.fan_out = n_out
 
@@ -82,11 +104,29 @@ class FullyConnected(ParamLayer):
 
 
 class Conv2D(ParamLayer):
-    def __init__(self, in_channels, out_channels, kernel_size=(3, 3), strides=(1, 1), padding='valid',
-                 channels_last=True, activation=linear, coef_init=glorot_uniform, inter_init=zeros,
-                 coef_reg=l2, inter_reg=l2, fit_intercept=True, random_state=None):
-        super().__init__((in_channels,) + kernel_size + (out_channels,), activation,
-                         coef_init, inter_init, coef_reg, inter_reg, fit_intercept, random_state)
+
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 kernel_size=(3, 3),
+                 strides=(1, 1),
+                 padding='valid',
+                 channels_last=True,
+                 activation=linear,
+                 coef_init=glorot_uniform,
+                 inter_init=zeros,
+                 coef_reg=l2,
+                 inter_reg=l2,
+                 fit_intercept=True,
+                 random_state=None):
+        super().__init__(coef_shape=(in_channels,) + kernel_size + (out_channels,),
+                         activation=activation,
+                         coef_init=coef_init,
+                         inter_init=inter_init,
+                         coef_reg=coef_reg,
+                         inter_reg=inter_reg,
+                         fit_intercept=fit_intercept,
+                         random_state=random_state)
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -156,7 +196,12 @@ class Conv2D(ParamLayer):
 
 
 class Pool(Layer, ABC):
-    def __init__(self, kernel_size=(3, 3), strides=(1, 1), padding='valid', channels_last=True):
+
+    def __init__(self,
+                 kernel_size=(3, 3),
+                 strides=(1, 1),
+                 padding='valid',
+                 channels_last=True):
         self.kernel_size = kernel_size
         self.strides = strides
         self.padding = padding.lower()
@@ -184,8 +229,16 @@ class Pool(Layer, ABC):
 
 
 class MaxPool2D(Pool):
-    def __init__(self, pool_size=(3, 3), strides=(1, 1), padding='valid', channels_last=True):
-        super().__init__(pool_size, strides, padding, channels_last)
+
+    def __init__(self,
+                 pool_size=(3, 3),
+                 strides=(1, 1),
+                 padding='valid',
+                 channels_last=True):
+        super().__init__(kernel_size=pool_size,
+                         strides=strides,
+                         padding=padding,
+                         channels_last=channels_last)
 
     def agg_func(self, x):
         return x.max(axis=(1, 2))
@@ -206,8 +259,16 @@ class MaxPool2D(Pool):
 
 
 class AvgPool2D(Pool):
-    def __init__(self, kernel_size=(3, 3), strides=(1, 1), padding='valid', channels_last=True):
-        super().__init__(kernel_size, strides, padding, channels_last)
+
+    def __init__(self,
+                 kernel_size=(3, 3),
+                 strides=(1, 1),
+                 padding='valid',
+                 channels_last=True):
+        super().__init__(kernel_size=kernel_size,
+                         strides=strides,
+                         padding=padding,
+                         channels_last=channels_last)
 
     def agg_func(self, x):
         return x.mean(axis=(1, 2))

@@ -18,9 +18,23 @@ from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGrad
 
 class NeuralNetwork(BaseEstimator, Layer):
 
-    def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent, learning_rate=0.01,
-                 max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4, validation_split=0., batch_size=None,
-                 max_f_eval=1000, early_stopping=False, patience=5, shuffle=True, random_state=None, verbose=False):
+    def __init__(self,
+                 layers=(),
+                 loss=mean_squared_error,
+                 optimizer=StochasticGradientDescent,
+                 learning_rate=0.01,
+                 max_iter=1000,
+                 momentum_type='none',
+                 momentum=0.9,
+                 tol=1e-4,
+                 validation_split=0.,
+                 batch_size=None,
+                 max_f_eval=1000,
+                 early_stopping=False,
+                 patience=5,
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
         self.layers = layers
         if not issubclass(loss, NeuralNetworkLoss):
             raise TypeError(f'{loss} is not an allowed neural network loss function')
@@ -212,12 +226,39 @@ class NeuralNetwork(BaseEstimator, Layer):
 
 class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
-    def __init__(self, layers=(), loss=mean_squared_error, optimizer=StochasticGradientDescent, learning_rate=0.01,
-                 max_iter=1000, momentum_type='none', momentum=0.9, tol=1e-4, validation_split=0., batch_size=None,
-                 max_f_eval=1000, early_stopping=False, patience=5, shuffle=True, random_state=None, verbose=False):
-        super().__init__(layers, loss, optimizer, learning_rate, max_iter, momentum_type, momentum, tol,
-                         validation_split, batch_size, max_f_eval, early_stopping, patience, shuffle,
-                         random_state, verbose)
+    def __init__(self,
+                 layers=(),
+                 loss=mean_squared_error,
+                 optimizer=StochasticGradientDescent,
+                 learning_rate=0.01,
+                 max_iter=1000,
+                 momentum_type='none',
+                 momentum=0.9,
+                 tol=1e-4,
+                 validation_split=0.,
+                 batch_size=None,
+                 max_f_eval=1000,
+                 early_stopping=False,
+                 patience=5,
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
+        super().__init__(layers=layers,
+                         loss=loss,
+                         optimizer=optimizer,
+                         learning_rate=learning_rate,
+                         max_iter=max_iter,
+                         momentum_type=momentum_type,
+                         momentum=momentum,
+                         tol=tol,
+                         validation_split=validation_split,
+                         batch_size=batch_size,
+                         max_f_eval=max_f_eval,
+                         early_stopping=early_stopping,
+                         patience=patience,
+                         shuffle=shuffle,
+                         random_state=random_state,
+                         verbose=verbose)
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
         super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)

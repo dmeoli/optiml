@@ -23,7 +23,8 @@ def random_uniform(shape, low=0., high=1., random_state=None):
 
 def truncated_normal(shape, mean=0., std=1., random_state=None):
     truncated = 2 * std + mean
-    return np.clip(random_normal(shape=shape, mean=mean, std=std, random_state=random_state), -truncated, truncated)
+    return np.clip(random_normal(shape=shape, mean=mean, std=std,
+                                 random_state=random_state), -truncated, truncated)
 
 
 def glorot_normal(shape, channels_last=True, random_state=None):

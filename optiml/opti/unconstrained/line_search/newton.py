@@ -104,10 +104,38 @@ class Newton(LineSearchOptimizer):
     #   = 'error': the algorithm found a numerical error that prevents it from
     #     continuing optimization (see mina above)
 
-    def __init__(self, f, x, eps=1e-6, max_iter=1000, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, delta=1e-6,
-                 tau=0.9, sfgrd=0.01, m_inf=-np.inf, min_a=1e-12, callback=None, callback_args=(), verbose=False):
-        super().__init__(f, x, eps, max_iter, max_f_eval, m1, m2, a_start, tau, sfgrd,
-                         m_inf, min_a, callback, callback_args, verbose)
+    def __init__(self,
+                 f,
+                 x,
+                 eps=1e-6,
+                 max_iter=1000,
+                 max_f_eval=1000,
+                 m1=0.01,
+                 m2=0.9,
+                 a_start=1,
+                 delta=1e-6,
+                 tau=0.9,
+                 sfgrd=0.01,
+                 m_inf=-np.inf,
+                 min_a=1e-12,
+                 callback=None,
+                 callback_args=(),
+                 verbose=False):
+        super().__init__(f=f,
+                         x=x,
+                         eps=eps,
+                         max_iter=max_iter,
+                         max_f_eval=max_f_eval,
+                         m1=m1,
+                         m2=m2,
+                         a_start=a_start,
+                         tau=tau,
+                         sfgrd=sfgrd,
+                         m_inf=m_inf,
+                         min_a=min_a,
+                         callback=callback,
+                         callback_args=callback_args,
+                         verbose=verbose)
         self.H_x = np.zeros(0)
         if not delta > 0:
             raise ValueError('delta must be > 0')

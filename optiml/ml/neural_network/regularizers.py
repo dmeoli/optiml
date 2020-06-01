@@ -2,6 +2,7 @@ import numpy as np
 
 
 class Regularizer:
+
     def __init__(self, lmbda=0.):
         self.lmbda = lmbda
 
@@ -16,6 +17,7 @@ class Regularizer:
 
 
 class L1(Regularizer):
+
     def __init__(self, lmbda=0.):
         super().__init__(lmbda)
 
@@ -27,6 +29,7 @@ class L1(Regularizer):
 
 
 class L2(Regularizer):
+
     def __init__(self, lmbda=0.):
         super().__init__(lmbda)
 

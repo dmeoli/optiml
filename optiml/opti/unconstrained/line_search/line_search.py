@@ -1,9 +1,12 @@
-import numpy as np
-
-
 class LineSearch:
 
-    def __init__(self, f, max_f_eval=1000, m1=0.01, a_start=1, tau=0.9, min_a=1e-16):
+    def __init__(self,
+                 f,
+                 max_f_eval=1000,
+                 m1=0.01,
+                 a_start=1,
+                 tau=0.9,
+                 min_a=1e-16):
         """
 
         :param f:          the objective function.
@@ -57,7 +60,13 @@ class BacktrackingLineSearch(LineSearch):
     :returns: the optimal step and the optimal f-value
     """
 
-    def __init__(self, f, max_f_eval=1000, m1=0.01, a_start=1, tau=0.9, min_a=1e-16):
+    def __init__(self,
+                 f,
+                 max_f_eval=1000,
+                 m1=0.01,
+                 a_start=1,
+                 tau=0.9,
+                 min_a=1e-16):
         """
 
         :param f:          the objective function.
@@ -79,7 +88,12 @@ class BacktrackingLineSearch(LineSearch):
                            is not a direction of descent, so maybe the function is not differentiable) and computation
                            is stopped. It is legal to take min_a = 0, thereby in fact skipping this test.
         """
-        super().__init__(f, max_f_eval, m1, a_start, tau, min_a)
+        super().__init__(f=f,
+                         max_f_eval=max_f_eval,
+                         m1=m1,
+                         a_start=a_start,
+                         tau=tau,
+                         min_a=min_a)
 
     def search(self, d, x, last_x, last_g, f_eval, phi0=None, phi_p0=None, verbose=False):
 
@@ -119,7 +133,15 @@ class ArmijoWolfeLineSearch(LineSearch):
     :returns: the optimal step and the optimal f-value
     """
 
-    def __init__(self, f, max_f_eval=1000, m1=0.01, m2=0.9, a_start=1, tau=0.9, sfgrd=0.01, min_a=1e-16):
+    def __init__(self,
+                 f,
+                 max_f_eval=1000,
+                 m1=0.01,
+                 m2=0.9,
+                 a_start=1,
+                 tau=0.9,
+                 sfgrd=0.01,
+                 min_a=1e-16):
         """
 
         :param f:          the objective function.
@@ -153,7 +175,12 @@ class ArmijoWolfeLineSearch(LineSearch):
                            is not a direction of descent, so maybe the function is not differentiable) and computation
                            is stopped. It is legal to take min_a = 0, thereby in fact skipping this test.
         """
-        super().__init__(f, max_f_eval, m1, a_start, tau, min_a)
+        super().__init__(f=f,
+                         max_f_eval=max_f_eval,
+                         m1=m1,
+                         a_start=a_start,
+                         tau=tau,
+                         min_a=min_a)
         if not 0 < sfgrd < 1:
             raise ValueError('sfgrd has to lie in (0,1)')
         self.sfgrd = sfgrd
