@@ -216,11 +216,6 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(self.g_x)
 
-            try:
-                self.callback()
-            except StopIteration:
-                break
-
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
             else:
@@ -259,7 +254,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                 else:
                     if self.wf == 0:  # Fletcher-Reeves
                         beta = (ng / np.linalg.norm(past_g)) ** 2
-                    elif self.wf == 1:  # Polak-Ribière
+                    elif self.wf == 1:  # Polak-Ribiere
                         beta = self.g_x.T.dot(self.g_x - past_g) / np.linalg.norm(past_g) ** 2
                         beta = max(beta, 0)
                     elif self.wf == 2:  # Hestenes-Stiefel
@@ -294,6 +289,11 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
             if self.f_x <= self.m_inf:
                 self.status = 'unbounded'
+                break
+
+            try:
+                self.callback()
+            except StopIteration:
                 break
 
             # update new point

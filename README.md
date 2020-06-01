@@ -137,6 +137,10 @@ pip install optiml
 Any bug report, bug fix or new pull request will be appreciated, especially from my classmates who will have the 
 opportunity to deal with some of these algorithms and could be improving their performance or adding new features.
 
+## Future Works
+
+Replace `numpy` with `pytorch` to improve training performance over large datasets by using the GPU support.
+
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This software is released under the MIT License. See the [LICENSE](LICENSE) file for details.

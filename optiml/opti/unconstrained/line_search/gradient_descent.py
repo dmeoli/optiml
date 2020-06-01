@@ -210,17 +210,17 @@ class SteepestGradientDescent(LineSearchOptimizer):
             if self.is_verbose():
                 print('\t{: 1.4e}'.format(a), end='')
 
-            try:
-                self.callback()
-            except StopIteration:
-                break
-
             if a <= self.line_search.min_a:
                 self.status = 'error'
                 break
 
             if self.f_x <= self.m_inf:
                 self.status = 'unbounded'
+                break
+
+            try:
+                self.callback()
+            except StopIteration:
                 break
 
             # update new point

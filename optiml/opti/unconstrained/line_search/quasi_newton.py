@@ -157,11 +157,6 @@ class BFGS(LineSearchOptimizer):
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
             ng = np.linalg.norm(self.g_x)
 
-            try:
-                self.callback()
-            except StopIteration:
-                break
-
             if self.eps < 0:
                 ng0 = -ng  # norm of first subgradient
             else:
@@ -243,6 +238,11 @@ class BFGS(LineSearchOptimizer):
 
             D = self.H_x.dot(y) * s.T
             self.H_x = self.H_x + rho * ((1 + rho * y.T.dot(self.H_x).dot(y)) * (s.dot(s.T)) - D - D.T)
+
+            try:
+                self.callback()
+            except StopIteration:
+                break
 
             # update new point
             self.x = last_x
