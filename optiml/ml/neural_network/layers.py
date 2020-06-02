@@ -7,7 +7,7 @@ from .initializers import glorot_uniform, zeros
 from .regularizers import l2
 
 
-class Layer:
+class Layer(ABC):
 
     def forward(self, X):
         raise NotImplementedError

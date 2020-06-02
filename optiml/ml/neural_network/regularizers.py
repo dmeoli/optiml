@@ -1,7 +1,9 @@
+from abc import ABC
+
 import numpy as np
 
 
-class Regularizer:
+class Regularizer(ABC):
 
     def __init__(self, lmbda=0.):
         self.lmbda = lmbda

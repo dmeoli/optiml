@@ -1,3 +1,5 @@
+from abc import ABC
+
 import autograd.numpy as np
 from scipy.special import xlogy
 
@@ -7,7 +9,7 @@ from .regularizers import L2
 from ...opti import OptimizationFunction
 
 
-class NeuralNetworkLoss(OptimizationFunction):
+class NeuralNetworkLoss(OptimizationFunction, ABC):
 
     def __init__(self, neural_net, X, y):
         super().__init__(X.shape[1])

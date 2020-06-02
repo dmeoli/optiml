@@ -6,6 +6,7 @@ from .. import Quadratic
 from ..unconstrained import ProximalBundle
 from ..unconstrained.line_search import LineSearchOptimizer
 from ..unconstrained.stochastic import StochasticOptimizer, AdaGrad
+from ..unconstrained.stochastic.schedules import constant
 from ..utils import ldl_solve
 
 
@@ -21,6 +22,8 @@ class LagrangianDual(Optimizer):
                  batch_size=None,
                  max_iter=1000,
                  max_f_eval=1000,
+                 step_size_schedule=constant,
+                 momentum_schedule=constant,
                  callback=None,
                  callback_args=(),
                  master_solver='ecos',
@@ -43,6 +46,9 @@ class LagrangianDual(Optimizer):
         self.step_size = step_size
         self.momentum_type = momentum_type
         self.momentum = momentum
+        self.step_size_schedule = step_size_schedule(self.step_size)
+        if self.momentum_type != 'none':
+            self.momentum_schedule = momentum_schedule(self.momentum)
         self.batch_size = batch_size
         self.max_f_eval = max_f_eval
         self.master_solver = master_solver

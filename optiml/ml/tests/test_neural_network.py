@@ -38,7 +38,7 @@ def test_neural_network_regressor():
     net = NeuralNetworkRegressor((FullyConnected(13, 13, sigmoid),
                                   FullyConnected(13, 13, sigmoid),
                                   FullyConnected(13, 1, linear)),
-                                 loss=mean_squared_error, optimizer=Adam, learning_rate=0.01)
+                                 loss=mean_squared_error, optimizer=Adam, learning_rate_init=0.01)
     net.fit(X_train, y_train)
     assert net.score(X_test, y_test) >= 0.7
 
@@ -51,7 +51,7 @@ def test_neural_network_classifier():
     net = NeuralNetworkClassifier((FullyConnected(4, 4, sigmoid),
                                    FullyConnected(4, 4, sigmoid),
                                    FullyConnected(4, 3, softmax)),
-                                  loss=categorical_cross_entropy, optimizer=Adam, learning_rate=0.01)
+                                  loss=categorical_cross_entropy, optimizer=Adam, learning_rate_init=0.01)
     net.fit(X_train, ohe.transform(y_train.reshape(-1, 1)))
     assert net.score(X_test, ohe.transform(y_test.reshape(-1, 1))) >= 0.95
 

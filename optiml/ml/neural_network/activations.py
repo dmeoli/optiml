@@ -1,8 +1,10 @@
+from abc import ABC
+
 import numpy as np
 from autograd.scipy.special import expit
 
 
-class Activation:
+class Activation(ABC):
 
     def function(self, x):
         raise NotImplementedError

@@ -1,5 +1,6 @@
 import sys
 import warnings
+from abc import ABC
 
 import numpy as np
 from sklearn.exceptions import PositiveSpectrumWarning
@@ -7,7 +8,7 @@ from sklearn.exceptions import PositiveSpectrumWarning
 from .kernels import gaussian, LinearKernel
 
 
-class SMO:
+class SMO(ABC):
 
     def __init__(self, quad, X, y, K, kernel=gaussian, C=1., tol=1e-3, verbose=False):
         self.quad = quad

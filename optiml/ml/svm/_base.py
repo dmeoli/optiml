@@ -1,10 +1,12 @@
 import warnings
+from abc import ABC
 
 import numpy as np
 from qpsolvers import solve_qp
 from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model._base import LinearClassifierMixin, SparseCoefMixin, LinearModel
+from sklearn.model_selection import train_test_split
 from sklearn.utils.multiclass import unique_labels
 
 from .kernels import gaussian, Kernel, LinearKernel
@@ -20,14 +22,66 @@ from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGrad
 from ...opti.unconstrained.stochastic.schedules import constant
 
 
-class SVM(BaseEstimator):
+class SVM(BaseEstimator, ABC):
+    """
+    Base abstract class for all SVM-type estimator.
+
+    Parameters
+    ----------
+    C : float, default=1.0
+        Regularization parameter. The strength of the regularization is
+        inversely proportional to C. Must be strictly positive. The penalty
+        is a squared l2 penalty.
+
+    tol : float, default=1e-3
+        Tolerance for stopping criterion.
+
+    optimizer : Optimizer instance, default=None
+        The solver for optimization. It can be a subclass of the LineSearchOptimizer
+        which can converge faster and perform better for small datasets e.g., the
+        LBFGS quasi-Newton method or, alternatively, a subclass of the StochasticOptimizer
+        e.g, the StochasticGradientDescent or Adam, which works well on relatively large
+        datasets (with thousands of training samples or more) in terms of both training
+        time and validation score.
+
+    max_iter :
+
+    learning_rate_init :
+
+    learning_rate_schedule:
+
+    momentum_type :
+
+    momentum :
+
+    momentum_schedule :
+
+    batch_size :
+
+    max_f_eval :
+
+    shuffle : bool, default=True
+        Whether to shuffle samples for batch sampling in each iteration. Only
+        used when the ``optimizer`` is an instance of StochasticOptimizer class.
+
+    random_state : int, default=None
+        Controls the pseudo random number generation for train-test split if
+        early stopping is used and shuffling the data for batch sampling when
+        an instance of StochasticOptimizer class is used as ``optimizer`` value.
+        Pass an int for reproducible output across multiple function calls.
+
+    verbose : bool or int, default=False
+        Controls the verbosity of progress messages to stdout. Use a boolean value
+        to switch on/off or an int value to show progress each ``verbose`` time
+        optimization steps.
+    """
 
     def __init__(self,
                  C=1.,
                  tol=1e-3,
                  optimizer=None,
                  max_iter=1000,
-                 learning_rate=0.1,
+                 learning_rate_init=0.1,
                  learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
@@ -45,7 +99,7 @@ class SVM(BaseEstimator):
         self.tol = tol
         self.optimizer = optimizer
         self.max_iter = max_iter
-        self.learning_rate = learning_rate
+        self.learning_rate_init = learning_rate_init
         self.learning_rate_schedule = learning_rate_schedule
         self.momentum_type = momentum_type
         self.momentum = momentum
@@ -56,8 +110,11 @@ class SVM(BaseEstimator):
         self.random_state = random_state
         self.verbose = verbose
 
+    def fit(self, X, y):
+        raise NotImplementedError
 
-class PrimalSVM(SVM):
+
+class PrimalSVM(SVM, ABC):
 
     def __init__(self,
                  C=1.,
@@ -65,13 +122,16 @@ class PrimalSVM(SVM):
                  loss=SVMLoss,
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
-                 learning_rate=0.1,
+                 learning_rate_init=0.1,
                  learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
                  momentum_schedule=constant,
+                 validation_split=0.,
                  batch_size=None,
                  max_f_eval=15000,
+                 early_stopping=False,
+                 patience=5,
                  fit_intercept=True,
                  shuffle=True,
                  random_state=None,
@@ -80,7 +140,7 @@ class PrimalSVM(SVM):
                          tol=tol,
                          optimizer=optimizer,
                          max_iter=max_iter,
-                         learning_rate=learning_rate,
+                         learning_rate_init=learning_rate_init,
                          learning_rate_schedule=learning_rate_schedule,
                          momentum_type=momentum_type,
                          momentum=momentum,
@@ -93,9 +153,23 @@ class PrimalSVM(SVM):
         self.loss = loss
         if not issubclass(self.optimizer, Optimizer):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
+        self.validation_split = validation_split
+        self.early_stopping = early_stopping
+        self.patience = patience
         self.coef_ = np.zeros(0)
         self.intercept_ = 0.
         self.fit_intercept = fit_intercept
+        if issubclass(self.optimizer, StochasticOptimizer):
+            self.train_loss_history = []
+            self.train_score_history = []
+            self._no_improvement_count = 0
+            self._avg_epoch_loss = 0
+            if self.validation_split:
+                self.val_loss_history = []
+                self.val_score_history = []
+                self.best_val_score = -np.inf
+            else:
+                self.best_loss = np.inf
 
     def _unpack(self, packed_coef_inter):
         if self.fit_intercept:
@@ -103,8 +177,72 @@ class PrimalSVM(SVM):
         else:
             self.coef_ = packed_coef_inter
 
+    def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
+        self._avg_epoch_loss += opt.f_x * X_batch.shape[0]
+        if opt.is_batch_end():
+            self._avg_epoch_loss /= opt.f.X.shape[0]  # n_samples
+            self.train_loss_history.append(self._avg_epoch_loss)
+            if self.verbose and not opt.epoch % self.verbose:
+                print('\tloss: {: 1.4e}'.format(self._avg_epoch_loss), end='')
+            self._avg_epoch_loss = 0.
+            if self.validation_split:
+                val_loss = self.loss.function(opt.x, X_val, y_val)
+                self.val_loss_history.append(val_loss)
+                if self.verbose and not opt.epoch % self.verbose:
+                    print(' - val_loss: {: 1.4e}'.format(val_loss), end='')
 
-class DualSVM(SVM):
+    def _update_no_improvement_count(self, opt):
+        if self.early_stopping:
+
+            if self.validation_split:  # monitor val_score
+
+                if self.val_score_history[-1] < self.best_val_score + self.tol:
+                    self._no_improvement_count += 1
+                else:
+                    self._no_improvement_count = 0
+                if self.val_score_history[-1] > self.best_val_score:
+                    self.best_val_score = self.val_score_history[-1]
+                    self._best_coef = self.coef_.copy()
+
+            else:  # monitor train_loss
+
+                if self.train_loss_history[-1] > self.best_loss - self.tol:
+                    self._no_improvement_count += 1
+                else:
+                    self._no_improvement_count = 0
+                if self.train_loss_history[-1] < self.best_loss:
+                    self.best_loss = self.train_loss_history[-1]
+
+            if self._no_improvement_count >= self.patience:
+
+                if self.validation_split:
+                    opt.x = self._best_coef
+
+                if self.verbose:
+                    if self.validation_split:
+                        print(f'\ntraining stopped since validation score did not improve more than '
+                              f'tol={self.tol} for {self.patience} consecutive epochs')
+                    else:
+                        print('\ntraining stopped since training loss did not improve more than '
+                              f'tol={self.tol} for {self.patience} consecutive epochs')
+
+                raise StopIteration
+
+
+class DualSVM(SVM, ABC):
+    """
+
+    Parameters
+    ----------
+
+    kernel : Kernel instance like {linear, poly, gaussian, laplacian, sigmoid}, default=gaussian
+        Specifies the kernel type to be used in the algorithm.
+        It must be one of linear, poly, gaussian, laplacian, sigmoid or
+        a custom one which extend the method ``__call__`` of the ``Kernel`` class.
+        If none is given, 'gaussian' will be used. If a custom is given it is
+        used to pre-compute the kernel matrix from data matrices; that matrix
+        should be an array of shape ``(n_samples, n_samples)``.
+    """
 
     def __init__(self,
                  kernel=gaussian,
@@ -112,7 +250,7 @@ class DualSVM(SVM):
                  tol=1e-3,
                  optimizer=SMO,
                  max_iter=1000,
-                 learning_rate=0.1,
+                 learning_rate_init=0.1,
                  learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
@@ -128,7 +266,7 @@ class DualSVM(SVM):
                          tol=tol,
                          optimizer=optimizer,
                          max_iter=max_iter,
-                         learning_rate=learning_rate,
+                         learning_rate_init=learning_rate_init,
                          learning_rate_schedule=learning_rate_schedule,
                          momentum_type=momentum_type,
                          momentum=momentum,
@@ -161,13 +299,16 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                  penalty='l2',
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
-                 learning_rate=0.1,
+                 learning_rate_init=0.1,
                  learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
                  momentum_schedule=constant,
+                 validation_split=0.,
                  batch_size=None,
                  max_f_eval=15000,
+                 early_stopping=False,
+                 patience=5,
                  fit_intercept=True,
                  shuffle=True,
                  random_state=None,
@@ -177,13 +318,16 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                          loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
-                         learning_rate=learning_rate,
+                         learning_rate_init=learning_rate_init,
                          learning_rate_schedule=learning_rate_schedule,
                          momentum_type=momentum_type,
                          momentum=momentum,
                          momentum_schedule=momentum_schedule,
+                         validation_split=validation_split,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
+                         early_stopping=early_stopping,
+                         patience=patience,
                          fit_intercept=fit_intercept,
                          shuffle=shuffle,
                          random_state=random_state,
@@ -224,14 +368,25 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
         elif issubclass(self.optimizer, StochasticOptimizer):
 
+            if self.validation_split:
+                X, X_val, y, y_val = train_test_split(X, y, test_size=self.validation_split,
+                                                      stratify=True, random_state=self.random_state)
+            else:
+                X_val = None
+                y_val = None
+
             self.optimizer = self.optimizer(f=self.loss,
                                             x=np.zeros(self.loss.ndim),
                                             epochs=self.max_iter,
-                                            step_size=self.learning_rate,
+                                            step_size=self.learning_rate_init,
                                             step_size_schedule=self.learning_rate_schedule,
                                             momentum_type=self.momentum_type,
                                             momentum=self.momentum,
                                             momentum_schedule=self.momentum_schedule,
+                                            callback=self._store_train_val_info,
+                                            callback_args=(X_val, y_val),
+                                            shuffle=self.shuffle,
+                                            random_state=self.random_state,
                                             verbose=self.verbose).minimize()
 
         self._unpack(self.optimizer.x)
@@ -256,7 +411,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  tol=1e-3,
                  optimizer=SMOClassifier,
                  max_iter=1000,
-                 learning_rate=0.1,
+                 learning_rate_init=0.1,
                  learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
@@ -273,7 +428,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                          tol=tol,
                          optimizer=optimizer,
                          max_iter=max_iter,
-                         learning_rate=learning_rate,
+                         learning_rate_init=learning_rate_init,
                          learning_rate_schedule=learning_rate_schedule,
                          momentum_type=momentum_type,
                          momentum=momentum,
@@ -376,7 +531,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                     self.optimizer = self.optimizer(f=self.obj,
                                                     x=np.zeros(self.obj.ndim),
                                                     epochs=self.max_iter,
-                                                    step_size=self.learning_rate,
+                                                    step_size=self.learning_rate_init,
                                                     step_size_schedule=self.learning_rate_schedule,
                                                     momentum_type=self.momentum_type,
                                                     momentum=self.momentum,
@@ -420,13 +575,15 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  loss=epsilon_insensitive,
                  optimizer=AdaGrad,
                  max_iter=1000,
-                 learning_rate=0.1,
+                 learning_rate_init=0.1,
                  learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
                  momentum_schedule=constant,
                  batch_size=None,
                  max_f_eval=15000,
+                 early_stopping=False,
+                 patience=5,
                  fit_intercept=True,
                  shuffle=True,
                  random_state=None,
@@ -436,13 +593,15 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                          loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
-                         learning_rate=learning_rate,
+                         learning_rate_init=learning_rate_init,
                          learning_rate_schedule=learning_rate_schedule,
                          momentum_type=momentum_type,
                          momentum=momentum,
                          momentum_schedule=momentum_schedule,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
+                         early_stopping=early_stopping,
+                         patience=patience,
                          fit_intercept=fit_intercept,
                          shuffle=shuffle,
                          random_state=random_state,
@@ -483,7 +642,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
             self.optimizer = self.optimizer(f=self.loss,
                                             x=np.zeros(self.loss.ndim),
                                             epochs=self.max_iter,
-                                            step_size=self.learning_rate,
+                                            step_size=self.learning_rate_init,
                                             step_size_schedule=self.learning_rate_schedule,
                                             momentum_type=self.momentum_type,
                                             momentum=self.momentum,
@@ -507,7 +666,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  tol=1e-3,
                  optimizer=SMORegression,
                  max_iter=1000,
-                 learning_rate=0.1,
+                 learning_rate_init=0.1,
                  learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
@@ -524,7 +683,7 @@ class DualSVR(RegressorMixin, DualSVM):
                          tol=tol,
                          optimizer=optimizer,
                          max_iter=max_iter,
-                         learning_rate=learning_rate,
+                         learning_rate_init=learning_rate_init,
                          learning_rate_schedule=learning_rate_schedule,
                          momentum_type=momentum_type,
                          momentum=momentum,
@@ -629,7 +788,7 @@ class DualSVR(RegressorMixin, DualSVM):
                         self.optimizer = self.optimizer(f=self.obj,
                                                         x=np.zeros(self.obj.ndim),
                                                         epochs=self.max_iter,
-                                                        step_size=self.learning_rate,
+                                                        step_size=self.learning_rate_init,
                                                         step_size_schedule=self.learning_rate_schedule,
                                                         momentum_type=self.momentum_type,
                                                         momentum=self.momentum,
