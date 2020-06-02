@@ -53,7 +53,7 @@ class GaussianKernel(Kernel):
     """
     Compute the gaussian RBF kernel between X and Y:
 
-        K(x, y) = exp(-gamma ||x-y||_2^2)
+        K(X, Y) = exp(-gamma ||X - Y||_2^2)
     """
 
     def __init__(self, gamma='scale'):
@@ -77,7 +77,7 @@ class LaplacianKernel(Kernel):
     """
     Compute the laplacian RBF kernel between X and Y:
 
-        K(x, y) = exp(-gamma ||x-y||_1)
+        K(X, Y) = exp(-gamma ||X - Y||_1)
     """
 
     def __init__(self, gamma='scale'):

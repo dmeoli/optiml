@@ -75,21 +75,36 @@ class LagrangianDual(Optimizer):
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
-            self.optimizer = self.optimizer(f=self.f, x=self.x, max_iter=self.max_iter, max_f_eval=self.max_f_eval,
-                                            callback=self._print_dual_info, verbose=self.verbose).minimize()
+            self.optimizer = self.optimizer(f=self.f,
+                                            x=self.x,
+                                            max_iter=self.max_iter,
+                                            max_f_eval=self.max_f_eval,
+                                            callback=self._print_dual_info,
+                                            verbose=self.verbose).minimize()
 
         elif issubclass(self.optimizer, StochasticOptimizer):
 
-            self.optimizer = self.optimizer(f=self.f, x=self.x, step_size=self.step_size, epochs=self.max_iter,
-                                            batch_size=self.batch_size, momentum_type=self.momentum_type,
-                                            momentum=self.momentum, callback=self._print_dual_info,
-                                            shuffle=self.shuffle, random_state=self.random_state,
+            self.optimizer = self.optimizer(f=self.f,
+                                            x=self.x,
+                                            step_size=self.step_size,
+                                            step_size_schedule=self.step_size_schedule,
+                                            epochs=self.max_iter,
+                                            batch_size=self.batch_size,
+                                            momentum_type=self.momentum_type,
+                                            momentum=self.momentum,
+                                            momentum_schedule=self.momentum_schedule,
+                                            callback=self._print_dual_info,
+                                            shuffle=self.shuffle,
+                                            random_state=self.random_state,
                                             verbose=self.verbose).minimize()
 
         elif issubclass(self.optimizer, ProximalBundle):
 
-            self.optimizer = self.optimizer(f=self.f, x=self.x, max_iter=self.max_iter,
-                                            master_solver=self.master_solver, verbose=self.verbose,
+            self.optimizer = self.optimizer(f=self.f,
+                                            x=self.x,
+                                            max_iter=self.max_iter,
+                                            master_solver=self.master_solver,
+                                            verbose=self.verbose,
                                             master_verbose=self.master_verbose).minimize()
 
         return self

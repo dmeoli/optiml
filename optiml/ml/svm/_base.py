@@ -17,6 +17,7 @@ from ...opti.constrained.bcqp import BoxConstrainedQuadraticOptimizer, Lagrangia
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
+from ...opti.unconstrained.stochastic.schedules import constant
 
 
 class SVM(BaseEstimator):
@@ -27,8 +28,10 @@ class SVM(BaseEstimator):
                  optimizer=None,
                  max_iter=1000,
                  learning_rate=0.1,
+                 learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
+                 momentum_schedule=constant,
                  batch_size=None,
                  max_f_eval=15000,
                  shuffle=True,
@@ -43,8 +46,10 @@ class SVM(BaseEstimator):
         self.optimizer = optimizer
         self.max_iter = max_iter
         self.learning_rate = learning_rate
+        self.learning_rate_schedule = learning_rate_schedule
         self.momentum_type = momentum_type
         self.momentum = momentum
+        self.momentum_schedule = momentum_schedule
         self.batch_size = batch_size
         self.max_f_eval = max_f_eval
         self.shuffle = shuffle
@@ -61,8 +66,10 @@ class PrimalSVM(SVM):
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
                  learning_rate=0.1,
+                 learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
+                 momentum_schedule=constant,
                  batch_size=None,
                  max_f_eval=15000,
                  fit_intercept=True,
@@ -74,8 +81,10 @@ class PrimalSVM(SVM):
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
+                         learning_rate_schedule=learning_rate_schedule,
                          momentum_type=momentum_type,
                          momentum=momentum,
+                         momentum_schedule=momentum_schedule,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          shuffle=shuffle,
@@ -104,8 +113,10 @@ class DualSVM(SVM):
                  optimizer=SMO,
                  max_iter=1000,
                  learning_rate=0.1,
+                 learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
+                 momentum_schedule=constant,
                  batch_size=None,
                  max_f_eval=15000,
                  master_solver='ecos',
@@ -118,8 +129,10 @@ class DualSVM(SVM):
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
+                         learning_rate_schedule=learning_rate_schedule,
                          momentum_type=momentum_type,
                          momentum=momentum,
+                         momentum_schedule=momentum_schedule,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          shuffle=shuffle,
@@ -149,8 +162,10 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
                  learning_rate=0.1,
+                 learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
+                 momentum_schedule=constant,
                  batch_size=None,
                  max_f_eval=15000,
                  fit_intercept=True,
@@ -163,8 +178,10 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
+                         learning_rate_schedule=learning_rate_schedule,
                          momentum_type=momentum_type,
                          momentum=momentum,
+                         momentum_schedule=momentum_schedule,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          fit_intercept=fit_intercept,
@@ -178,7 +195,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         self.penalty = penalty
 
     def fit(self, X, y):
-        self.labels = unique_labels(y)
+        self.labels = unique_labels(y)  # TODO label binarizer di sklearn
         if len(self.labels) > 2:
             raise ValueError('use OneVsOneClassifier or OneVsRestClassifier from sklearn.multiclass '
                              'to train a model over more than two labels')
@@ -193,8 +210,11 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
-            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), max_iter=self.max_iter,
-                                            max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
+            self.optimizer = self.optimizer(f=self.loss,
+                                            x=np.zeros(self.loss.ndim),
+                                            max_iter=self.max_iter,
+                                            max_f_eval=self.max_f_eval,
+                                            verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'stopped':
                 if self.optimizer.iter >= self.max_iter:
@@ -204,9 +224,15 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
         elif issubclass(self.optimizer, StochasticOptimizer):
 
-            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), epochs=self.max_iter,
-                                            step_size=self.learning_rate, momentum_type=self.momentum_type,
-                                            momentum=self.momentum, verbose=self.verbose).minimize()
+            self.optimizer = self.optimizer(f=self.loss,
+                                            x=np.zeros(self.loss.ndim),
+                                            epochs=self.max_iter,
+                                            step_size=self.learning_rate,
+                                            step_size_schedule=self.learning_rate_schedule,
+                                            momentum_type=self.momentum_type,
+                                            momentum=self.momentum,
+                                            momentum_schedule=self.momentum_schedule,
+                                            verbose=self.verbose).minimize()
 
         self._unpack(self.optimizer.x)
 
@@ -231,8 +257,10 @@ class DualSVC(ClassifierMixin, DualSVM):
                  optimizer=SMOClassifier,
                  max_iter=1000,
                  learning_rate=0.1,
+                 learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
+                 momentum_schedule=constant,
                  batch_size=None,
                  max_f_eval=15000,
                  master_solver='ecos',
@@ -246,8 +274,10 @@ class DualSVC(ClassifierMixin, DualSVM):
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
+                         learning_rate_schedule=learning_rate_schedule,
                          momentum_type=momentum_type,
                          momentum=momentum,
+                         momentum_schedule=momentum_schedule,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          master_solver=master_solver,
@@ -287,13 +317,20 @@ class DualSVC(ClassifierMixin, DualSVM):
         elif isinstance(self.optimizer, str):
 
             lb = np.zeros(n_samples)  # lower bounds
-            alphas = solve_qp(Q, q, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
+            alphas = solve_qp(P=Q,
+                              q=q,
+                              lb=lb,
+                              ub=ub,
+                              solver=self.optimizer,
+                              verbose=self.verbose)
 
         else:
 
             if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                self.optimizer = self.optimizer(f=self.obj, ub=ub, max_iter=self.max_iter,
+                self.optimizer = self.optimizer(f=self.obj,
+                                                ub=ub,
+                                                max_iter=self.max_iter,
                                                 verbose=self.verbose).minimize()
                 alphas = self.optimizer.x
 
@@ -303,8 +340,11 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
 
-                    self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
-                                                    max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
+                    self.optimizer = self.optimizer(f=self.obj,
+                                                    x=np.zeros(self.obj.ndim),
+                                                    max_iter=self.max_iter,
+                                                    max_f_eval=self.max_f_eval,
+                                                    verbose=self.verbose).minimize()
 
                     if self.optimizer.status == 'stopped':
                         if self.optimizer.iter >= self.max_iter:
@@ -316,8 +356,11 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 elif issubclass(self.optimizer, ProximalBundle):
 
-                    self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
-                                                    master_solver=self.master_solver, verbose=self.verbose,
+                    self.optimizer = self.optimizer(f=self.obj,
+                                                    x=np.zeros(self.obj.ndim),
+                                                    max_iter=self.max_iter,
+                                                    master_solver=self.master_solver,
+                                                    verbose=self.verbose,
                                                     master_verbose=self.master_verbose).minimize()
 
                     if self.optimizer.status == 'stopped':
@@ -330,9 +373,15 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 elif issubclass(self.optimizer, StochasticOptimizer):
 
-                    self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), epochs=self.max_iter,
-                                                    step_size=self.learning_rate, momentum_type=self.momentum_type,
-                                                    momentum=self.momentum, verbose=self.verbose).minimize()
+                    self.optimizer = self.optimizer(f=self.obj,
+                                                    x=np.zeros(self.obj.ndim),
+                                                    epochs=self.max_iter,
+                                                    step_size=self.learning_rate,
+                                                    step_size_schedule=self.learning_rate_schedule,
+                                                    momentum_type=self.momentum_type,
+                                                    momentum=self.momentum,
+                                                    momentum_schedule=self.momentum_schedule,
+                                                    verbose=self.verbose).minimize()
 
                 alphas = self.obj.primal_solution
 
@@ -372,8 +421,10 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  optimizer=AdaGrad,
                  max_iter=1000,
                  learning_rate=0.1,
+                 learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
+                 momentum_schedule=constant,
                  batch_size=None,
                  max_f_eval=15000,
                  fit_intercept=True,
@@ -386,8 +437,10 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
+                         learning_rate_schedule=learning_rate_schedule,
                          momentum_type=momentum_type,
                          momentum=momentum,
+                         momentum_schedule=momentum_schedule,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          fit_intercept=fit_intercept,
@@ -413,8 +466,11 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
-            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), max_iter=self.max_iter,
-                                            max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
+            self.optimizer = self.optimizer(f=self.loss,
+                                            x=np.zeros(self.loss.ndim),
+                                            max_iter=self.max_iter,
+                                            max_f_eval=self.max_f_eval,
+                                            verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'stopped':
                 if self.optimizer.iter >= self.max_iter:
@@ -424,9 +480,15 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
         elif issubclass(self.optimizer, StochasticOptimizer):
 
-            self.optimizer = self.optimizer(f=self.loss, x=np.zeros(self.loss.ndim), epochs=self.max_iter,
-                                            step_size=self.learning_rate, momentum_type=self.momentum_type,
-                                            momentum=self.momentum, verbose=self.verbose).minimize()
+            self.optimizer = self.optimizer(f=self.loss,
+                                            x=np.zeros(self.loss.ndim),
+                                            epochs=self.max_iter,
+                                            step_size=self.learning_rate,
+                                            step_size_schedule=self.learning_rate_schedule,
+                                            momentum_type=self.momentum_type,
+                                            momentum=self.momentum,
+                                            momentum_schedule=self.momentum_schedule,
+                                            verbose=self.verbose).minimize()
 
         self._unpack(self.optimizer.x)
 
@@ -446,8 +508,10 @@ class DualSVR(RegressorMixin, DualSVM):
                  optimizer=SMORegression,
                  max_iter=1000,
                  learning_rate=0.1,
+                 learning_rate_schedule=constant,
                  momentum_type='none',
                  momentum=0.9,
+                 momentum_schedule=constant,
                  batch_size=None,
                  max_f_eval=15000,
                  master_solver='ecos',
@@ -461,8 +525,10 @@ class DualSVR(RegressorMixin, DualSVM):
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
+                         learning_rate_schedule=learning_rate_schedule,
                          momentum_type=momentum_type,
                          momentum=momentum,
+                         momentum_schedule=momentum_schedule,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          master_solver=master_solver,
@@ -510,13 +576,22 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 b = np.zeros(1)  # equality vector
                 lb = np.zeros(2 * n_samples)  # lower bounds
-                alphas = solve_qp(Q, q, A=A, b=b, lb=lb, ub=ub, solver=self.optimizer, verbose=self.verbose)
+                alphas = solve_qp(P=Q,
+                                  q=q,
+                                  A=A,
+                                  b=b,
+                                  lb=lb,
+                                  ub=ub,
+                                  solver=self.optimizer,
+                                  verbose=self.verbose)
 
             else:
 
                 if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                    self.optimizer = self.optimizer(f=self.obj, ub=ub, max_iter=self.max_iter,
+                    self.optimizer = self.optimizer(f=self.obj,
+                                                    ub=ub,
+                                                    max_iter=self.max_iter,
                                                     verbose=self.verbose).minimize()
                     alphas = self.optimizer.x
 
@@ -526,8 +601,11 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
-                        self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
-                                                        max_f_eval=self.max_f_eval, verbose=self.verbose).minimize()
+                        self.optimizer = self.optimizer(f=self.obj,
+                                                        x=np.zeros(self.obj.ndim),
+                                                        max_iter=self.max_iter,
+                                                        max_f_eval=self.max_f_eval,
+                                                        verbose=self.verbose).minimize()
 
                         if self.optimizer.status == 'stopped':
                             if self.optimizer.iter >= self.max_iter:
@@ -539,15 +617,24 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     elif issubclass(self.optimizer, ProximalBundle):
 
-                        self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), max_iter=self.max_iter,
-                                                        master_solver=self.master_solver, verbose=self.verbose,
+                        self.optimizer = self.optimizer(f=self.obj,
+                                                        x=np.zeros(self.obj.ndim),
+                                                        max_iter=self.max_iter,
+                                                        master_solver=self.master_solver,
+                                                        verbose=self.verbose,
                                                         master_verbose=self.master_verbose).minimize()
 
                     elif issubclass(self.optimizer, StochasticOptimizer):
 
-                        self.optimizer = self.optimizer(f=self.obj, x=np.zeros(self.obj.ndim), epochs=self.max_iter,
-                                                        step_size=self.learning_rate, momentum_type=self.momentum_type,
-                                                        momentum=self.momentum, verbose=self.verbose).minimize()
+                        self.optimizer = self.optimizer(f=self.obj,
+                                                        x=np.zeros(self.obj.ndim),
+                                                        epochs=self.max_iter,
+                                                        step_size=self.learning_rate,
+                                                        step_size_schedule=self.learning_rate_schedule,
+                                                        momentum_type=self.momentum_type,
+                                                        momentum=self.momentum,
+                                                        momentum_schedule=self.momentum_schedule,
+                                                        verbose=self.verbose).minimize()
 
                     alphas = self.obj.primal_solution
 
