@@ -108,7 +108,7 @@ def plot_svm_hyperplane(svm, X, y):
     kernel = ('' if isinstance(svm, LinearClassifierMixin) or isinstance(svm, LinearModel) else
               'using ' + (svm.kernel + ' kernel' if isinstance(svm.kernel, str) else
                           svm.kernel.__class__.__name__ if isinstance(svm.kernel, Kernel) else svm.kernel.__name__))
-    plt.title(f'{"custom" if isinstance(svm, SVM) else "sklearn"} {svm.__class__.__name__} {kernel}', fontsize=9)
+    plt.title(f'{"" if isinstance(svm, SVM) else "sklearn"} {svm.__class__.__name__} {kernel}', fontsize=9)
 
     # set the legend
     if isinstance(svm, ClassifierMixin):

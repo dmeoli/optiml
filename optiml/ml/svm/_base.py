@@ -7,7 +7,7 @@ from sklearn.base import ClassifierMixin, BaseEstimator, RegressorMixin
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model._base import LinearClassifierMixin, SparseCoefMixin, LinearModel
 from sklearn.model_selection import train_test_split
-from sklearn.utils.multiclass import unique_labels
+from sklearn.preprocessing import LabelBinarizer
 
 from .kernels import gaussian, Kernel, LinearKernel
 from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
@@ -36,33 +36,55 @@ class SVM(BaseEstimator, ABC):
     tol : float, default=1e-3
         Tolerance for stopping criterion.
 
-    optimizer : Optimizer instance, default=None
-        The solver for optimization. It can be a subclass of the LineSearchOptimizer
+    optimizer : LineSearchOptimizer or StochasticOptimizer subclass, default=None
+        The solver for optimization. It can be a subclass of the `LineSearchOptimizer`
         which can converge faster and perform better for small datasets e.g., the
-        LBFGS quasi-Newton method or, alternatively, a subclass of the StochasticOptimizer
-        e.g, the StochasticGradientDescent or Adam, which works well on relatively large
-        datasets (with thousands of training samples or more) in terms of both training
-        time and validation score.
+        `LBFGS` quasi-Newton method or, alternatively, a subclass of the `StochasticOptimizer`
+        e.g, the `StochasticGradientDescent` or `Adam`, which works well on relatively
+        large datasets (with thousands of training samples or more) in terms of both
+        training time and validation score.
 
-    max_iter :
+    max_iter : int, default=1000
+        Maximum number of iterations. The solver iterates until convergence
+        (determined by ``tol``) or this number of iterations. If the optimizer
+        is a subclass of `StochasticOptimizer`, this value determines the number
+        of epochs (how many times each data point will be used), not the number
+        of gradient steps.
 
-    learning_rate_init :
+    learning_rate_init : double, default=0.1
+        The initial learning rate used for weight update. It controls the
+        step-size in updating the weights. Only used when solver is a
+        subclass of `StochasticOptimizer`.
 
-    learning_rate_schedule:
+    learning_rate_schedule: Schedule instance, default=constant
+        Learning rate schedule for weight updates. Only used when solver is a
+        subclass of `StochasticOptimizer`.
 
-    momentum_type :
+    momentum_type : {'none', 'standard', 'nesterov'}, default='none'
+        Momentum type used for weight update. Only used when solver is
+        a subclass of `StochasticOptimizer`.
 
-    momentum :
+    momentum : float, default=0.9
+        Momentum for weight update. Should be between 0 and 1. Only used when
+        solver is a subclass of `StochasticOptimizer`.
 
     momentum_schedule :
+        Momentum schedule for weight updates. Only used when solver is a
+        subclass of `StochasticOptimizer`.
 
     batch_size :
 
-    max_f_eval :
+    max_f_eval : int, default=15000
+        Only used when ``optimizer`` is a subclass of `LineSearchOptimizer`.
+        Maximum number of loss function calls. The solver iterates until
+        convergence (determined by ``tol``), number of iterations reaches
+        ``max_iter``, or this number of loss function calls. Note that number
+        of loss function calls will be greater than or equal to the number
+        of iterations.
 
     shuffle : bool, default=True
         Whether to shuffle samples for batch sampling in each iteration. Only
-        used when the ``optimizer`` is an instance of StochasticOptimizer class.
+        used when the ``optimizer`` is a subclass of `StochasticOptimizer`.
 
     random_state : int, default=None
         Controls the pseudo random number generation for train-test split if
@@ -178,17 +200,18 @@ class PrimalSVM(SVM, ABC):
             self.coef_ = packed_coef_inter
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
+        self._unpack(opt.x)
         self._avg_epoch_loss += opt.f_x * X_batch.shape[0]
         if opt.is_batch_end():
             self._avg_epoch_loss /= opt.f.X.shape[0]  # n_samples
             self.train_loss_history.append(self._avg_epoch_loss)
-            if self.verbose and not opt.epoch % self.verbose:
-                print('\tloss: {: 1.4e}'.format(self._avg_epoch_loss), end='')
+            if opt.is_verbose() and opt.epoch != opt.iter:
+                print('\tavg_loss: {: 1.4e}'.format(self._avg_epoch_loss), end='')
             self._avg_epoch_loss = 0.
             if self.validation_split:
                 val_loss = self.loss.function(opt.x, X_val, y_val)
                 self.val_loss_history.append(val_loss)
-                if self.verbose and not opt.epoch % self.verbose:
+                if opt.is_verbose():
                     print(' - val_loss: {: 1.4e}'.format(val_loss), end='')
 
     def _update_no_improvement_count(self, opt):
@@ -337,23 +360,37 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         if penalty not in ('l1', 'l2'):
             raise TypeError(f'{penalty} is not an allowed penalty')
         self.penalty = penalty
+        self.lb = LabelBinarizer(neg_label=-1)
+
+    def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
+        super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
+        if opt.is_batch_end():
+            acc = self.score(X_batch[:, :-1], y_batch)
+            self.train_score_history.append(acc)
+            if opt.is_verbose():
+                print(' - acc: {: 1.4f}'.format(acc), end='')
+            if self.validation_split:
+                val_acc = self.score(X_val[:, :-1], y_val)
+                self.val_score_history.append(val_acc)
+                if opt.is_verbose():
+                    print(' - val_acc: {: 1.4f}'.format(val_acc), end='')
+            self._update_no_improvement_count(opt)
 
     def fit(self, X, y):
-        self.labels = unique_labels(y)  # TODO label binarizer di sklearn
-        if len(self.labels) > 2:
+        self.lb.fit(y)
+        if len(self.lb.classes_) > 2:
             raise ValueError('use OneVsOneClassifier or OneVsRestClassifier from sklearn.multiclass '
                              'to train a model over more than two labels')
-        y = np.where(y == self.labels[0], -1., 1.)
-
-        if self.fit_intercept:
-            X_train = np.c_[X, np.ones_like(y)]
-        else:
-            X_train = X
-
-        self.loss = self.loss(self, X_train, y, self.penalty)
+        y = self.lb.transform(y).ravel()
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
+            if self.fit_intercept:
+                X_biased = np.c_[X, np.ones_like(y)]
+            else:
+                X_biased = X
+
+            self.loss = self.loss(self, X_biased, y, self.penalty)
             self.optimizer = self.optimizer(f=self.loss,
                                             x=np.zeros(self.loss.ndim),
                                             max_iter=self.max_iter,
@@ -366,15 +403,30 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                 elif self.optimizer.f_eval >= self.max_f_eval:
                     warnings.warn('max_f_eval reached but the optimization has not converged yet', ConvergenceWarning)
 
+            self._unpack(self.optimizer.x)
+
         elif issubclass(self.optimizer, StochasticOptimizer):
 
             if self.validation_split:
-                X, X_val, y, y_val = train_test_split(X, y, test_size=self.validation_split,
-                                                      stratify=True, random_state=self.random_state)
+                X, X_val, y, y_val = train_test_split(X, y,
+                                                      test_size=self.validation_split,
+                                                      random_state=self.random_state)
+
+                if self.fit_intercept:
+                    X_val_biased = np.c_[X_val, np.ones_like(y_val)]
+                else:
+                    X_val_biased = X_val
+
             else:
-                X_val = None
+                X_val_biased = None
                 y_val = None
 
+            if self.fit_intercept:
+                X_biased = np.c_[X, np.ones_like(y)]
+            else:
+                X_biased = X
+
+            self.loss = self.loss(self, X_biased, y, self.penalty)
             self.optimizer = self.optimizer(f=self.loss,
                                             x=np.zeros(self.loss.ndim),
                                             epochs=self.max_iter,
@@ -384,14 +436,12 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                                             momentum=self.momentum,
                                             momentum_schedule=self.momentum_schedule,
                                             callback=self._store_train_val_info,
-                                            callback_args=(X_val, y_val),
+                                            callback_args=(X_val_biased, y_val),
                                             shuffle=self.shuffle,
                                             random_state=self.random_state,
                                             verbose=self.verbose).minimize()
 
-        self._unpack(self.optimizer.x)
-
-        if self.fit_intercept:
+        if self.fit_intercept and X.shape[1] > 1:
             self.loss.X = X
 
         return self
@@ -400,7 +450,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         return np.dot(X, self.coef_) + self.intercept_
 
     def predict(self, X):
-        return np.where(self.decision_function(X) >= 0, self.labels[1], self.labels[0])
+        return self.lb.inverse_transform(self.decision_function(X))
 
 
 class DualSVC(ClassifierMixin, DualSVM):
@@ -440,13 +490,14 @@ class DualSVC(ClassifierMixin, DualSVM):
                          shuffle=shuffle,
                          random_state=random_state,
                          verbose=verbose)
+        self.lb = LabelBinarizer(neg_label=-1)
 
     def fit(self, X, y):
-        self.labels = unique_labels(y)
-        if len(self.labels) > 2:
+        self.lb.fit(y)
+        if len(self.lb.classes_) > 2:
             raise ValueError('use OneVsOneClassifier or OneVsRestClassifier from sklearn.multiclass '
                              'to train a model over more than two labels')
-        y = np.where(y == self.labels[0], -1., 1.)
+        y = self.lb.transform(y).ravel()
 
         n_samples = len(y)
 
@@ -563,7 +614,7 @@ class DualSVC(ClassifierMixin, DualSVM):
         return np.dot(X, self.coef_) + self.intercept_
 
     def predict(self, X):
-        return np.where(self.decision_function(X) >= 0, self.labels[1], self.labels[0])
+        return self.lb.inverse_transform(self.decision_function(X))
 
 
 class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
@@ -580,6 +631,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  momentum_type='none',
                  momentum=0.9,
                  momentum_schedule=constant,
+                 validation_split=0.,
                  batch_size=None,
                  max_f_eval=15000,
                  early_stopping=False,
@@ -598,6 +650,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          momentum_schedule=momentum_schedule,
+                         validation_split=validation_split,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          early_stopping=early_stopping,
@@ -612,19 +665,34 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
             raise ValueError('epsilon must be >= 0')
         self.epsilon = epsilon
 
+    def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
+        super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
+        if opt.is_batch_end():
+            r2 = self.score(X_batch[:, :-1], y_batch)
+            self.train_score_history.append(r2)
+            if opt.is_verbose():
+                print(' - r2: {: 1.4f}'.format(r2), end='')
+            if self.early_stopping:
+                val_r2 = self.score(X_val[:, :-1], y_val)
+                self.val_score_history.append(val_r2)
+                if opt.is_verbose():
+                    print(' - val_r2: {: 1.4f}'.format(val_r2), end='')
+            self._update_no_improvement_count(opt)
+
     def fit(self, X, y):
         targets = y.shape[1] if y.ndim > 1 else 1
         if targets > 1:
             raise ValueError('use sklearn.multioutput.MultiOutputRegressor '
                              'to train a model over more than one target')
 
-        if self.fit_intercept:
-            X = np.c_[X, np.ones_like(y)]
-
-        self.loss = self.loss(self, X, y, self.epsilon)
-
         if issubclass(self.optimizer, LineSearchOptimizer):
 
+            if self.fit_intercept:
+                X_biased = np.c_[X, np.ones_like(y)]
+            else:
+                X_biased = X
+
+            self.loss = self.loss(self, X_biased, y, self.epsilon)
             self.optimizer = self.optimizer(f=self.loss,
                                             x=np.zeros(self.loss.ndim),
                                             max_iter=self.max_iter,
@@ -637,8 +705,30 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                 elif self.optimizer.f_eval >= self.max_f_eval:
                     warnings.warn('max_f_eval reached but the optimization has not converged yet', ConvergenceWarning)
 
+            self._unpack(self.optimizer.x)
+
         elif issubclass(self.optimizer, StochasticOptimizer):
 
+            if self.validation_split:
+                X, X_val, y, y_val = train_test_split(X, y,
+                                                      test_size=self.validation_split,
+                                                      random_state=self.random_state)
+
+                if self.fit_intercept:
+                    X_val_biased = np.c_[X_val, np.ones_like(y_val)]
+                else:
+                    X_val_biased = X_val
+
+            else:
+                X_val_biased = None
+                y_val = None
+
+            if self.fit_intercept:
+                X_biased = np.c_[X, np.ones_like(y)]
+            else:
+                X_biased = X
+
+            self.loss = self.loss(self, X_biased, y, self.epsilon)
             self.optimizer = self.optimizer(f=self.loss,
                                             x=np.zeros(self.loss.ndim),
                                             epochs=self.max_iter,
@@ -647,9 +737,14 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                                             momentum_type=self.momentum_type,
                                             momentum=self.momentum,
                                             momentum_schedule=self.momentum_schedule,
+                                            callback=self._store_train_val_info,
+                                            callback_args=(X_val_biased, y_val),
+                                            shuffle=self.shuffle,
+                                            random_state=self.random_state,
                                             verbose=self.verbose).minimize()
 
-        self._unpack(self.optimizer.x)
+        if self.fit_intercept and X.shape[1] > 1:
+            self.loss.X = X
 
         return self
 
@@ -797,8 +892,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     alphas = self.obj.primal_solution
 
-            alphas_p = alphas[:n_samples]
-            alphas_n = alphas[n_samples:]
+            alphas_p, alphas_n = np.split(alphas, 2)
 
         sv = np.logical_or(alphas_p > 1e-5, alphas_n > 1e-5)
         self.support_ = np.arange(len(alphas_p))[sv]

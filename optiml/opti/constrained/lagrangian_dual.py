@@ -182,7 +182,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
         ql = self.q.T - mu.T.dot(self.A) + lmbda_p.T - lmbda_n.T
         x = ldl_solve((self.L, self.D, self.P), -ql)
-        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda_p.T.dot(self.ub)
+        return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
         """

@@ -140,13 +140,13 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
         if opt.is_batch_end():
             self._avg_epoch_loss /= opt.f.X.shape[0]  # n_samples
             self.train_loss_history.append(self._avg_epoch_loss)
-            if self.verbose and not opt.epoch % self.verbose:
-                print('\tloss: {: 1.4e}'.format(self._avg_epoch_loss), end='')
+            if opt.is_verbose() and opt.epoch != opt.iter:
+                print('\tavg_loss: {: 1.4e}'.format(self._avg_epoch_loss), end='')
             self._avg_epoch_loss = 0.
             if self.validation_split:
                 val_loss = self.loss.function(opt.x, X_val, y_val)
                 self.val_loss_history.append(val_loss)
-                if self.verbose and not opt.epoch % self.verbose:
+                if opt.is_verbose():
                     print(' - val_loss: {: 1.4e}'.format(val_loss), end='')
 
     def _update_no_improvement_count(self, opt):
@@ -214,8 +214,10 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
                 # don't stratify in multi-label classification
                 should_stratify = isinstance(self, NeuralNetworkClassifier) and self.layers[-1].fan_out == 1
                 stratify = y if should_stratify else None
-                X, X_val, y, y_val = train_test_split(X, y, test_size=self.validation_split,
-                                                      stratify=stratify, random_state=self.random_state)
+                X, X_val, y, y_val = train_test_split(X, y,
+                                                      stratify=stratify,
+                                                      test_size=self.validation_split,
+                                                      random_state=self.random_state)
             else:
                 X_val = None
                 y_val = None
@@ -286,12 +288,12 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
         if opt.is_batch_end():
             acc = self.score(X_batch, y_batch)
             self.train_score_history.append(acc)
-            if self.verbose and not opt.epoch % self.verbose:
+            if opt.is_verbose():
                 print(' - acc: {: 1.4f}'.format(acc), end='')
             if self.validation_split:
                 val_acc = self.score(X_val, y_val)
                 self.val_score_history.append(val_acc)
-                if self.verbose and not opt.epoch % self.verbose:
+                if opt.is_verbose():
                     print(' - val_acc: {: 1.4f}'.format(val_acc), end='')
             self._update_no_improvement_count(opt)
 
@@ -340,12 +342,12 @@ class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
         if opt.is_batch_end():
             r2 = self.score(X_batch, y_batch)
             self.train_score_history.append(r2)
-            if self.verbose and not opt.epoch % self.verbose:
+            if opt.is_verbose():
                 print(' - r2: {: 1.4f}'.format(r2), end='')
             if self.early_stopping:
                 val_r2 = self.score(X_val, y_val)
                 self.val_score_history.append(val_r2)
-                if self.verbose and not opt.epoch % self.verbose:
+                if opt.is_verbose():
                     print(' - val_r2: {: 1.4f}'.format(val_r2), end='')
             self._update_no_improvement_count(opt)
 

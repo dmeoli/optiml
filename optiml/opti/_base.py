@@ -62,8 +62,8 @@ class Optimizer:
 class OptimizationFunction:
 
     def __init__(self, ndim=2):
-        self.jac = jacobian(self.function)
-        self.hes = hessian(self.function)
+        self.auto_jac = jacobian(self.function)
+        self.auto_hess = hessian(self.function)
         self.ndim = ndim
 
     def x_star(self):
@@ -84,7 +84,7 @@ class OptimizationFunction:
         :param x: 1D array of points at which the Jacobian is to be computed.
         :return:  the Jacobian of the function at x.
         """
-        return self.jac(x)
+        return self.auto_jac(x)
 
     def hessian(self, x):
         """
@@ -92,7 +92,7 @@ class OptimizationFunction:
         :param x: 1D array of points at which the Hessian is to be computed.
         :return:  the Hessian matrix of the function at x.
         """
-        return self.hes(x)
+        return self.auto_hess(x)
 
 
 class Quadratic(OptimizationFunction):

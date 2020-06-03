@@ -88,14 +88,14 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         :return: the function value
         """
         lmbda_p, lmbda_n = np.split(lmbda, 2)
-        ql = self.q.T + lmbda_p - lmbda_n
+        ql = self.q.T + lmbda_p.T - lmbda_n.T
         if np.array_equal(lmbda, self.last_lmbda):
             x = self.last_x
         else:
             x = ldl_solve((self.L, self.D, self.P), -ql)
             self.last_lmbda = lmbda
             self.last_x = x
-        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda_p.T.dot(self.ub)
+        return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
         """
@@ -115,7 +115,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             x = self.last_x
         else:
             lmbda_p, lmbda_n = np.split(lmbda, 2)
-            ql = self.q.T + lmbda_p - lmbda_n
+            ql = self.q.T + lmbda_p.T - lmbda_n.T
             x = ldl_solve((self.L, self.D, self.P), -ql)
             self.last_lmbda = lmbda
             self.last_x = x
