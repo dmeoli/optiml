@@ -13,7 +13,7 @@ from ..utils import ldl_solve
 class LagrangianDual(Optimizer):
 
     def __init__(self,
-                 dual,
+                 f,
                  optimizer=AdaGrad,
                  eps=1e-6,
                  step_size=0.01,
@@ -31,8 +31,8 @@ class LagrangianDual(Optimizer):
                  shuffle=True,
                  random_state=None,
                  verbose=False):
-        super().__init__(f=dual,
-                         x=np.zeros(dual.ndim),
+        super().__init__(f=f,
+                         x=np.zeros(f.ndim),
                          eps=eps,
                          max_iter=max_iter,
                          callback=callback,
@@ -46,9 +46,8 @@ class LagrangianDual(Optimizer):
         self.step_size = step_size
         self.momentum_type = momentum_type
         self.momentum = momentum
-        self.step_size_schedule = step_size_schedule(self.step_size)
-        if self.momentum_type != 'none':
-            self.momentum_schedule = momentum_schedule(self.momentum)
+        self.step_size_schedule = step_size_schedule
+        self.momentum_schedule = momentum_schedule
         self.batch_size = batch_size
         self.max_f_eval = max_f_eval
         self.master_solver = master_solver
@@ -113,7 +112,7 @@ class LagrangianDual(Optimizer):
                                             verbose=self.verbose,
                                             master_verbose=self.master_verbose).minimize()
 
-        return self
+        return self.optimizer
 
     def callback(self, args=()):
         if self.f.primal.ndim == 2:

@@ -14,9 +14,8 @@ from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitiv
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
-from ...opti.constrained import LagrangianConstrainedQuadratic
+from ...opti.constrained import LagrangianConstrainedQuadratic, LagrangianDual
 from ...opti.constrained.bcqp import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
-from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
 from ...opti.unconstrained.stochastic.schedules import constant
@@ -543,31 +542,13 @@ class DualSVC(ClassifierMixin, DualSVM):
             elif issubclass(self.optimizer, Optimizer):
 
                 self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
+                self.optimizer = LagrangianDual(f=self.obj,
+                                                optimizer=self.optimizer,
+                                                max_iter=self.max_iter,
+                                                max_f_eval=self.max_f_eval,
+                                                verbose=self.verbose).minimize()
 
-                if issubclass(self.optimizer, LineSearchOptimizer):
-
-                    self.optimizer = self.optimizer(f=self.obj,
-                                                    x=np.zeros(self.obj.ndim),
-                                                    max_iter=self.max_iter,
-                                                    max_f_eval=self.max_f_eval,
-                                                    verbose=self.verbose).minimize()
-
-                    if self.optimizer.status == 'stopped':
-                        if self.optimizer.iter >= self.max_iter:
-                            warnings.warn('max_iter reached but the optimization has not converged yet',
-                                          ConvergenceWarning)
-                        elif self.optimizer.f_eval >= self.max_f_eval:
-                            warnings.warn('max_f_eval reached but the optimization has not converged yet',
-                                          ConvergenceWarning)
-
-                elif issubclass(self.optimizer, ProximalBundle):
-
-                    self.optimizer = self.optimizer(f=self.obj,
-                                                    x=np.zeros(self.obj.ndim),
-                                                    max_iter=self.max_iter,
-                                                    master_solver=self.master_solver,
-                                                    verbose=self.verbose,
-                                                    master_verbose=self.master_verbose).minimize()
+                if not isinstance(self.optimizer, StochasticOptimizer):
 
                     if self.optimizer.status == 'stopped':
                         if self.optimizer.iter >= self.max_iter:
@@ -576,18 +557,6 @@ class DualSVC(ClassifierMixin, DualSVM):
                         elif self.optimizer.f_eval >= self.max_f_eval:
                             warnings.warn('max_f_eval reached but the optimization has not converged yet',
                                           ConvergenceWarning)
-
-                elif issubclass(self.optimizer, StochasticOptimizer):
-
-                    self.optimizer = self.optimizer(f=self.obj,
-                                                    x=np.zeros(self.obj.ndim),
-                                                    epochs=self.max_iter,
-                                                    step_size=self.learning_rate_init,
-                                                    step_size_schedule=self.learning_rate_schedule,
-                                                    momentum_type=self.momentum_type,
-                                                    momentum=self.momentum,
-                                                    momentum_schedule=self.momentum_schedule,
-                                                    verbose=self.verbose).minimize()
 
                 alphas = self.obj.primal_solution
 
@@ -852,14 +821,13 @@ class DualSVR(RegressorMixin, DualSVM):
                 elif issubclass(self.optimizer, Optimizer):
 
                     self.obj = LagrangianConstrainedQuadratic(self.obj, A, ub)
+                    self.optimizer = LagrangianDual(f=self.obj,
+                                                    optimizer=self.optimizer,
+                                                    max_iter=self.max_iter,
+                                                    max_f_eval=self.max_f_eval,
+                                                    verbose=self.verbose).minimize()
 
-                    if issubclass(self.optimizer, LineSearchOptimizer):
-
-                        self.optimizer = self.optimizer(f=self.obj,
-                                                        x=np.zeros(self.obj.ndim),
-                                                        max_iter=self.max_iter,
-                                                        max_f_eval=self.max_f_eval,
-                                                        verbose=self.verbose).minimize()
+                    if not isinstance(self.optimizer, StochasticOptimizer):
 
                         if self.optimizer.status == 'stopped':
                             if self.optimizer.iter >= self.max_iter:
@@ -868,27 +836,6 @@ class DualSVR(RegressorMixin, DualSVM):
                             elif self.optimizer.f_eval >= self.max_f_eval:
                                 warnings.warn('max_f_eval reached but the optimization has not converged yet',
                                               ConvergenceWarning)
-
-                    elif issubclass(self.optimizer, ProximalBundle):
-
-                        self.optimizer = self.optimizer(f=self.obj,
-                                                        x=np.zeros(self.obj.ndim),
-                                                        max_iter=self.max_iter,
-                                                        master_solver=self.master_solver,
-                                                        verbose=self.verbose,
-                                                        master_verbose=self.master_verbose).minimize()
-
-                    elif issubclass(self.optimizer, StochasticOptimizer):
-
-                        self.optimizer = self.optimizer(f=self.obj,
-                                                        x=np.zeros(self.obj.ndim),
-                                                        epochs=self.max_iter,
-                                                        step_size=self.learning_rate_init,
-                                                        step_size_schedule=self.learning_rate_schedule,
-                                                        momentum_type=self.momentum_type,
-                                                        momentum=self.momentum,
-                                                        momentum_schedule=self.momentum_schedule,
-                                                        verbose=self.verbose).minimize()
 
                     alphas = self.obj.primal_solution
 
