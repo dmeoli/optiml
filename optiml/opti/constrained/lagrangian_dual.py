@@ -118,7 +118,7 @@ class LagrangianDual(Optimizer):
         if self.f.primal.ndim == 2:
             self.x0_history.append(self.f.primal_solution[0])
             self.x1_history.append(self.f.primal_solution[1])
-            self.f_x_history.append(self.f.primal_value)
+            self.f_x_history.append(-self.f.primal_value)
         if callable(self._callback):
             self._callback(self, *args, *self.callback_args)
 
