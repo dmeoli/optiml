@@ -112,7 +112,7 @@ class LagrangianDual(Optimizer):
                                             verbose=self.verbose,
                                             master_verbose=self.master_verbose).minimize()
 
-        return self.optimizer
+        return self
 
     def callback(self, args=()):
         if self.f.primal.ndim == 2:

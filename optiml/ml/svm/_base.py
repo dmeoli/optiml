@@ -95,6 +95,23 @@ class SVM(BaseEstimator, ABC):
         Controls the verbosity of progress messages to stdout. Use a boolean value
         to switch on/off or an int value to show progress each ``verbose`` time
         optimization steps.
+
+    Attributes
+    ----------
+
+
+    Examples
+    --------
+
+
+    Notes
+    -----
+
+
+    References
+    ----------
+
+
     """
 
     def __init__(self,
@@ -544,8 +561,18 @@ class DualSVC(ClassifierMixin, DualSVM):
                 self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
                 self.optimizer = LagrangianDual(f=self.obj,
                                                 optimizer=self.optimizer,
+                                                step_size=self.learning_rate_init,
+                                                step_size_schedule=self.learning_rate_schedule,
+                                                momentum_type=self.momentum_type,
+                                                momentum=self.momentum,
+                                                momentum_schedule=self.momentum_schedule,
+                                                batch_size=self.batch_size,
                                                 max_iter=self.max_iter,
                                                 max_f_eval=self.max_f_eval,
+                                                master_solver=self.master_solver,
+                                                master_verbose=self.master_verbose,
+                                                shuffle=self.shuffle,
+                                                random_state=self.random_state,
                                                 verbose=self.verbose).minimize()
 
                 if not isinstance(self.optimizer, StochasticOptimizer):
@@ -823,8 +850,18 @@ class DualSVR(RegressorMixin, DualSVM):
                     self.obj = LagrangianConstrainedQuadratic(self.obj, A, ub)
                     self.optimizer = LagrangianDual(f=self.obj,
                                                     optimizer=self.optimizer,
+                                                    step_size=self.learning_rate_init,
+                                                    step_size_schedule=self.learning_rate_schedule,
+                                                    momentum_type=self.momentum_type,
+                                                    momentum=self.momentum,
+                                                    momentum_schedule=self.momentum_schedule,
+                                                    batch_size=self.batch_size,
                                                     max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval,
+                                                    master_solver=self.master_solver,
+                                                    master_verbose=self.master_verbose,
+                                                    shuffle=self.shuffle,
+                                                    random_state=self.random_state,
                                                     verbose=self.verbose).minimize()
 
                     if not isinstance(self.optimizer, StochasticOptimizer):
