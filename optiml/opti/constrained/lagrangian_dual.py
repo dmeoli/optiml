@@ -66,13 +66,13 @@ class LagrangianDual(Optimizer):
 
         self.callback()
 
-        if gap <= self.eps:
-            self.status = 'optimal'
-            raise StopIteration
-
         self.x, self.f_x = self.f.primal_solution, self.f.primal_value
 
         self.iter += 1
+
+        if gap <= self.eps:
+            self.status = 'optimal'
+            raise StopIteration
 
     def minimize(self):
 
