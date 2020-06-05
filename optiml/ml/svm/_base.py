@@ -16,6 +16,7 @@ from ...opti import Optimizer
 from ...opti import Quadratic
 from ...opti.constrained import LagrangianConstrainedQuadratic, LagrangianDual
 from ...opti.constrained.bcqp import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
+from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
 from ...opti.unconstrained.stochastic.schedules import constant
@@ -171,6 +172,8 @@ class PrimalSVM(SVM, ABC):
                  early_stopping=False,
                  patience=5,
                  fit_intercept=True,
+                 master_solver='ecos',
+                 master_verbose=False,
                  shuffle=True,
                  random_state=None,
                  verbose=False):
@@ -194,6 +197,8 @@ class PrimalSVM(SVM, ABC):
         self.validation_split = validation_split
         self.early_stopping = early_stopping
         self.patience = patience
+        self.master_solver = master_solver
+        self.master_verbose = master_verbose
         self.coef_ = np.zeros(0)
         self.intercept_ = 0.
         self.fit_intercept = fit_intercept
@@ -349,6 +354,8 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                  early_stopping=False,
                  patience=5,
                  fit_intercept=True,
+                 master_solver='ecos',
+                 master_verbose=False,
                  shuffle=True,
                  random_state=None,
                  verbose=False):
@@ -368,6 +375,8 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                          early_stopping=early_stopping,
                          patience=patience,
                          fit_intercept=fit_intercept,
+                         master_solver=master_solver,
+                         master_verbose=master_verbose,
                          shuffle=shuffle,
                          random_state=random_state,
                          verbose=verbose)
@@ -418,6 +427,26 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                     warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
                 elif self.optimizer.f_eval >= self.max_f_eval:
                     warnings.warn('max_f_eval reached but the optimization has not converged yet', ConvergenceWarning)
+
+            self._unpack(self.optimizer.x)
+
+        elif issubclass(self.optimizer, ProximalBundle):
+
+            if self.fit_intercept:
+                X_biased = np.c_[X, np.ones_like(y)]
+            else:
+                X_biased = X
+
+            self.loss = self.loss(self, X_biased, y, self.penalty)
+            self.optimizer = self.optimizer(f=self.loss,
+                                            x=np.zeros(self.loss.ndim),
+                                            max_iter=self.max_iter,
+                                            master_solver=self.master_solver,
+                                            verbose=self.verbose,
+                                            master_verbose=self.master_verbose).minimize()
+
+            if self.optimizer.status == 'stopped':
+                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
 
             self._unpack(self.optimizer.x)
 
@@ -633,6 +662,8 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  early_stopping=False,
                  patience=5,
                  fit_intercept=True,
+                 master_solver='ecos',
+                 master_verbose=False,
                  shuffle=True,
                  random_state=None,
                  verbose=False):
@@ -652,6 +683,8 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                          early_stopping=early_stopping,
                          patience=patience,
                          fit_intercept=fit_intercept,
+                         master_solver=master_solver,
+                         master_verbose=master_verbose,
                          shuffle=shuffle,
                          random_state=random_state,
                          verbose=verbose)
@@ -700,6 +733,26 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                     warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
                 elif self.optimizer.f_eval >= self.max_f_eval:
                     warnings.warn('max_f_eval reached but the optimization has not converged yet', ConvergenceWarning)
+
+            self._unpack(self.optimizer.x)
+
+        elif issubclass(self.optimizer, ProximalBundle):
+
+            if self.fit_intercept:
+                X_biased = np.c_[X, np.ones_like(y)]
+            else:
+                X_biased = X
+
+            self.loss = self.loss(self, X_biased, y, self.epsilon)
+            self.optimizer = self.optimizer(f=self.loss,
+                                            x=np.zeros(self.loss.ndim),
+                                            max_iter=self.max_iter,
+                                            master_solver=self.master_solver,
+                                            verbose=self.verbose,
+                                            master_verbose=self.master_verbose).minimize()
+
+            if self.optimizer.status == 'stopped':
+                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
 
             self._unpack(self.optimizer.x)
 

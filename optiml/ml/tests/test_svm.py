@@ -8,6 +8,7 @@ from optiml.ml.svm import PrimalSVC, DualSVC, PrimalSVR, DualSVR
 from optiml.ml.svm.kernels import linear, gaussian
 from optiml.ml.svm.losses import hinge, squared_hinge, epsilon_insensitive, squared_epsilon_insensitive
 from optiml.opti.constrained.bcqp import ProjectedGradient, ActiveSet, InteriorPoint, FrankWolfe
+from optiml.opti.unconstrained import ProximalBundle
 from optiml.opti.unconstrained.line_search import SteepestGradientDescent
 from optiml.opti.unconstrained.stochastic import StochasticGradientDescent, AdaGrad
 
@@ -26,6 +27,15 @@ def test_solve_linear_svr_with_stochastic_optimizer():
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=StochasticGradientDescent)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.77
+
+
+def test_solve_linear_svr_with_proximal_bundle_optimizer():
+    X, y = load_boston(return_X_y=True)
+    X_scaled = StandardScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+    svr = PrimalSVR(loss=epsilon_insensitive, optimizer=ProximalBundle)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
@@ -100,6 +110,15 @@ def test_solve_linear_svc_with_stochastic_optimizer():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
     svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=StochasticGradientDescent))
+    svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+
+def test_solve_linear_svc_with_proximal_bundle_optimizer():
+    X, y = load_iris(return_X_y=True)
+    X_scaled = MinMaxScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=ProximalBundle))
     svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.57
 

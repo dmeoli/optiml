@@ -3,7 +3,6 @@ from scipy.linalg import ldl
 
 from .. import Optimizer
 from .. import Quadratic
-from ..unconstrained import ProximalBundle
 from ..unconstrained.line_search import LineSearchOptimizer
 from ..unconstrained.stochastic import StochasticOptimizer, AdaGrad
 from ..unconstrained.stochastic.schedules import constant
@@ -26,8 +25,6 @@ class LagrangianDual(Optimizer):
                  momentum_schedule=constant,
                  callback=None,
                  callback_args=(),
-                 master_solver='ecos',
-                 master_verbose=False,
                  shuffle=True,
                  random_state=None,
                  verbose=False):
@@ -50,8 +47,6 @@ class LagrangianDual(Optimizer):
         self.momentum_schedule = momentum_schedule
         self.batch_size = batch_size
         self.max_f_eval = max_f_eval
-        self.master_solver = master_solver
-        self.master_verbose = master_verbose
         self.shuffle = shuffle
         self.random_state = random_state
 
@@ -102,15 +97,6 @@ class LagrangianDual(Optimizer):
                                             shuffle=self.shuffle,
                                             random_state=self.random_state,
                                             verbose=self.verbose).minimize()
-
-        elif issubclass(self.optimizer, ProximalBundle):
-
-            self.optimizer = self.optimizer(f=self.f,
-                                            x=self.x,
-                                            max_iter=self.max_iter,
-                                            master_solver=self.master_solver,
-                                            verbose=self.verbose,
-                                            master_verbose=self.master_verbose).minimize()
 
         return self
 
