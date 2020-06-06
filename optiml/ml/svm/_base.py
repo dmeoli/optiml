@@ -38,7 +38,7 @@ class SVM(BaseEstimator, ABC):
 
     optimizer : LineSearchOptimizer or StochasticOptimizer subclass, default=None
         The solver for optimization. It can be a subclass of the `LineSearchOptimizer`
-        which can converge faster and perform better for small datasets e.g., the
+        which can converge faster and perform better for small datasets, e.g., the
         `LBFGS` quasi-Newton method or, alternatively, a subclass of the `StochasticOptimizer`
         e.g, the `StochasticGradientDescent` or `Adam`, which works well on relatively
         large datasets (with thousands of training samples or more) in terms of both

@@ -51,7 +51,7 @@ class Subgradient(LineSearchOptimizer):
     #
     #     delta^{i + 1} = a_start * max(abs(f^{i + 1}_{ref}), 1)
     #
-    #   If eps == 0, i.e. a diminishing square-summable) step size is used, then
+    #   If eps == 0, i.e., a diminishing square-summable) step size is used, then
     #   a_start is used as the fixed scaling factor for the step size sequence
     #   a_start * (1 / i).
     #

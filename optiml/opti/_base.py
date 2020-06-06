@@ -80,7 +80,7 @@ class OptimizationFunction:
 
     def jacobian(self, x):
         """
-        The Jacobian (i.e. gradient) of the function.
+        The Jacobian (i.e., the gradient) of the function.
         :param x: 1D array of points at which the Jacobian is to be computed.
         :return:  the Jacobian of the function at x.
         """
@@ -104,7 +104,7 @@ class Quadratic(OptimizationFunction):
                                     1/2 x^T Q x + q^T x
 
         :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
-                           the Hessian (i.e. the quadratic part) of f. If it is not
+                           the Hessian (i.e., the quadratic part) of f. If it is not
                            positive semidefinite, f(x) will be unbounded below.
         :param q: ([n x 1] real column vector): the linear part of f.
         """
@@ -146,7 +146,7 @@ class Quadratic(OptimizationFunction):
 
     def jacobian(self, x):
         """
-        The Jacobian (i.e. gradient) of a general quadratic function J f(x) = Q x + q.
+        The Jacobian (i.e., the gradient) of a general quadratic function J f(x) = Q x + q.
         :param x: ([n x 1] real column vector): the point where to start the algorithm from.
         :return:  the Jacobian of a general quadratic function.
         """
@@ -156,7 +156,7 @@ class Quadratic(OptimizationFunction):
         """
         The Hessian matrix of a general quadratic function H f(x) = Q.
         :param x: 1D array of points at which the Hessian is to be computed.
-        :return:  the Hessian matrix (i.e. the quadratic part) of a general quadratic function at x.
+        :return:  the Hessian matrix (i.e., the the quadratic part) of a general quadratic function at x.
         """
         return self.Q
 

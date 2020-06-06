@@ -4,7 +4,7 @@ size or momentum for gradient descent.
 
 A schedule is implemented as an iterator. This allows it to have iterators
 of infinite length. It also makes it possible to manipulate scheduls with
-the itertools python module, e.g. for chaining iterators.
+the itertools python module, e.g., for chaining iterators.
 """
 
 import itertools

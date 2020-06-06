@@ -308,7 +308,7 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
                                  'function only works with softmax output layer')
             if self.layers[-1].fan_out != n_classes:
                 raise ValueError('the number of neurons in the output layer must '
-                                 f'be equal to the number of classes, i.e. {n_classes}')
+                                 f'be equal to the number of classes, i.e., {n_classes}')
         elif self.loss in (MeanSquaredError, BinaryCrossEntropy):
             if n_classes > 2:
                 raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} '
@@ -368,7 +368,7 @@ class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
         n_targets = y.shape[1]
         if self.layers[-1].fan_out != n_targets:
             raise ValueError(f'the number of neurons in the output layer must be '
-                             f'equal to the number of targets, i.e. {n_targets}')
+                             f'equal to the number of targets, i.e., {n_targets}')
 
         return super().fit(X, y)
 
