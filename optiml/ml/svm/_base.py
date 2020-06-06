@@ -598,8 +598,6 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                 batch_size=self.batch_size,
                                                 max_iter=self.max_iter,
                                                 max_f_eval=self.max_f_eval,
-                                                master_solver=self.master_solver,
-                                                master_verbose=self.master_verbose,
                                                 shuffle=self.shuffle,
                                                 random_state=self.random_state,
                                                 verbose=self.verbose).minimize()
@@ -911,8 +909,6 @@ class DualSVR(RegressorMixin, DualSVM):
                                                     batch_size=self.batch_size,
                                                     max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval,
-                                                    master_solver=self.master_solver,
-                                                    master_verbose=self.master_verbose,
                                                     shuffle=self.shuffle,
                                                     random_state=self.random_state,
                                                     verbose=self.verbose).minimize()
