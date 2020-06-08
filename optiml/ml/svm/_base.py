@@ -14,7 +14,7 @@ from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitiv
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
-from ...opti.constrained import LagrangianDual
+from ...opti.constrained import LagrangianDual, LagrangianConstrainedQuadratic
 from ...opti.constrained.bcqp import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
@@ -856,6 +856,8 @@ class DualSVR(RegressorMixin, DualSVM):
                        np.hstack((-K, K))))
         q = np.hstack((-y, y)) + self.epsilon
 
+        A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
+
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
         self.obj = Quadratic(Q, q)
@@ -873,7 +875,6 @@ class DualSVR(RegressorMixin, DualSVM):
 
             if isinstance(self.optimizer, str):
 
-                A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
                 b = np.zeros(1)  # equality vector
 
                 lb = np.zeros(2 * n_samples)  # lower bounds
@@ -899,7 +900,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 elif issubclass(self.optimizer, Optimizer):
 
-                    self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
+                    self.obj = LagrangianConstrainedQuadratic(self.obj, A, ub)
                     self.optimizer = LagrangianDual(f=self.obj,
                                                     optimizer=self.optimizer,
                                                     step_size=self.learning_rate_init,
