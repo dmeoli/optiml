@@ -175,12 +175,6 @@ class LagrangianConstrainedQuadratic(Quadratic):
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = np.hstack((self.A * x, self.ub - x, x))
 
-        # compute an heuristic solution out of the solution x of
-        # the Lagrangian relaxation by projecting x on the box
-        x[x < 0] = 0
-        idx = x > self.ub
-        x[idx] = self.ub[idx]
-
         v = self.primal.function(x)
         if v < self.primal_value:
             self.primal_solution = x
