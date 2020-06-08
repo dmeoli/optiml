@@ -142,7 +142,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
         """
         Compute the value of the lagrangian relaxation defined as:
              L(x, lambda) = 1/2 x^T Q x + q^T x - mu^T A x - lambda_+^T (ub - x) - lambda_-^T x
-           L(x, lambda) = 1/2 x^T Q x + (q^T - mu^T A + lambda_+^T - lambda_-^T) x - lambda_+^T ub
+           L(x, lambda) = 1/2 x^T Q x + (q^T - mu^T A + lambda_+^T - lambda_-^T)^T x - lambda_+^T ub
         where mu are the first n components of lambda which controls the equality constraints,
         lambda_+^T are the second n components of lambda and lambda_-^T are the last n components;
         both controls the box-constraints and are constrained to be >= 0.
