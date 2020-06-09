@@ -6,17 +6,16 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 # linear algebra utils
 
-def cholesky_solve(A, b):
+def cholesky_solve(L, b):
     """Solve a symmetric positive definite linear
     system A x = b using Cholesky factorization"""
-    L = np.linalg.cholesky(A)  # complexity O(n^3/3)
     return np.linalg.solve(L.T, np.linalg.solve(L, b))
 
 
 def ldl_solve(ldl_factor, b):
     """Solve a symmetric indefinite linear system
     A x = b using the LDL^T Cholesky factorization."""
-    L, D, P = ldl_factor  # complexity O(n^3/3)
+    L, D, P = ldl_factor
     return np.linalg.solve(L.T, (np.linalg.solve(D, np.linalg.solve(L, b[P]))))
 
 
@@ -133,7 +132,6 @@ def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_
 # plot functions
 
 def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max):
-
     X, Y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
     Z = np.array([f.function(np.array([x, y]))

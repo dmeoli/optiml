@@ -180,4 +180,10 @@ class LagrangianConstrainedQuadratic(Quadratic):
             self.primal_solution = x
             self.primal_value = -v
 
+        # compute an heuristic solution out of the solution x of
+        # the Lagrangian relaxation by projecting x on the box
+        x[x < 0] = 0
+        idx = x > self.ub
+        x[idx] = self.ub[idx]
+
         return g

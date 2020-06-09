@@ -192,7 +192,7 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
 
             # and use Cholesky to solve the system
             # because H is symmetric positive definite matrix
-            dx = cholesky_solve(H, w)
+            dx = cholesky_solve(np.linalg.cholesky(H), w)
 
             dlp = (mu * np.ones(self.f.ndim) + lp * dx) / umx - lp
 

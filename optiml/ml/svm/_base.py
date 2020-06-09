@@ -856,8 +856,6 @@ class DualSVR(RegressorMixin, DualSVM):
                        np.hstack((-K, K))))
         q = np.hstack((-y, y)) + self.epsilon
 
-        A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
-
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
         self.obj = Quadratic(Q, q)
@@ -873,16 +871,17 @@ class DualSVR(RegressorMixin, DualSVM):
 
         else:
 
-            if isinstance(self.optimizer, str):
+            A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
 
-                b = np.zeros(1)  # equality vector
+            Q = Q + np.outer(A, A)
+            self.obj = Quadratic(Q, q)
+
+            if isinstance(self.optimizer, str):
 
                 lb = np.zeros(2 * n_samples)  # lower bounds
 
                 alphas = solve_qp(P=Q,
                                   q=q,
-                                  A=A,
-                                  b=b,
                                   lb=lb,
                                   ub=ub,
                                   solver=self.optimizer,
