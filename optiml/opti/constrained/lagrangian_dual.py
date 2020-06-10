@@ -54,8 +54,8 @@ class LagrangianDual(Optimizer):
 
         if ((isinstance(opt, LineSearchOptimizer) and opt.is_verbose()) or
             (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())) and self.is_verbose():
-            print('\tub: {: 1.4e}'.format(self.f.f_x), end='')
-            print(' - pcost: {: 1.4e}'.format(self.primal_f_x), end='')
+            print('\tub: {: 1.4e}'.format(self.f_x), end='')
+            print(' - pcost: {: 1.4e}'.format(self.f.primal_f_x), end='')
             print(' - gap: {: 1.4e}'.format(gap), end='')
 
         self.callback()
