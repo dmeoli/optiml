@@ -612,7 +612,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                             warnings.warn('max_f_eval reached but the optimization has not converged yet',
                                           ConvergenceWarning)
 
-                alphas = self.obj.primal_solution
+                alphas = self.obj.primal_x
 
         sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
@@ -873,15 +873,14 @@ class DualSVR(RegressorMixin, DualSVM):
 
             A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
 
-            Q = Q + np.outer(A, A)
-            self.obj = Quadratic(Q, q)
-
             if isinstance(self.optimizer, str):
 
                 lb = np.zeros(2 * n_samples)  # lower bounds
 
                 alphas = solve_qp(P=Q,
                                   q=q,
+                                  A=A,
+                                  b=np.zeros(1),
                                   lb=lb,
                                   ub=ub,
                                   solver=self.optimizer,
@@ -891,6 +890,9 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
+                    Q = Q + np.outer(A, A)
+                    self.obj = Quadratic(Q, q)
+
                     self.optimizer = self.optimizer(f=self.obj,
                                                     ub=ub,
                                                     max_iter=self.max_iter,
@@ -899,7 +901,10 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 elif issubclass(self.optimizer, Optimizer):
 
-                    self.obj = LagrangianConstrainedQuadratic(self.obj, A, ub)
+                    Q = Q + np.outer(A, A)
+                    self.obj = Quadratic(Q, q)
+
+                    self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
                     self.optimizer = LagrangianDual(f=self.obj,
                                                     optimizer=self.optimizer,
                                                     step_size=self.learning_rate_init,
@@ -924,7 +929,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                 warnings.warn('max_f_eval reached but the optimization has not converged yet',
                                               ConvergenceWarning)
 
-                    alphas = self.obj.primal_solution
+                    alphas = self.obj.primal_x
 
             alphas_p, alphas_n = np.split(alphas, 2)
 

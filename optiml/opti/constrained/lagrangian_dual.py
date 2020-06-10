@@ -50,17 +50,17 @@ class LagrangianDual(Optimizer):
         self.random_state = random_state
 
     def _print_dual_info(self, opt):
-        gap = (self.f.primal_value - self.f_x) / max(abs(self.f_x), 1)
+        gap = (self.f.primal_f_x - self.f_x) / max(abs(self.f_x), 1)
 
         if ((isinstance(opt, LineSearchOptimizer) and opt.is_verbose()) or
-                (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())):
-            print('\tub: {: 1.4e}'.format(self.f.primal_value), end='')
-            print(' - pcost: {: 1.4e}'.format(self.f_x), end='')
+            (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())) and self.is_verbose():
+            print('\tub: {: 1.4e}'.format(self.f.f_x), end='')
+            print(' - pcost: {: 1.4e}'.format(self.primal_f_x), end='')
             print(' - gap: {: 1.4e}'.format(gap), end='')
 
         self.callback()
 
-        self.x, self.f_x = self.f.primal_solution, self.f.primal_value
+        self.x, self.f_x = self.f.primal_x, self.f.primal_f_x
 
         if gap <= self.eps:
             self.status = 'optimal'
@@ -101,21 +101,21 @@ class LagrangianDual(Optimizer):
 
     def callback(self, args=()):
         if self.f.primal.ndim == 2:
-            self.x0_history.append(self.f.primal_solution[0])
-            self.x1_history.append(self.f.primal_solution[1])
-            self.f_x_history.append(-self.f.primal_value)
+            self.x0_history.append(self.f.primal_x[0])
+            self.x1_history.append(self.f.primal_x[1])
+            self.f_x_history.append(-self.f.primal_f_x)
         if callable(self._callback):
             self._callback(self, *args, *self.callback_args)
 
 
 class LagrangianConstrainedQuadratic(Quadratic):
+    """
+    Construct the lagrangian relaxation of a constrained quadratic function defined as:
+
+            1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub
+    """
 
     def __init__(self, quad, A, ub):
-        """
-        Construct the lagrangian relaxation of a constrained quadratic function defined as:
-                1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub
-        :param quad: constrained quadratic function to be relaxed
-        """
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
         super().__init__(quad.Q, quad.q)
@@ -129,8 +129,8 @@ class LagrangianConstrainedQuadratic(Quadratic):
             raise ValueError('the lower bound must be > 0')
         self.ub = np.asarray(ub, dtype=np.float)
         self.primal = quad
-        self.primal_solution = np.inf
-        self.primal_value = np.inf
+        self.primal_x = np.inf
+        self.primal_f_x = np.inf
 
     def x_star(self):
         raise np.full(fill_value=np.nan, shape=self.ndim)
@@ -141,49 +141,59 @@ class LagrangianConstrainedQuadratic(Quadratic):
     def function(self, lmbda):
         """
         Compute the value of the lagrangian relaxation defined as:
+
              L(x, lambda) = 1/2 x^T Q x + q^T x - mu^T A x - lambda_+^T (ub - x) - lambda_-^T x
            L(x, lambda) = 1/2 x^T Q x + (q^T - mu^T A + lambda_+^T - lambda_-^T)^T x - lambda_+^T ub
+
         where mu are the first n components of lambda which controls the equality constraints,
         lambda_+^T are the second n components of lambda and lambda_-^T are the last n components;
         both controls the box-constraints and are constrained to be >= 0.
-        The optimal solution of the Lagrangian relaxation is the unique solution of the linear system:
+        The optimal solution of the Lagrangian relaxation is the solution of the linear system:
+
                 Q x = q^T - mu^T A + lambda_+^T - lambda_-^T
+
         Since we have saved the LDL^T Cholesky factorization of Q,
         i.e., Q = L D L^T, we obtain this by solving:
+
              L D L^T x = q^T - mu^T A + lambda_+^T - lambda_-^T
+
         :param lmbda:
         :return: the function value
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-        ql = self.q.T - mu.T.dot(self.A) + lmbda_p.T - lmbda_n.T
+        ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
         x = ldl_solve((self.L, self.D, self.P), -ql)
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
         """
-        Compute the jacobian of the lagrangian relaxation as follow: with x the optimal
+        Compute the jacobian of the Lagrangian dual relaxation as follow: with x the optimal
         solution of the minimization problem, the gradient at lambda is:
+
                                 [-A x, x - ub, -x]
-        However, we rather want to maximize the lagrangian relaxation, hence we have to
+
+        However, we rather want to maximize the Lagrangian dual relaxation, hence we have to
         change the sign of both function values and gradient entries:
+
                                  [A x, ub - x, x]
+
         :param lmbda:
         :return:
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-        ql = self.q.T - mu.T.dot(self.A) + lmbda_p.T - lmbda_n.T
+        ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
         x = ldl_solve((self.L, self.D, self.P), -ql)
         g = np.hstack((self.A * x, self.ub - x, x))
-
-        v = self.primal.function(x)
-        if v < self.primal_value:
-            self.primal_solution = x
-            self.primal_value = -v
 
         # compute an heuristic solution out of the solution x of
         # the Lagrangian relaxation by projecting x on the box
         x[x < 0] = 0
         idx = x > self.ub
         x[idx] = self.ub[idx]
+
+        v = self.primal.function(x)
+        if v < self.primal_f_x:
+            self.primal_x = x
+            self.primal_f_x = -v
 
         return g

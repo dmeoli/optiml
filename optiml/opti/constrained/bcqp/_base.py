@@ -33,15 +33,13 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
 
 
 class LagrangianBoxConstrainedQuadratic(Quadratic):
+    """
+    Construct the Lagrangian dual relaxation of a box-constrained quadratic function defined as:
+
+                    1/2 x^T Q x + q^T x : 0 <= x <= ub
+    """
 
     def __init__(self, quad, ub):
-        """
-        Construct the lagrangian relaxation of a box-constrained quadratic function defined as:
-
-                        1/2 x^T Q x + q^T x : 0 <= x <= ub
-
-        :param quad: box-constrained quadratic function to be relaxed
-        """
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
         super().__init__(quad.Q, quad.q)
@@ -54,8 +52,8 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             raise ValueError('the lower bound must be > 0')
         self.ub = np.asarray(ub, dtype=np.float)
         self.primal = quad
-        self.primal_solution = np.inf
-        self.primal_value = np.inf
+        self.primal_x = np.inf
+        self.primal_f_x = np.inf
         self.last_lmbda = None
         self.last_x = None
 
@@ -67,44 +65,46 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
     def function(self, lmbda):
         """
-        Compute the value of the lagrangian relaxation defined as:
+        The Lagrangian primal is defined as:
 
-             L(x, lambda) = 1/2 x^T Q x + q^T x - lambda_+^T (ub - x) - lambda_-^T x
-            L(x, lambda) = 1/2 x^T Q x + (q^T + lambda_+^T - lambda_-^T)^T x - lambda_+^T ub
+             L(x, lambda) = 1/2 x^T Q x + q^T x - lambda_+^T (ub - x) - lambda_-^T x : lambda >= 0
+            L(x, lambda) = 1/2 x^T Q x + (q + lambda_+ - lambda_-)^T x - lambda_+^T ub : lambda >= 0
 
-        where lambda_+^T are the second n components of lambda and lambda_-^T are the last n components;
-        both controls the box-constraints and are constrained to be >= 0.
+        where lambda_+ are the first n components of lambda and lambda_- are the last n components.
 
-        The optimal solution of the Lagrangian relaxation is the unique solution of the linear system:
+        Taking the derivative of the Lagrangian primal L(x, lambda) wrt x and settings it to 0 gives:
 
-                Q x = q^T + lambda_+^T - lambda_-^T
+                Q x + q + lambda_+ - lambda_- = 0
 
-        Since we have saved the LDL^T Cholesky factorization of Q,
-        i.e., Q = L D L^T, we obtain this by solving:
+        so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
 
-             L D L^T x = q^T + lambda_+^T - lambda_-^T
+                Q x = - q + lambda_+ - lambda_-
+
+        Now, by substituting x into L, we get the Lagrangian dual relaxation:
+
+            D(lambda) = 1/2 x^T Q + (q + lambda_+ - lambda_-)^T x - lambda_+^T ub : lambda >= 0
 
         :param lmbda:
         :return: the function value
         """
         lmbda_p, lmbda_n = np.split(lmbda, 2)
-        ql = self.q.T + lmbda_p.T - lmbda_n.T
+        ql = self.q + lmbda_p - lmbda_n
         if np.array_equal(lmbda, self.last_lmbda):
             x = self.last_x
         else:
             x = ldl_solve((self.L, self.D, self.P), -ql)
             self.last_lmbda = lmbda
             self.last_x = x
-        return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
+        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
         """
-        Compute the jacobian of the lagrangian relaxation as follow: with x the optimal
+        Compute the jacobian of the Lagrangian dual relaxation as follow: with x the optimal
         solution of the minimization problem, the gradient at lambda is:
 
                                 [x - ub, -x]
 
-        However, we rather want to maximize the lagrangian relaxation, hence we have to
+        However, we rather want to maximize the Lagrangian dual relaxation, hence we have to
         change the sign of both function values and gradient entries:
 
                                  [ub - x, x]
@@ -115,7 +115,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             x = self.last_x
         else:
             lmbda_p, lmbda_n = np.split(lmbda, 2)
-            ql = self.q.T + lmbda_p.T - lmbda_n.T
+            ql = self.q + lmbda_p - lmbda_n
             x = ldl_solve((self.L, self.D, self.P), -ql)
             self.last_lmbda = lmbda
             self.last_x = x
@@ -128,8 +128,8 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         x[idx] = self.ub[idx]
 
         v = self.primal.function(x)
-        if v < self.primal_value:
-            self.primal_solution = x
-            self.primal_value = -v
+        if v < self.primal_f_x:
+            self.primal_x = x
+            self.primal_f_x = -v
 
         return g
