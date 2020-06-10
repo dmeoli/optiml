@@ -67,8 +67,8 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         """
         The Lagrangian primal is defined as:
 
-             L(x, lambda) = 1/2 x^T Q x + q^T x - lambda_+^T (ub - x) - lambda_-^T x : lambda >= 0
-            L(x, lambda) = 1/2 x^T Q x + (q + lambda_+ - lambda_-)^T x - lambda_+^T ub : lambda >= 0
+        L(x, lambda_+, lambda_-) = 1/2 x^T Q x + q^T x - lambda_+^T (ub - x) - lambda_-^T x : lambda_+, lambda_- >= 0
+        L(x, lambda_+, lambda_-) = 1/2 x^T Q x + (q + lambda_+ - lambda_-)^T x - lambda_+^T ub : lambda_+, lambda_- >= 0
 
         where lambda_+ are the first n components of lambda and lambda_- are the last n components.
 
@@ -82,9 +82,9 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
         Now, by substituting x into L, we get the Lagrangian dual relaxation:
 
-            D(lambda) = 1/2 x^T Q + (q + lambda_+ - lambda_-)^T x - lambda_+^T ub : lambda >= 0
+        D(lambda_+, lambda_-) = 1/2 x^T Q + (q + lambda_+ - lambda_-)^T x - lambda_+^T ub : lambda_+, lambda_- >= 0
 
-        :param lmbda:
+        :param lmbda: the dual variable wrt evaluate the function
         :return: the function value
         """
         lmbda_p, lmbda_n = np.split(lmbda, 2)
@@ -108,8 +108,8 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         change the sign of both function values and gradient entries:
 
                                  [ub - x, x]
-        :param lmbda:
-        :return:
+        :param lmbda: the dual variable wrt evaluate the gradient
+        :return: the gradient
         """
         if np.array_equal(lmbda, self.last_lmbda):
             x = self.last_x
