@@ -901,10 +901,10 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 elif issubclass(self.optimizer, Optimizer):
 
-                    Q = Q + np.outer(A, A)
-                    self.obj = Quadratic(Q, q)
+                    # Q = Q + np.outer(A, A)
+                    # self.obj = Quadratic(Q, q)
 
-                    self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
+                    self.obj = LagrangianConstrainedQuadratic(self.obj, A, ub)
                     self.optimizer = LagrangianDual(f=self.obj,
                                                     optimizer=self.optimizer,
                                                     step_size=self.learning_rate_init,

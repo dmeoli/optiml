@@ -1,11 +1,10 @@
 from abc import ABC
 
 import numpy as np
-from scipy.linalg import ldl
 
 from ... import Optimizer
 from ... import Quadratic
-from ...utils import ldl_solve
+from ...utils import cholesky_solve, nearest_posdef
 
 
 class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
@@ -42,12 +41,9 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
     def __init__(self, quad, ub):
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
-        super().__init__(quad.Q, quad.q)
+        super().__init__(nearest_posdef(quad.Q), quad.q)
         self.ndim *= 2
-        # Compute the LDL^T Cholesky symmetric indefinite factorization
-        # of Q because it is symmetric but could be not positive definite.
-        # This will be used at each iteration to solve the Lagrangian relaxation.
-        self.L, self.D, self.P = ldl(self.Q)
+        self.L = np.linalg.cholesky(self.Q)
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
         self.ub = np.asarray(ub, dtype=np.float)
@@ -92,7 +88,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         if np.array_equal(lmbda, self.last_lmbda):
             x = self.last_x
         else:
-            x = ldl_solve((self.L, self.D, self.P), -ql)
+            x = cholesky_solve(self.L, -ql)
             self.last_lmbda = lmbda
             self.last_x = x
         return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda_p.T.dot(self.ub)
@@ -116,7 +112,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         else:
             lmbda_p, lmbda_n = np.split(lmbda, 2)
             ql = self.q + lmbda_p - lmbda_n
-            x = ldl_solve((self.L, self.D, self.P), -ql)
+            x = cholesky_solve(self.L, -ql)
             self.last_lmbda = lmbda
             self.last_x = x
         g = np.hstack((self.ub - x, x))

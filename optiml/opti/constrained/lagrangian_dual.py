@@ -1,11 +1,10 @@
 import numpy as np
-from scipy.linalg import ldl
 
 from .. import Optimizer, Quadratic
 from ..unconstrained.line_search import LineSearchOptimizer
 from ..unconstrained.stochastic import StochasticOptimizer, AdaGrad
 from ..unconstrained.stochastic.schedules import constant
-from ..utils import ldl_solve
+from ..utils import cholesky_solve, nearest_posdef
 
 
 class LagrangianDual(Optimizer):
@@ -118,12 +117,9 @@ class LagrangianConstrainedQuadratic(Quadratic):
     def __init__(self, quad, A, ub):
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
-        super().__init__(quad.Q, quad.q)
+        super().__init__(nearest_posdef(quad.Q), quad.q)
         self.ndim *= 3
-        # Compute the LDL^T Cholesky symmetric indefinite factorization
-        # of Q because it is symmetric but could be not positive definite.
-        # This will be used at each iteration to solve the Lagrangian relaxation.
-        self.L, self.D, self.P = ldl(self.Q)
+        self.L = np.linalg.cholesky(self.Q)
         self.A = np.asarray(A, dtype=np.float)
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
@@ -162,7 +158,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
         ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-        x = ldl_solve((self.L, self.D, self.P), -ql)
+        x = cholesky_solve(self.L, -ql)
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
@@ -182,7 +178,7 @@ class LagrangianConstrainedQuadratic(Quadratic):
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
         ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-        x = ldl_solve((self.L, self.D, self.P), -ql)
+        x = cholesky_solve(self.L, -ql)
         g = np.hstack((self.A * x, self.ub - x, x))
 
         # compute an heuristic solution out of the solution x of

@@ -1,8 +1,5 @@
 import autograd.numpy as np
 from autograd import jacobian, hessian
-from scipy.linalg import ldl
-
-from optiml.opti.utils import ldl_solve
 
 
 class Optimizer:
@@ -127,8 +124,8 @@ class Quadratic(OptimizationFunction):
     def x_star(self):
         if not hasattr(self, 'x_opt'):
             try:
-                self.x_opt = ldl_solve(ldl(self.Q), -self.q)
-            except np.linalg.LinAlgError:  # the Hessian matrix is singular
+                self.x_opt = np.linalg.solve(self.Q, -self.q)
+            except np.linalg.LinAlgError:
                 self.x_opt = np.full(fill_value=np.nan, shape=self.ndim)
         return self.x_opt
 
