@@ -8,7 +8,6 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
 from .activations import sigmoid, linear, softmax
-from .initializers import compute_fans
 from .layers import Layer, ParamLayer
 from .losses import (CategoricalCrossEntropy, SparseCategoricalCrossEntropy,
                      MeanSquaredError, BinaryCrossEntropy, mean_squared_error, NeuralNetworkLoss)
@@ -130,7 +129,7 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
         # save sizes and indices of intercepts for faster unpacking
         for layer in self.layers:
             if isinstance(layer, ParamLayer) and layer.fit_intercept:
-                fan_in, fan_out = compute_fans(layer.inter_.shape)
+                fan_in, fan_out = layer.inter_.shape[0], layer.inter_.shape[1]
                 end = start + fan_out
                 self.inter_idx.append((start, end))
                 start = end
