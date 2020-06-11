@@ -135,7 +135,7 @@ class ProximalBundle(Optimizer):
             d = Variable((self.f.ndim, 1))
             v = Variable(1)
 
-            M = [v >= F + G * (self.x.reshape(-1, 1) + d)]
+            M = [v >= F + G @ (self.x.reshape(-1, 1) + d)]
 
             if self.f.f_star() < np.inf:
                 # cheating: use information about f_star in the model

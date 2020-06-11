@@ -117,11 +117,6 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] SoftMax
         - Layers
             - [x] Fully Connected
-            - [x] Convolutional
-                - [x] Conv 2D
-                - [x] Max Pooling
-                - [x] Avg Pooling
-                - [x] Flatten
         - Initializers
             - [x] Xavier or Glorot normal and uniform
             - [x] He normal and uniform
@@ -136,10 +131,6 @@ pip install optiml
 
 Any bug report, bug fix or new pull request will be appreciated, especially from my classmates who will have the 
 opportunity to deal with some of these algorithms and could be improving their performance or adding new features.
-
-## Future Works
-
-Replace `numpy` with `pytorch` to improve training performance over large datasets by using GPU support.
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
