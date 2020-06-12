@@ -67,7 +67,7 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] Frank-Wolfe or Conditional Gradient
             - [x] Active Set
             - [x] Interior Point
-        - [x] Lagrangian Dual Relaxation
+        - [x] Lagrangian Dual
 
 - Machine Learning
     - [x] Support Vector Machines
