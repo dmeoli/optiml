@@ -127,6 +127,8 @@ class LagrangianConstrainedQuadratic(Quadratic):
         self.primal = quad
         self.primal_x = np.inf
         self.primal_f_x = np.inf
+        self.last_lmbda = None
+        self.last_x = None
 
     def x_star(self):
         raise np.full(fill_value=np.nan, shape=self.ndim)
@@ -136,30 +138,34 @@ class LagrangianConstrainedQuadratic(Quadratic):
 
     def function(self, lmbda):
         """
-        Compute the value of the lagrangian relaxation defined as:
+        The Lagrangian relaxation is defined as:
 
-             L(x, lambda) = 1/2 x^T Q x + q^T x - mu^T A x - lambda_+^T (ub - x) - lambda_-^T x
-           L(x, lambda) = 1/2 x^T Q x + (q^T - mu^T A + lambda_+^T - lambda_-^T)^T x - lambda_+^T ub
+        L(x, mu, lambda_+, lambda_-) = 1/2 x^T Q x + q^T x - mu^T A x - lambda_+^T (ub - x) - lambda_-^T x
+        L(x, mu, lambda_+, lambda_-) = 1/2 x^T Q x + (q - mu A^T + lambda_+ - lambda_-)^T x - lambda_+^T ub
 
-        where mu are the first n components of lambda which controls the equality constraints,
-        lambda_+^T are the second n components of lambda and lambda_-^T are the last n components;
-        both controls the box-constraints and are constrained to be >= 0.
-        The optimal solution of the Lagrangian relaxation is the solution of the linear system:
+        where mu are the first n components of lambda, lambda_+^T are the second n components of lambda
+        and lambda_-^T are the last n components; all are constrained to be >= 0.
 
-                Q x = q^T - mu^T A + lambda_+^T - lambda_-^T
+        Taking the derivative of the Lagrangian primal L(x, mu, lambda_+, lambda_-) wrt x and settings it to 0 gives:
 
-        Since we have saved the LDL^T Cholesky factorization of Q,
-        i.e., Q = L D L^T, we obtain this by solving:
+                Q x + q - mu A^T + lambda_+ - lambda_- = 0
 
-             L D L^T x = q^T - mu^T A + lambda_+^T - lambda_-^T
+        so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
 
-        :param lmbda:
-        :return: the function value
+                Q x = - q - mu A^T + lambda_+ - lambda_-
+
+        :param lmbda: the dual variable wrt evaluate the function
+        :return: the function value wrt lambda
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
         ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-        x = cholesky_solve(self.L, -ql)
-        return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
+        if np.array_equal(lmbda, self.last_lmbda):
+            x = self.last_x
+        else:
+            x = cholesky_solve(self.L, -ql)
+            self.last_lmbda = lmbda
+            self.last_x = x
+        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
         """
@@ -173,19 +179,18 @@ class LagrangianConstrainedQuadratic(Quadratic):
 
                                  [A x, ub - x, x]
 
-        :param lmbda:
-        :return:
+        :param lmbda: the dual variable wrt evaluate the gradient
+        :return: the gradient wrt lambda
         """
-        mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-        ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-        x = cholesky_solve(self.L, -ql)
+        if np.array_equal(lmbda, self.last_lmbda):
+            x = self.last_x
+        else:
+            mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
+            ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
+            x = cholesky_solve(self.L, -ql)
+            self.last_lmbda = lmbda
+            self.last_x = x
         g = np.hstack((self.A * x, self.ub - x, x))
-
-        # compute an heuristic solution out of the solution x of
-        # the Lagrangian relaxation by projecting x on the box
-        x[x < 0] = 0
-        idx = x > self.ub
-        x[idx] = self.ub[idx]
 
         v = self.primal.function(x)
         if v < self.primal_f_x:

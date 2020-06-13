@@ -61,14 +61,15 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
     def function(self, lmbda):
         """
-        The Lagrangian primal is defined as:
+        The Lagrangian relaxation is defined as:
 
-        L(x, lambda_+, lambda_-) = 1/2 x^T Q x + q^T x - lambda_+^T (ub - x) - lambda_-^T x : lambda_+, lambda_- >= 0
-        L(x, lambda_+, lambda_-) = 1/2 x^T Q x + (q + lambda_+ - lambda_-)^T x - lambda_+^T ub : lambda_+, lambda_- >= 0
+        L(x, lambda_+, lambda_-) = 1/2 x^T Q x + q^T x - lambda_+^T (ub - x) - lambda_-^T x
+        L(x, lambda_+, lambda_-) = 1/2 x^T Q x + (q + lambda_+ - lambda_-)^T x - lambda_+^T ub
 
-        where lambda_+ are the first n components of lambda and lambda_- are the last n components.
+        where lambda_+ are the first n components of lambda and lambda_- are the last n components,
+        both constrained to be >= 0.
 
-        Taking the derivative of the Lagrangian primal L(x, lambda) wrt x and settings it to 0 gives:
+        Taking the derivative of the Lagrangian primal L(x, lambda_+, lambda_-) wrt x and settings it to 0 gives:
 
                 Q x + q + lambda_+ - lambda_- = 0
 
@@ -76,12 +77,8 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
                 Q x = - q + lambda_+ - lambda_-
 
-        Now, by substituting x into L, we get the Lagrangian dual relaxation:
-
-        D(lambda_+, lambda_-) = 1/2 x^T Q + (q + lambda_+ - lambda_-)^T x - lambda_+^T ub : lambda_+, lambda_- >= 0
-
         :param lmbda: the dual variable wrt evaluate the function
-        :return: the function value
+        :return: the function value wrt lambda
         """
         lmbda_p, lmbda_n = np.split(lmbda, 2)
         ql = self.q + lmbda_p - lmbda_n
@@ -104,8 +101,9 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         change the sign of both function values and gradient entries:
 
                                  [ub - x, x]
+
         :param lmbda: the dual variable wrt evaluate the gradient
-        :return: the gradient
+        :return: the gradient wrt lambda
         """
         if np.array_equal(lmbda, self.last_lmbda):
             x = self.last_x

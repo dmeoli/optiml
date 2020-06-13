@@ -40,6 +40,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                  callback=None,
                  callback_args=(),
                  verbose=False):
+        f.Q = nearest_posdef(f.Q)
         super().__init__(f=f,
                          ub=ub,
                          eps=eps,
@@ -100,7 +101,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
 
             # use the LDL^T Cholesky symmetric indefinite factorization to solve the
             # linear system since Q_{AA} is symmetric but could be not positive definite
-            xs[A] = cholesky_solve(np.linalg.cholesky(nearest_posdef(self.f.Q[A, :][:, A])),
+            xs[A] = cholesky_solve(np.linalg.cholesky(self.f.Q[A, :][:, A]),
                                    -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
 
             if np.logical_and(xs[A] <= self.ub[A] + 1e-12, xs[A] >= -1e-12).all():
