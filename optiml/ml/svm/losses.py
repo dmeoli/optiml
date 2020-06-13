@@ -28,10 +28,6 @@ class SVMLoss(OptimizationFunction, ABC):
 
 class SVCLoss(SVMLoss, ABC):
 
-    def __init__(self, svm, X, y, penalty='l2'):
-        super().__init__(svm, X, y)
-        self.penalty = penalty
-
     def function(self, packed_coef_inter, X_batch=None, y_batch=None):
         if X_batch is None:
             X_batch = self.X
@@ -39,12 +35,8 @@ class SVCLoss(SVMLoss, ABC):
             y_batch = self.y
 
         n_samples = X_batch.shape[0]
-        if self.penalty == 'l1':
-            return (1 / (2 * n_samples) * np.linalg.norm(packed_coef_inter, ord=1) +
-                    self.svm.C / n_samples * np.sum(self.loss(np.dot(X_batch, packed_coef_inter), y_batch)))
-        elif self.penalty == 'l2':
-            return (1 / (2 * n_samples) * np.linalg.norm(packed_coef_inter) ** 2 +
-                    self.svm.C / n_samples * np.sum(self.loss(np.dot(X_batch, packed_coef_inter), y_batch)))
+        return (1 / (2 * n_samples) * np.linalg.norm(packed_coef_inter) ** 2 +
+                self.svm.C / n_samples * np.sum(self.loss(np.dot(X_batch, packed_coef_inter), y_batch)))
 
     def jacobian(self, packed_coef_inter, X_batch=None, y_batch=None):
         if X_batch is None:
@@ -53,12 +45,8 @@ class SVCLoss(SVMLoss, ABC):
             y_batch = self.y
 
         n_samples = X_batch.shape[0]
-        if self.penalty == 'l1':
-            return (1 / n_samples * np.sign(packed_coef_inter) -
-                    self.svm.C / n_samples * self.loss_jacobian(packed_coef_inter, X_batch, y_batch))
-        elif self.penalty == 'l2':
-            return ((1 / n_samples) * packed_coef_inter -
-                    self.svm.C / n_samples * self.loss_jacobian(packed_coef_inter, X_batch, y_batch))
+        return ((1 / n_samples) * packed_coef_inter -
+                self.svm.C / n_samples * self.loss_jacobian(packed_coef_inter, X_batch, y_batch))
 
 
 class Hinge(SVCLoss):

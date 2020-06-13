@@ -340,7 +340,6 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                  C=1.,
                  tol=1e-4,
                  loss=squared_hinge,
-                 penalty='l2',
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
                  learning_rate_init=0.1,
@@ -382,9 +381,6 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                          verbose=verbose)
         if not issubclass(loss, SVCLoss):
             raise TypeError(f'{loss} is not an allowed LinearSVC loss function')
-        if penalty not in ('l1', 'l2'):
-            raise TypeError(f'{penalty} is not an allowed penalty')
-        self.penalty = penalty
         self.lb = LabelBinarizer(neg_label=-1)
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
@@ -415,7 +411,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
             else:
                 X_biased = X
 
-            self.loss = self.loss(self, X_biased, y, self.penalty)
+            self.loss = self.loss(self, X_biased, y)
             self.optimizer = self.optimizer(f=self.loss,
                                             x=np.zeros(self.loss.ndim),
                                             max_iter=self.max_iter,
@@ -437,7 +433,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
             else:
                 X_biased = X
 
-            self.loss = self.loss(self, X_biased, y, self.penalty)
+            self.loss = self.loss(self, X_biased, y)
             self.optimizer = self.optimizer(f=self.loss,
                                             x=np.zeros(self.loss.ndim),
                                             max_iter=self.max_iter,
@@ -471,7 +467,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
             else:
                 X_biased = X
 
-            self.loss = self.loss(self, X_biased, y, self.penalty)
+            self.loss = self.loss(self, X_biased, y)
             self.optimizer = self.optimizer(f=self.loss,
                                             x=np.zeros(self.loss.ndim),
                                             epochs=self.max_iter,
