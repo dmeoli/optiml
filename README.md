@@ -75,11 +75,11 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] Primal
             - [x] Dual
                 - Kernels
-                    - [x] linear kernel
-                    - [x] polynomial kernel
-                    - [x] gaussian kernel
-                    - [x] laplacian kernel
-                    - [x] sigmoid kernel
+                    - [x] Linear
+                    - [x] Polynomial
+                    - [x] Gaussian
+                    - [x] Laplacian
+                    - [x] Sigmoid
         - [x] Support Vector Classifier
             - Losses
                 - [x] Hinge (L1 Loss)
@@ -106,6 +106,7 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - [x] L1 or Lasso
             - [x] L2 or Ridge or Tikhonov
         - Activations
+            - [x] Linear
             - [x] Sigmoid
             - [x] Tanh
             - [x] ReLU
