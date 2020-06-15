@@ -333,7 +333,7 @@ class SMORegression(SMO):
 
     References
 
-    G. W. Flake, S. Lawrence. Efficient SVM Regression Training with SMO.
+    G.W. Flake, S. Lawrence. Efficient SVM Regression Training with SMO.
 
     Alex J. Smola, Bernhard Scholkopf. A Tutorial on Support Vector Regression.
     NeuroCOLT2 Technical Report Series NC2-TR-1998-030.
