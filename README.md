@@ -61,12 +61,11 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
         - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface to 
         [cvxopt](https://github.com/cvxopt/cvxopt), [osqp](https://github.com/oxfordcontrol/osqp), 
         [ecos](https://github.com/embotech/ecos), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
-    - Constrained Quadratic Optimization or Quadratic Programming
-        - Box-Constrained Quadratic Methods
-            - [x] Projected Gradient
-            - [x] Frank-Wolfe or Conditional Gradient
-            - [x] Active Set
-            - [x] Interior Point
+    - Box-Constrained Quadratic Optimization
+        - [x] Projected Gradient
+        - [x] Frank-Wolfe or Conditional Gradient
+        - [x] Active Set
+        - [x] Interior Point
         - [x] Lagrangian Dual
 
 - Machine Learning

@@ -74,7 +74,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
         so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
 
-                x = Q^-1 -(q + lambda_+ - lambda_-)
+                Q x = q + lambda_+ - lambda_-
 
         :param lmbda: the dual variable wrt evaluate the function
         :return: the function value wrt lambda
