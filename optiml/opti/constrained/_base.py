@@ -47,8 +47,6 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             raise ValueError('the lower bound must be > 0')
         self.ub = np.asarray(ub, dtype=np.float)
         self.primal = quad
-        self.primal_x = np.inf
-        self.primal_f_x = np.inf
         self.last_lmbda = None
         self.last_x = None
 
@@ -65,14 +63,16 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         L(x, lambda_+, lambda_-) = 1/2 x^T Q x + q^T x - lambda_+^T (ub - x) - lambda_-^T x
         L(x, lambda_+, lambda_-) = 1/2 x^T Q x + (q + lambda_+ - lambda_-)^T x - lambda_+^T ub
 
-        where lambda_+ are the first n components of lambda and lambda_- are the last n components,
-        both constrained to be >= 0.
+        where lambda_+ are the first n components of lambda and lambda_-
+        are the last n components, both constrained to be >= 0.
 
-        Taking the derivative of the Lagrangian primal L(x, lambda_+, lambda_-) wrt x and settings it to 0 gives:
+        Taking the derivative of the Lagrangian primal L(x, lambda_+, lambda_-)
+        wrt x and settings it to 0 gives:
 
                 Q x + q + lambda_+ - lambda_- = 0
 
-        so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
+        so, the optimal solution of the Lagrangian relaxation is the solution
+        of the linear system:
 
                 Q x = q + lambda_+ - lambda_-
 
@@ -98,13 +98,13 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
     def jacobian(self, lmbda):
         """
-        Compute the jacobian of the Lagrangian dual relaxation as follow: with x the optimal
-        solution of the minimization problem, the gradient at lambda is:
+        Compute the jacobian of the Lagrangian dual relaxation as follow: with x the
+        optimal solution of the minimization problem, the gradient at lambda is:
 
                                 [x - ub, -x]
 
-        However, we rather want to maximize the Lagrangian dual relaxation, hence we have to
-        change the sign of both function values and gradient entries:
+        However, we rather want to maximize the Lagrangian dual relaxation, hence
+        we have to change the sign of both function values and gradient entries:
 
                                  [ub - x, x]
 
@@ -119,11 +119,4 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             x = lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
             self.last_x = x
-        g = np.hstack((self.ub - x, x))
-
-        v = self.primal.function(x)
-        if v < self.primal_f_x:
-            self.primal_x = x
-            self.primal_f_x = -v
-
-        return g
+        return np.hstack((self.ub - x, x))

@@ -579,7 +579,6 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                 ub=ub,
                                                 max_iter=self.max_iter,
                                                 verbose=self.verbose).minimize()
-                alphas = self.optimizer.x
 
             elif issubclass(self.optimizer, Optimizer):
 
@@ -608,7 +607,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                             warnings.warn('max_f_eval reached but the optimization has not converged yet',
                                           ConvergenceWarning)
 
-                alphas = self.obj.primal_x
+            alphas = self.optimizer.x
 
         sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
@@ -891,7 +890,6 @@ class DualSVR(RegressorMixin, DualSVM):
                                                     ub=ub,
                                                     max_iter=self.max_iter,
                                                     verbose=self.verbose).minimize()
-                    alphas = self.optimizer.x
 
                 elif issubclass(self.optimizer, Optimizer):
 
@@ -920,7 +918,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                 warnings.warn('max_f_eval reached but the optimization has not converged yet',
                                               ConvergenceWarning)
 
-                    alphas = self.obj.primal_x
+                alphas = self.optimizer.x
 
             alphas_p, alphas_n = np.split(alphas, 2)
 

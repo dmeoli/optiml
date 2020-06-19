@@ -48,17 +48,18 @@ class LagrangianDual(Optimizer):
         self.random_state = random_state
 
     def _print_dual_info(self, opt):
-        gap = (self.f.primal_f_x - self.f_x) / max(abs(self.f_x), 1)
+        primal_f_x = -self.f.primal.function(self.f.last_x)
+        gap = (primal_f_x - self.f_x) / max(abs(self.f_x), 1)
 
         if ((isinstance(opt, LineSearchOptimizer) and opt.is_verbose()) or
             (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())) and self.is_verbose():
             print('\tub: {: 1.4e}'.format(self.f_x), end='')
-            print(' - pcost: {: 1.4e}'.format(self.f.primal_f_x), end='')
+            print(' - pcost: {: 1.4e}'.format(primal_f_x), end='')
             print(' - gap: {: 1.4e}'.format(gap), end='')
 
         self.callback()
 
-        self.x, self.f_x = self.f.primal_x, self.f.primal_f_x
+        self.x, self.f_x = self.f.last_x, primal_f_x
 
         if gap <= self.eps:
             self.status = 'optimal'
