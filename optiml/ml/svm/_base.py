@@ -14,8 +14,8 @@ from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitiv
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
-from ...opti.constrained import LagrangianDual, LagrangianConstrainedQuadratic
-from ...opti.constrained.bcqp import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
+from ...opti.constrained import LagrangianDual
+from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
@@ -869,14 +869,15 @@ class DualSVR(RegressorMixin, DualSVM):
 
             A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
 
+            Q += np.outer(A, A)
+            self.obj = Quadratic(Q, q)
+
             if isinstance(self.optimizer, str):
 
                 lb = np.zeros(2 * n_samples)  # lower bounds
 
                 alphas = solve_qp(P=Q,
                                   q=q,
-                                  A=A,
-                                  b=np.zeros(1),
                                   lb=lb,
                                   ub=ub,
                                   solver=self.optimizer,
@@ -886,9 +887,6 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                    Q = Q + np.outer(A, A)
-                    self.obj = Quadratic(Q, q)
-
                     self.optimizer = self.optimizer(f=self.obj,
                                                     ub=ub,
                                                     max_iter=self.max_iter,
@@ -897,7 +895,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 elif issubclass(self.optimizer, Optimizer):
 
-                    self.obj = LagrangianConstrainedQuadratic(self.obj, A, ub)
+                    self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
                     self.optimizer = LagrangianDual(f=self.obj,
                                                     optimizer=self.optimizer,
                                                     step_size=self.learning_rate_init,

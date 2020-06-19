@@ -1,7 +1,7 @@
 import numpy as np
 
-from . import BoxConstrainedQuadraticOptimizer
-from ...utils import cholesky_solve, nearest_posdef
+from optiml.opti.constrained import BoxConstrainedQuadraticOptimizer
+from optiml.opti.utils import cholesky_solve, nearest_posdef
 
 
 class ActiveSet(BoxConstrainedQuadraticOptimizer):

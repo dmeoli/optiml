@@ -1,10 +1,10 @@
 from abc import ABC
 
 import numpy as np
+from scipy.sparse.linalg import lsqr
 
-from ... import Optimizer
-from ... import Quadratic
-from ...utils import cholesky_solve, nearest_posdef
+from optiml.opti import Optimizer
+from optiml.opti import Quadratic
 
 
 class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
@@ -41,9 +41,8 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
     def __init__(self, quad, ub):
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
-        super().__init__(nearest_posdef(quad.Q), quad.q)
+        super().__init__(quad.Q, quad.q)
         self.ndim *= 2
-        self.L = np.linalg.cholesky(self.Q)
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
         self.ub = np.asarray(ub, dtype=np.float)
@@ -75,7 +74,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
         so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
 
-                Q x = - q + lambda_+ - lambda_-
+                x = Q^-1 -(q + lambda_+ - lambda_-)
 
         :param lmbda: the dual variable wrt evaluate the function
         :return: the function value wrt lambda
@@ -85,10 +84,17 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         if np.array_equal(lmbda, self.last_lmbda):
             x = self.last_x
         else:
-            x = cholesky_solve(self.L, -ql)
+            # The MINRES and SYMMLQ methods are variants of the Lanczos method (the Arnoldi iteration reduces to the
+            # Lanczos iteration for symmetric matrices) that underpins the conjugate gradients method PCG. Like PCG,
+            # the coefficient matrix still needs to be symmetric, but MINRES and SYMMLQ allow it to be indefinite
+            # (not all eigenvalues need to be positive). This is achieved by avoiding the implicit LU factorization
+            # normally present in the Lanczos method, which is prone to breakdowns when zero pivots are encountered
+            # with indefinite matrices. MINRES minimizes the residual in the 2-norm, while SYMMLQ solves a projected
+            # system using an LQ factorization and keeps the residual orthogonal to all previous ones.
+            x = lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
             self.last_x = x
-        return (0.5 * x.T.dot(self.Q) + ql.T).dot(x) - lmbda_p.T.dot(self.ub)
+        return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
         """
@@ -110,16 +116,10 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         else:
             lmbda_p, lmbda_n = np.split(lmbda, 2)
             ql = self.q + lmbda_p - lmbda_n
-            x = cholesky_solve(self.L, -ql)
+            x = lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
             self.last_x = x
         g = np.hstack((self.ub - x, x))
-
-        # compute an heuristic solution out of the solution x of
-        # the Lagrangian relaxation by projecting x on the box
-        x[x < 0] = 0
-        idx = x > self.ub
-        x[idx] = self.ub[idx]
 
         v = self.primal.function(x)
         if v < self.primal_f_x:

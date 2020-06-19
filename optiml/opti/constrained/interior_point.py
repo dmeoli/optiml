@@ -1,6 +1,6 @@
 import numpy as np
 
-from . import BoxConstrainedQuadraticOptimizer
+from optiml.opti.constrained import BoxConstrainedQuadraticOptimizer
 from optiml.opti.utils import cholesky_solve
 
 
