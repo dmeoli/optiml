@@ -84,13 +84,6 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         if np.array_equal(lmbda, self.last_lmbda):
             x = self.last_x
         else:
-            # The MINRES and SYMMLQ methods are variants of the Lanczos method (the Arnoldi iteration reduces to the
-            # Lanczos iteration for symmetric matrices) that underpins the conjugate gradients method PCG. Like PCG,
-            # the coefficient matrix still needs to be symmetric, but MINRES and SYMMLQ allow it to be indefinite
-            # (not all eigenvalues need to be positive). This is achieved by avoiding the implicit LU factorization
-            # normally present in the Lanczos method, which is prone to breakdowns when zero pivots are encountered
-            # with indefinite matrices. MINRES minimizes the residual in the 2-norm, while SYMMLQ solves a projected
-            # system using an LQ factorization and keeps the residual orthogonal to all previous ones.
             x = lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
             self.last_x = x
