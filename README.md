@@ -5,7 +5,7 @@
 [![PyPI Version](https://img.shields.io/pypi/v/optiml.svg?color=blue)](https://pypi.org/project/optiml/)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/optiml/master)
 
-OptiML is a sklearn compatible custom reimplementation of *Support Vector Machines* and *Deep Neural Networks*, 
+OptiML is a sklearn compatible implementation of *Support Vector Machines* and *Deep Neural Networks*, 
 both with some of the most successful features according to the state of art.
 
 This work was motivated by the possibility of being able to solve the optimization problem deriving from the mathematical 
