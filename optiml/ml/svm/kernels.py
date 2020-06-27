@@ -75,30 +75,6 @@ class GaussianKernel(Kernel):
         return np.exp(-gamma * np.linalg.norm(X[:, np.newaxis] - Y[np.newaxis, :], axis=2) ** 2)
 
 
-class LaplacianKernel(Kernel):
-    """
-    Compute the laplacian RBF kernel between X and Y:
-
-        K(X, Y) = exp(-gamma ||X - Y||_1)
-    """
-
-    def __init__(self, gamma='scale'):
-        if isinstance(gamma, str):
-            if gamma not in ('scale', 'auto'):
-                raise ValueError(f'unknown gamma type {gamma}')
-        else:
-            if not gamma > 0:
-                raise ValueError('gamma must be > 0')
-        self.gamma = gamma
-
-    def __call__(self, X, Y=None):
-        if Y is None:
-            Y = X
-        gamma = (1. / (X.shape[1] * X.var()) if self.gamma == 'scale' else  # auto
-                 1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
-        return np.exp(-gamma * np.linalg.norm(X[:, np.newaxis] - Y[np.newaxis, :], ord=1, axis=2))
-
-
 class SigmoidKernel(Kernel):
     """
     Compute the sigmoid kernel between X and Y:
@@ -127,5 +103,4 @@ class SigmoidKernel(Kernel):
 linear = LinearKernel()
 poly = PolyKernel()
 gaussian = GaussianKernel()
-laplacian = LaplacianKernel()
 sigmoid = SigmoidKernel()
