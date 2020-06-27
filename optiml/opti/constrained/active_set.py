@@ -100,13 +100,13 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
             xs[U] = self.ub[U]
 
             try:
-                # use the Cholesky symmetric factorization to solve the linear system if
-                # Q_{AA} is symmetric and positive definite, i.e., the function is convex
+                # use the Cholesky factorization to solve the linear system if Q_{AA}
+                # is symmetric and positive definite, i.e., the function is convex
                 xs[A] = cholesky_solve(np.linalg.cholesky(self.f.Q[A, :][:, A]),
                                        -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
             except np.linalg.LinAlgError:
-                # if Q_{AA} is indefinite, i.e. the function is linear along the eigenvector
-                # correspondent to zero eigenvalues, the system has infinite solutions; so we
+                # if Q_{AA} is indefinite, i.e., the function is linear along the eigenvector
+                # correspondent to zero eigenvalues, the system has infinite solutions, so we
                 # will choose the one that minimize the residue
                 xs[A] = lsqr(self.f.Q[A, :][:, A], -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))[0]
 

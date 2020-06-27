@@ -5,6 +5,7 @@ from scipy.sparse.linalg import lsqr
 
 from optiml.opti import Optimizer
 from optiml.opti import Quadratic
+from optiml.opti.utils import cholesky_solve
 
 
 class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
@@ -42,6 +43,10 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
         super().__init__(quad.Q, quad.q)
+        try:
+            self.L = np.linalg.cholesky(self.Q)
+        except np.linalg.LinAlgError:
+            pass
         self.ndim *= 2
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
@@ -84,7 +89,12 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         if np.array_equal(lmbda, self.last_lmbda):
             x = self.last_x
         else:
-            x = lsqr(self.Q, -ql)[0]
+            # if Q is positive definite, i.e., the function is convex, use the Cholesky
+            # factorization to solve the linear system; otherwise, if Q is indefinite,
+            # i.e., the function is linear along the eigenvector correspondent to zero
+            # eigenvalues, the system has infinite solutions, so we will choose the one
+            # that minimize the residue
+            x = cholesky_solve(self.L, -ql) if hasattr(self, 'L') else lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
             self.last_x = x
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
@@ -109,7 +119,12 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         else:
             lmbda_p, lmbda_n = np.split(lmbda, 2)
             ql = self.q + lmbda_p - lmbda_n
-            x = lsqr(self.Q, -ql)[0]
+            # if Q is positive definite, i.e., the function is convex, use the Cholesky
+            # factorization to solve the linear system, otherwise, if Q is indefinite,
+            # i.e., the function is linear along the eigenvector correspondent to zero
+            # eigenvalues, the system has infinite solutions, so we will choose the one
+            # that minimize the residue
+            x = cholesky_solve(self.L, -ql) if hasattr(self, 'L') else lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
             self.last_x = x
         return np.hstack((self.ub - x, x))
