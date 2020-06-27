@@ -12,59 +12,6 @@ def cholesky_solve(L, b):
     return np.linalg.solve(L.T, np.linalg.solve(L, b))
 
 
-def nearest_posdef(Q):
-    """Find the nearest positive-definite matrix to input
-
-    A Python/Numpy port of John D'Errico's `nearestSPD` MATLAB code [1], which
-    credits [2].
-
-    [1] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
-
-    [2] N.J. Higham, "Computing a nearest symmetric positive semidefinite
-    matrix" (1988): https://doi.org/10.1016/0024-3795(88)90223-6
-    """
-
-    B = (Q + Q.T) / 2
-    _, s, V = np.linalg.svd(B)
-
-    H = np.dot(V.T, np.dot(np.diag(s), V))
-
-    A2 = (B + H) / 2
-
-    A3 = (A2 + A2.T) / 2
-
-    if is_posdef(A3):
-        return A3
-
-    spacing = np.spacing(np.linalg.norm(Q))
-
-    # The above is different from [1]. It appears that MATLAB's `chol` Cholesky
-    # decomposition will accept matrices with exactly 0-eigenvalue, whereas
-    # Numpy's will not. So where [1] uses `eps(min_eig)` (where `eps` is Matlab
-    # for `np.spacing`), we use the above definition. CAVEAT: our `spacing`
-    # will be much larger than [1]'s `eps(min_eig)`, since `min_eig` is usually on
-    # the order of 1e-16, and `eps(1e-16)` is on the order of 1e-34, whereas
-    # `spacing` will, for Gaussian random matrices of small dimension, be on
-    # other order of 1e-16. In practice, both ways converge, as the unit test
-    # below suggests.
-    k = 1
-    while not is_posdef(A3):
-        min_eig = np.min(np.real(np.linalg.eigvals(A3)))
-        A3 += np.eye(Q.shape[0]) * (-min_eig * k ** 2 + spacing)
-        k += 1
-
-    return A3
-
-
-def is_posdef(Q):
-    """Returns true when input is positive-definite, via Cholesky"""
-    try:
-        np.linalg.cholesky(Q)
-        return True
-    except np.linalg.LinAlgError:
-        return False
-
-
 # function generators
 
 def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_min=8, ub_max=12, seed=None):

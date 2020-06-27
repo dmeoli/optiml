@@ -1,7 +1,8 @@
 import numpy as np
+from scipy.sparse.linalg import lsqr
 
 from optiml.opti.constrained import BoxConstrainedQuadraticOptimizer
-from optiml.opti.utils import cholesky_solve, nearest_posdef
+from optiml.opti.utils import cholesky_solve
 
 
 class ActiveSet(BoxConstrainedQuadraticOptimizer):
@@ -40,7 +41,6 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                  callback=None,
                  callback_args=(),
                  verbose=False):
-        f.Q = nearest_posdef(f.Q)
         super().__init__(f=f,
                          ub=ub,
                          eps=eps,
@@ -99,10 +99,16 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
             xs = np.zeros(self.f.ndim)
             xs[U] = self.ub[U]
 
-            # use the LDL^T Cholesky symmetric indefinite factorization to solve the
-            # linear system since Q_{AA} is symmetric but could be not positive definite
-            xs[A] = cholesky_solve(np.linalg.cholesky(self.f.Q[A, :][:, A]),
-                                   -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
+            try:
+                # use the Cholesky symmetric factorization to solve the linear system if
+                # Q_{AA} is symmetric and positive definite, i.e., the function is convex
+                xs[A] = cholesky_solve(np.linalg.cholesky(self.f.Q[A, :][:, A]),
+                                       -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
+            except np.linalg.LinAlgError:
+                # if Q_{AA} is indefinite, i.e. the function is linear along the eigenvector
+                # correspondent to zero eigenvalues, the system has infinite solutions; so we
+                # will choose the one that minimize the residue
+                xs[A] = lsqr(self.f.Q[A, :][:, A], -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))[0]
 
             if np.logical_and(xs[A] <= self.ub[A] + 1e-12, xs[A] >= -1e-12).all():
                 # the solution of the unconstrained problem is actually feasible
