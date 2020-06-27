@@ -106,7 +106,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                                        -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
             except np.linalg.LinAlgError:
                 # if Q_{AA} is indefinite, i.e., the function is linear along the eigenvector
-                # correspondent to zero eigenvalues, the system has infinite solutions, so we
+                # correspondent to zero eigenvalues, the system has not solutions, so we
                 # will choose the one that minimize the residue
                 xs[A] = lsqr(self.f.Q[A, :][:, A], -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))[0]
 

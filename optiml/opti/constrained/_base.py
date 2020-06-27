@@ -92,7 +92,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             # if Q is positive definite, i.e., the function is convex, use the Cholesky
             # factorization to solve the linear system; otherwise, if Q is indefinite,
             # i.e., the function is linear along the eigenvector correspondent to zero
-            # eigenvalues, the system has infinite solutions, so we will choose the one
+            # eigenvalues, the system has not solutions, so we will choose the one
             # that minimize the residue
             x = cholesky_solve(self.L, -ql) if hasattr(self, 'L') else lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
@@ -122,7 +122,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             # if Q is positive definite, i.e., the function is convex, use the Cholesky
             # factorization to solve the linear system, otherwise, if Q is indefinite,
             # i.e., the function is linear along the eigenvector correspondent to zero
-            # eigenvalues, the system has infinite solutions, so we will choose the one
+            # eigenvalues, the system has not solutions, so we will choose the one
             # that minimize the residue
             x = cholesky_solve(self.L, -ql) if hasattr(self, 'L') else lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
