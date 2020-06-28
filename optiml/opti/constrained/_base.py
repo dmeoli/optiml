@@ -71,7 +71,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         where lambda_+ are the first n components of lambda and lambda_-
         are the last n components, both constrained to be >= 0.
 
-        Taking the derivative of the Lagrangian primal L(x, lambda_+, lambda_-)
+        Taking the derivative of the Lagrangian L(x, lambda_+, lambda_-)
         wrt x and settings it to 0 gives:
 
                 Q x + q + lambda_+ - lambda_- = 0
