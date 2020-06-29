@@ -571,6 +571,9 @@ class DualSVC(ClassifierMixin, DualSVM):
                               solver=self.optimizer,
                               verbose=self.verbose)
 
+            if self.verbose:
+                print()
+
         else:
 
             if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
@@ -881,6 +884,9 @@ class DualSVR(RegressorMixin, DualSVM):
                                   ub=ub,
                                   solver=self.optimizer,
                                   verbose=self.verbose)
+
+                if self.verbose:
+                    print()
 
             else:
 

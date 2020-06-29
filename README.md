@@ -71,14 +71,9 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
 - Machine Learning
     - [x] Support Vector Machines
         - Formulations
-            - [x] Primal
-            - [x] Dual
-                - Kernels
-                    - [x] Linear
-                    - [x] Polynomial
-                    - [x] Gaussian
-                    - [x] Laplacian
-                    - [x] Sigmoid
+            - Primal
+            - Wolfe Dual
+            - Lagrangian Dual
         - [x] Support Vector Classifier
             - Losses
                 - [x] Hinge (L1 Loss)
@@ -87,6 +82,11 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
             - Losses
                 - [x] Epsilon-Insensitive (L1 Loss)
                 - [x] Squared Epsilon-Insensitive (L2 Loss)
+        - Kernels
+            - [x] Linear
+            - [x] Polynomial
+            - [x] Gaussian
+            - [x] Sigmoid
         - Optimizers (ad hoc)
             - [x] Sequential Minimal Optimization
             - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
@@ -96,8 +96,8 @@ Computational Mathematics course  @ [Department of Computer Science](https://www
         - [x] Neural Network Classifier
         - [x] Neural Network Regressor
         - Losses
-            - [x] Mean Squared Error (L2 Loss)
             - [x] Mean Absolute Error (L1 Loss)
+            - [x] Mean Squared Error (L2 Loss)
             - [x] Binary Cross Entropy
             - [x] Categorical Cross Entropy
             - [x] Sparse Categorical Cross Entropy
