@@ -190,8 +190,8 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
             # w = \mu (np.ones(n) / umx - np.ones(n) / self.x) + lp - lm
             w = mu * (self.ub - 2 * self.x) / (umx * self.x) + lp - lm
 
-            # and use Cholesky to solve the system
-            # because H is symmetric positive definite matrix
+            # and use Cholesky to solve the system since
+            # H is a symmetric positive definite matrix
             dx = cholesky_solve(np.linalg.cholesky(H), w)
 
             dlp = (mu * np.ones(self.f.ndim) + lp * dx) / umx - lp

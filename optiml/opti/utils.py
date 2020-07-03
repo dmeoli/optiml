@@ -12,7 +12,7 @@ def cholesky_solve(L, b):
     return np.linalg.solve(L.T, np.linalg.solve(L, b))
 
 
-# function generators
+# bcqp generator
 
 def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_min=8, ub_max=12, seed=None):
     """

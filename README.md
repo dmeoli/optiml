@@ -10,7 +10,7 @@ both with some of the most successful features according to the state of art.
 
 This work was motivated by the possibility of being able to solve the optimization problem deriving from the mathematical 
 formulation of these models through a wide range of optimization algorithms object of study and developed for the 
-Computational Mathematics course  @ [Department of Computer Science](https://www.di.unipi.it/en/) @ 
+Numerical Methods and Optimization course  @ [Department of Computer Science](https://www.di.unipi.it/en/) @ 
 [University of Pisa](https://www.unipi.it/index.php/english) under the supervision of [Antonio Frangioni](http://pages.di.unipi.it/frangio/).
 
 ## Contents
