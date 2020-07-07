@@ -40,7 +40,7 @@ def generate_linearly_separable_overlap_data(size=100, random_state=None):
     return np.vstack((X1, X2)), np.hstack((y1, y2))
 
 
-def generate_non_linearly_separable_data(size=50, random_state=None):
+def generate_non_linearly_separable_data(size=100, random_state=None):
     rs = np.random.RandomState(random_state)
     mean1 = [-1, 2]
     mean2 = [1, -1]
@@ -58,13 +58,13 @@ def generate_non_linearly_separable_data(size=50, random_state=None):
 
 def generate_non_linearly_regression_data(size=100, random_state=None):
     rs = np.random.RandomState(random_state)
-    X = np.sort(4 * np.pi * rs.uniform(size=size)) - 2 * np.pi
-    y = np.sinc(X)
+    X = np.sort(4 * np.pi * rs.uniform(size=size))
+    y = np.sin(X)
     y += 0.25 * (0.5 - rs.uniform(size=size))  # noise
     return X.reshape(-1, 1), y
 
 
-def generate_centred_and_normalized_regression_data(size=50, random_state=None):
+def generate_centred_and_normalized_regression_data(size=100, random_state=None):
     rs = np.random.RandomState(random_state)
     # generating sine curve and uniform noise
     X = np.linspace(0, 1, size)

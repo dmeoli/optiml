@@ -42,10 +42,6 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
         super().__init__(quad.Q, quad.q)
-        try:
-            self.L = np.linalg.cholesky(self.Q)
-        except np.linalg.LinAlgError:
-            pass
         self.ndim *= 2
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
