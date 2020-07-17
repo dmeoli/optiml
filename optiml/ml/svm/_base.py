@@ -19,7 +19,6 @@ from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxC
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
-from ...opti.unconstrained.stochastic.schedules import constant
 
 
 class SVM(BaseEstimator, ABC):
@@ -51,13 +50,9 @@ class SVM(BaseEstimator, ABC):
         of epochs (how many times each data point will be used), not the number
         of gradient steps.
 
-    learning_rate_init : double, default=0.1
+    learning_rate : double, default=0.1
         The initial learning rate used for weight update. It controls the
         step-size in updating the weights. Only used when solver is a
-        subclass of `StochasticOptimizer`.
-
-    learning_rate_schedule: Schedule instance, default=constant
-        Learning rate schedule for weight updates. Only used when solver is a
         subclass of `StochasticOptimizer`.
 
     momentum_type : {'none', 'standard', 'nesterov'}, default='none'
@@ -67,10 +62,6 @@ class SVM(BaseEstimator, ABC):
     momentum : float, default=0.9
         Momentum for weight update. Should be between 0 and 1. Only used when
         solver is a subclass of `StochasticOptimizer`.
-
-    momentum_schedule :
-        Momentum schedule for weight updates. Only used when solver is a
-        subclass of `StochasticOptimizer`.
 
     batch_size :
 
@@ -120,11 +111,9 @@ class SVM(BaseEstimator, ABC):
                  tol=1e-3,
                  optimizer=None,
                  max_iter=1000,
-                 learning_rate_init=0.1,
-                 learning_rate_schedule=constant,
+                 learning_rate=0.1,
                  momentum_type='none',
                  momentum=0.9,
-                 momentum_schedule=constant,
                  batch_size=None,
                  max_f_eval=15000,
                  shuffle=True,
@@ -138,11 +127,9 @@ class SVM(BaseEstimator, ABC):
         self.tol = tol
         self.optimizer = optimizer
         self.max_iter = max_iter
-        self.learning_rate_init = learning_rate_init
-        self.learning_rate_schedule = learning_rate_schedule
+        self.learning_rate = learning_rate
         self.momentum_type = momentum_type
         self.momentum = momentum
-        self.momentum_schedule = momentum_schedule
         self.batch_size = batch_size
         self.max_f_eval = max_f_eval
         self.shuffle = shuffle
@@ -161,11 +148,9 @@ class PrimalSVM(SVM, ABC):
                  loss=SVMLoss,
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
-                 learning_rate_init=0.1,
-                 learning_rate_schedule=constant,
+                 learning_rate=0.1,
                  momentum_type='none',
                  momentum=0.9,
-                 momentum_schedule=constant,
                  validation_split=0.,
                  batch_size=None,
                  max_f_eval=15000,
@@ -181,11 +166,9 @@ class PrimalSVM(SVM, ABC):
                          tol=tol,
                          optimizer=optimizer,
                          max_iter=max_iter,
-                         learning_rate_init=learning_rate_init,
-                         learning_rate_schedule=learning_rate_schedule,
+                         learning_rate=learning_rate,
                          momentum_type=momentum_type,
                          momentum=momentum,
-                         momentum_schedule=momentum_schedule,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          shuffle=shuffle,
@@ -294,11 +277,9 @@ class DualSVM(SVM, ABC):
                  tol=1e-3,
                  optimizer=SMO,
                  max_iter=1000,
-                 learning_rate_init=0.1,
-                 learning_rate_schedule=constant,
+                 learning_rate=0.1,
                  momentum_type='none',
                  momentum=0.9,
-                 momentum_schedule=constant,
                  batch_size=None,
                  max_f_eval=15000,
                  master_solver='ecos',
@@ -310,11 +291,9 @@ class DualSVM(SVM, ABC):
                          tol=tol,
                          optimizer=optimizer,
                          max_iter=max_iter,
-                         learning_rate_init=learning_rate_init,
-                         learning_rate_schedule=learning_rate_schedule,
+                         learning_rate=learning_rate,
                          momentum_type=momentum_type,
                          momentum=momentum,
-                         momentum_schedule=momentum_schedule,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          shuffle=shuffle,
@@ -342,11 +321,9 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                  loss=squared_hinge,
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
-                 learning_rate_init=0.1,
-                 learning_rate_schedule=constant,
+                 learning_rate=0.1,
                  momentum_type='none',
                  momentum=0.9,
-                 momentum_schedule=constant,
                  validation_split=0.,
                  batch_size=None,
                  max_f_eval=15000,
@@ -363,11 +340,9 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                          loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
-                         learning_rate_init=learning_rate_init,
-                         learning_rate_schedule=learning_rate_schedule,
+                         learning_rate=learning_rate,
                          momentum_type=momentum_type,
                          momentum=momentum,
-                         momentum_schedule=momentum_schedule,
                          validation_split=validation_split,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
@@ -471,11 +446,9 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
             self.optimizer = self.optimizer(f=self.loss,
                                             x=np.zeros(self.loss.ndim),
                                             epochs=self.max_iter,
-                                            step_size=self.learning_rate_init,
-                                            step_size_schedule=self.learning_rate_schedule,
+                                            step_size=self.learning_rate,
                                             momentum_type=self.momentum_type,
                                             momentum=self.momentum,
-                                            momentum_schedule=self.momentum_schedule,
                                             callback=self._store_train_val_info,
                                             callback_args=(X_val_biased, y_val),
                                             shuffle=self.shuffle,
@@ -502,11 +475,9 @@ class DualSVC(ClassifierMixin, DualSVM):
                  tol=1e-3,
                  optimizer=SMOClassifier,
                  max_iter=1000,
-                 learning_rate_init=0.1,
-                 learning_rate_schedule=constant,
+                 learning_rate=0.1,
                  momentum_type='none',
                  momentum=0.9,
-                 momentum_schedule=constant,
                  batch_size=None,
                  max_f_eval=15000,
                  master_solver='ecos',
@@ -519,11 +490,9 @@ class DualSVC(ClassifierMixin, DualSVM):
                          tol=tol,
                          optimizer=optimizer,
                          max_iter=max_iter,
-                         learning_rate_init=learning_rate_init,
-                         learning_rate_schedule=learning_rate_schedule,
+                         learning_rate=learning_rate,
                          momentum_type=momentum_type,
                          momentum=momentum,
-                         momentum_schedule=momentum_schedule,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          master_solver=master_solver,
@@ -588,11 +557,9 @@ class DualSVC(ClassifierMixin, DualSVM):
                 self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
                 self.optimizer = LagrangianDual(f=self.obj,
                                                 optimizer=self.optimizer,
-                                                step_size=self.learning_rate_init,
-                                                step_size_schedule=self.learning_rate_schedule,
+                                                step_size=self.learning_rate,
                                                 momentum_type=self.momentum_type,
                                                 momentum=self.momentum,
-                                                momentum_schedule=self.momentum_schedule,
                                                 batch_size=self.batch_size,
                                                 max_iter=self.max_iter,
                                                 max_f_eval=self.max_f_eval,
@@ -647,11 +614,9 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  loss=epsilon_insensitive,
                  optimizer=AdaGrad,
                  max_iter=1000,
-                 learning_rate_init=0.1,
-                 learning_rate_schedule=constant,
+                 learning_rate=0.1,
                  momentum_type='none',
                  momentum=0.9,
-                 momentum_schedule=constant,
                  validation_split=0.,
                  batch_size=None,
                  max_f_eval=15000,
@@ -668,11 +633,9 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                          loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
-                         learning_rate_init=learning_rate_init,
-                         learning_rate_schedule=learning_rate_schedule,
+                         learning_rate=learning_rate,
                          momentum_type=momentum_type,
                          momentum=momentum,
-                         momentum_schedule=momentum_schedule,
                          validation_split=validation_split,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
@@ -777,11 +740,9 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
             self.optimizer = self.optimizer(f=self.loss,
                                             x=np.zeros(self.loss.ndim),
                                             epochs=self.max_iter,
-                                            step_size=self.learning_rate_init,
-                                            step_size_schedule=self.learning_rate_schedule,
+                                            step_size=self.learning_rate,
                                             momentum_type=self.momentum_type,
                                             momentum=self.momentum,
-                                            momentum_schedule=self.momentum_schedule,
                                             callback=self._store_train_val_info,
                                             callback_args=(X_val_biased, y_val),
                                             shuffle=self.shuffle,
@@ -806,11 +767,9 @@ class DualSVR(RegressorMixin, DualSVM):
                  tol=1e-3,
                  optimizer=SMORegression,
                  max_iter=1000,
-                 learning_rate_init=0.1,
-                 learning_rate_schedule=constant,
+                 learning_rate=0.1,
                  momentum_type='none',
                  momentum=0.9,
-                 momentum_schedule=constant,
                  batch_size=None,
                  max_f_eval=15000,
                  master_solver='ecos',
@@ -823,11 +782,9 @@ class DualSVR(RegressorMixin, DualSVM):
                          tol=tol,
                          optimizer=optimizer,
                          max_iter=max_iter,
-                         learning_rate_init=learning_rate_init,
-                         learning_rate_schedule=learning_rate_schedule,
+                         learning_rate=learning_rate,
                          momentum_type=momentum_type,
                          momentum=momentum,
-                         momentum_schedule=momentum_schedule,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          master_solver=master_solver,
@@ -902,11 +859,9 @@ class DualSVR(RegressorMixin, DualSVM):
                     self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
                     self.optimizer = LagrangianDual(f=self.obj,
                                                     optimizer=self.optimizer,
-                                                    step_size=self.learning_rate_init,
-                                                    step_size_schedule=self.learning_rate_schedule,
+                                                    step_size=self.learning_rate,
                                                     momentum_type=self.momentum_type,
                                                     momentum=self.momentum,
-                                                    momentum_schedule=self.momentum_schedule,
                                                     batch_size=self.batch_size,
                                                     max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval,

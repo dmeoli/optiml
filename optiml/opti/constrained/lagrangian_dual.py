@@ -3,7 +3,6 @@ import numpy as np
 from .. import Optimizer
 from ..unconstrained.line_search import LineSearchOptimizer
 from ..unconstrained.stochastic import StochasticOptimizer, AdaGrad
-from ..unconstrained.stochastic.schedules import constant
 
 
 class LagrangianDual(Optimizer):
@@ -18,8 +17,6 @@ class LagrangianDual(Optimizer):
                  batch_size=None,
                  max_iter=1000,
                  max_f_eval=1000,
-                 step_size_schedule=constant,
-                 momentum_schedule=constant,
                  callback=None,
                  callback_args=(),
                  shuffle=True,
@@ -40,8 +37,6 @@ class LagrangianDual(Optimizer):
         self.step_size = step_size
         self.momentum_type = momentum_type
         self.momentum = momentum
-        self.step_size_schedule = step_size_schedule
-        self.momentum_schedule = momentum_schedule
         self.batch_size = batch_size
         self.max_f_eval = max_f_eval
         self.shuffle = shuffle
@@ -85,12 +80,10 @@ class LagrangianDual(Optimizer):
             self.optimizer = self.optimizer(f=self.f,
                                             x=self.x,
                                             step_size=self.step_size,
-                                            step_size_schedule=self.step_size_schedule,
                                             epochs=self.max_iter,
                                             batch_size=self.batch_size,
                                             momentum_type=self.momentum_type,
                                             momentum=self.momentum,
-                                            momentum_schedule=self.momentum_schedule,
                                             callback=self._print_dual_info,
                                             shuffle=self.shuffle,
                                             random_state=self.random_state,

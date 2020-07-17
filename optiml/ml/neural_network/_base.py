@@ -14,7 +14,6 @@ from .losses import (CategoricalCrossEntropy, SparseCategoricalCrossEntropy,
 from ...opti import Optimizer
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
-from ...opti.unconstrained.stochastic.schedules import constant
 
 
 class NeuralNetwork(BaseEstimator, Layer, ABC):
@@ -23,12 +22,10 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
                  layers=(),
                  loss=mean_squared_error,
                  optimizer=StochasticGradientDescent,
-                 learning_rate_init=0.01,
-                 learning_rate_schedule=constant,
+                 learning_rate=0.01,
                  max_iter=1000,
                  momentum_type='none',
                  momentum=0.9,
-                 momentum_schedule=constant,
                  tol=1e-4,
                  validation_split=0.,
                  batch_size=None,
@@ -45,11 +42,9 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
         if not issubclass(optimizer, Optimizer):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
         self.optimizer = optimizer
-        self.learning_rate_init = learning_rate_init
-        self.learning_rate_schedule = learning_rate_schedule
+        self.learning_rate = learning_rate
         self.momentum_type = momentum_type
         self.momentum = momentum
-        self.momentum_schedule = momentum_schedule
         self.tol = tol
         self.max_iter = max_iter
         self.batch_size = batch_size
@@ -224,13 +219,11 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
             self.loss = self.loss(self, X, y)
             self.optimizer = self.optimizer(f=self.loss,
                                             x=packed_coef_inter,
-                                            step_size=self.learning_rate_init,
-                                            step_size_schedule=self.learning_rate_schedule,
+                                            step_size=self.learning_rate,
                                             epochs=self.max_iter,
                                             batch_size=self.batch_size,
                                             momentum_type=self.momentum_type,
                                             momentum=self.momentum,
-                                            momentum_schedule=self.momentum_schedule,
                                             callback=self._store_train_val_info,
                                             callback_args=(X_val, y_val),
                                             shuffle=self.shuffle,
@@ -248,12 +241,10 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
                  layers=(),
                  loss=mean_squared_error,
                  optimizer=StochasticGradientDescent,
-                 learning_rate_init=0.01,
-                 learning_rate_schedule=constant,
+                 learning_rate=0.01,
                  max_iter=1000,
                  momentum_type='none',
                  momentum=0.9,
-                 momentum_schedule=constant,
                  tol=1e-4,
                  validation_split=0.,
                  batch_size=None,
@@ -266,12 +257,10 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
         super().__init__(layers=layers,
                          loss=loss,
                          optimizer=optimizer,
-                         learning_rate_init=learning_rate_init,
-                         learning_rate_schedule=learning_rate_schedule,
+                         learning_rate=learning_rate,
                          max_iter=max_iter,
                          momentum_type=momentum_type,
                          momentum=momentum,
-                         momentum_schedule=momentum_schedule,
                          tol=tol,
                          validation_split=validation_split,
                          batch_size=batch_size,

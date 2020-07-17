@@ -3,7 +3,6 @@ import warnings
 import numpy as np
 
 from . import StochasticOptimizer
-from .schedules import constant
 
 
 class AMSGrad(StochasticOptimizer):
@@ -20,8 +19,6 @@ class AMSGrad(StochasticOptimizer):
                  beta1=0.9,
                  beta2=0.999,
                  offset=1e-8,
-                 step_size_schedule=constant,
-                 momentum_schedule=constant,
                  callback=None,
                  callback_args=(),
                  shuffle=True,
@@ -35,8 +32,6 @@ class AMSGrad(StochasticOptimizer):
                          batch_size=batch_size,
                          eps=eps,
                          epochs=epochs,
-                         step_size_schedule=step_size_schedule,
-                         momentum_schedule=momentum_schedule,
                          callback=callback,
                          callback_args=callback_args,
                          shuffle=shuffle,
@@ -88,9 +83,6 @@ class AMSGrad(StochasticOptimizer):
                 break
 
             if self.is_batch_end():
-                self.step_size = next(self.step_size_schedule)
-                if self.momentum_type != 'none':
-                    self.momentum = next(self.momentum_schedule)
                 self.epoch += 1
 
             if self.epoch >= self.epochs:
