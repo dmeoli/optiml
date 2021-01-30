@@ -12,4 +12,4 @@ setup(name="optiml",
       long_description_content_type="text/markdown",
       license="MIT",
       url="https://github.com/dmeoli/optiml",
-      python_requires='>=3.6')
+      python_requires=">=3.6")
