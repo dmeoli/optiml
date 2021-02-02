@@ -114,7 +114,7 @@ class CategoricalCrossEntropy(NeuralNetworkLoss):
 
     def delta(self, y_pred, y_true):
         # according to: https://deepnotes.io/softmax-crossentropy
-        one_hot_mask = y_true.astype(np.bool)
+        one_hot_mask = y_true.astype(bool)
         y_pred[one_hot_mask] -= 1.
         return y_pred
 
