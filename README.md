@@ -18,9 +18,8 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
 - Numerical Optimization
     - Unconstrained Optimization
         - Line Search Methods
-            - 0th Order Methods
-                - [x] Subgradient
             - 1st Order Methods
+                - [x] Subgradient
                 - [x] Steepest Gradient Descent
                 - [ ] Conjugate Gradient
                     - [ ] Fletcher–Reeves formula
