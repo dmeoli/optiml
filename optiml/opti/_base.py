@@ -22,7 +22,7 @@ class Optimizer:
         if callable(x):
             self.x = x(f.ndim)
         else:
-            self.x = np.asarray(x, dtype=np.float)
+            self.x = np.asarray(x, dtype=float)
         self.f_x = np.nan
         self.g_x = np.zeros(0)
         if self.f.ndim <= 3:
