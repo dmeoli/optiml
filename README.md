@@ -57,7 +57,7 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
         - [x] Frank-Wolfe or Conditional Gradient
         - [x] Active Set
         - [x] Interior Point
-        - [x] Lagrangian Dual
+        - [x] Lagrangian Dual (also with equality constraints)
 
 - Machine Learning
     - [x] Support Vector Machines

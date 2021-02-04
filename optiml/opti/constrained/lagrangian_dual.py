@@ -41,20 +41,18 @@ class LagrangianDual(Optimizer):
         self.max_f_eval = max_f_eval
         self.shuffle = shuffle
         self.random_state = random_state
+        self.dual_x = None
+        self.dual_f_x = None
 
     def _print_dual_info(self, opt):
-        primal_f_x = -self.f.primal.function(self.f.last_x)
-        gap = (primal_f_x - self.f_x) / max(abs(self.f_x), 1)
+        gap = (self.f.primal_f_x - self.f_x) / max(abs(self.f.primal_f_x), 1)
 
         if ((isinstance(opt, LineSearchOptimizer) and opt.is_verbose()) or
             (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())) and self.is_verbose():
-            print('\tub: {: 1.4e}'.format(self.f_x), end='')
-            print(' - pcost: {: 1.4e}'.format(primal_f_x), end='')
+            print('\tpcost: {: 1.4e}'.format(self.f.primal_f_x), end='')
             print(' - gap: {: 1.4e}'.format(gap), end='')
 
         self.callback()
-
-        self.x, self.f_x = self.f.last_x, primal_f_x
 
         if gap <= self.eps:
             self.status = 'optimal'
@@ -89,12 +87,15 @@ class LagrangianDual(Optimizer):
                                             random_state=self.random_state,
                                             verbose=self.verbose).minimize()
 
+        self.dual_x, self.dual_f_x = self.x, self.f_x
+        self.x, self.f_x = self.f.primal_x, self.f.primal_f_x
+
         return self
 
     def callback(self, args=()):
         if self.f.primal.ndim == 2:
             self.x0_history.append(self.f.primal_x[0])
             self.x1_history.append(self.f.primal_x[1])
-            self.f_x_history.append(-self.f.primal_f_x)
+            self.f_x_history.append(self.f.primal_f_x)
         if callable(self._callback):
             self._callback(self, *args, *self.callback_args)

@@ -16,6 +16,7 @@ from ...opti import Optimizer
 from ...opti import Quadratic
 from ...opti.constrained import LagrangianDual
 from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
+from ...opti.constrained._base import LagrangianConstrainedQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
@@ -87,23 +88,6 @@ class SVM(BaseEstimator, ABC):
         Controls the verbosity of progress messages to stdout. Use a boolean value
         to switch on/off or an int value to show progress each ``verbose`` time
         optimization steps.
-
-    Attributes
-    ----------
-
-
-    Examples
-    --------
-
-
-    Notes
-    -----
-
-
-    References
-    ----------
-
-
     """
 
     def __init__(self,
@@ -282,6 +266,7 @@ class DualSVM(SVM, ABC):
                  momentum=0.9,
                  batch_size=None,
                  max_f_eval=15000,
+                 use_explicit_eq=True,
                  master_solver='ecos',
                  master_verbose=False,
                  shuffle=True,
@@ -306,6 +291,7 @@ class DualSVM(SVM, ABC):
                 not issubclass(optimizer, SMO) or
                 not issubclass(optimizer, Optimizer)):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
+        self.use_explicit_eq = use_explicit_eq
         self.master_solver = master_solver
         self.master_verbose = master_verbose
         if isinstance(self.kernel, LinearKernel):
@@ -480,6 +466,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  momentum=0.9,
                  batch_size=None,
                  max_f_eval=15000,
+                 use_explicit_eq=True,
                  master_solver='ecos',
                  master_verbose=False,
                  shuffle=True,
@@ -495,6 +482,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                          momentum=momentum,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
+                         use_explicit_eq=use_explicit_eq,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
                          shuffle=shuffle,
@@ -533,12 +521,29 @@ class DualSVC(ClassifierMixin, DualSVM):
         elif isinstance(self.optimizer, str):
 
             lb = np.zeros(n_samples)  # lower bounds
-            alphas = solve_qp(P=Q,
-                              q=q,
-                              lb=lb,
-                              ub=ub,
-                              solver=self.optimizer,
-                              verbose=self.verbose)
+
+            if self.use_explicit_eq:
+
+                alphas = solve_qp(P=Q,
+                                  q=q,
+                                  A=y.astype(np.float),
+                                  b=np.zeros(1),
+                                  lb=lb,
+                                  ub=ub,
+                                  solver=self.optimizer,
+                                  verbose=self.verbose)
+
+            else:
+
+                Q += np.outer(y, y)
+                self.obj = Quadratic(Q, q)
+
+                alphas = solve_qp(P=Q,
+                                  q=q,
+                                  lb=lb,
+                                  ub=ub,
+                                  solver=self.optimizer,
+                                  verbose=self.verbose)
 
             if self.verbose:
                 print()
@@ -547,6 +552,9 @@ class DualSVC(ClassifierMixin, DualSVM):
 
             if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
+                Q += np.outer(y, y)
+                self.obj = Quadratic(Q, q)
+
                 self.optimizer = self.optimizer(f=self.obj,
                                                 ub=ub,
                                                 max_iter=self.max_iter,
@@ -554,18 +562,38 @@ class DualSVC(ClassifierMixin, DualSVM):
 
             elif issubclass(self.optimizer, Optimizer):
 
-                self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
-                self.optimizer = LagrangianDual(f=self.obj,
-                                                optimizer=self.optimizer,
-                                                step_size=self.learning_rate,
-                                                momentum_type=self.momentum_type,
-                                                momentum=self.momentum,
-                                                batch_size=self.batch_size,
-                                                max_iter=self.max_iter,
-                                                max_f_eval=self.max_f_eval,
-                                                shuffle=self.shuffle,
-                                                random_state=self.random_state,
-                                                verbose=self.verbose).minimize()
+                if self.use_explicit_eq:
+
+                    self.obj = LagrangianConstrainedQuadratic(self.obj, y, ub)
+                    self.optimizer = LagrangianDual(f=self.obj,
+                                                    optimizer=self.optimizer,
+                                                    step_size=self.learning_rate,
+                                                    momentum_type=self.momentum_type,
+                                                    momentum=self.momentum,
+                                                    batch_size=self.batch_size,
+                                                    max_iter=self.max_iter,
+                                                    max_f_eval=self.max_f_eval,
+                                                    shuffle=self.shuffle,
+                                                    random_state=self.random_state,
+                                                    verbose=self.verbose).minimize()
+
+                else:
+
+                    Q += np.outer(y, y)
+                    self.obj = Quadratic(Q, q)
+
+                    self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
+                    self.optimizer = LagrangianDual(f=self.obj,
+                                                    optimizer=self.optimizer,
+                                                    step_size=self.learning_rate,
+                                                    momentum_type=self.momentum_type,
+                                                    momentum=self.momentum,
+                                                    batch_size=self.batch_size,
+                                                    max_iter=self.max_iter,
+                                                    max_f_eval=self.max_f_eval,
+                                                    shuffle=self.shuffle,
+                                                    random_state=self.random_state,
+                                                    verbose=self.verbose).minimize()
 
                 if not isinstance(self.optimizer, StochasticOptimizer):
 
@@ -772,6 +800,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  momentum=0.9,
                  batch_size=None,
                  max_f_eval=15000,
+                 use_explicit_eq=True,
                  master_solver='ecos',
                  master_verbose=False,
                  shuffle=True,
@@ -787,6 +816,7 @@ class DualSVR(RegressorMixin, DualSVM):
                          momentum=momentum,
                          batch_size=batch_size,
                          max_f_eval=max_f_eval,
+                         use_explicit_eq=use_explicit_eq,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
                          shuffle=shuffle,
@@ -828,19 +858,32 @@ class DualSVR(RegressorMixin, DualSVM):
 
             A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
 
-            Q += np.outer(A, A)
-            self.obj = Quadratic(Q, q)
-
             if isinstance(self.optimizer, str):
 
                 lb = np.zeros(2 * n_samples)  # lower bounds
 
-                alphas = solve_qp(P=Q,
-                                  q=q,
-                                  lb=lb,
-                                  ub=ub,
-                                  solver=self.optimizer,
-                                  verbose=self.verbose)
+                if self.use_explicit_eq:
+
+                    alphas = solve_qp(P=Q,
+                                      q=q,
+                                      A=A,
+                                      b=np.zeros(1),
+                                      lb=lb,
+                                      ub=ub,
+                                      solver=self.optimizer,
+                                      verbose=self.verbose)
+
+                else:
+
+                    Q += np.outer(A, A)
+                    self.obj = Quadratic(Q, q)
+
+                    alphas = solve_qp(P=Q,
+                                      q=q,
+                                      lb=lb,
+                                      ub=ub,
+                                      solver=self.optimizer,
+                                      verbose=self.verbose)
 
                 if self.verbose:
                     print()
@@ -849,6 +892,9 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
+                    Q += np.outer(A, A)
+                    self.obj = Quadratic(Q, q)
+
                     self.optimizer = self.optimizer(f=self.obj,
                                                     ub=ub,
                                                     max_iter=self.max_iter,
@@ -856,18 +902,38 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 elif issubclass(self.optimizer, Optimizer):
 
-                    self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
-                    self.optimizer = LagrangianDual(f=self.obj,
-                                                    optimizer=self.optimizer,
-                                                    step_size=self.learning_rate,
-                                                    momentum_type=self.momentum_type,
-                                                    momentum=self.momentum,
-                                                    batch_size=self.batch_size,
-                                                    max_iter=self.max_iter,
-                                                    max_f_eval=self.max_f_eval,
-                                                    shuffle=self.shuffle,
-                                                    random_state=self.random_state,
-                                                    verbose=self.verbose).minimize()
+                    if self.use_explicit_eq:
+
+                        self.obj = LagrangianConstrainedQuadratic(self.obj, A, ub)
+                        self.optimizer = LagrangianDual(f=self.obj,
+                                                        optimizer=self.optimizer,
+                                                        step_size=self.learning_rate,
+                                                        momentum_type=self.momentum_type,
+                                                        momentum=self.momentum,
+                                                        batch_size=self.batch_size,
+                                                        max_iter=self.max_iter,
+                                                        max_f_eval=self.max_f_eval,
+                                                        shuffle=self.shuffle,
+                                                        random_state=self.random_state,
+                                                        verbose=self.verbose).minimize()
+
+                    else:
+
+                        Q += np.outer(A, A)
+                        self.obj = Quadratic(Q, q)
+
+                        self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
+                        self.optimizer = LagrangianDual(f=self.obj,
+                                                        optimizer=self.optimizer,
+                                                        step_size=self.learning_rate,
+                                                        momentum_type=self.momentum_type,
+                                                        momentum=self.momentum,
+                                                        batch_size=self.batch_size,
+                                                        max_iter=self.max_iter,
+                                                        max_f_eval=self.max_f_eval,
+                                                        shuffle=self.shuffle,
+                                                        random_state=self.random_state,
+                                                        verbose=self.verbose).minimize()
 
                     if not isinstance(self.optimizer, StochasticOptimizer):
 

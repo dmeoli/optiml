@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 def cholesky_solve(L, b):
     """Solve a symmetric positive definite linear
-    system L L.T x = b using Cholesky factorization"""
+    system L L^T x = b using Cholesky factorization"""
     return np.linalg.solve(L.T, np.linalg.solve(L, b))
 
 
