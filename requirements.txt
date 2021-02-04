@@ -1,8 +1,8 @@
 autograd
-numpy
 cvxopt
 cvxpy
 matplotlib
+numpy
 qpsolvers
 scikit-learn
 scipy
