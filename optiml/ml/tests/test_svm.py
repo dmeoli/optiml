@@ -109,7 +109,7 @@ def test_solve_svr_as_bcqp_lagrangian_relaxation():
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
     svr = DualSVR(kernel=linear, optimizer=AdaGrad, use_explicit_eq=False)
     svr.fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.77
+    assert svr.score(X_test, y_test) >= 0.53
 
 
 def test_solve_svr_as_qp_lagrangian_relaxation():
@@ -118,7 +118,7 @@ def test_solve_svr_as_qp_lagrangian_relaxation():
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
     svr = DualSVR(kernel=linear, optimizer=AdaGrad, use_explicit_eq=True)
     svr.fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.7
+    assert svr.score(X_test, y_test) >= 0.48
 
 
 def test_solve_linear_svc_with_line_search_optimizer():
