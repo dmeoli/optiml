@@ -121,12 +121,6 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             x = lsqr(self.Q, -ql)[0]
         g = np.hstack((self.ub - x, x))
 
-        # compute an heuristic solution out of the solution x of
-        # the Lagrangian relaxation by projecting x on the box
-        x[x < 0] = 0
-        idx = x > self.ub
-        x[idx] = self.ub[idx]
-
         self._update_primal(x)
 
         return g
