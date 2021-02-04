@@ -1,7 +1,8 @@
 autograd
 cvxopt
-cvxpy
+cvxpy==1.1.7
 matplotlib
+numpy
 qpsolvers
 scikit-learn
 scipy
