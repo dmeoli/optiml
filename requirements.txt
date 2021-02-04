@@ -1,6 +1,6 @@
 autograd
 cvxopt
-cvxpy==1.1.7
+cvxpy
 matplotlib
 numpy
 qpsolvers
