@@ -7,11 +7,12 @@ python:
   - 3.9
 
 before_install:
-  - pip install pytest-cov
-  - pip install coveralls
+  - pip install --upgrade numpy
 
 install:
   - pip install --upgrade -r requirements.txt
+  - pip install pytest-cov
+  - pip install coveralls
   - pip install .
 
 script:
