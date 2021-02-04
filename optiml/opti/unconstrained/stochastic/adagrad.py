@@ -47,7 +47,7 @@ class AdaGrad(StochasticOptimizer):
                 prev_v = np.inf
 
         for batch in self.batches:
-            self.f_x, self.g_x = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
+            self.f_x = self.f.function(self.x, *batch)
 
             if self.is_batch_end():
 

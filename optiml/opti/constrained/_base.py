@@ -52,9 +52,10 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
         self.ub = np.asarray(ub, dtype=np.float)
+        # initialize the primal problem
         self.primal = quad
-        self.primal_x = np.inf
-        self.primal_f_x = np.inf
+        self.primal_x = ub / 2  # starts from the middle of the box
+        self.primal_f_x = self.primal.function(self.primal_x)
 
     def x_star(self):
         raise np.full(fill_value=np.nan, shape=self.ndim)
@@ -126,12 +127,21 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         idx = x > self.ub
         x[idx] = self.ub[idx]
 
+        self._update_primal(x)
+
+        return g
+
+    def _update_primal(self, x):
+        # compute an heuristic solution out of the solution x of
+        # the Lagrangian relaxation by projecting x on the box
+        x[x < 0] = 0
+        idx = x > self.ub
+        x[idx] = self.ub[idx]
+
         v = self.primal.function(x)
         if v < self.primal_f_x:
             self.primal_x = x
             self.primal_f_x = v
-
-        return g
 
 
 class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
@@ -199,11 +209,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             # correspondent to zero eigenvalues, the system has not solutions, so we
             # will choose the one that minimize the residue
             x = lsqr(self.Q, -ql)[0]
-        g = np.hstack((self.A * x, self.ub - x, x))
 
-        v = self.primal.function(x)
-        if v < self.primal_f_x:
-            self.primal_x = x
-            self.primal_f_x = v
+        self._update_primal(x)
 
-        return g
+        return np.hstack((self.A * x, self.ub - x, x))
