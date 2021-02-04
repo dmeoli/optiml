@@ -93,6 +93,8 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             # correspondent to zero eigenvalues, the system has not solutions, so we
             # will choose the one that minimize the residue
             x = lsqr(self.Q, -ql)[0]
+            # from scipy.sparse.linalg import minres
+            # x = minres(self.Q, -ql)[0]
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
@@ -119,6 +121,8 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             # correspondent to zero eigenvalues, the system has not solutions, so we
             # will choose the one that minimize the residue
             x = lsqr(self.Q, -ql)[0]
+            # from scipy.sparse.linalg import minres
+            # x = minres(self.Q, -ql)[0]
         g = np.hstack((self.ub - x, x))
 
         self._update_primal(x)
@@ -177,6 +181,8 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             # correspondent to zero eigenvalues, the system has not solutions, so we
             # will choose the one that minimize the residue
             x = lsqr(self.Q, -ql)[0]
+            # from scipy.sparse.linalg import minres
+            # x = minres(self.Q, -ql)[0]
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
@@ -203,6 +209,8 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             # correspondent to zero eigenvalues, the system has not solutions, so we
             # will choose the one that minimize the residue
             x = lsqr(self.Q, -ql)[0]
+            # from scipy.sparse.linalg import minres
+            # x = minres(self.Q, -ql)[0]
 
         self._update_primal(x)
 
