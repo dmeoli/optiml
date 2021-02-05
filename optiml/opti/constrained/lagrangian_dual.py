@@ -29,10 +29,6 @@ class LagrangianDual(Optimizer):
                          callback=callback,
                          callback_args=callback_args,
                          verbose=verbose)
-        if self.f.primal.ndim == 2:
-            self.x0_history = []
-            self.x1_history = []
-            self.f_x_history = []
         self.optimizer = optimizer
         self.step_size = step_size
         self.momentum_type = momentum_type
@@ -41,32 +37,17 @@ class LagrangianDual(Optimizer):
         self.max_f_eval = max_f_eval
         self.shuffle = shuffle
         self.random_state = random_state
-
-    def _print_dual_info(self, opt):
-        self.callback()
-
-        gap = (self.f.primal_f_x - self.f_x) / max(abs(self.f.primal_f_x), 1)
-
-        if ((isinstance(opt, LineSearchOptimizer) and opt.is_verbose()) or
-            (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())) and self.is_verbose():
-            print('\tpcost: {: 1.4e}'.format(self.f.primal_f_x), end='')
-            print(' - gap: {: 1.4e}'.format(gap), end='')
-
-        if gap <= self.eps:
-            self.status = 'optimal'
-            raise StopIteration
-
-        self.iter += 1
+        # initialize the primal problem
+        self.primal_x = self.f.ub / 2  # starts from the middle of the box
+        self.primal_f_x = self.f.primal.function(self.primal_x)
+        if self.f.primal.ndim == 2:
+            self.x0_history = []
+            self.x1_history = []
+            self.f_x_history = []
 
     def minimize(self):
 
         self.f_x = self.f.function(self.x)
-
-        # saving the starting point of the primal formulation
-        if self.f.primal.ndim == 2:
-            self.x0_history.append(self.f.primal_x[0])
-            self.x1_history.append(self.f.primal_x[1])
-            self.f_x_history.append(self.f.primal_f_x)
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -74,7 +55,7 @@ class LagrangianDual(Optimizer):
                                             x=self.x,
                                             max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval,
-                                            callback=self._print_dual_info,
+                                            callback=self._update_primal,
                                             verbose=self.verbose).minimize()
 
         elif issubclass(self.optimizer, StochasticOptimizer):
@@ -86,17 +67,44 @@ class LagrangianDual(Optimizer):
                                             batch_size=self.batch_size,
                                             momentum_type=self.momentum_type,
                                             momentum=self.momentum,
-                                            callback=self._print_dual_info,
+                                            callback=self._update_primal,
                                             shuffle=self.shuffle,
                                             random_state=self.random_state,
                                             verbose=self.verbose).minimize()
 
         return self
 
+    def _update_primal(self, opt):
+        self.callback()
+
+        # compute an heuristic solution out of the solution x of
+        # the Lagrangian relaxation by projecting x on the box
+        self.f.last_x[self.f.last_x < 0] = 0
+        idx = self.f.last_x > self.f.ub
+        self.f.last_x[idx] = self.f.ub[idx]
+
+        v = self.f.primal.function(self.f.last_x)
+        if v < self.primal_f_x:
+            self.primal_x = self.f.last_x
+            self.primal_f_x = v
+
+        gap = (self.primal_f_x - self.f_x) / max(abs(self.primal_f_x), 1)
+
+        if ((isinstance(opt, LineSearchOptimizer) and opt.is_verbose()) or
+            (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())) and self.is_verbose():
+            print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
+            print(' - gap: {: 1.4e}'.format(gap), end='')
+
+        if gap <= self.eps:
+            self.status = 'optimal'
+            raise StopIteration
+
+        self.iter += 1
+
     def callback(self, args=()):
         if self.f.primal.ndim == 2:
-            self.x0_history.append(self.f.primal_x[0])
-            self.x1_history.append(self.f.primal_x[1])
-            self.f_x_history.append(self.f.primal_f_x)
+            self.x0_history.append(self.primal_x[0])
+            self.x1_history.append(self.primal_x[1])
+            self.f_x_history.append(self.primal_f_x)
         if callable(self._callback):
             self._callback(self, *args, *self.callback_args)

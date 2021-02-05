@@ -605,7 +605,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                             warnings.warn('max_f_eval reached but the optimization has not converged yet',
                                           ConvergenceWarning)
 
-            alphas = self.optimizer.f.primal_x if isinstance(self.optimizer, LagrangianDual) else self.optimizer.x
+            alphas = self.optimizer.primal_x if isinstance(self.optimizer, LagrangianDual) else self.optimizer.x
 
         sv = alphas > 1e-5
         self.support_ = np.arange(len(alphas))[sv]
@@ -945,7 +945,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                 warnings.warn('max_f_eval reached but the optimization has not converged yet',
                                               ConvergenceWarning)
 
-                alphas = self.optimizer.f.primal_x if isinstance(self.optimizer, LagrangianDual) else self.optimizer.x
+                alphas = self.optimizer.primal_x if isinstance(self.optimizer, LagrangianDual) else self.optimizer.x
 
             alphas_p, alphas_n = np.split(alphas, 2)
 
