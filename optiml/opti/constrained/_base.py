@@ -102,13 +102,13 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
     def jacobian(self, lmbda):
         """
-        Compute the jacobian of the Lagrangian dual relaxation as follow: with x the
-        optimal solution of the minimization problem, the gradient at lambda is:
+        With x optimal solution of the minimization problem, the jacobian
+        of the Lagrangian dual relaxation at lambda is:
 
                                 [x - ub, -x]
 
-        However, we rather want to maximize the Lagrangian dual relaxation, hence
-        we have to change the sign of both function values and gradient entries:
+        However, we rather want to maximize the Lagrangian dual relaxation,
+        hence we have to change the sign of gradient entries:
 
                                  [ub - x, x]
 
@@ -181,13 +181,13 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
 
     def jacobian(self, lmbda):
         """
-        Compute the jacobian of the Lagrangian dual relaxation as follow: with x the optimal
-        solution of the minimization problem, the gradient at lambda is:
+        With x optimal solution of the minimization problem, the jacobian
+        of the Lagrangian dual relaxation at lambda is:
 
                                 [-A x, x - ub, -x]
 
-        However, we rather want to maximize the Lagrangian dual relaxation, hence we have to
-        change the sign of both function values and gradient entries:
+        However, we rather want to maximize the Lagrangian dual relaxation,
+        hence we have to change the sign of gradient entries:
 
                                  [A x, ub - x, x]
 
