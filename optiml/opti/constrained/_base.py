@@ -75,11 +75,11 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
         Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
 
-                Q x + q + lambda_+ - lambda_- = 0
+                Q x + (q + lambda_+ - lambda_-) = 0
 
         so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
 
-                Q x = - q - lambda_+ + lambda_-
+                Q x = - (q + lambda_+ - lambda_-)
 
         :param lmbda: the dual variable wrt evaluate the function
         :return: the function value wrt lambda
@@ -157,11 +157,11 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
 
         Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
 
-                Q x + q - mu A + lambda_+ - lambda_- = 0
+                Q x + (q - mu A + lambda_+ - lambda_-) = 0
 
         so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
 
-                Q x = - q + mu A - lambda_+ + lambda_-
+                Q x = - (q - mu A + lambda_+ - lambda_-)
 
         :param lmbda: the dual variable wrt evaluate the function
         :return: the function value wrt lambda
