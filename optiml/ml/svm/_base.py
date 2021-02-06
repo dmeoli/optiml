@@ -64,8 +64,6 @@ class SVM(BaseEstimator, ABC):
         Momentum for weight update. Should be between 0 and 1. Only used when
         solver is a subclass of `StochasticOptimizer`.
 
-    batch_size :
-
     max_f_eval : int, default=15000
         Only used when ``optimizer`` is a subclass of `LineSearchOptimizer`.
         Maximum number of loss function calls. The solver iterates until
@@ -73,16 +71,6 @@ class SVM(BaseEstimator, ABC):
         ``max_iter``, or this number of loss function calls. Note that number
         of loss function calls will be greater than or equal to the number
         of iterations.
-
-    shuffle : bool, default=True
-        Whether to shuffle samples for batch sampling in each iteration. Only
-        used when the ``optimizer`` is a subclass of `StochasticOptimizer`.
-
-    random_state : int, default=None
-        Controls the pseudo random number generation for train-test split if
-        early stopping is used and shuffling the data for batch sampling when
-        an instance of StochasticOptimizer class is used as ``optimizer`` value.
-        Pass an int for reproducible output across multiple function calls.
 
     verbose : bool or int, default=False
         Controls the verbosity of progress messages to stdout. Use a boolean value
@@ -98,10 +86,7 @@ class SVM(BaseEstimator, ABC):
                  learning_rate=0.1,
                  momentum_type='none',
                  momentum=0.9,
-                 batch_size=None,
                  max_f_eval=15000,
-                 shuffle=True,
-                 random_state=None,
                  verbose=False):
         if not C > 0:
             raise ValueError('C must be > 0')
@@ -114,10 +99,7 @@ class SVM(BaseEstimator, ABC):
         self.learning_rate = learning_rate
         self.momentum_type = momentum_type
         self.momentum = momentum
-        self.batch_size = batch_size
         self.max_f_eval = max_f_eval
-        self.shuffle = shuffle
-        self.random_state = random_state
         self.verbose = verbose
 
     def fit(self, X, y):
@@ -125,6 +107,21 @@ class SVM(BaseEstimator, ABC):
 
 
 class PrimalSVM(SVM, ABC):
+    """
+
+    Parameters
+    ----------
+
+    shuffle : bool, default=True
+    Whether to shuffle samples for batch sampling in each iteration. Only
+    used when the ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    random_state : int, default=None
+        Controls the pseudo random number generation for train-test split if
+        early stopping is used and shuffling the data for batch sampling when
+        an instance of StochasticOptimizer class is used as ``optimizer`` value.
+        Pass an int for reproducible output across multiple function calls.
+    """
 
     def __init__(self,
                  C=1.,
@@ -153,19 +150,19 @@ class PrimalSVM(SVM, ABC):
                          learning_rate=learning_rate,
                          momentum_type=momentum_type,
                          momentum=momentum,
-                         batch_size=batch_size,
                          max_f_eval=max_f_eval,
-                         shuffle=shuffle,
-                         random_state=random_state,
                          verbose=verbose)
         self.loss = loss
         if not issubclass(self.optimizer, Optimizer):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
         self.validation_split = validation_split
+        self.batch_size = batch_size
         self.early_stopping = early_stopping
         self.patience = patience
         self.master_solver = master_solver
         self.master_verbose = master_verbose
+        self.shuffle = shuffle
+        self.random_state = random_state
         self.coef_ = np.zeros(0)
         self.intercept_ = 0.
         self.fit_intercept = fit_intercept
@@ -264,13 +261,10 @@ class DualSVM(SVM, ABC):
                  learning_rate=0.1,
                  momentum_type='none',
                  momentum=0.9,
-                 batch_size=None,
                  max_f_eval=15000,
                  use_explicit_eq=True,
                  master_solver='ecos',
                  master_verbose=False,
-                 shuffle=True,
-                 random_state=None,
                  verbose=False):
         super().__init__(C=C,
                          tol=tol,
@@ -279,10 +273,7 @@ class DualSVM(SVM, ABC):
                          learning_rate=learning_rate,
                          momentum_type=momentum_type,
                          momentum=momentum,
-                         batch_size=batch_size,
                          max_f_eval=max_f_eval,
-                         shuffle=shuffle,
-                         random_state=random_state,
                          verbose=verbose)
         if not isinstance(kernel, Kernel):
             raise TypeError(f'{kernel} is not an allowed kernel function')
@@ -464,13 +455,10 @@ class DualSVC(ClassifierMixin, DualSVM):
                  learning_rate=0.1,
                  momentum_type='none',
                  momentum=0.9,
-                 batch_size=None,
                  max_f_eval=15000,
                  use_explicit_eq=True,
                  master_solver='ecos',
                  master_verbose=False,
-                 shuffle=True,
-                 random_state=None,
                  verbose=False):
         super().__init__(kernel=kernel,
                          C=C,
@@ -480,13 +468,10 @@ class DualSVC(ClassifierMixin, DualSVM):
                          learning_rate=learning_rate,
                          momentum_type=momentum_type,
                          momentum=momentum,
-                         batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          use_explicit_eq=use_explicit_eq,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
-                         shuffle=shuffle,
-                         random_state=random_state,
                          verbose=verbose)
         self.lb = LabelBinarizer(neg_label=-1)
 
@@ -570,11 +555,8 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     step_size=self.learning_rate,
                                                     momentum_type=self.momentum_type,
                                                     momentum=self.momentum,
-                                                    batch_size=self.batch_size,
                                                     max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval,
-                                                    shuffle=self.shuffle,
-                                                    random_state=self.random_state,
                                                     verbose=self.verbose).minimize()
 
                 else:
@@ -588,11 +570,8 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     step_size=self.learning_rate,
                                                     momentum_type=self.momentum_type,
                                                     momentum=self.momentum,
-                                                    batch_size=self.batch_size,
                                                     max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval,
-                                                    shuffle=self.shuffle,
-                                                    random_state=self.random_state,
                                                     verbose=self.verbose).minimize()
 
                 if not isinstance(self.optimizer, StochasticOptimizer):
@@ -798,13 +777,10 @@ class DualSVR(RegressorMixin, DualSVM):
                  learning_rate=0.1,
                  momentum_type='none',
                  momentum=0.9,
-                 batch_size=None,
                  max_f_eval=15000,
                  use_explicit_eq=True,
                  master_solver='ecos',
                  master_verbose=False,
-                 shuffle=True,
-                 random_state=None,
                  verbose=False):
         super().__init__(kernel=kernel,
                          C=C,
@@ -814,13 +790,10 @@ class DualSVR(RegressorMixin, DualSVM):
                          learning_rate=learning_rate,
                          momentum_type=momentum_type,
                          momentum=momentum,
-                         batch_size=batch_size,
                          max_f_eval=max_f_eval,
                          use_explicit_eq=use_explicit_eq,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
-                         shuffle=shuffle,
-                         random_state=random_state,
                          verbose=verbose)
         if not epsilon >= 0:
             raise ValueError('epsilon must be >= 0')
@@ -910,11 +883,8 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         step_size=self.learning_rate,
                                                         momentum_type=self.momentum_type,
                                                         momentum=self.momentum,
-                                                        batch_size=self.batch_size,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
-                                                        shuffle=self.shuffle,
-                                                        random_state=self.random_state,
                                                         verbose=self.verbose).minimize()
 
                     else:
@@ -928,11 +898,8 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         step_size=self.learning_rate,
                                                         momentum_type=self.momentum_type,
                                                         momentum=self.momentum,
-                                                        batch_size=self.batch_size,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
-                                                        shuffle=self.shuffle,
-                                                        random_state=self.random_state,
                                                         verbose=self.verbose).minimize()
 
                     if not isinstance(self.optimizer, StochasticOptimizer):
