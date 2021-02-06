@@ -73,13 +73,13 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         where lambda_+ are the first n components of lambda and lambda_- are the last n
         components; both controls the box-constraints and are constrained to be >= 0.
 
-        Taking the derivative of the Lagrangian L(x, lambda) wrt x and settings it to 0 gives:
+        Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
 
                 Q x + q + lambda_+ - lambda_- = 0
 
         so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
 
-                Q x = q + lambda_+ - lambda_-
+                Q x = - q - lambda_+ + lambda_-
 
         :param lmbda: the dual variable wrt evaluate the function
         :return: the function value wrt lambda
@@ -92,9 +92,9 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                # since Q is indefinite, i.e., the function is linear along the eigenvector
-                # correspondent to 0 eigenvalues, the system has not solutions, so we
-                # will choose the one that minimize the residue in the last-squares sense
+                # since Q is indefinite, i.e., the function is linear along the eigenvectors
+                # correspondent to the null eigenvalues, the system has not solutions, so we
+                # will choose the one that minimizes the residue in the least-squares sense
                 x = lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
             self.last_x = x
@@ -123,9 +123,9 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                # since Q is indefinite, i.e., the function is linear along the eigenvector
-                # correspondent to 0 eigenvalues, the system has not solutions, so we
-                # will choose the one that minimize the residue in the last-squares sense
+                # since Q is indefinite, i.e., the function is linear along the eigenvectors
+                # correspondent to the null eigenvalues, the system has not solutions, so we
+                # will choose the one that minimizes the residue in the least-squares sense
                 x = lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
             self.last_x = x
@@ -155,9 +155,13 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
         lambda_+^T are the second n components of lambda and lambda_-^T are the last n components;
         both controls the box-constraints and are constrained to be >= 0.
 
-        The optimal solution of the Lagrangian relaxation is the solution of the linear system:
+        Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
 
-                Q x = q - mu A + lambda_+ - lambda_-
+                Q x + q - mu A + lambda_+ - lambda_- = 0
+
+        so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
+
+                Q x = - q + mu A - lambda_+ + lambda_-
 
         :param lmbda: the dual variable wrt evaluate the function
         :return: the function value wrt lambda
@@ -171,9 +175,9 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
                 x = cholesky_solve(self.L, -ql)
                 self.last_x = x
             else:
-                # since Q is indefinite, i.e., the function is linear along the eigenvector
-                # correspondent to 0 eigenvalues, the system has not solutions, so we
-                # will choose the one that minimize the residue in the last-squares sense
+                # since Q is indefinite, i.e., the function is linear along the eigenvectors
+                # correspondent to the null eigenvalues, the system has not solutions, so we
+                # will choose the one that minimizes the residue in the least-squares sense
                 x = lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
             self.last_x = x
@@ -202,9 +206,9 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                # since Q is indefinite, i.e., the function is linear along the eigenvector
-                # correspondent to 0 eigenvalues, the system has not solutions, so we
-                # will choose the one that minimize the residue in the last-squares sense
+                # since Q is indefinite, i.e., the function is linear along the eigenvectors
+                # correspondent to the null eigenvalues, the system has not solutions, so we
+                # will choose the one that minimizes the residue in the least-squares sense
                 x = lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
             self.last_x = x
