@@ -129,7 +129,10 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
                 x = lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
             self.last_x = x
-        return np.hstack((self.ub - x, x))
+        g = np.hstack((self.ub - x, x))
+        # project the direction over the active constraints
+        g[np.logical_and(lmbda <= 1e-12, -g < 0)] = 0
+        return g
 
 
 class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
@@ -212,4 +215,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
                 x = lsqr(self.Q, -ql)[0]
             self.last_lmbda = lmbda
             self.last_x = x
-        return np.hstack((self.A * x, self.ub - x, x))
+        g = np.hstack((self.A * x, self.ub - x, x))
+        # project the direction over the active constraints
+        g[np.logical_and(lmbda <= 1e-12, -g < 0)] = 0
+        return g
