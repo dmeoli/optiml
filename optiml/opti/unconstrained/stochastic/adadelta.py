@@ -13,7 +13,7 @@ class AdaDelta(StochasticOptimizer):
                  epochs=1000,
                  step_size=1.,
                  momentum_type='none',
-                 momentum=0.9,
+                 momentum=0.,
                  decay=0.95,
                  offset=1e-4,
                  callback=None,
@@ -79,31 +79,14 @@ class AdaDelta(StochasticOptimizer):
                 self.status = 'stopped'
                 break
 
-            if self.momentum_type == 'standard':
-                step_m1 = self.step
-                step1 = self.momentum * step_m1
-            elif self.momentum_type == 'nesterov':
-                step_m1 = self.step
-                step1 = self.momentum * step_m1
-                self.x -= step1
-
-            self.g_x = self.f.jacobian(self.x, *batch)
             self.gms = self.decay * self.gms + (1. - self.decay) * self.g_x ** 2
             delta = np.sqrt(self.sms + self.offset) / np.sqrt(self.gms + self.offset) * self.g_x
 
-            step2 = self.step_size * delta
+            step = self.step_size * delta
 
-            if self.momentum_type == 'standard':
-                self.x -= step1 + step2
-            else:
-                self.x -= step2
+            self.x -= step
 
-            if self.momentum_type != 'none':
-                self.step = step1 + step2
-            else:
-                self.step = step2
-
-            self.sms = self.decay * self.sms + (1. - self.decay) * self.step ** 2
+            self.sms = self.decay * self.sms + (1. - self.decay) * step ** 2
 
             self.iter += 1
 

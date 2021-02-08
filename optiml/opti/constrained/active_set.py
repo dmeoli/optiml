@@ -105,9 +105,9 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 xs[A] = cholesky_solve(np.linalg.cholesky(self.f.Q[A, :][:, A]),
                                        -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
             except np.linalg.LinAlgError:
-                # if Q_{AA} is indefinite, i.e., the function is linear along the eigenvector
-                # correspondent to zero eigenvalues, the system has not solutions, so we
-                # will choose the one that minimize the residue
+                # if Q_{AA} is indefinite, i.e., the function is linear along the eigenvectors
+                # correspondent to the null eigenvalues, the system has not solutions, so we
+                # will choose the one that minimizes the residue in the least-squares sense
                 xs[A] = lsqr(self.f.Q[A, :][:, A], -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))[0]
 
             if np.logical_and(xs[A] <= self.ub[A] + 1e-12, xs[A] >= -1e-12).all():

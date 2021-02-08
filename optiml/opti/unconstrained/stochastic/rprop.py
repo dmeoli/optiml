@@ -17,7 +17,7 @@ class RProp(StochasticOptimizer):
                  step_grow=1.2,
                  max_step=1,
                  momentum_type='none',
-                 momentum=0.9,
+                 momentum=0.,
                  callback=None,
                  callback_args=(),
                  shuffle=True,
@@ -79,34 +79,17 @@ class RProp(StochasticOptimizer):
                 self.status = 'stopped'
                 break
 
-            if self.momentum_type == 'standard':
-                step_m1 = self.step
-                step1 = self.momentum * step_m1
-            elif self.momentum_type == 'nesterov':
-                step_m1 = self.step
-                step1 = self.momentum * step_m1
-                self.x -= step1
-
             g_m1 = self.jacobian
 
-            self.jacobian = self.f.jacobian(self.x, *batch)
             grad_prod = g_m1 * self.jacobian
 
             self.changes[grad_prod > 0] *= self.step_grow
             self.changes[grad_prod < 0] *= self.step_shrink
             self.changes = np.clip(self.changes, self.min_step, self.max_step)
 
-            step2 = self.changes * np.sign(self.jacobian)
+            step = self.changes * np.sign(self.jacobian)
 
-            if self.momentum_type == 'standard':
-                self.x -= step1 + step2
-            else:
-                self.x -= step2
-
-            if self.momentum_type != 'none':
-                self.step = step1 + step2
-            else:
-                self.step = step2
+            self.x -= step
 
             self.iter += 1
 

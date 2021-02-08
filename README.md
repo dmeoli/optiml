@@ -38,13 +38,22 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
                     - [x] BFGS
                     - [ ] L-BFGS
         - Stochastic Methods
-            - [x] Momentum
-                - [x] standard
-                - [x] Nesterov
             - [x] Stochastic Gradient Descent
+                - [x] Momentum
+                    - [x] standard
+                    - [x] Nesterov
             - [x] Adam
+                - [x] Momentum
+                    - [x] standard
+                    - [x] Nesterov
             - [x] AMSGrad
+                - [x] Momentum
+                    - [x] standard
+                    - [x] Nesterov
             - [x] AdaMax
+                - [x] Momentum
+                    - [x] standard
+                    - [x] Nesterov
             - [x] AdaGrad
             - [x] AdaDelta
             - [x] RProp
