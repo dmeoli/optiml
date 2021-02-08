@@ -86,18 +86,15 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         """
         lmbda_p, lmbda_n = np.split(lmbda, 2)
         ql = self.q + lmbda_p - lmbda_n
-        if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x
+        if self.is_posdef:
+            x = cholesky_solve(self.L, -ql)
         else:
-            if self.is_posdef:
-                x = cholesky_solve(self.L, -ql)
-            else:
-                # since Q is indefinite, i.e., the function is linear along the eigenvectors
-                # correspondent to the null eigenvalues, the system has not solutions, so we
-                # will choose the one that minimizes the residue in the least-squares sense
-                x = lsqr(self.Q, -ql)[0]
-            self.last_lmbda = lmbda
-            self.last_x = x
+            # since Q is indefinite, i.e., the function is linear along the eigenvectors
+            # correspondent to the null eigenvalues, the system has not solutions, so we
+            # will choose the one that minimizes the residue in the least-squares sense
+            x = lsqr(self.Q, -ql)[0]
+        self.last_lmbda = lmbda
+        self.last_x = x
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
@@ -115,24 +112,18 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         :param lmbda: the dual variable wrt evaluate the gradient
         :return: the gradient wrt lambda
         """
-        if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x
+        lmbda_p, lmbda_n = np.split(lmbda, 2)
+        ql = self.q + lmbda_p - lmbda_n
+        if self.is_posdef:
+            x = cholesky_solve(self.L, -ql)
         else:
-            lmbda_p, lmbda_n = np.split(lmbda, 2)
-            ql = self.q + lmbda_p - lmbda_n
-            if self.is_posdef:
-                x = cholesky_solve(self.L, -ql)
-            else:
-                # since Q is indefinite, i.e., the function is linear along the eigenvectors
-                # correspondent to the null eigenvalues, the system has not solutions, so we
-                # will choose the one that minimizes the residue in the least-squares sense
-                x = lsqr(self.Q, -ql)[0]
-            self.last_lmbda = lmbda
-            self.last_x = x
-        g = np.hstack((self.ub - x, x))
-        # project the direction over the active constraints
-        g[np.logical_and(lmbda <= 1e-12, -g < 0)] = 0
-        return g
+            # since Q is indefinite, i.e., the function is linear along the eigenvectors
+            # correspondent to the null eigenvalues, the system has not solutions, so we
+            # will choose the one that minimizes the residue in the least-squares sense
+            x = lsqr(self.Q, -ql)[0]
+        self.last_lmbda = lmbda
+        self.last_x = x
+        return np.hstack((self.ub - x, x))
 
 
 class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
@@ -171,18 +162,15 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
         ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-        if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x
+        if self.is_posdef:
+            x = cholesky_solve(self.L, -ql)
         else:
-            if self.is_posdef:
-                x = cholesky_solve(self.L, -ql)
-            else:
-                # since Q is indefinite, i.e., the function is linear along the eigenvectors
-                # correspondent to the null eigenvalues, the system has not solutions, so we
-                # will choose the one that minimizes the residue in the least-squares sense
-                x = lsqr(self.Q, -ql)[0]
-            self.last_lmbda = lmbda
-            self.last_x = x
+            # since Q is indefinite, i.e., the function is linear along the eigenvectors
+            # correspondent to the null eigenvalues, the system has not solutions, so we
+            # will choose the one that minimizes the residue in the least-squares sense
+            x = lsqr(self.Q, -ql)[0]
+        self.last_lmbda = lmbda
+        self.last_x = x
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
@@ -200,21 +188,15 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
         :param lmbda: the dual variable wrt evaluate the gradient
         :return: the gradient wrt lambda
         """
-        if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x
+        mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
+        ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
+        if self.is_posdef:
+            x = cholesky_solve(self.L, -ql)
         else:
-            mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-            ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-            if self.is_posdef:
-                x = cholesky_solve(self.L, -ql)
-            else:
-                # since Q is indefinite, i.e., the function is linear along the eigenvectors
-                # correspondent to the null eigenvalues, the system has not solutions, so we
-                # will choose the one that minimizes the residue in the least-squares sense
-                x = lsqr(self.Q, -ql)[0]
-            self.last_lmbda = lmbda
-            self.last_x = x
-        g = np.hstack((self.A * x, self.ub - x, x))
-        # project the direction over the active constraints
-        g[np.logical_and(lmbda <= 1e-12, -g < 0)] = 0
-        return g
+            # since Q is indefinite, i.e., the function is linear along the eigenvectors
+            # correspondent to the null eigenvalues, the system has not solutions, so we
+            # will choose the one that minimizes the residue in the least-squares sense
+            x = lsqr(self.Q, -ql)[0]
+        self.last_lmbda = lmbda
+        self.last_x = x
+        return np.hstack((self.A * x, self.ub - x, x))

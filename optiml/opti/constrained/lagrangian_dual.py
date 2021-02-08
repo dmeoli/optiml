@@ -55,7 +55,7 @@ class LagrangianDual(Optimizer):
                                             x=self.x,
                                             max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval,
-                                            callback=self._update_primal,
+                                            callback=self._update_primal_dual,
                                             verbose=self.verbose).minimize()
 
         elif issubclass(self.optimizer, StochasticOptimizer):
@@ -67,15 +67,18 @@ class LagrangianDual(Optimizer):
                                             batch_size=self.batch_size,
                                             momentum_type=self.momentum_type,
                                             momentum=self.momentum,
-                                            callback=self._update_primal,
+                                            callback=self._update_primal_dual,
                                             shuffle=self.shuffle,
                                             random_state=self.random_state,
                                             verbose=self.verbose).minimize()
 
         return self
 
-    def _update_primal(self, opt):
+    def _update_primal_dual(self, opt):
         self.callback()
+
+        # project the direction over the active constraints
+        opt.g_x[np.logical_and(opt.x <= 1e-12, -opt.g_x < 0)] = 0
 
         # compute an heuristic solution out of the solution x of
         # the Lagrangian relaxation by projecting x on the box
@@ -93,7 +96,7 @@ class LagrangianDual(Optimizer):
         if ((isinstance(opt, LineSearchOptimizer) and opt.is_verbose()) or
             (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())) and self.is_verbose():
             print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
-            print(' - gap: {: 1.4e}'.format(gap), end='')
+            print('\tgap: {: 1.4e}'.format(gap), end='')
 
         if gap <= self.eps:
             self.status = 'optimal'
