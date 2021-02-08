@@ -176,7 +176,6 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
         else:
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
-                self.last_x = x
             else:
                 # since Q is indefinite, i.e., the function is linear along the eigenvectors
                 # correspondent to the null eigenvalues, the system has not solutions, so we
