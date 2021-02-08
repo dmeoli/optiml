@@ -17,7 +17,7 @@ class RProp(StochasticOptimizer):
                  step_grow=1.2,
                  max_step=1,
                  momentum_type='none',
-                 momentum=0.,
+                 momentum=0.9,
                  callback=None,
                  callback_args=(),
                  shuffle=True,
@@ -40,8 +40,6 @@ class RProp(StochasticOptimizer):
         self.step_shrink = step_shrink
         self.step_grow = step_grow
         self.max_step = max_step
-        self.jacobian = np.zeros_like(self.x)
-        self.changes = np.zeros_like(self.x)
 
     def minimize(self):
 
@@ -50,6 +48,9 @@ class RProp(StochasticOptimizer):
             if self.f.f_star() < np.inf:
                 print('\t gap\t\t rate', end='')
                 prev_v = np.inf
+
+        g_x_m1 = np.zeros_like(self.x)
+        changes = np.zeros_like(self.x)
 
         for batch in self.batches:
             self.f_x, self.g_x = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
@@ -79,19 +80,19 @@ class RProp(StochasticOptimizer):
                 self.status = 'stopped'
                 break
 
-            g_m1 = self.jacobian
+            grad_prod = g_x_m1 * self.g_x
 
-            grad_prod = g_m1 * self.jacobian
+            changes[grad_prod > 0] *= self.step_grow
+            changes[grad_prod < 0] *= self.step_shrink
+            changes = np.clip(changes, self.min_step, self.max_step)
 
-            self.changes[grad_prod > 0] *= self.step_grow
-            self.changes[grad_prod < 0] *= self.step_shrink
-            self.changes = np.clip(self.changes, self.min_step, self.max_step)
-
-            step = self.changes * np.sign(self.jacobian)
+            step = changes * np.sign(self.g_x)
 
             self.x -= step
 
             self.iter += 1
+
+            g_x_m1 = self.g_x
 
         if self.verbose:
             print('\n')

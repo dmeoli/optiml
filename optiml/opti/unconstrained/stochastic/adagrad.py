@@ -13,7 +13,7 @@ class AdaGrad(StochasticOptimizer):
                  epochs=1000,
                  step_size=0.01,
                  momentum_type='none',
-                 momentum=0.,
+                 momentum=0.9,
                  offset=1e-4,
                  callback=None,
                  callback_args=(),

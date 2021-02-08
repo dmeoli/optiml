@@ -40,12 +40,12 @@ class StochasticOptimizer(Optimizer, ABC):
         if not step_size > 0:
             raise ValueError('step_size must be > 0')
         self.step_size = step_size
-        if not momentum > 0:
-            raise ValueError('momentum must be > 0')
-        self.momentum = momentum
         if momentum_type not in ('standard', 'nesterov', 'none'):
             raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type
+        if not momentum > 0:
+            raise ValueError('momentum must be > 0')
+        self.momentum = momentum
         self.epochs = epochs
         self.epoch = 0
         self.shuffle = shuffle

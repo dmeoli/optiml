@@ -14,7 +14,7 @@ class RMSProp(StochasticOptimizer):
                  step_size=0.001,
                  decay=0.9,
                  momentum_type='none',
-                 momentum=0.,
+                 momentum=0.9,
                  callback=None,
                  callback_args=(),
                  shuffle=True,

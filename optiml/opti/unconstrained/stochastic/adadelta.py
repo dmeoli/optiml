@@ -13,7 +13,7 @@ class AdaDelta(StochasticOptimizer):
                  epochs=1000,
                  step_size=1.,
                  momentum_type='none',
-                 momentum=0.,
+                 momentum=0.9,
                  decay=0.95,
                  offset=1e-4,
                  callback=None,
