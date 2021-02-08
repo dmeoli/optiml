@@ -206,7 +206,7 @@ def test_solve_svc_as_bcqp_lagrangian_relaxation():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
     svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=AdaGrad, use_explicit_eq=False)).fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.94
+    assert svc.score(X_test, y_test) >= 0.97
 
 
 def test_solve_svc_as_qp_lagrangian_relaxation():
