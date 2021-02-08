@@ -130,7 +130,7 @@ class Subgradient(LineSearchOptimizer):
         if self.verbose:
             print('iter\t cost\t\t gnorm', end='')
             if self.f.f_star() < np.inf:
-                print('\t gap\t\t rate', end='')
+                print('\t\t gap\t\t rate', end='')
                 prev_v = np.inf
 
         x_ref = self.x

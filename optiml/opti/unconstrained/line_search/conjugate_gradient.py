@@ -248,13 +248,13 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
             if self.iter == 0:  # first iteration is off-line, standard gradient
                 d = -self.g_x
                 if self.is_verbose():
-                    print('\t\t\t', end='')
+                    print('\t\t', end='')
             else:  # normal iterations, use appropriate formula
                 if self.r_start > 0 and self.iter % self.f.ndim * self.r_start == 0:
                     # ... unless a restart is being performed
                     beta = 0
                     if self.is_verbose():
-                        print('\t(res)\t', end='')
+                        print('\t(res)\t\t', end='')
                 else:
                     if self.wf == 0:  # Fletcher-Reeves
                         beta = (ng / np.linalg.norm(past_g)) ** 2

@@ -148,7 +148,7 @@ class Newton(LineSearchOptimizer):
         if self.verbose:
             print('iter\tfeval\t cost\t\t gnorm', end='')
             if self.f.f_star() < np.inf:
-                print('\t gap\t\t rate', end='')
+                print('\t\t gap\t\t rate', end='')
                 prev_v = np.inf
 
         while True:
