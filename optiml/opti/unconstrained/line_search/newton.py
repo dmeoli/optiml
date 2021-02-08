@@ -146,11 +146,10 @@ class Newton(LineSearchOptimizer):
         last_g = np.zeros(self.f.ndim)  # gradient of last_x
 
         if self.verbose:
-            print('iter\tfeval\t cost\t\t gnorm\t', end='')
+            print('iter\tfeval\t cost\t\t gnorm', end='')
             if self.f.f_star() < np.inf:
-                print('\t gap\t\t rate\t', end='')
+                print('\t gap\t\t rate', end='')
                 prev_v = np.inf
-            print('\t delta\t\tls\tit\t astar', end='')
 
         while True:
             self.f_x, self.g_x, self.H_x = self.f.function(self.x), self.f.jacobian(self.x), self.f.hessian(self.x)
@@ -171,6 +170,11 @@ class Newton(LineSearchOptimizer):
                         print('\t\t', end='')
                     prev_v = self.f_x
 
+            try:
+                self.callback()
+            except StopIteration:
+                break
+
             # stopping criteria
             if ng <= self.eps * ng0:
                 self.status = 'optimal'
@@ -184,11 +188,11 @@ class Newton(LineSearchOptimizer):
             lambda_n = min(np.linalg.eigvalsh(self.H_x))  # smallest eigenvalue
             if lambda_n < self.delta:
                 if self.is_verbose():
-                    print('\t{: 1.4e}'.format(self.delta - lambda_n), end='')
+                    print('\tdelta: {: 1.4e}'.format(self.delta - lambda_n), end='')
                 self.H_x = self.H_x + (self.delta - lambda_n) * np.identity(len(self.g_x))
             else:
                 if self.is_verbose():
-                    print('\t{: 1.4e}'.format(self.delta), end='')
+                    print('\tdelta: {: 1.4e}'.format(self.delta), end='')
 
             d = -np.linalg.inv(self.H_x).dot(self.g_x)
 
@@ -200,7 +204,7 @@ class Newton(LineSearchOptimizer):
 
             # output statistics
             if self.is_verbose():
-                print('\t{: 1.4e}'.format(a), end='')
+                print('\tastar: {: 1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
                 self.status = 'error'
@@ -208,11 +212,6 @@ class Newton(LineSearchOptimizer):
 
             if self.f_x <= self.m_inf:
                 self.status = 'unbounded'
-                break
-
-            try:
-                self.callback()
-            except StopIteration:
                 break
 
             # update new point

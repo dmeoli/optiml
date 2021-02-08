@@ -208,9 +208,8 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
         if self.verbose:
             print('iter\tfeval\t cost\t\t gnorm', end='')
             if self.f.f_star() < np.inf:
-                print('\t\t gap\t\t rate\t', end='')
+                print('\t\t gap\t\t rate', end='')
                 prev_v = np.inf
-            print('\t beta\t\tls\tit\t astar', end='')
 
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
@@ -231,6 +230,11 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                         print('\t\t\t', end='')
                     prev_v = self.f_x
 
+            try:
+                self.callback()
+            except StopIteration:
+                break
+
             # stopping criteria
             if ng <= self.eps * ng0:
                 self.status = 'optimal'
@@ -244,7 +248,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
             if self.iter == 0:  # first iteration is off-line, standard gradient
                 d = -self.g_x
                 if self.is_verbose():
-                    print('\t', end='')
+                    print('\t\t\t', end='')
             else:  # normal iterations, use appropriate formula
                 if self.r_start > 0 and self.iter % self.f.ndim * self.r_start == 0:
                     # ... unless a restart is being performed
@@ -262,7 +266,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
                     elif self.wf == 3:  # Dai-Yuan
                         beta = ng ** 2 / (self.g_x - past_g).T.dot(past_d)
                     if self.is_verbose():
-                        print('\t{: 1.4e}'.format(beta), end='')
+                        print('\tbeta: {: 1.4e}'.format(beta), end='')
 
                 if beta != 0:
                     d = -self.g_x + beta * past_d
@@ -281,7 +285,7 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
             # output statistics
             if self.is_verbose():
-                print('\t{: 1.4e}'.format(a), end='')
+                print('\tastar: {: 1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
                 self.status = 'error'
@@ -289,11 +293,6 @@ class NonlinearConjugateGradient(LineSearchOptimizer):
 
             if self.f_x <= self.m_inf:
                 self.status = 'unbounded'
-                break
-
-            try:
-                self.callback()
-            except StopIteration:
                 break
 
             # update new point

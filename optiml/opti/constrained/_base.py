@@ -125,6 +125,9 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         self.last_x = x
         return np.hstack((self.ub - x, x))
 
+    def hessian(self, x):
+        raise NotImplementedError
+
 
 class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
     """

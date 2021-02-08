@@ -164,11 +164,10 @@ class SteepestGradientDescent(LineSearchOptimizer):
         last_g = np.zeros(self.f.ndim)  # gradient of last_x
 
         if self.verbose:
-            print('iter\tfeval\t cost\t\t gnorm\t', end='')
+            print('iter\tfeval\t cost\t\t gnorm', end='')
             if self.f.f_star() < np.inf:
-                print('\t gap\t\t rate\t', end='')
+                print('\t gap\t\t rate', end='')
                 prev_v = np.inf
-            print('\tls\tit\t astar', end='')
 
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
@@ -189,6 +188,11 @@ class SteepestGradientDescent(LineSearchOptimizer):
                         print('\t\t', end='')
                     prev_v = self.f_x
 
+            try:
+                self.callback()
+            except StopIteration:
+                break
+
             # stopping criteria
             if ng <= self.eps * ng0:
                 self.status = 'optimal'
@@ -208,7 +212,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
             # output statistics
             if self.is_verbose():
-                print('\t{: 1.4e}'.format(a), end='')
+                print('\tastar: {: 1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
                 self.status = 'error'
@@ -216,11 +220,6 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
             if self.f_x <= self.m_inf:
                 self.status = 'unbounded'
-                break
-
-            try:
-                self.callback()
-            except StopIteration:
                 break
 
             # update new point

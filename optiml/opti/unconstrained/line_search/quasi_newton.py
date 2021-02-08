@@ -147,11 +147,10 @@ class BFGS(LineSearchOptimizer):
         last_g = np.zeros(self.f.ndim)  # gradient of last_x
 
         if self.verbose:
-            print('iter\tfeval\t cost\t\t gnorm\t', end='')
+            print('iter\tfeval\t cost\t\t gnorm', end='')
             if self.f.f_star() < np.inf:
-                print('\t gap\t\t rate\t', end='')
+                print('\t gap\t\t rate', end='')
                 prev_v = np.inf
-            print('\tls\tit\t astar\t\t rho', end='')
 
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
@@ -191,6 +190,11 @@ class BFGS(LineSearchOptimizer):
                         print('\t\t', end='')
                     prev_v = self.f_x
 
+            try:
+                self.callback()
+            except StopIteration:
+                break
+
             # stopping criteria
             if ng <= self.eps * ng0:
                 self.status = 'optimal'
@@ -211,7 +215,7 @@ class BFGS(LineSearchOptimizer):
 
             # output statistics
             if self.is_verbose():
-                print('\t{: 1.4e}'.format(a), end='')
+                print('\tastar: {: 1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
                 self.status = 'error'
@@ -234,15 +238,10 @@ class BFGS(LineSearchOptimizer):
             rho = 1 / rho
 
             if self.is_verbose():
-                print('\t{: 1.4e}'.format(rho), end='')
+                print('\trho: {: 1.4e}'.format(rho), end='')
 
             D = self.H_x.dot(y) * s.T
             self.H_x = self.H_x + rho * ((1 + rho * y.T.dot(self.H_x).dot(y)) * (s.dot(s.T)) - D - D.T)
-
-            try:
-                self.callback()
-            except StopIteration:
-                break
 
             # update new point
             self.x = last_x
