@@ -95,7 +95,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             # correspondent to the null eigenvalues, the system has not solutions, so we
             # will choose the one that minimizes the residue in the least-squares sense
             # (waiting for 'symmlq' in scipy.sparse.linalg)
-            x, self.last_itn, self.last_r1norm = np.array(lsqr(self.Q, -ql))[[0, 2, 3]]
+            x, self.last_itn, self.last_r1norm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
         self.last_lmbda = lmbda
         self.last_x = x
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
@@ -124,7 +124,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             # correspondent to the null eigenvalues, the system has not solutions, so we
             # will choose the one that minimizes the residue in the least-squares sense
             # (waiting for 'symmlq' in scipy.sparse.linalg)
-            x, self.last_itn, self.last_r1norm = np.array(lsqr(self.Q, -ql))[[0, 2, 3]]
+            x, self.last_itn, self.last_r1norm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
         self.last_lmbda = lmbda
         self.last_x = x
         return np.hstack((self.ub - x, x))
@@ -176,7 +176,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             # correspondent to the null eigenvalues, the system has not solutions, so we
             # will choose the one that minimizes the residue in the least-squares sense
             # (waiting for 'symmlq' in scipy.sparse.linalg)
-            x, self.last_itn, self.last_r1norm = np.array(lsqr(self.Q, -ql))[[0, 2, 3]]
+            x, self.last_itn, self.last_r1norm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
         self.last_lmbda = lmbda
         self.last_x = x
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
@@ -205,7 +205,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             # correspondent to the null eigenvalues, the system has not solutions, so we
             # will choose the one that minimizes the residue in the least-squares sense
             # (waiting for 'symmlq' in scipy.sparse.linalg)
-            x, self.last_itn, self.last_r1norm = np.array(lsqr(self.Q, -ql))[[0, 2, 3]]
+            x, self.last_itn, self.last_r1norm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
         self.last_lmbda = lmbda
         self.last_x = x
         return np.hstack((self.A * x, self.ub - x, x))
