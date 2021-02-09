@@ -2,6 +2,7 @@ import numpy as np
 
 from .. import Optimizer
 from ..unconstrained.line_search import LineSearchOptimizer
+from ..unconstrained.line_search.line_search import LagrangianArmijoWolfeLineSearch
 from ..unconstrained.stochastic import StochasticOptimizer, AdaGrad
 
 
@@ -56,7 +57,16 @@ class LagrangianDual(Optimizer):
                                             max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval,
                                             callback=self._update_primal_dual,
-                                            verbose=self.verbose).minimize()
+                                            verbose=self.verbose)
+            self.optimizer.line_search = LagrangianArmijoWolfeLineSearch(self.optimizer.f,
+                                                                         self.optimizer.line_search.max_f_eval,
+                                                                         self.optimizer.line_search.m1,
+                                                                         self.optimizer.line_search.m2,
+                                                                         self.optimizer.line_search.a_start,
+                                                                         self.optimizer.line_search.tau,
+                                                                         self.optimizer.line_search.sfgrd,
+                                                                         self.optimizer.line_search.min_a)
+            self.optimizer.minimize()
 
         elif issubclass(self.optimizer, StochasticOptimizer):
 
