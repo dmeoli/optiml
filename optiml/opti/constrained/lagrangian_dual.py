@@ -42,9 +42,9 @@ class LagrangianDual(Optimizer):
         self.primal_x = self.f.ub / 2  # starts from the middle of the box
         self.primal_f_x = self.f.primal.function(self.primal_x)
         if self.f.primal.ndim == 2:
-            self.x0_history = []
-            self.x1_history = []
-            self.f_x_history = []
+            self.x0_history = [self.primal_x[0]]
+            self.x1_history = [self.primal_x[1]]
+            self.f_x_history = [self.primal_f_x]
 
     def minimize(self):
 
@@ -84,7 +84,6 @@ class LagrangianDual(Optimizer):
         return self
 
     def _update_primal_dual(self, opt):
-        self.callback()
 
         # project the direction over the active constraints
         opt.g_x[np.logical_and(opt.x <= 1e-12, -opt.g_x < 0)] = 0
@@ -106,6 +105,8 @@ class LagrangianDual(Optimizer):
             (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())) and self.is_verbose():
             print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
             print('\tgap: {: 1.4e}'.format(gap), end='')
+
+        self.callback()
 
         if gap <= self.eps:
             self.status = 'optimal'
