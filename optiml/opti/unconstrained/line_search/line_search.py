@@ -283,5 +283,5 @@ class LagrangianArmijoWolfeLineSearch(ArmijoWolfeLineSearch):
             ls_iter += 1
 
         if verbose:
-            print('\tit: {:2d}'.format(ls_iter), end='')
+            print('\tls: {:2d}'.format(ls_iter), end='')
         return a, phi_a, last_x, last_g, f_eval

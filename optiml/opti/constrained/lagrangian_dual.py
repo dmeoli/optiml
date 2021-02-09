@@ -48,8 +48,6 @@ class LagrangianDual(Optimizer):
 
     def minimize(self):
 
-        self.f_x = self.f.function(self.x)
-
         if issubclass(self.optimizer, LineSearchOptimizer):
 
             self.optimizer = self.optimizer(f=self.f,
@@ -66,7 +64,7 @@ class LagrangianDual(Optimizer):
                                                                          self.optimizer.line_search.tau,
                                                                          self.optimizer.line_search.sfgrd,
                                                                          self.optimizer.line_search.min_a)
-            self.optimizer.minimize()
+
 
         elif issubclass(self.optimizer, StochasticOptimizer):
 
@@ -80,8 +78,9 @@ class LagrangianDual(Optimizer):
                                             callback=self._update_primal_dual,
                                             shuffle=self.shuffle,
                                             random_state=self.random_state,
-                                            verbose=self.verbose).minimize()
+                                            verbose=self.verbose)
 
+        self.__dict__.update(self.optimizer.minimize().__dict__)
         return self
 
     def _update_primal_dual(self, opt):
@@ -101,7 +100,7 @@ class LagrangianDual(Optimizer):
             self.primal_x = self.f.last_x
             self.primal_f_x = v
 
-        gap = (self.primal_f_x - self.f_x) / max(abs(self.primal_f_x), 1)
+        gap = (self.primal_f_x - opt.f_x) / max(abs(self.primal_f_x), 1)
 
         if ((isinstance(opt, LineSearchOptimizer) and opt.is_verbose()) or
             (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())) and self.is_verbose():
