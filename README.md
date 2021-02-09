@@ -21,12 +21,7 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
             - 1st Order Methods
                 - [x] Subgradient
                 - [x] Steepest Gradient Descent
-                - [ ] Conjugate Gradient
-                    - [ ] Fletcher–Reeves formula
-                    - [ ] Polak–Ribière formula
-                    - [ ] Hestenes-Stiefel formula
-                    - [ ] Dai-Yuan formula
-                - [x] Nonlinear Conjugate Gradient
+                - [x] Conjugate Gradient
                     - [x] Fletcher–Reeves formula
                     - [x] Polak–Ribière formula
                     - [x] Hestenes-Stiefel formula
@@ -36,7 +31,6 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
                 - [x] Newton
                 - Quasi-Newton
                     - [x] BFGS
-                    - [ ] L-BFGS
         - Stochastic Methods
             - [x] Stochastic Gradient Descent
                 - [x] Momentum

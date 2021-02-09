@@ -4,52 +4,6 @@ from . import LineSearchOptimizer
 
 
 class ConjugateGradient(LineSearchOptimizer):
-
-    def __init__(self,
-                 f,
-                 x,
-                 wf=0,
-                 r_start=0,
-                 eps=1e-6,
-                 max_iter=1000,
-                 max_f_eval=1000,
-                 m1=0.01,
-                 m2=0.9,
-                 a_start=1,
-                 tau=0.9,
-                 sfgrd=0.01,
-                 m_inf=-np.inf,
-                 min_a=1e-16,
-                 callback=None,
-                 callback_args=(),
-                 verbose=False):
-        super().__init__(f=f,
-                         x=x,
-                         eps=eps,
-                         max_iter=max_iter,
-                         max_f_eval=max_f_eval,
-                         m1=m1,
-                         m2=m2,
-                         a_start=a_start,
-                         tau=tau,
-                         sfgrd=sfgrd,
-                         m_inf=m_inf,
-                         min_a=min_a,
-                         callback=callback,
-                         callback_args=callback_args,
-                         verbose=verbose)
-        if wf < 0 or wf > 4:
-            raise ValueError(f'unknown NCG formula {wf}')
-        self.wf = wf
-        if not r_start >= 0:
-            raise ValueError('r_start must be >= 0')
-        self.r_start = r_start
-
-    def minimize(self):
-        raise NotImplementedError
-
-
-class NonlinearConjugateGradient(LineSearchOptimizer):
     # Apply a Nonlinear Conjugated Gradient algorithm for the minimization of
     # the provided function f.
     #
