@@ -574,15 +574,13 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     max_f_eval=self.max_f_eval,
                                                     verbose=self.verbose).minimize()
 
-                if not isinstance(self.optimizer, StochasticOptimizer):
-
-                    if self.optimizer.status == 'stopped':
-                        if self.optimizer.iter >= self.max_iter:
-                            warnings.warn('max_iter reached but the optimization has not converged yet',
-                                          ConvergenceWarning)
-                        elif self.optimizer.f_eval >= self.max_f_eval:
-                            warnings.warn('max_f_eval reached but the optimization has not converged yet',
-                                          ConvergenceWarning)
+                if self.optimizer.status == 'stopped':
+                    if self.optimizer.iter >= self.max_iter:
+                        warnings.warn('max_iter reached but the optimization has not converged yet',
+                                      ConvergenceWarning)
+                    elif hasattr(self.optimizer, 'f_eval') and self.optimizer.f_eval >= self.max_f_eval:
+                        warnings.warn('max_f_eval reached but the optimization has not converged yet',
+                                      ConvergenceWarning)
 
             alphas = self.optimizer.primal_x if isinstance(self.optimizer, LagrangianDual) else self.optimizer.x
 
@@ -902,15 +900,13 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         max_f_eval=self.max_f_eval,
                                                         verbose=self.verbose).minimize()
 
-                    if not isinstance(self.optimizer, StochasticOptimizer):
-
-                        if self.optimizer.status == 'stopped':
-                            if self.optimizer.iter >= self.max_iter:
-                                warnings.warn('max_iter reached but the optimization has not converged yet',
-                                              ConvergenceWarning)
-                            elif self.optimizer.f_eval >= self.max_f_eval:
-                                warnings.warn('max_f_eval reached but the optimization has not converged yet',
-                                              ConvergenceWarning)
+                    if self.optimizer.status == 'stopped':
+                        if self.optimizer.iter >= self.max_iter:
+                            warnings.warn('max_iter reached but the optimization has not converged yet',
+                                          ConvergenceWarning)
+                        elif hasattr(self.optimizer, 'f_eval') and self.optimizer.f_eval >= self.max_f_eval:
+                            warnings.warn('max_f_eval reached but the optimization has not converged yet',
+                                          ConvergenceWarning)
 
                 alphas = self.optimizer.primal_x if isinstance(self.optimizer, LagrangianDual) else self.optimizer.x
 
