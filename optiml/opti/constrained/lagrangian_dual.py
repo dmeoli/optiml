@@ -106,8 +106,8 @@ class LagrangianDual(Optimizer):
             print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
             print('\tgap: {: 1.4e}'.format(gap), end='')
             if not self.f.is_posdef:
-                print('\titn: {:2d}'.format(self.f.last_itn), end='')
-                print('\tr1norm: {: 1.4e}'.format(self.f.last_r1norm), end='')
+                print('\titn: {:3d}'.format(self.f.last_itn), end='')
+                print('\tr1norm: {:1.4e}'.format(self.f.last_r1norm), end='')
 
         self.callback()
 

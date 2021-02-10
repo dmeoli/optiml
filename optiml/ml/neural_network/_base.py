@@ -277,12 +277,12 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
             acc = self.score(X_batch, y_batch)
             self.train_score_history.append(acc)
             if opt.is_verbose():
-                print('\tacc: {: 1.4f}'.format(acc), end='')
+                print('\tacc: {:1.4f}'.format(acc), end='')
             if self.validation_split:
                 val_acc = self.score(X_val, y_val)
                 self.val_score_history.append(val_acc)
                 if opt.is_verbose():
-                    print('\tval_acc: {: 1.4f}'.format(val_acc), end='')
+                    print('\tval_acc: {:1.4f}'.format(val_acc), end='')
             self._update_no_improvement_count(opt)
 
     def fit(self, X, y):
