@@ -827,7 +827,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
         else:
 
-            A = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
+            e = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
 
             if isinstance(self.optimizer, str):
 
@@ -837,7 +837,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     alphas = solve_qp(P=Q,
                                       q=q,
-                                      A=A,
+                                      A=e,
                                       b=np.zeros(1),
                                       lb=lb,
                                       ub=ub,
@@ -846,7 +846,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 else:
 
-                    Q += np.outer(A, A)
+                    Q += np.outer(e, e)
                     self.obj = Quadratic(Q, q)
 
                     alphas = solve_qp(P=Q,
@@ -863,7 +863,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                    Q += np.outer(A, A)
+                    Q += np.outer(e, e)
                     self.obj = Quadratic(Q, q)
 
                     self.optimizer = self.optimizer(f=self.obj,
@@ -875,7 +875,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     if self.use_explicit_eq:
 
-                        self.obj = LagrangianConstrainedQuadratic(self.obj, A, ub)
+                        self.obj = LagrangianConstrainedQuadratic(self.obj, e, ub)
                         self.optimizer = LagrangianDual(f=self.obj,
                                                         optimizer=self.optimizer,
                                                         step_size=self.learning_rate,
@@ -887,7 +887,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     else:
 
-                        Q += np.outer(A, A)
+                        Q += np.outer(e, e)
                         self.obj = Quadratic(Q, q)
 
                         self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
