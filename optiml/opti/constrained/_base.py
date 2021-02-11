@@ -52,7 +52,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             self.is_posdef = False
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
-        self.ub = np.asarray(ub, dtype=np.float)
+        self.ub = np.asarray(ub, dtype=float)
         # backup {lambda : x}
         self.last_lmbda = None
         self.last_x = None
@@ -143,7 +143,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
     def __init__(self, quad, A, ub):
         super().__init__(quad, ub)
         self.ndim += int(self.ndim / 2)
-        self.A = np.asarray(A, dtype=np.float)
+        self.A = np.asarray(A, dtype=float)
 
     def function(self, lmbda):
         """

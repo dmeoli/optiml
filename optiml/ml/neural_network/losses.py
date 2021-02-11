@@ -125,10 +125,10 @@ class SparseCategoricalCrossEntropy(NeuralNetworkLoss):
 
     def loss(self, y_pred, y_true):
         assert y_pred.shape[0] == y_true.shape[0]
-        return -np.sum(np.log(y_pred[np.arange(y_pred.shape[0]), y_true.astype(np.int32).ravel()]))
+        return -np.sum(np.log(y_pred[np.arange(y_pred.shape[0]), y_true.astype(int).ravel()]))
 
     def delta(self, y_pred, y_true):
-        y_pred[np.arange(y_pred.shape[0]), y_true.astype(np.int32).ravel()] -= 1.
+        y_pred[np.arange(y_pred.shape[0]), y_true.astype(int).ravel()] -= 1.
         return y_pred
 
 

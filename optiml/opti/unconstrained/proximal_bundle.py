@@ -111,25 +111,24 @@ class ProximalBundle(Optimizer):
             else:
                 print('iter\t cost\t\t dnorm', end='')
 
+        # compute first function and subgradient
+        self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+
+        G = self.g_x.T  # matrix of subgradients
+        F = self.f_x - self.g_x.T.dot(self.x)  # vector of translated function values
+        # each (fxi , gi , xi) gives the constraint:
+        #
+        #  v >= fxi + gi^T * (x + d - xi) = gi^T * (x + d) + (fi - gi^T * xi)
+        #
+        # so we just keep the single constant fi - gi^T * xi instead of xi
+
+        ng = np.linalg.norm(self.g_x)
+        if self.eps < 0:
+            ng0 = -ng  # norm of first subgradient
+        else:
+            ng0 = 1  # un-scaled stopping criterion
+
         while True:
-
-            if self.iter == 0:
-                # compute first function and subgradient
-                self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
-
-                G = self.g_x.T  # matrix of subgradients
-                F = self.f_x - self.g_x.T.dot(self.x)  # vector of translated function values
-                # each (fxi , gi , xi) gives the constraint
-                #
-                #  v >= fxi + gi' * (x + d - xi) = gi' * (x + d) + (fi - gi' * xi)
-                #
-                # so we just keep the single constant fi - gi' * xi instead of xi
-
-                ng = np.linalg.norm(self.g_x)
-                if self.eps < 0:
-                    ng0 = -ng  # norm of first subgradient
-                else:
-                    ng0 = 1  # un-scaled stopping criterion
 
             # construct the master problem
             d = Variable((self.f.ndim, 1))
@@ -164,11 +163,6 @@ class ProximalBundle(Optimizer):
                 else:
                     print('\n{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, nd), end='')
 
-            try:
-                self.callback()
-            except StopIteration:
-                break
-
             # stopping criteria
             if self.mu * nd <= self.eps * ng0:
                 self.status = 'optimal'
@@ -182,6 +176,11 @@ class ProximalBundle(Optimizer):
 
             # compute function and subgradient
             fd, self.g_x = self.f.function(last_x), self.f.jacobian(last_x)
+
+            try:
+                self.callback()
+            except StopIteration:
+                break
 
             if fd <= self.m_inf:
                 self.status = 'unbounded'

@@ -1,5 +1,6 @@
 import numpy as np
 
+from . import LagrangianBoxConstrainedQuadratic
 from .. import Optimizer
 from ..unconstrained import ProximalBundle
 from ..unconstrained.line_search import LineSearchOptimizer
@@ -16,13 +17,10 @@ class LagrangianDual(Optimizer):
                  step_size=0.01,
                  momentum_type='none',
                  momentum=0.9,
-                 batch_size=None,
                  max_iter=1000,
                  max_f_eval=1000,
                  callback=None,
                  callback_args=(),
-                 shuffle=True,
-                 random_state=None,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -34,14 +32,13 @@ class LagrangianDual(Optimizer):
                          callback=callback,
                          callback_args=callback_args,
                          verbose=verbose)
+        if not isinstance(f, LagrangianBoxConstrainedQuadratic):
+            raise TypeError(f'{f} is not an allowed constrained quadratic optimization function')
         self.optimizer = optimizer
         self.step_size = step_size
         self.momentum_type = momentum_type
         self.momentum = momentum
-        self.batch_size = batch_size
         self.max_f_eval = max_f_eval
-        self.shuffle = shuffle
-        self.random_state = random_state
         self.mu = mu
         self.master_solver = master_solver
         self.master_verbose = master_verbose
@@ -79,12 +76,9 @@ class LagrangianDual(Optimizer):
                                             x=self.x,
                                             step_size=self.step_size,
                                             epochs=self.max_iter,
-                                            batch_size=self.batch_size,
                                             momentum_type=self.momentum_type,
                                             momentum=self.momentum,
                                             callback=self._update_primal_dual,
-                                            shuffle=self.shuffle,
-                                            random_state=self.random_state,
                                             verbose=self.verbose)
 
         elif issubclass(self.optimizer, ProximalBundle):
@@ -93,6 +87,7 @@ class LagrangianDual(Optimizer):
                                             x=self.x,
                                             mu=self.mu,
                                             max_iter=self.max_iter,
+                                            callback=self._update_primal_dual,
                                             master_solver=self.master_solver,
                                             master_verbose=self.master_verbose,
                                             verbose=self.verbose)
@@ -118,15 +113,14 @@ class LagrangianDual(Optimizer):
 
         gap = (self.primal_f_x - opt.f_x) / max(abs(self.primal_f_x), 1)
 
-        if ((isinstance(opt, LineSearchOptimizer) and opt.is_verbose()) or
-            (isinstance(opt, StochasticOptimizer) and opt.is_batch_end())) and self.is_verbose():
+        if opt.is_verbose():
             print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
             print('\tgap: {: 1.4e}'.format(gap), end='')
             if not self.f.is_posdef:
                 print('\titn: {:3d}'.format(self.f.last_itn), end='')
                 print('\tr1norm: {:1.4e}'.format(self.f.last_r1norm), end='')
 
-        self.callback()
+        self.callback(self.callback_args)
 
         if gap <= self.eps:
             self.status = 'optimal'
@@ -140,4 +134,4 @@ class LagrangianDual(Optimizer):
             self.x1_history.append(self.primal_x[1])
             self.f_x_history.append(self.primal_f_x)
         if callable(self._callback):
-            self._callback(self, *args, *self.callback_args)
+            self._callback(*self.callback_args)

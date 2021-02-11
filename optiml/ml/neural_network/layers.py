@@ -38,7 +38,7 @@ class ParamLayer(Layer, ABC):
         elif callable(coef_init):
             self.coef_ = coef_init(coef_shape, random_state=random_state)
         else:
-            self.coef_ = np.asarray(coef_init, dtype=np.float).reshape(-1, 1)
+            self.coef_ = np.asarray(coef_init, dtype=float).reshape(-1, 1)
 
         self.fit_intercept = fit_intercept
         if self.fit_intercept:
@@ -49,7 +49,7 @@ class ParamLayer(Layer, ABC):
             elif callable(inter_init):
                 self.inter_ = inter_init(shape, random_state=random_state)
             else:
-                self.inter_ = np.asarray(inter_init, dtype=np.float).reshape(-1, 1)
+                self.inter_ = np.asarray(inter_init, dtype=float).reshape(-1, 1)
 
         if coef_reg is None:
             self.coef_reg = l2

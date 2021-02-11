@@ -536,7 +536,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 alphas = solve_qp(P=Q,
                                   q=q,
-                                  A=y.astype(np.float),
+                                  A=y.astype(float),
                                   b=np.zeros(1),
                                   lb=lb,
                                   ub=ub,
