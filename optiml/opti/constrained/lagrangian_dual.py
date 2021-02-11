@@ -1,6 +1,7 @@
 import numpy as np
 
 from .. import Optimizer
+from ..unconstrained import ProximalBundle
 from ..unconstrained.line_search import LineSearchOptimizer
 from ..unconstrained.line_search.line_search import LagrangianArmijoWolfeLineSearch
 from ..unconstrained.stochastic import StochasticOptimizer, AdaGrad
@@ -22,6 +23,9 @@ class LagrangianDual(Optimizer):
                  callback_args=(),
                  shuffle=True,
                  random_state=None,
+                 mu=1,
+                 master_solver='ecos',
+                 master_verbose=False,
                  verbose=False):
         super().__init__(f=f,
                          x=np.zeros(f.ndim),
@@ -38,6 +42,9 @@ class LagrangianDual(Optimizer):
         self.max_f_eval = max_f_eval
         self.shuffle = shuffle
         self.random_state = random_state
+        self.mu = mu
+        self.master_solver = master_solver
+        self.master_verbose = master_verbose
         # initialize the primal problem
         self.primal_x = self.f.ub / 2  # starts from the middle of the box
         self.primal_f_x = self.f.primal.function(self.primal_x)
@@ -78,6 +85,16 @@ class LagrangianDual(Optimizer):
                                             callback=self._update_primal_dual,
                                             shuffle=self.shuffle,
                                             random_state=self.random_state,
+                                            verbose=self.verbose)
+
+        elif issubclass(self.optimizer, ProximalBundle):
+
+            self.optimizer = self.optimizer(f=self.f,
+                                            x=self.x,
+                                            mu=self.mu,
+                                            max_iter=self.max_iter,
+                                            master_solver=self.master_solver,
+                                            master_verbose=self.master_verbose,
                                             verbose=self.verbose)
 
         self.__dict__.update(self.optimizer.minimize().__dict__)

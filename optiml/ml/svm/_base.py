@@ -12,6 +12,7 @@ from sklearn.preprocessing import LabelBinarizer
 from .kernels import gaussian, Kernel, LinearKernel
 from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
 from .smo import SMO, SMOClassifier, SMORegression
+from ..neural_network.initializers import random_uniform
 from ...opti import Optimizer
 from ...opti import Quadratic
 from ...opti.constrained import LagrangianDual
@@ -72,6 +73,12 @@ class SVM(BaseEstimator, ABC):
         of loss function calls will be greater than or equal to the number
         of iterations.
 
+    mu :
+
+    master_solver :
+
+    master_verbose : bool or int, default=False
+
     verbose : bool or int, default=False
         Controls the verbosity of progress messages to stdout. Use a boolean value
         to switch on/off or an int value to show progress each ``verbose`` time
@@ -87,6 +94,9 @@ class SVM(BaseEstimator, ABC):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
+                 mu=1,
+                 master_solver='ecos',
+                 master_verbose=False,
                  verbose=False):
         if not C > 0:
             raise ValueError('C must be > 0')
@@ -100,6 +110,9 @@ class SVM(BaseEstimator, ABC):
         self.momentum_type = momentum_type
         self.momentum = momentum
         self.max_f_eval = max_f_eval
+        self.mu = mu
+        self.master_solver = master_solver
+        self.master_verbose = master_verbose
         self.verbose = verbose
 
     def fit(self, X, y):
@@ -138,10 +151,11 @@ class PrimalSVM(SVM, ABC):
                  early_stopping=False,
                  patience=5,
                  fit_intercept=True,
-                 master_solver='ecos',
-                 master_verbose=False,
                  shuffle=True,
                  random_state=None,
+                 mu=1,
+                 master_solver='ecos',
+                 master_verbose=False,
                  verbose=False):
         super().__init__(C=C,
                          tol=tol,
@@ -151,6 +165,9 @@ class PrimalSVM(SVM, ABC):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
+                         mu=mu,
+                         master_solver=master_solver,
+                         master_verbose=master_verbose,
                          verbose=verbose)
         self.loss = loss
         if not issubclass(self.optimizer, Optimizer):
@@ -159,8 +176,6 @@ class PrimalSVM(SVM, ABC):
         self.batch_size = batch_size
         self.early_stopping = early_stopping
         self.patience = patience
-        self.master_solver = master_solver
-        self.master_verbose = master_verbose
         self.shuffle = shuffle
         self.random_state = random_state
         self.coef_ = np.zeros(0)
@@ -263,6 +278,7 @@ class DualSVM(SVM, ABC):
                  momentum=0.9,
                  max_f_eval=15000,
                  use_explicit_eq=True,
+                 mu=1,
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
@@ -274,6 +290,9 @@ class DualSVM(SVM, ABC):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
+                         mu=mu,
+                         master_solver=master_solver,
+                         master_verbose=master_verbose,
                          verbose=verbose)
         if not isinstance(kernel, Kernel):
             raise TypeError(f'{kernel} is not an allowed kernel function')
@@ -283,8 +302,6 @@ class DualSVM(SVM, ABC):
                 not issubclass(optimizer, Optimizer)):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
         self.use_explicit_eq = use_explicit_eq
-        self.master_solver = master_solver
-        self.master_verbose = master_verbose
         if isinstance(self.kernel, LinearKernel):
             self.coef_ = np.zeros(0)
         self.intercept_ = 0.
@@ -307,10 +324,11 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                  early_stopping=False,
                  patience=5,
                  fit_intercept=True,
-                 master_solver='ecos',
-                 master_verbose=False,
                  shuffle=True,
                  random_state=None,
+                 mu=1,
+                 master_solver='ecos',
+                 master_verbose=False,
                  verbose=False):
         super().__init__(C=C,
                          tol=tol,
@@ -326,10 +344,11 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                          early_stopping=early_stopping,
                          patience=patience,
                          fit_intercept=fit_intercept,
-                         master_solver=master_solver,
-                         master_verbose=master_verbose,
                          shuffle=shuffle,
                          random_state=random_state,
+                         mu=mu,
+                         master_solver=master_solver,
+                         master_verbose=master_verbose,
                          verbose=verbose)
         if not issubclass(loss, SVCLoss):
             raise TypeError(f'{loss} is not an allowed LinearSVC loss function')
@@ -365,7 +384,8 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=np.zeros(self.loss.ndim),
+                                            x=random_uniform(self.loss.ndim,
+                                                             random_state=self.random_state),
                                             max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval,
                                             verbose=self.verbose).minimize()
@@ -387,11 +407,13 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=np.zeros(self.loss.ndim),
+                                            x=random_uniform(self.loss.ndim,
+                                                             random_state=self.random_state),
+                                            mu=self.mu,
                                             max_iter=self.max_iter,
                                             master_solver=self.master_solver,
-                                            verbose=self.verbose,
-                                            master_verbose=self.master_verbose).minimize()
+                                            master_verbose=self.master_verbose,
+                                            verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'stopped':
                 warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
@@ -421,7 +443,8 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=np.zeros(self.loss.ndim),
+                                            x=random_uniform(self.loss.ndim,
+                                                             random_state=self.random_state),
                                             epochs=self.max_iter,
                                             step_size=self.learning_rate,
                                             momentum_type=self.momentum_type,
@@ -457,6 +480,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  momentum=0.9,
                  max_f_eval=15000,
                  use_explicit_eq=True,
+                 mu=1,
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
@@ -470,6 +494,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                          momentum=momentum,
                          max_f_eval=max_f_eval,
                          use_explicit_eq=use_explicit_eq,
+                         mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
                          verbose=verbose)
@@ -557,6 +582,9 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     momentum=self.momentum,
                                                     max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval,
+                                                    mu=self.mu,
+                                                    master_solver=self.master_solver,
+                                                    master_verbose=self.master_verbose,
                                                     verbose=self.verbose).minimize()
 
                 else:
@@ -572,6 +600,9 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     momentum=self.momentum,
                                                     max_iter=self.max_iter,
                                                     max_f_eval=self.max_f_eval,
+                                                    mu=self.mu,
+                                                    master_solver=self.master_solver,
+                                                    master_verbose=self.master_verbose,
                                                     verbose=self.verbose).minimize()
 
                 if self.optimizer.status == 'stopped':
@@ -628,10 +659,11 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  early_stopping=False,
                  patience=5,
                  fit_intercept=True,
-                 master_solver='ecos',
-                 master_verbose=False,
                  shuffle=True,
                  random_state=None,
+                 mu=1,
+                 master_solver='ecos',
+                 master_verbose=False,
                  verbose=False):
         super().__init__(C=C,
                          tol=tol,
@@ -647,10 +679,11 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                          early_stopping=early_stopping,
                          patience=patience,
                          fit_intercept=fit_intercept,
-                         master_solver=master_solver,
-                         master_verbose=master_verbose,
                          shuffle=shuffle,
                          random_state=random_state,
+                         mu=mu,
+                         master_solver=master_solver,
+                         master_verbose=master_verbose,
                          verbose=verbose)
         if not issubclass(loss, SVRLoss):
             raise TypeError(f'{loss} is not an allowed LinearSVR loss function')
@@ -687,7 +720,8 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y, self.epsilon)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=np.zeros(self.loss.ndim),
+                                            x=random_uniform(self.loss.ndim,
+                                                             random_state=self.random_state),
                                             max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval,
                                             verbose=self.verbose).minimize()
@@ -709,11 +743,13 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y, self.epsilon)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=np.zeros(self.loss.ndim),
+                                            x=random_uniform(self.loss.ndim,
+                                                             random_state=self.random_state),
+                                            mu=self.mu,
                                             max_iter=self.max_iter,
                                             master_solver=self.master_solver,
-                                            verbose=self.verbose,
-                                            master_verbose=self.master_verbose).minimize()
+                                            master_verbose=self.master_verbose,
+                                            verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'stopped':
                 warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
@@ -743,7 +779,8 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y, self.epsilon)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=np.zeros(self.loss.ndim),
+                                            x=random_uniform(self.loss.ndim,
+                                                             random_state=self.random_state),
                                             epochs=self.max_iter,
                                             step_size=self.learning_rate,
                                             momentum_type=self.momentum_type,
@@ -777,6 +814,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  momentum=0.9,
                  max_f_eval=15000,
                  use_explicit_eq=True,
+                 mu=1,
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
@@ -790,6 +828,7 @@ class DualSVR(RegressorMixin, DualSVM):
                          momentum=momentum,
                          max_f_eval=max_f_eval,
                          use_explicit_eq=use_explicit_eq,
+                         mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
                          verbose=verbose)
@@ -877,12 +916,15 @@ class DualSVR(RegressorMixin, DualSVM):
 
                         self.obj = LagrangianConstrainedQuadratic(self.obj, e, ub)
                         self.optimizer = LagrangianDual(f=self.obj,
+                                                        mu=self.mu,
                                                         optimizer=self.optimizer,
                                                         step_size=self.learning_rate,
                                                         momentum_type=self.momentum_type,
                                                         momentum=self.momentum,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
+                                                        master_solver=self.master_solver,
+                                                        master_verbose=self.master_verbose,
                                                         verbose=self.verbose).minimize()
 
                     else:
@@ -892,12 +934,15 @@ class DualSVR(RegressorMixin, DualSVM):
 
                         self.obj = LagrangianBoxConstrainedQuadratic(self.obj, ub)
                         self.optimizer = LagrangianDual(f=self.obj,
+                                                        mu=self.mu,
                                                         optimizer=self.optimizer,
                                                         step_size=self.learning_rate,
                                                         momentum_type=self.momentum_type,
                                                         momentum=self.momentum,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
+                                                        master_solver=self.master_solver,
+                                                        master_verbose=self.master_verbose,
                                                         verbose=self.verbose).minimize()
 
                     if self.optimizer.status == 'stopped':

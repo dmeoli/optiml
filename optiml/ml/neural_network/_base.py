@@ -12,6 +12,7 @@ from .layers import Layer, ParamLayer
 from .losses import (CategoricalCrossEntropy, SparseCategoricalCrossEntropy,
                      MeanSquaredError, BinaryCrossEntropy, mean_squared_error, NeuralNetworkLoss)
 from ...opti import Optimizer
+from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
 
@@ -34,6 +35,9 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
                  patience=5,
                  shuffle=True,
                  random_state=None,
+                 mu=1,
+                 master_solver='ecos',
+                 master_verbose=False,
                  verbose=False):
         self.layers = layers
         if not issubclass(loss, NeuralNetworkLoss):
@@ -54,6 +58,9 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
         self.patience = patience
         self.shuffle = shuffle
         self.random_state = random_state
+        self.mu = mu
+        self.master_solver = master_solver
+        self.master_verbose = master_verbose
         self.verbose = verbose
         if issubclass(self.optimizer, StochasticOptimizer):
             self.train_loss_history = []
@@ -202,6 +209,20 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
                 elif self.optimizer.f_eval >= self.max_f_eval:
                     warnings.warn('max_f_eval reached but the optimization has not converged yet', ConvergenceWarning)
 
+        elif issubclass(self.optimizer, ProximalBundle):
+
+            self.loss = self.loss(self, X, y)
+            self.optimizer = self.optimizer(f=self.loss,
+                                            x=packed_coef_inter,
+                                            mu=self.mu,
+                                            max_iter=self.max_iter,
+                                            master_solver=self.master_solver,
+                                            master_verbose=self.master_verbose,
+                                            verbose=self.verbose).minimize()
+
+            if self.optimizer.status == 'stopped':
+                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
+
         elif issubclass(self.optimizer, StochasticOptimizer):
 
             if self.validation_split:
@@ -236,40 +257,6 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
 
 
 class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
-
-    def __init__(self,
-                 layers=(),
-                 loss=mean_squared_error,
-                 optimizer=StochasticGradientDescent,
-                 learning_rate=0.01,
-                 max_iter=1000,
-                 momentum_type='none',
-                 momentum=0.9,
-                 tol=1e-4,
-                 validation_split=0.,
-                 batch_size=None,
-                 max_f_eval=15000,
-                 early_stopping=False,
-                 patience=5,
-                 shuffle=True,
-                 random_state=None,
-                 verbose=False):
-        super().__init__(layers=layers,
-                         loss=loss,
-                         optimizer=optimizer,
-                         learning_rate=learning_rate,
-                         max_iter=max_iter,
-                         momentum_type=momentum_type,
-                         momentum=momentum,
-                         tol=tol,
-                         validation_split=validation_split,
-                         batch_size=batch_size,
-                         max_f_eval=max_f_eval,
-                         early_stopping=early_stopping,
-                         patience=patience,
-                         shuffle=shuffle,
-                         random_state=random_state,
-                         verbose=verbose)
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
         super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)

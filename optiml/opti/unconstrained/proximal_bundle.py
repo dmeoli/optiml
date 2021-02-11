@@ -84,8 +84,8 @@ class ProximalBundle(Optimizer):
                  master_solver='ecos',
                  callback=None,
                  callback_args=(),
-                 verbose=False,
-                 master_verbose=False):
+                 master_verbose=False,
+                 verbose=False):
         super().__init__(f=f,
                          x=x,
                          eps=eps,
