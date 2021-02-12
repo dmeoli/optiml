@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 
 from .kernels import gaussian, Kernel, LinearKernel
-from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
+from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, squared_epsilon_insensitive
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
@@ -640,7 +640,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  C=1.,
                  epsilon=0.,
                  tol=1e-4,
-                 loss=epsilon_insensitive,
+                 loss=squared_epsilon_insensitive,
                  optimizer=AdaGrad,
                  max_iter=1000,
                  learning_rate=0.1,
