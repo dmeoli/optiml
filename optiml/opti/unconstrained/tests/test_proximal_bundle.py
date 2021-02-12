@@ -7,13 +7,13 @@ from optiml.opti.unconstrained import ProximalBundle
 
 
 def test_quadratic():
-    assert np.allclose(ProximalBundle(f=quad1, x=np.random.uniform).minimize().x, quad1.x_star())
-    assert np.allclose(ProximalBundle(f=quad2, x=np.random.uniform).minimize().x, quad2.x_star(), rtol=0.1)
+    assert np.allclose(ProximalBundle(f=quad1).minimize().x, quad1.x_star())
+    assert np.allclose(ProximalBundle(f=quad2).minimize().x, quad2.x_star(), rtol=0.1)
 
 
 def test_Rosenbrock():
     rosen = Rosenbrock()
-    assert np.allclose(ProximalBundle(f=rosen, x=np.random.uniform).minimize().x, rosen.x_star(), rtol=0.1)
+    assert np.allclose(ProximalBundle(f=rosen).minimize().x, rosen.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":

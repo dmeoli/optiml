@@ -133,19 +133,19 @@ class ProximalBundle(Optimizer):
             self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0)] = 0
 
         F = self.f_x - self.g_x.T.dot(self.x)  # vector of translated function values
-        # each (fxi , gi , xi) gives the constraint:
-        #
-        #  v >= fxi + gi^T * (x + d - xi) = gi^T * (x + d) + (fi - gi^T * xi)
-        #
-        # so we just keep the single constant fi - gi^T * xi instead of xi
 
         while True:
 
             # construct the master problem
-            d = Variable((self.x.size, 1))
+            d = Variable(self.x.size)
             v = Variable(1)
 
-            M = [v >= F + G @ (self.x.reshape(-1, 1) + d)]
+            # each (fxi , gi , xi) gives the constraint:
+            #
+            #  v >= fxi + gi^T * (x + d - xi) = gi^T * (x + d) + (fi - gi^T * xi)
+            #
+            # so we just keep the single constant fi - gi^T * xi instead of xi
+            M = [v >= F + G @ (self.x + d)]
 
             if self.f.f_star() < np.inf:
                 # cheating: use information about f_star in the model
@@ -203,12 +203,16 @@ class ProximalBundle(Optimizer):
                 # project the direction over the active constraints
                 self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0)] = 0
 
-            F = np.vstack((F, fd - self.g_x.T.dot(last_x)))
+            F = np.hstack((F, fd - self.g_x.T.dot(last_x)))
 
             if fd <= self.f_x + self.m1 * (v - self.f_x):
                 self.x = last_x
                 self.f_x = fd
+                if self.is_verbose():
+                    print('\tstep: {:s}'.format('SS'), end='')
             else:
+                if self.is_verbose():
+                    print('\tstep: {:s}'.format('NS'), end='')
                 if self.f.ndim <= 3:
                     self.x0_history_ns.append(self.x[0])
                     self.x1_history_ns.append(self.x[1])
