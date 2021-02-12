@@ -120,13 +120,13 @@ class ProximalBundle(Optimizer):
         # compute first function and subgradient
         self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
 
-        G = self.g_x.T  # matrix of subgradients
-
         ng = np.linalg.norm(self.g_x)
         if self.eps < 0:
             ng0 = -ng  # norm of first subgradient
         else:
             ng0 = 1  # un-scaled stopping criterion
+
+        G = self.g_x.T  # matrix of subgradients
 
         if self.lagrangian:
             # project the direction over the active constraints
