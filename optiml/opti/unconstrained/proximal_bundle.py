@@ -81,9 +81,10 @@ class ProximalBundle(Optimizer):
                  eps=1e-6,
                  max_iter=1000,
                  m_inf=-np.inf,
-                 master_solver='ecos',
                  callback=None,
                  callback_args=(),
+                 lagrangian=False,
+                 master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
         super().__init__(f=f,
@@ -100,6 +101,7 @@ class ProximalBundle(Optimizer):
             raise ValueError('m1 has to lie in (0,1)')
         self.m1 = m1
         self.m_inf = m_inf
+        self.lagrangian = lagrangian
         self.master_solver = master_solver
         self.master_verbose = master_verbose
         if self.f.ndim <= 3:
@@ -119,6 +121,11 @@ class ProximalBundle(Optimizer):
         self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
 
         G = self.g_x.T  # matrix of subgradients
+
+        if self.lagrangian:
+            # project the direction over the active constraints
+            self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0)] = 0
+
         F = self.f_x - self.g_x.T.dot(self.x)  # vector of translated function values
         # each (fxi , gi , xi) gives the constraint:
         #
@@ -191,6 +198,11 @@ class ProximalBundle(Optimizer):
                 break
 
             G = np.vstack((G, self.g_x.T))
+
+            if self.lagrangian:
+                # project the direction over the active constraints
+                self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0)] = 0
+
             F = np.vstack((F, fd - self.g_x.T.dot(last_x)))
 
             if fd <= self.f_x + self.m1 * (v - self.f_x):

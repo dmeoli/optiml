@@ -100,17 +100,20 @@ class LagrangianDual(Optimizer):
                                             mu=self.mu,
                                             max_iter=self.max_iter,
                                             callback=self._update_primal_dual,
+                                            lagrangian=True,
                                             master_solver=self.master_solver,
                                             master_verbose=self.master_verbose,
                                             verbose=self.verbose)
 
         self.__dict__.update(self.optimizer.minimize().__dict__)
+        assert np.all(self.x >= 0)
         return self
 
     def _update_primal_dual(self, opt):
 
-        # project the direction over the active constraints
-        opt.g_x[np.logical_and(opt.x <= 1e-12, -opt.g_x < 0)] = 0
+        if not isinstance(opt, ProximalBundle):
+            # project the direction over the active constraints
+            opt.g_x[np.logical_and(opt.x <= 1e-12, -opt.g_x < 0)] = 0
 
         # compute an heuristic solution out of the solution x of
         # the Lagrangian relaxation by projecting x on the box
