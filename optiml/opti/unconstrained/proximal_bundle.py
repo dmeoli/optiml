@@ -122,6 +122,12 @@ class ProximalBundle(Optimizer):
 
         G = self.g_x.T  # matrix of subgradients
 
+        ng = np.linalg.norm(self.g_x)
+        if self.eps < 0:
+            ng0 = -ng  # norm of first subgradient
+        else:
+            ng0 = 1  # un-scaled stopping criterion
+
         if self.lagrangian:
             # project the direction over the active constraints
             self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0)] = 0
@@ -133,16 +139,10 @@ class ProximalBundle(Optimizer):
         #
         # so we just keep the single constant fi - gi^T * xi instead of xi
 
-        ng = np.linalg.norm(self.g_x)
-        if self.eps < 0:
-            ng0 = -ng  # norm of first subgradient
-        else:
-            ng0 = 1  # un-scaled stopping criterion
-
         while True:
 
             # construct the master problem
-            d = Variable((self.f.ndim, 1))
+            d = Variable((self.x.size, 1))
             v = Variable(1)
 
             M = [v >= F + G @ (self.x.reshape(-1, 1) + d)]
