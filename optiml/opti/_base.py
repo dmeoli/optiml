@@ -32,8 +32,6 @@ class Optimizer:
             self.x0_history = []
             self.x1_history = []
             self.f_x_history = []
-        if not eps > 0:
-            raise ValueError('eps must be > 0')
         self.eps = eps
         if not max_iter > 0:
             raise ValueError('max_iter must be > 0')
