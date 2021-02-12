@@ -248,16 +248,18 @@ def test_solve_svc_as_bcqp_lagrangian_relaxation_with_proximal_bundle_optimizer(
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ProximalBundle, max_iter=100, use_explicit_eq=False))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ProximalBundle, max_iter=50,
+                                      master_solver='osqp', use_explicit_eq=False))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97
+    assert svc.score(X_test, y_test) >= 0.94
 
 
 def test_solve_svc_as_qp_lagrangian_relaxation_with_proximal_bundle_optimizer():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ProximalBundle, max_iter=100, use_explicit_eq=True))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ProximalBundle, max_iter=50,
+                                      master_solver='osqp', use_explicit_eq=True))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.92
 
