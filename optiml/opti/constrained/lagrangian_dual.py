@@ -5,7 +5,7 @@ from .. import Optimizer
 from ..unconstrained import ProximalBundle
 from ..unconstrained.line_search import LineSearchOptimizer
 from ..unconstrained.line_search.line_search import LagrangianArmijoWolfeLineSearch
-from ..unconstrained.stochastic import StochasticOptimizer, AdaGrad
+from ..unconstrained.stochastic import StochasticOptimizer, AdaGrad, StochasticMomentumOptimizer
 
 
 class LagrangianDual(Optimizer):
@@ -73,14 +73,25 @@ class LagrangianDual(Optimizer):
 
         elif issubclass(self.optimizer, StochasticOptimizer):
 
-            self.optimizer = self.optimizer(f=self.f,
-                                            x=self.x,
-                                            step_size=self.step_size,
-                                            epochs=self.max_iter,
-                                            momentum_type=self.momentum_type,
-                                            momentum=self.momentum,
-                                            callback=self._update_primal_dual,
-                                            verbose=self.verbose)
+            if issubclass(self.optimizer, StochasticMomentumOptimizer):
+
+                self.optimizer = self.optimizer(f=self.f,
+                                                x=self.x,
+                                                step_size=self.step_size,
+                                                epochs=self.max_iter,
+                                                momentum_type=self.momentum_type,
+                                                momentum=self.momentum,
+                                                callback=self._update_primal_dual,
+                                                verbose=self.verbose)
+
+            else:
+
+                self.optimizer = self.optimizer(f=self.f,
+                                                x=self.x,
+                                                step_size=self.step_size,
+                                                epochs=self.max_iter,
+                                                callback=self._update_primal_dual,
+                                                verbose=self.verbose)
 
         elif issubclass(self.optimizer, ProximalBundle):
 

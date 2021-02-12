@@ -2,10 +2,10 @@ import warnings
 
 import numpy as np
 
-from . import StochasticOptimizer
+from . import StochasticMomentumOptimizer
 
 
-class AdaMax(StochasticOptimizer):
+class AdaMax(StochasticMomentumOptimizer):
 
     def __init__(self,
                  f,

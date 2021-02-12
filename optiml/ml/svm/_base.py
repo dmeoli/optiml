@@ -19,7 +19,8 @@ from ...opti.constrained import LagrangianDual
 from ...opti.constrained._base import LagrangianConstrainedQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
-from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad
+from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad, \
+    StochasticMomentumOptimizer
 
 
 class SVM(BaseEstimator, ABC):
@@ -437,16 +438,29 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                 X_biased = X
 
             self.loss = self.loss(self, X_biased, y)
-            self.optimizer = self.optimizer(f=self.loss,
-                                            epochs=self.max_iter,
-                                            step_size=self.learning_rate,
-                                            momentum_type=self.momentum_type,
-                                            momentum=self.momentum,
-                                            callback=self._store_train_val_info,
-                                            callback_args=(X_val_biased, y_val),
-                                            shuffle=self.shuffle,
-                                            random_state=self.random_state,
-                                            verbose=self.verbose).minimize()
+
+            if issubclass(self.optimizer, StochasticMomentumOptimizer):
+
+                self.optimizer = self.optimizer(f=self.loss,
+                                                epochs=self.max_iter,
+                                                step_size=self.learning_rate,
+                                                momentum_type=self.momentum_type,
+                                                momentum=self.momentum,
+                                                callback=self._store_train_val_info,
+                                                callback_args=(X_val_biased, y_val),
+                                                shuffle=self.shuffle,
+                                                random_state=self.random_state,
+                                                verbose=self.verbose).minimize()
+            else:
+
+                self.optimizer = self.optimizer(f=self.loss,
+                                                epochs=self.max_iter,
+                                                step_size=self.learning_rate,
+                                                callback=self._store_train_val_info,
+                                                callback_args=(X_val_biased, y_val),
+                                                shuffle=self.shuffle,
+                                                random_state=self.random_state,
+                                                verbose=self.verbose).minimize()
 
         if self.fit_intercept and X.shape[1] > 1:
             self.loss.X = X
@@ -767,16 +781,30 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                 X_biased = X
 
             self.loss = self.loss(self, X_biased, y, self.epsilon)
-            self.optimizer = self.optimizer(f=self.loss,
-                                            epochs=self.max_iter,
-                                            step_size=self.learning_rate,
-                                            momentum_type=self.momentum_type,
-                                            momentum=self.momentum,
-                                            callback=self._store_train_val_info,
-                                            callback_args=(X_val_biased, y_val),
-                                            shuffle=self.shuffle,
-                                            random_state=self.random_state,
-                                            verbose=self.verbose).minimize()
+
+            if issubclass(self.optimizer, StochasticMomentumOptimizer):
+
+                self.optimizer = self.optimizer(f=self.loss,
+                                                epochs=self.max_iter,
+                                                step_size=self.learning_rate,
+                                                momentum_type=self.momentum_type,
+                                                momentum=self.momentum,
+                                                callback=self._store_train_val_info,
+                                                callback_args=(X_val_biased, y_val),
+                                                shuffle=self.shuffle,
+                                                random_state=self.random_state,
+                                                verbose=self.verbose).minimize()
+
+            else:
+
+                self.optimizer = self.optimizer(f=self.loss,
+                                                epochs=self.max_iter,
+                                                step_size=self.learning_rate,
+                                                callback=self._store_train_val_info,
+                                                callback_args=(X_val_biased, y_val),
+                                                shuffle=self.shuffle,
+                                                random_state=self.random_state,
+                                                verbose=self.verbose).minimize()
 
         if self.fit_intercept and X.shape[1] > 1:
             self.loss.X = X

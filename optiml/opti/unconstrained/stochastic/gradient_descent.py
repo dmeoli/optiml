@@ -1,9 +1,9 @@
 import numpy as np
 
-from . import StochasticOptimizer
+from . import StochasticMomentumOptimizer
 
 
-class StochasticGradientDescent(StochasticOptimizer):
+class StochasticGradientDescent(StochasticMomentumOptimizer):
 
     def __init__(self,
                  f,

@@ -14,8 +14,6 @@ class StochasticOptimizer(Optimizer, ABC):
                  f,
                  x=np.random.uniform,
                  step_size=0.01,
-                 momentum_type='none',
-                 momentum=0.9,
                  batch_size=None,
                  eps=1e-6,
                  epochs=1000,
@@ -40,12 +38,6 @@ class StochasticOptimizer(Optimizer, ABC):
         if not step_size > 0:
             raise ValueError('step_size must be > 0')
         self.step_size = step_size
-        if momentum_type not in ('standard', 'nesterov', 'none'):
-            raise ValueError(f'unknown momentum type {momentum_type}')
-        self.momentum_type = momentum_type
-        if not momentum > 0:
-            raise ValueError('momentum must be > 0')
-        self.momentum = momentum
         self.epochs = epochs
         self.epoch = 0
         self.shuffle = shuffle
@@ -99,3 +91,29 @@ class StochasticOptimizer(Optimizer, ABC):
 
     def is_verbose(self):
         return self.verbose and not self.epoch % self.verbose
+
+
+class StochasticMomentumOptimizer(StochasticOptimizer, ABC):
+
+    def __init__(self,
+                 f,
+                 x=np.random.uniform,
+                 step_size=0.01,
+                 momentum_type='none',
+                 momentum=0.9,
+                 batch_size=None,
+                 eps=1e-6,
+                 epochs=1000,
+                 callback=None,
+                 callback_args=(),
+                 shuffle=True,
+                 random_state=None,
+                 verbose=False):
+        super().__init__(f, x, step_size, batch_size, eps, epochs, callback,
+                         callback_args, shuffle, random_state, verbose)
+        if momentum_type not in ('standard', 'nesterov', 'none'):
+            raise ValueError(f'unknown momentum type {momentum_type}')
+        self.momentum_type = momentum_type
+        if not momentum > 0:
+            raise ValueError('momentum must be > 0')
+        self.momentum = momentum

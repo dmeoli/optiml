@@ -14,7 +14,7 @@ from .losses import (CategoricalCrossEntropy, SparseCategoricalCrossEntropy,
 from ...opti import Optimizer
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
-from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent
+from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, StochasticMomentumOptimizer
 
 
 class NeuralNetwork(BaseEstimator, Layer, ABC):
@@ -238,18 +238,34 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
                 y_val = None
 
             self.loss = self.loss(self, X, y)
-            self.optimizer = self.optimizer(f=self.loss,
-                                            x=packed_coef_inter,
-                                            step_size=self.learning_rate,
-                                            epochs=self.max_iter,
-                                            batch_size=self.batch_size,
-                                            momentum_type=self.momentum_type,
-                                            momentum=self.momentum,
-                                            callback=self._store_train_val_info,
-                                            callback_args=(X_val, y_val),
-                                            shuffle=self.shuffle,
-                                            random_state=self.random_state,
-                                            verbose=self.verbose).minimize()
+
+            if issubclass(self.optimizer, StochasticMomentumOptimizer):
+
+                self.optimizer = self.optimizer(f=self.loss,
+                                                x=packed_coef_inter,
+                                                step_size=self.learning_rate,
+                                                epochs=self.max_iter,
+                                                batch_size=self.batch_size,
+                                                momentum_type=self.momentum_type,
+                                                momentum=self.momentum,
+                                                callback=self._store_train_val_info,
+                                                callback_args=(X_val, y_val),
+                                                shuffle=self.shuffle,
+                                                random_state=self.random_state,
+                                                verbose=self.verbose).minimize()
+
+            else:
+
+                self.optimizer = self.optimizer(f=self.loss,
+                                                x=packed_coef_inter,
+                                                step_size=self.learning_rate,
+                                                epochs=self.max_iter,
+                                                batch_size=self.batch_size,
+                                                callback=self._store_train_val_info,
+                                                callback_args=(X_val, y_val),
+                                                shuffle=self.shuffle,
+                                                random_state=self.random_state,
+                                                verbose=self.verbose).minimize()
 
         self._unpack(self.optimizer.x)
 
