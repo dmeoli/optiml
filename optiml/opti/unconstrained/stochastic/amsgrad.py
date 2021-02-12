@@ -9,7 +9,7 @@ class AMSGrad(StochasticOptimizer):
 
     def __init__(self,
                  f,
-                 x,
+                 x=np.random.uniform,
                  batch_size=None,
                  eps=1e-6,
                  epochs=1000,

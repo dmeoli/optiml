@@ -13,6 +13,7 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
     def __init__(self,
                  f,
                  ub,
+                 x=None,
                  eps=1e-6,
                  max_iter=1000,
                  callback=None,
@@ -21,7 +22,7 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
         if not isinstance(f, Quadratic):
             raise TypeError(f'{f} is not an allowed quadratic function')
         super().__init__(f=f,
-                         x=ub / 2,  # starts from the middle of the box
+                         x=x or ub / 2,  # starts from the middle of the box
                          eps=eps,
                          max_iter=max_iter,
                          callback=callback,

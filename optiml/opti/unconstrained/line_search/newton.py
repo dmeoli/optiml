@@ -106,7 +106,7 @@ class Newton(LineSearchOptimizer):
 
     def __init__(self,
                  f,
-                 x,
+                 x=np.random.uniform,
                  eps=1e-6,
                  max_iter=1000,
                  max_f_eval=1000,

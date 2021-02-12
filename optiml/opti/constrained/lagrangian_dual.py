@@ -12,6 +12,7 @@ class LagrangianDual(Optimizer):
 
     def __init__(self,
                  f,
+                 x=np.zeros,
                  optimizer=AdaGrad,
                  eps=1e-6,
                  step_size=0.01,
@@ -26,7 +27,7 @@ class LagrangianDual(Optimizer):
                  master_verbose=False,
                  verbose=False):
         super().__init__(f=f,
-                         x=np.zeros(f.ndim),
+                         x=x,
                          eps=eps,
                          max_iter=max_iter,
                          callback=callback,

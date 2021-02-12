@@ -7,13 +7,13 @@ from optiml.opti.unconstrained.line_search import HeavyBallGradient
 
 
 def test_quadratic():
-    assert np.allclose(HeavyBallGradient(f=quad1, x=np.random.uniform(size=2)).minimize().x, quad1.x_star())
-    assert np.allclose(HeavyBallGradient(f=quad2, x=np.random.uniform(size=2)).minimize().x, quad2.x_star())
+    assert np.allclose(HeavyBallGradient(f=quad1).minimize().x, quad1.x_star())
+    assert np.allclose(HeavyBallGradient(f=quad2).minimize().x, quad2.x_star())
 
 
 def test_Rosenbrock():
     rosen = Rosenbrock()
-    assert np.allclose(HeavyBallGradient(f=rosen, x=np.random.uniform(size=2)).minimize().x, rosen.x_star(), rtol=0.1)
+    assert np.allclose(HeavyBallGradient(f=rosen).minimize().x, rosen.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":

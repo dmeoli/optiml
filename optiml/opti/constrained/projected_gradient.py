@@ -38,6 +38,7 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
     def __init__(self,
                  f,
                  ub,
+                 x=None,
                  eps=1e-6,
                  max_iter=1000,
                  callback=None,
@@ -45,6 +46,7 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
                  verbose=False):
         super().__init__(f=f,
                          ub=ub,
+                         x=x,
                          eps=eps,
                          max_iter=max_iter,
                          callback=callback,

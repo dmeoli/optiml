@@ -12,11 +12,10 @@ from sklearn.preprocessing import LabelBinarizer
 from .kernels import gaussian, Kernel, LinearKernel
 from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, epsilon_insensitive
 from .smo import SMO, SMOClassifier, SMORegression
-from ..neural_network.initializers import random_uniform
 from ...opti import Optimizer
 from ...opti import Quadratic
-from ...opti.constrained import LagrangianDual
 from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
+from ...opti.constrained import LagrangianDual
 from ...opti.constrained._base import LagrangianConstrainedQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
@@ -384,8 +383,6 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=random_uniform(self.loss.ndim,
-                                                             random_state=self.random_state),
                                             max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval,
                                             verbose=self.verbose).minimize()
@@ -407,8 +404,6 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=random_uniform(self.loss.ndim,
-                                                             random_state=self.random_state),
                                             mu=self.mu,
                                             max_iter=self.max_iter,
                                             master_solver=self.master_solver,
@@ -443,8 +438,6 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=random_uniform(self.loss.ndim,
-                                                             random_state=self.random_state),
                                             epochs=self.max_iter,
                                             step_size=self.learning_rate,
                                             momentum_type=self.momentum_type,
@@ -720,8 +713,6 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y, self.epsilon)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=random_uniform(self.loss.ndim,
-                                                             random_state=self.random_state),
                                             max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval,
                                             verbose=self.verbose).minimize()
@@ -743,8 +734,6 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y, self.epsilon)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=random_uniform(self.loss.ndim,
-                                                             random_state=self.random_state),
                                             mu=self.mu,
                                             max_iter=self.max_iter,
                                             master_solver=self.master_solver,
@@ -779,8 +768,6 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y, self.epsilon)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=random_uniform(self.loss.ndim,
-                                                             random_state=self.random_state),
                                             epochs=self.max_iter,
                                             step_size=self.learning_rate,
                                             momentum_type=self.momentum_type,

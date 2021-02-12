@@ -36,6 +36,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
     def __init__(self,
                  f,
                  ub,
+                 x=None,
                  eps=1e-6,
                  max_iter=1000,
                  callback=None,
@@ -43,6 +44,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                  verbose=False):
         super().__init__(f=f,
                          ub=ub,
+                         x=x,
                          eps=eps,
                          max_iter=max_iter,
                          callback=callback,
@@ -108,6 +110,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 # if Q_{AA} is indefinite, i.e., the function is linear along the eigenvectors
                 # correspondent to the null eigenvalues, the system has not solutions, so we
                 # will choose the one that minimizes the residue in the least-squares sense
+                # (waiting for 'symmlq' in scipy.sparse.linalg)
                 xs[A] = lsqr(self.f.Q[A, :][:, A], -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))[0]
 
             if np.logical_and(xs[A] <= self.ub[A] + 1e-12, xs[A] >= -1e-12).all():

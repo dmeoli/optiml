@@ -113,7 +113,7 @@ class HeavyBallGradient(LineSearchOptimizer):
 
     def __init__(self,
                  f,
-                 x,
+                 x=np.random.uniform,
                  beta=0.9,
                  eps=1e-6,
                  max_iter=1000,

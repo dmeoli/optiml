@@ -46,6 +46,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
     def __init__(self,
                  f,
                  ub,
+                 x=None,
                  t=0.,
                  eps=1e-6,
                  max_iter=1000,
@@ -54,6 +55,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
                  verbose=False):
         super().__init__(f=f,
                          ub=ub,
+                         x=x,
                          eps=eps,
                          max_iter=max_iter,
                          callback=callback,

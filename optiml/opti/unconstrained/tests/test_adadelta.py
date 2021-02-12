@@ -7,14 +7,13 @@ from optiml.opti.unconstrained.stochastic import AdaDelta
 
 
 def test_AdaDelta_quadratic():
-    assert np.allclose(AdaDelta(f=quad1, x=np.random.uniform(size=2)).minimize().x, quad1.x_star(), rtol=0.1)
-    assert np.allclose(AdaDelta(f=quad2, x=np.random.uniform(size=2)).minimize().x, quad2.x_star(), rtol=0.1)
+    assert np.allclose(AdaDelta(f=quad1).minimize().x, quad1.x_star(), rtol=0.1)
+    assert np.allclose(AdaDelta(f=quad2).minimize().x, quad2.x_star(), rtol=0.1)
 
 
 def test_AdaDelta_Rosenbrock():
     rosen = Rosenbrock()
-    assert np.allclose(AdaDelta(f=rosen, x=np.random.uniform(size=2), step_size=0.1).minimize().x,
-                       rosen.x_star(), rtol=0.1)
+    assert np.allclose(AdaDelta(f=rosen, step_size=0.1).minimize().x, rosen.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":

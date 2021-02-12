@@ -4,7 +4,7 @@ from autograd import jacobian, hessian
 
 class Optimizer:
 
-    def __init__(self, f, x, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
+    def __init__(self, f, x=np.random.uniform, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
         """
 
         :param f:        the objective function.
@@ -20,7 +20,10 @@ class Optimizer:
             raise TypeError(f'{f} is not an allowed optimization function')
         self.f = f
         if callable(x):
-            self.x = x(f.ndim)
+            try:
+                self.x = x(size=f.ndim)
+            except TypeError:
+                self.x = x(shape=f.ndim)
         else:
             self.x = np.asarray(x, dtype=float)
         self.f_x = np.nan

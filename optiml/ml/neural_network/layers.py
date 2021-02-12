@@ -3,7 +3,7 @@ from abc import ABC
 import autograd.numpy as np
 
 from .activations import Activation, linear
-from .initializers import glorot_uniform, zeros
+from .initializers import glorot_uniform
 from .regularizers import l2
 
 
@@ -45,9 +45,9 @@ class ParamLayer(Layer, ABC):
             shape = [1] * len(coef_shape)
             shape[-1] = coef_shape[-1]
             if inter_init is None:
-                self.inter_ = zeros(shape)
+                self.inter_ = np.zeros(shape)
             elif callable(inter_init):
-                self.inter_ = inter_init(shape, random_state=random_state)
+                self.inter_ = inter_init(shape)
             else:
                 self.inter_ = np.asarray(inter_init, dtype=float).reshape(-1, 1)
 
@@ -69,7 +69,7 @@ class FullyConnected(ParamLayer):
                  n_out,
                  activation=linear,
                  coef_init=glorot_uniform,
-                 inter_init=zeros,
+                 inter_init=np.zeros,
                  coef_reg=l2,
                  inter_reg=l2,
                  fit_intercept=True,

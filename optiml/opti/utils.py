@@ -3,6 +3,8 @@ import numpy as np
 from matplotlib.colors import SymLogNorm
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
+from .unconstrained import ProximalBundle
+
 
 # linear algebra utils
 
@@ -181,14 +183,19 @@ def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max):
 
 def plot_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max):
     fig = plot_surface_contour(f, opt, x_min, x_max, y_min, y_max)
-    x0_history = opt['x0_history'] if isinstance(opt, dict) else opt.x0_history
-    x1_history = opt['x1_history'] if isinstance(opt, dict) else opt.x1_history
-    f_x_history = opt['f_x_history'] if isinstance(opt, dict) else opt.f_x_history
     # 3D trajectory optimization plot
-    fig.axes[0].plot(x0_history, x1_history, f_x_history, marker='.', color='k')
-    angles_x = np.array(x0_history)[1:] - np.array(x0_history)[:-1]
-    angles_y = np.array(x1_history)[1:] - np.array(x1_history)[:-1]
+    fig.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history, marker='.', color='k')
+    angles_x = np.array(opt.x0_history)[1:] - np.array(opt.x0_history)[:-1]
+    angles_y = np.array(opt.x1_history)[1:] - np.array(opt.x1_history)[:-1]
     # 2D trajectory optimization plot
-    fig.axes[1].quiver(x0_history[:-1], x1_history[:-1], angles_x, angles_y,
-                       scale_units='xy', angles='xy', scale=1)
+    fig.axes[1].quiver(opt.x0_history[:-1], opt.x1_history[:-1], angles_x, angles_y,
+                       scale_units='xy', angles='xy', scale=1, color='k')
+    if isinstance(opt, ProximalBundle):  # plot ns steps
+        # 3D trajectory optimization plot
+        fig.axes[0].plot(opt.x0_history_ns, opt.x1_history_ns, opt.f_x_history_ns, marker='.', color='b')
+        angles_x = np.array(opt.x0_history_ns)[1:] - np.array(opt.x0_history_ns)[:-1]
+        angles_y = np.array(opt.x1_history_ns)[1:] - np.array(opt.x1_history_ns)[:-1]
+        # 2D trajectory optimization plot
+        fig.axes[1].quiver(opt.x0_history_ns[:-1], opt.x1_history_ns[:-1], angles_x, angles_y,
+                           scale_units='xy', angles='xy', scale=1, color='b')
     plt.show()

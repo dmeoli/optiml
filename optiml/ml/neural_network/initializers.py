@@ -1,30 +1,9 @@
 import numpy as np
 
 
-def zeros(shape, random_state=None):
-    return np.zeros(shape)
-
-
-def ones(shape, random_state=None):
-    return np.ones(shape)
-
-
-def constant(v, shape, random_state=None):
-    return np.full(shape, v)
-
-
-def random_normal(shape, mean=0., std=1., random_state=None):
-    return np.random.RandomState(random_state).normal(loc=mean, scale=std, size=shape)
-
-
-def random_uniform(shape, low=0., high=1., random_state=None):
-    return np.random.RandomState(random_state).uniform(low=low, high=high, size=shape)
-
-
 def truncated_normal(shape, mean=0., std=1., random_state=None):
     truncated = 2 * std + mean
-    return np.clip(random_normal(shape=shape, mean=mean, std=std,
-                                 random_state=random_state), -truncated, truncated)
+    return np.clip(np.random.RandomState(random_state).normal(size=shape, loc=mean, scale=std), -truncated, truncated)
 
 
 def glorot_normal(shape, random_state=None):
@@ -35,7 +14,7 @@ def glorot_normal(shape, random_state=None):
     and fan_out is the number of output units in the weight tensor."""
     fan_in, fan_out = shape[0], shape[1]
     std = np.sqrt(2. / (fan_in + fan_out))
-    return truncated_normal(shape=(fan_in, fan_out), mean=0., std=std, random_state=random_state)
+    return truncated_normal(shape=shape, mean=0., std=std, random_state=random_state)
 
 
 def glorot_uniform(shape, random_state=None):
@@ -46,7 +25,7 @@ def glorot_uniform(shape, random_state=None):
     and fan_out is the number of output units in the weight tensor."""
     fan_in, fan_out = shape[0], shape[1]
     limit = np.sqrt(6. / (fan_in + fan_out))
-    return random_uniform(shape=shape, low=-limit, high=limit, random_state=random_state)
+    return np.random.RandomState(random_state).uniform(size=shape, low=-limit, high=limit)
 
 
 def he_normal(shape, random_state=None):
@@ -65,4 +44,4 @@ def he_uniform(shape, random_state=None):
     the weight tensor."""
     fan_in, fan_out = shape[0], shape[1]
     limit = np.sqrt(6. / fan_in)
-    return random_uniform(shape=shape, low=-limit, high=limit, random_state=random_state)
+    return np.random.RandomState(random_state).uniform(size=shape, low=-limit, high=limit)

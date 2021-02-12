@@ -97,7 +97,7 @@ class Subgradient(LineSearchOptimizer):
 
     def __init__(self,
                  f,
-                 x,
+                 x=np.random.uniform,
                  eps=1e-6,
                  a_start=1e-4,
                  tau=0.95,
