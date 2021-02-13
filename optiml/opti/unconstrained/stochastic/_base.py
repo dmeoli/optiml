@@ -92,6 +92,25 @@ class StochasticOptimizer(Optimizer, ABC):
     def is_verbose(self):
         return self.verbose and not self.epoch % self.verbose
 
+    def _print_header(self):
+        if self.verbose:
+            print('epoch\titer\t cost\t', end='')
+            if self.f.f_star() < np.inf:
+                print('\t gap\t\t rate', end='')
+                self.prev_f_x = np.inf
+
+    def _print_info(self):
+        if self.is_batch_end() and self.is_verbose():
+            print('\n{:4d}\t{:4d}\t{: 1.4e}'.format(self.epoch, self.iter, self.f_x), end='')
+            if self.f.f_star() < np.inf:
+                print('\t{: 1.4e}'.format(self.f_x - self.f.f_star()), end='')
+                if self.prev_f_x < np.inf:
+                    print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) /
+                                              (self.prev_f_x - self.f.f_star())), end='')
+                else:
+                    print('\t\t', end='')
+                self.prev_f_x = self.f_x
+
 
 class StochasticMomentumOptimizer(StochasticOptimizer, ABC):
 

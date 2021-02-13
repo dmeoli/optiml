@@ -53,29 +53,14 @@ class AMSGrad(StochasticMomentumOptimizer):
 
     def minimize(self):
 
-        if self.verbose:
-            print('epoch\titer\t cost\t', end='')
-            if self.f.f_star() < np.inf:
-                print('\t gap\t\t rate', end='')
-                prev_v = np.inf
+        self._print_header()
 
         est_mom2_crt = 0.
 
         for batch in self.batches:
-            self.f_x, self.g_x = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
+            self.f_x = self.f.function(self.x, *batch)
 
-            if self.is_batch_end():
-
-                if self.is_verbose():
-                    print('\n{:4d}\t{:4d}\t{: 1.4e}'.format(self.epoch, self.iter, self.f_x), end='')
-                    if self.f.f_star() < np.inf:
-                        print('\t{: 1.4e}'.format(self.f_x - self.f.f_star()), end='')
-                        if prev_v < np.inf:
-                            print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) /
-                                                      (prev_v - self.f.f_star())), end='')
-                        else:
-                            print('\t\t', end='')
-                        prev_v = self.f_x
+            self._print_info()
 
             try:
                 self.callback(batch)
@@ -96,7 +81,8 @@ class AMSGrad(StochasticMomentumOptimizer):
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
                 self.x -= step1
-                self.g_x = self.f.jacobian(self.x, *batch)
+
+            self.g_x = self.f.jacobian(self.x, *batch)
 
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
