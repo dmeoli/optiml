@@ -205,11 +205,7 @@ class ProximalBundle(Optimizer):
             if fd <= self.f_x + self.m1 * (v - self.f_x):
                 self.x = last_x
                 self.f_x = fd
-                if self.is_verbose():
-                    print('\tstep: {:s}'.format('SS'), end='')
             else:
-                if self.is_verbose():
-                    print('\tstep: {:s}'.format('NS'), end='')
                 if self.f.ndim <= 3:
                     self.x0_history_ns.append(self.x[0])
                     self.x1_history_ns.append(self.x[1])
