@@ -163,30 +163,18 @@ class SteepestGradientDescent(LineSearchOptimizer):
         last_x = np.zeros(self.f.ndim)  # last point visited in the line search
         last_g = np.zeros(self.f.ndim)  # gradient of last_x
 
-        if self.verbose:
-            print('iter\tfeval\t cost\t\t gnorm', end='')
-            if self.f.f_star() < np.inf:
-                print('\t\t gap\t\t rate', end='')
-                prev_v = np.inf
+        self._print_header()
 
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
-            ng = np.linalg.norm(self.g_x)
+            self.ng = np.linalg.norm(self.g_x)
 
             if self.eps < 0:
-                ng0 = -ng  # norm of first subgradient
+                ng0 = -self.ng  # norm of first subgradient
             else:
                 ng0 = 1  # un-scaled stopping criterion
 
-            if self.is_verbose():
-                print('\n{:4d}\t{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_eval, self.f_x, ng), end='')
-                if self.f.f_star() < np.inf:
-                    print('\t{: 1.4e}'.format(self.f_x - self.f.f_star()), end='')
-                    if prev_v < np.inf:
-                        print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
-                    else:
-                        print('\t\t', end='')
-                    prev_v = self.f_x
+            self._print_info()
 
             try:
                 self.callback()
@@ -194,7 +182,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
                 break
 
             # stopping criteria
-            if ng <= self.eps * ng0:
+            if self.ng <= self.eps * ng0:
                 self.status = 'optimal'
                 break
 
@@ -204,15 +192,11 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
             d = -self.g_x
 
-            phi_p0 = -ng * ng
+            phi_p0 = -self.ng * self.ng
 
             # compute step size
             a, self.f_x, last_x, last_g, self.f_eval = self.line_search.search(
                 d, self.x, last_x, last_g, self.f_eval, self.f_x, phi_p0, self.is_verbose())
-
-            # output statistics
-            if self.is_verbose():
-                print('\tastar: {: 1.4e}'.format(a), end='')
 
             if a <= self.line_search.min_a:
                 self.status = 'error'

@@ -131,7 +131,7 @@ class Subgradient(LineSearchOptimizer):
             print('iter\t cost\t\t gnorm', end='')
             if self.f.f_star() < np.inf:
                 print('\t\t gap\t\t rate', end='')
-                prev_v = np.inf
+                self.prev_f_x = np.inf
 
         x_ref = self.x
         f_ref = np.inf  # best f-value found so far
@@ -140,7 +140,7 @@ class Subgradient(LineSearchOptimizer):
 
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
-            ng = np.linalg.norm(self.g_x)
+            self.ng = np.linalg.norm(self.g_x)
 
             if self.eps > 0:  # target-level step size
                 if self.f_x <= f_ref - delta:  # found a "significantly" better point
@@ -152,16 +152,16 @@ class Subgradient(LineSearchOptimizer):
                 f_ref = self.f_x  # update f_ref
                 x_ref = self.x  # this is the incumbent solution
 
-            # output statistics
             if self.is_verbose():
-                print('\n{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, ng), end='')
+                print('\n{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, self.ng), end='')
                 if self.f.f_star() < np.inf:
                     print('\t{: 1.4e}'.format(self.f_x - self.f.f_star()), end='')
-                    if prev_v < np.inf:
-                        print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) / (prev_v - self.f.f_star())), end='')
+                    if self.prev_f_x < np.inf:
+                        print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) /
+                                                  (self.prev_f_x - self.f.f_star())), end='')
                     else:
                         print('\t\t', end='')
-                    prev_v = self.f_x
+                    self.prev_f_x = self.f_x
 
             try:
                 self.callback()
@@ -174,7 +174,7 @@ class Subgradient(LineSearchOptimizer):
                 self.status = 'optimal'
                 break
 
-            if ng < 1e-12:  # unlikely, but it could happen
+            if self.ng < 1e-12:  # unlikely, but it could happen
                 x_ref = self.x
                 self.status = 'optimal'
                 break
@@ -185,13 +185,12 @@ class Subgradient(LineSearchOptimizer):
 
             # compute step size
             if self.eps > 0:  # Polyak step size with target level
-                a = (self.f_x - f_ref + delta) / ng
+                a = (self.f_x - f_ref + delta) / self.ng
             elif self.eps < 0:  # true Polyak step size (cheating)
-                a = (self.f_x - self.f.f_star()) / ng
+                a = (self.f_x - self.f.f_star()) / self.ng
             else:  # diminishing square-summable step size
                 a = self.line_search.a_start * (1 / self.iter)
 
-            # output statistics
             if self.is_verbose():
                 print('\tastar: {: 1.4e}'.format(a), end='')
 
@@ -204,11 +203,7 @@ class Subgradient(LineSearchOptimizer):
                 self.status = 'unbounded'
                 break
 
-            # compute new point
-            last_x = self.x - (a / ng) * self.g_x
-
-            # compute new point
-            self.x = last_x
+            self.x = self.x - (a / self.ng) * self.g_x
 
             self.iter += 1
 

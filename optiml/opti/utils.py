@@ -137,7 +137,7 @@ def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max):
     # 3D surface plot
     ax = fig.add_subplot(1, 2, 1, projection='3d', elev=50, azim=-50)
     ax.plot_surface(X, Y, Z, norm=SymLogNorm(linthresh=abs(Z.min()), base=np.e), cmap='jet', alpha=0.5)
-    ax.plot(f.x_star()[0], f.x_star()[1], f.f_star(), marker='*', color='r', markersize=10)
+    ax.plot(f.x_star()[0], f.x_star()[1], f.f_star(), marker='*', color='r', linestyle='None', markersize=10)
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
     ax.set_zlabel(f'${type(f).__name__}$')

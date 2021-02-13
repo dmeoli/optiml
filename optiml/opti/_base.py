@@ -56,6 +56,12 @@ class Optimizer:
     def minimize(self):
         raise NotImplementedError
 
+    def _print_header(self):
+        raise NotImplementedError
+
+    def _print_info(self):
+        raise NotImplementedError
+
 
 class OptimizationFunction:
 

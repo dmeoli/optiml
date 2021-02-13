@@ -73,9 +73,29 @@ class LineSearchOptimizer(Optimizer, ABC):
                          callback=callback,
                          callback_args=callback_args,
                          verbose=verbose)
+        self.ng = 0
         self.m_inf = m_inf
         if 0 < m2 < 1:
             self.line_search = ArmijoWolfeLineSearch(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a)
         else:
             self.line_search = BacktrackingLineSearch(f, max_f_eval, m1, a_start, min_a, tau)
         self.f_eval = 1
+
+    def _print_header(self):
+        if self.verbose:
+            print('iter\tfeval\t cost\t\t gnorm', end='')
+            if self.f.f_star() < np.inf:
+                print('\t\t gap\t\t rate', end='')
+                self.prev_f_x = np.inf
+
+    def _print_info(self):
+        if self.is_verbose():
+            print('\n{:4d}\t{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_eval, self.f_x, self.ng), end='')
+            if self.f.f_star() < np.inf:
+                print('\t{: 1.4e}'.format(self.f_x - self.f.f_star()), end='')
+                if self.prev_f_x < np.inf:
+                    print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) /
+                                              (self.prev_f_x - self.f.f_star())), end='')
+                else:
+                    print('\t\t', end='')
+                self.prev_f_x = self.f_x

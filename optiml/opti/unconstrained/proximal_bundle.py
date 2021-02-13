@@ -112,10 +112,9 @@ class ProximalBundle(Optimizer):
     def minimize(self):
 
         if self.verbose:
+            print('iter\t cost\t\t dnorm', end='')
             if self.f.f_star() < np.inf:
-                print('iter\t cost\t\t gap\t\t dnorm', end='')
-            else:
-                print('iter\t cost\t\t dnorm', end='')
+                print('\t\t gap', end='')
 
         # compute first function and subgradient
         self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
@@ -164,18 +163,16 @@ class ProximalBundle(Optimizer):
             d = -d.value.ravel()
             v = v.value.item()
 
-            nd = np.linalg.norm(d)
+            self.nd = np.linalg.norm(d)
 
             # output statistics
             if self.is_verbose():
+                print('\n{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, self.nd), end='')
                 if self.f.f_star() < np.inf:
-                    print('\n{:4d}\t{: 1.4e}\t{: 1.4e}\t{: 1.4e}'.format(
-                        self.iter, self.f_x, (self.f_x - self.f.f_star()) / max(abs(self.f.f_star()), 1), nd), end='')
-                else:
-                    print('\n{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, nd), end='')
+                    print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) / max(abs(self.f.f_star()), 1)), end='')
 
             # stopping criteria
-            if self.mu * nd <= self.eps * ng0:
+            if self.mu * self.nd <= self.eps * ng0:
                 self.status = 'optimal'
                 break
 
