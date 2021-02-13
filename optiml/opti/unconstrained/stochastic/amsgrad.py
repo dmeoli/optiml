@@ -96,11 +96,11 @@ class AMSGrad(StochasticMomentumOptimizer):
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
                 self.x -= step1
+                self.g_x = self.f.jacobian(self.x, *batch)
 
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
 
-            self.g_x = self.f.jacobian(self.x, *batch)
             self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * self.g_x  # update biased 1st moment estimate
             # update biased 2nd raw moment estimate
             self.est_mom2 = self.beta2 * est_mom2_m1 + (1. - self.beta2) * self.g_x ** 2

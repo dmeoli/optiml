@@ -17,32 +17,32 @@ def test_SteepestGradientDescent_Rosenbrock():
     assert np.allclose(SteepestGradientDescent(f=rosen).minimize().x, rosen.x_star())
 
 
-def test_GradientDescent_quadratic():
+def test_StochasticGradientDescent_quadratic():
     assert np.allclose(StochasticGradientDescent(f=quad1).minimize().x, quad1.x_star())
     assert np.allclose(StochasticGradientDescent(f=quad2).minimize().x, quad2.x_star())
 
 
-def test_GradientDescent_Rosenbrock():
+def test_StochasticGradientDescent_Rosenbrock():
     rosen = Rosenbrock()
     assert np.allclose(StochasticGradientDescent(f=rosen).minimize().x, rosen.x_star(), rtol=0.1)
 
 
-def test_GradientDescent_standard_momentum_quadratic():
+def test_StochasticGradientDescent_standard_momentum_quadratic():
     assert np.allclose(StochasticGradientDescent(f=quad1, momentum_type='standard').minimize().x, quad1.x_star())
     assert np.allclose(StochasticGradientDescent(f=quad2, momentum_type='standard').minimize().x, quad2.x_star())
 
 
-def test_GradientDescent_standard_momentum_Rosenbrock():
+def test_StochasticGradientDescent_standard_momentum_Rosenbrock():
     rosen = Rosenbrock()
     assert np.allclose(StochasticGradientDescent(f=rosen, momentum_type='standard').minimize().x, rosen.x_star())
 
 
-def test_GradientDescent_Nesterov_momentum_quadratic():
+def test_StochasticGradientDescent_Nesterov_momentum_quadratic():
     assert np.allclose(StochasticGradientDescent(f=quad1, momentum_type='nesterov').minimize().x, quad1.x_star())
     assert np.allclose(StochasticGradientDescent(f=quad2, momentum_type='nesterov').minimize().x, quad2.x_star())
 
 
-def test_GradientDescent_Nesterov_momentum_Rosenbrock():
+def test_StochasticGradientDescent_Nesterov_momentum_Rosenbrock():
     rosen = Rosenbrock()
     assert np.allclose(StochasticGradientDescent(f=rosen, momentum_type='nesterov').minimize().x, rosen.x_star())
 

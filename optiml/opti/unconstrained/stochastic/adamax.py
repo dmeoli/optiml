@@ -96,11 +96,11 @@ class AdaMax(StochasticMomentumOptimizer):
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
                 self.x -= step1
+                self.g_x = self.f.jacobian(self.x, *batch)
 
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
 
-            self.g_x = self.f.jacobian(self.x, *batch)
             self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * self.g_x  # update biased 1st moment estimate
             # update the exponentially weighted infinity norm
             self.est_mom2 = np.maximum(self.beta2 * est_mom2_m1, np.abs(self.g_x))
