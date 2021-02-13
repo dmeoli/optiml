@@ -106,6 +106,7 @@ class LagrangianDual(Optimizer):
                                             verbose=self.verbose)
 
         self.__dict__.update(self.optimizer.minimize().__dict__)
+        assert np.all(self.x >= 0)
         return self
 
     def _update_primal_dual(self, opt):
