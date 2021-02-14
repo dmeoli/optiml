@@ -1,10 +1,10 @@
 from abc import ABC
 
 import numpy as np
-from scipy.sparse.linalg import lsqr
 
 from optiml.opti import Optimizer
 from optiml.opti import Quadratic
+from optiml.opti.unconstrained.line_search import ConjugateGradient
 from optiml.opti.utils import cholesky_solve
 
 
@@ -95,8 +95,22 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             # since Q is indefinite, i.e., the function is linear along the eigenvectors
             # correspondent to the null eigenvalues, the system has not solutions, so we
             # will choose the one that minimizes the residue in the least-squares sense
-            # (waiting for 'symmlq' in scipy.sparse.linalg)
-            x, self.last_itn, self.last_r1norm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
+
+            # from scipy.sparse.linalg import lsqr
+            # x, self.last_itn, self.last_rnorm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
+
+            # LSQR is formally equivalent to applying CG to the normal equations:
+            #                       A^T A x = A^T b
+
+            # from scipy.sparse.linalg import minres
+            # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
+            # x, _ = minres(Q, ql)
+            # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+
+            quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
+            cg = ConjugateGradient(f=quad, wf=2, verbose=False).minimize()  # Hestenes-Stiefel
+            x, self.last_itn, = cg.x, cg.iter
+            self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
         self.last_lmbda = lmbda
         self.last_x = x
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
@@ -124,8 +138,22 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             # since Q is indefinite, i.e., the function is linear along the eigenvectors
             # correspondent to the null eigenvalues, the system has not solutions, so we
             # will choose the one that minimizes the residue in the least-squares sense
-            # (waiting for 'symmlq' in scipy.sparse.linalg)
-            x, self.last_itn, self.last_r1norm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
+
+            # from scipy.sparse.linalg import lsqr
+            # x, self.last_itn, self.last_rnorm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
+
+            # LSQR is formally equivalent to applying CG to the normal equations:
+            #                       A^T A x = A^T b
+
+            # from scipy.sparse.linalg import minres
+            # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
+            # x, _ = minres(Q, ql)
+            # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+
+            quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
+            cg = ConjugateGradient(f=quad, wf=2, verbose=False).minimize()  # Hestenes-Stiefel
+            x, self.last_itn, = cg.x, cg.iter
+            self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
         self.last_lmbda = lmbda
         self.last_x = x
         return np.hstack((self.ub - x, x))
@@ -176,8 +204,22 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             # since Q is indefinite, i.e., the function is linear along the eigenvectors
             # correspondent to the null eigenvalues, the system has not solutions, so we
             # will choose the one that minimizes the residue in the least-squares sense
-            # (waiting for 'symmlq' in scipy.sparse.linalg)
-            x, self.last_itn, self.last_r1norm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
+
+            # from scipy.sparse.linalg import lsqr
+            # x, self.last_itn, self.last_rnorm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
+
+            # LSQR is formally equivalent to applying CG to the normal equations:
+            #                       A^T A x = A^T b
+
+            # from scipy.sparse.linalg import minres
+            # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
+            # x, _ = minres(Q, ql)
+            # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+
+            quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
+            cg = ConjugateGradient(f=quad, wf=2, verbose=False).minimize()  # Hestenes-Stiefel
+            x, self.last_itn, = cg.x, cg.iter
+            self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
         self.last_lmbda = lmbda
         self.last_x = x
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
@@ -205,8 +247,22 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             # since Q is indefinite, i.e., the function is linear along the eigenvectors
             # correspondent to the null eigenvalues, the system has not solutions, so we
             # will choose the one that minimizes the residue in the least-squares sense
-            # (waiting for 'symmlq' in scipy.sparse.linalg)
-            x, self.last_itn, self.last_r1norm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
+
+            # from scipy.sparse.linalg import lsqr
+            # x, self.last_itn, self.last_rnorm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
+
+            # LSQR is formally equivalent to applying CG to the normal equations:
+            #                       A^T A x = A^T b
+
+            # from scipy.sparse.linalg import minres
+            # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
+            # x, _ = minres(Q, ql)
+            # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+
+            quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
+            cg = ConjugateGradient(f=quad, wf=2, verbose=False).minimize()  # Hestenes-Stiefel
+            x, self.last_itn, = cg.x, cg.iter
+            self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
         self.last_lmbda = lmbda
         self.last_x = x
         return np.hstack((self.A * x, self.ub - x, x))

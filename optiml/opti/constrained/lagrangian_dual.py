@@ -132,13 +132,14 @@ class LagrangianDual(Optimizer):
             print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
             print('\tgap: {: 1.4e}'.format(gap), end='')
             if not self.f.is_posdef:
-                print('\titn: {:3d}'.format(self.f.last_itn), end='')
-                print('\tr1norm: {:1.4e}'.format(self.f.last_r1norm), end='')
+                if self.f.last_itn:
+                    print('\titn: {:3d}'.format(self.f.last_itn), end='')
+                print('\trnorm: {:1.4e}'.format(self.f.last_rnorm), end='')
 
         self.callback(self.callback_args)
 
         if gap <= self.eps:
-            self.status = 'optimal'
+            opt.status = 'optimal'
             raise StopIteration
 
         self.iter += 1
