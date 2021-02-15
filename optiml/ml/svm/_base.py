@@ -282,7 +282,7 @@ class DualSVM(SVM, ABC):
                  master_solver='ecos',
                  master_verbose=False,
                  nonpsd_solver='cg',
-                 nonpsd_verbose=False,
+                 nonpsd_solver_verbose=False,
                  verbose=False):
         super().__init__(C=C,
                          tol=tol,
@@ -308,7 +308,7 @@ class DualSVM(SVM, ABC):
             self.coef_ = np.zeros(0)
         self.intercept_ = 0.
         self.nonpsd_solver = nonpsd_solver
-        self.nonpsd_verbose = nonpsd_verbose
+        self.nonpsd_solver_verbose = nonpsd_solver_verbose
 
 
 class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
@@ -499,7 +499,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  master_solver='ecos',
                  master_verbose=False,
                  nonpsd_solver='cg',
-                 nonpsd_verbose=False,
+                 nonpsd_solver_verbose=False,
                  verbose=False):
         super().__init__(kernel=kernel,
                          C=C,
@@ -515,7 +515,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                          master_solver=master_solver,
                          master_verbose=master_verbose,
                          nonpsd_solver=nonpsd_solver,
-                         nonpsd_verbose=nonpsd_verbose,
+                         nonpsd_solver_verbose=nonpsd_solver_verbose,
                          verbose=verbose)
         self.lb = LabelBinarizer(neg_label=-1)
 
@@ -615,7 +615,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     master_solver=self.master_solver,
                                                     master_verbose=self.master_verbose,
                                                     nonpsd_solver=self.nonpsd_solver,
-                                                    nonpsd_verbose=self.nonpsd_verbose,
+                                                    nonpsd_solver_verbose=self.nonpsd_solver_verbose,
                                                     verbose=self.verbose).minimize()
 
                 else:
@@ -635,7 +635,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     master_solver=self.master_solver,
                                                     master_verbose=self.master_verbose,
                                                     nonpsd_solver=self.nonpsd_solver,
-                                                    nonpsd_verbose=self.nonpsd_verbose,
+                                                    nonpsd_solver_verbose=self.nonpsd_solver_verbose,
                                                     verbose=self.verbose).minimize()
 
                 if self.optimizer.status == 'stopped':
@@ -863,7 +863,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  master_solver='ecos',
                  master_verbose=False,
                  nonpsd_solver='cg',
-                 nonpsd_verbose=False,
+                 nonpsd_solver_verbose=False,
                  verbose=False):
         super().__init__(kernel=kernel,
                          C=C,
@@ -879,7 +879,7 @@ class DualSVR(RegressorMixin, DualSVM):
                          master_solver=master_solver,
                          master_verbose=master_verbose,
                          nonpsd_solver=nonpsd_solver,
-                         nonpsd_verbose=nonpsd_verbose,
+                         nonpsd_solver_verbose=nonpsd_solver_verbose,
                          verbose=verbose)
         if not epsilon >= 0:
             raise ValueError('epsilon must be >= 0')
@@ -985,7 +985,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
                                                         nonpsd_solver=self.nonpsd_solver,
-                                                        nonpsd_verbose=self.nonpsd_verbose,
+                                                        nonpsd_solver_verbose=self.nonpsd_solver_verbose,
                                                         verbose=self.verbose).minimize()
 
                     else:
@@ -1005,7 +1005,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
                                                         nonpsd_solver=self.nonpsd_solver,
-                                                        nonpsd_verbose=self.nonpsd_verbose,
+                                                        nonpsd_solver_verbose=self.nonpsd_solver_verbose,
                                                         verbose=self.verbose).minimize()
 
                     if self.optimizer.status == 'stopped':
