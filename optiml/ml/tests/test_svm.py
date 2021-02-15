@@ -259,7 +259,7 @@ def test_solve_svc_as_qp_lagrangian_relaxation_with_proximal_bundle_optimizer():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
     svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ProximalBundle, max_iter=100,
-                                      dual_solver='minres', use_explicit_eq=True, master_solver='osqp'))
+                                      dual_solver='lsqr', use_explicit_eq=True))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.84
 
