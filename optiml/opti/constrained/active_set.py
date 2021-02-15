@@ -78,7 +78,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
             elif self.nonpsd_solver == 'cg':  # optimization solution (faster, more accurate):
 
                 quad = Quadratic(Q, q)
-                x = ConjugateGradient(f=quad, wf=2).minimize().x  # Hestenes-Stiefel
+                x = ConjugateGradient(f=quad, wf='hs').minimize().x  # Hestenes-Stiefel
 
             else:
 

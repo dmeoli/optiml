@@ -32,10 +32,10 @@ class ConjugateGradient(LineSearchOptimizer):
     #
     # - wf (integer scalar, optional, default value 0): which of the Nonlinear
     #   Conjugated Gradient formulae to use. Possible values are:
-    #   = 0: Fletcher-Reeves
-    #   = 1: Polak-Ribière
-    #   = 2: Hestenes-Stiefel
-    #   = 3: Dai-Yuan
+    #   = fr: Fletcher-Reeves
+    #   = pr: Polak-Ribière
+    #   = hs: Hestenes-Stiefel
+    #   = dy: Dai-Yuan
     #
     # - r_start (integer scalar, optional, default value 0): if > 0, restarts
     #   (setting beta = 0) are performed every n * r_start iterations
@@ -118,7 +118,7 @@ class ConjugateGradient(LineSearchOptimizer):
     def __init__(self,
                  f,
                  x=np.random.uniform,
-                 wf=0,
+                 wf='fr',
                  eps=1e-6,
                  max_iter=1000,
                  max_f_eval=1000,
@@ -148,7 +148,7 @@ class ConjugateGradient(LineSearchOptimizer):
                          callback=callback,
                          callback_args=callback_args,
                          verbose=verbose)
-        if not 0 <= wf <= 3:
+        if wf not in ('fr', 'pr', 'hs', 'dy'):
             raise ValueError(f'unknown NCG formula {wf}')
         self.wf = wf
         if not r_start >= 0:
@@ -198,14 +198,14 @@ class ConjugateGradient(LineSearchOptimizer):
                     if self.is_verbose():
                         print('\t(res)\t\t', end='')
                 else:
-                    if self.wf == 0:  # Fletcher-Reeves
+                    if self.wf == 'fr':  # Fletcher-Reeves
                         beta = (self.ng / np.linalg.norm(past_g)) ** 2
-                    elif self.wf == 1:  # Polak-Ribiere
+                    elif self.wf == 'pr':  # Polak-Ribiere
                         beta = self.g_x.T.dot(self.g_x - past_g) / np.linalg.norm(past_g) ** 2
                         beta = max(beta, 0)
-                    elif self.wf == 2:  # Hestenes-Stiefel
+                    elif self.wf == 'hs':  # Hestenes-Stiefel
                         beta = self.g_x.T.dot(self.g_x - past_g) / (self.g_x - past_g).T.dot(past_d)
-                    elif self.wf == 3:  # Dai-Yuan
+                    elif self.wf == 'dy':  # Dai-Yuan
                         beta = self.ng ** 2 / (self.g_x - past_g).T.dot(past_d)
                     if self.is_verbose():
                         print('\tbeta: {: 1.4e}'.format(beta), end='')

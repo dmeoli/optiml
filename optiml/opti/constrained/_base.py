@@ -98,7 +98,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
                     print(ConjugateGradient.__name__)
 
                 quad = Quadratic(Q, ql)
-                cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
+                cg = ConjugateGradient(f=quad, wf='hs', verbose=self.verbose()).minimize()  # Hestenes-Stiefel
                 x, self.last_itn, = cg.x, cg.iter
 
             else:
