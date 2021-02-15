@@ -1,7 +1,7 @@
 from abc import ABC
 
 import numpy as np
-from scipy.sparse.linalg import minres
+from scipy.sparse.linalg import minres, lsqr
 
 from optiml.opti import Optimizer
 from optiml.opti import Quadratic
@@ -103,10 +103,6 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
                 # correspondent to the null eigenvalues, the system has not solutions, so we
                 # will choose the one that minimizes the residue in the least-squares sense
 
-                # bad: does not exploit the symmetricity of Q
-                # from scipy.sparse.linalg import lsqr
-                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
-
                 # LSQR is formally equivalent to the normal equations:
                 #                       A^T A x = A^T b
 
@@ -121,10 +117,17 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
                 elif self.solver == 'cg':  # optimization solution (faster, more accurate):
 
+                    if self.verbose():
+                        print(ConjugateGradient.__name__)
+
                     quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
                     cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
                     x, self.last_itn, = cg.x, cg.iter
                     self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+                elif self.solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
+
+                    x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
 
                 else:
 
@@ -162,10 +165,6 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
                 # correspondent to the null eigenvalues, the system has not solutions, so we
                 # will choose the one that minimizes the residue in the least-squares sense
 
-                # bad: does not exploit the symmetricity of Q
-                # from scipy.sparse.linalg import lsqr
-                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
-
                 # LSQR is formally equivalent to the normal equations:
                 #                       A^T A x = A^T b
 
@@ -180,10 +179,17 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
                 elif self.solver == 'cg':  # optimization solution (faster, more accurate):
 
+                    if self.verbose():
+                        print(ConjugateGradient.__name__)
+
                     quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
                     cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
                     x, self.last_itn, = cg.x, cg.iter
                     self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+                elif self.solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
+
+                    x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
 
                 else:
 
@@ -244,10 +250,6 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
                 # correspondent to the null eigenvalues, the system has not solutions, so we
                 # will choose the one that minimizes the residue in the least-squares sense
 
-                # bad: does not exploit the symmetricity of Q
-                # from scipy.sparse.linalg import lsqr
-                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
-
                 # LSQR is formally equivalent to the normal equations:
                 #                       A^T A x = A^T b
 
@@ -262,10 +264,17 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
 
                 elif self.solver == 'cg':  # optimization solution (faster, more accurate):
 
+                    if self.verbose():
+                        print(ConjugateGradient.__name__)
+
                     quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
                     cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
                     x, self.last_itn, = cg.x, cg.iter
                     self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+                elif self.solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
+
+                    x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
 
                 else:
 
@@ -303,10 +312,6 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
                 # correspondent to the null eigenvalues, the system has not solutions, so we
                 # will choose the one that minimizes the residue in the least-squares sense
 
-                # bad: does not exploit the symmetricity of Q
-                # from scipy.sparse.linalg import lsqr
-                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
-
                 # LSQR is formally equivalent to the normal equations:
                 #                       A^T A x = A^T b
 
@@ -321,10 +326,17 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
 
                 elif self.solver == 'cg':  # optimization solution (faster, more accurate):
 
+                    if self.verbose():
+                        print(ConjugateGradient.__name__)
+
                     quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
                     cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
                     x, self.last_itn, = cg.x, cg.iter
                     self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+                elif self.solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
+
+                    x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
 
                 else:
 

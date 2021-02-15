@@ -634,7 +634,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
             alphas = self.optimizer.primal_x if isinstance(self.optimizer, LagrangianDual) else self.optimizer.x
 
-        sv = alphas > 1e-5
+        sv = alphas > 1e-6
         self.support_ = np.arange(len(alphas))[sv]
         self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], alphas[sv]
         self.dual_coef_ = self.alphas * self.sv_y
@@ -992,7 +992,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
             alphas_p, alphas_n = np.split(alphas, 2)
 
-        sv = np.logical_or(alphas_p > 1e-5, alphas_n > 1e-5)
+        sv = np.logical_or(alphas_p > 1e-6, alphas_n > 1e-6)
         self.support_ = np.arange(len(alphas_p))[sv]
         self.support_vectors_, self.sv_y, self.alphas_p, self.alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
         self.dual_coef_ = self.alphas_p - self.alphas_n
