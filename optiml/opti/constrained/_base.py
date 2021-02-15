@@ -69,7 +69,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
     def f_star(self):
         return np.inf
 
-    def _symmetric_nonposdef_solve(self, ql):
+    def _solve_sym_nonpsd(self, ql):
         # since Q is indefinite, i.e., the function is linear along the eigenvectors
         # correspondent to the null eigenvalues, the system has not solutions, so we
         # will choose the one that minimizes the residue in the least-squares sense
@@ -83,8 +83,8 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
         else:
 
-            # LSQR is formally equivalent to the normal equations:
-            #                   Q^T Q x = Q^T ql
+            # LSQR `min ||Ax - b||^2` is formally equivalent to the normal equations:
+            #                       A^T A x = A^T b
 
             Q, ql = np.inner(self.Q, self.Q), self.Q.T.dot(ql)
 
@@ -139,7 +139,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                x = self._symmetric_nonposdef_solve(ql)
+                x = self._solve_sym_nonpsd(ql)
             # backup new {lambda : x}
             self.last_lmbda = lmbda
             self.last_x = x
@@ -168,7 +168,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                x = self._symmetric_nonposdef_solve(ql)
+                x = self._solve_sym_nonpsd(ql)
             # backup new {lambda : x}
             self.last_lmbda = lmbda
             self.last_x = x
@@ -220,7 +220,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                x = self._symmetric_nonposdef_solve(ql)
+                x = self._solve_sym_nonpsd(ql)
             # backup new {lambda : x}
             self.last_lmbda = lmbda
             self.last_x = x
@@ -249,7 +249,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                x = self._symmetric_nonposdef_solve(ql)
+                x = self._solve_sym_nonpsd(ql)
             # backup new {lambda : x}
             self.last_lmbda = lmbda
             self.last_x = x
