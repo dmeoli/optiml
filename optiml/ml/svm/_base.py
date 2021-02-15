@@ -19,8 +19,7 @@ from ...opti.constrained import LagrangianDual
 from ...opti.constrained._base import LagrangianConstrainedQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
-from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, AdaGrad, \
-    StochasticMomentumOptimizer
+from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, StochasticMomentumOptimizer
 
 
 class SVM(BaseEstimator, ABC):
@@ -681,7 +680,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  epsilon=0.,
                  tol=1e-4,
                  loss=squared_epsilon_insensitive,
-                 optimizer=AdaGrad,
+                 optimizer=StochasticGradientDescent,
                  max_iter=1000,
                  learning_rate=0.1,
                  momentum_type='none',
