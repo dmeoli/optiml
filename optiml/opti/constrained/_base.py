@@ -134,15 +134,15 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         lmbda_p, lmbda_n = np.split(lmbda, 2)
         ql = self.q + lmbda_p - lmbda_n
         if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x  # speedup: just restore optimal solution
+            x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
                 x = self._solve_sym_nonpsd(ql)
             # backup new {lambda : x}
-            self.last_lmbda = lmbda
-            self.last_x = x
+            self.last_lmbda = lmbda.copy()
+            self.last_x = x.copy()
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
@@ -161,7 +161,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         :return: the gradient wrt lambda
         """
         if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x  # speedup: just restore optimal solution
+            x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
             lmbda_p, lmbda_n = np.split(lmbda, 2)
             ql = self.q + lmbda_p - lmbda_n
@@ -170,8 +170,8 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             else:
                 x = self._solve_sym_nonpsd(ql)
             # backup new {lambda : x}
-            self.last_lmbda = lmbda
-            self.last_x = x
+            self.last_lmbda = lmbda.copy()
+            self.last_x = x.copy()
         return np.hstack((self.ub - x, x))
 
     def hessian(self, x):
@@ -215,15 +215,15 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
         ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
         if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x  # speedup: just restore optimal solution
+            x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
                 x = self._solve_sym_nonpsd(ql)
             # backup new {lambda : x}
-            self.last_lmbda = lmbda
-            self.last_x = x
+            self.last_lmbda = lmbda.copy()
+            self.last_x = x.copy()
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
@@ -242,7 +242,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
         :return: the gradient wrt lambda
         """
         if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x  # speedup: just restore optimal solution
+            x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
             mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
             ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
@@ -251,6 +251,6 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             else:
                 x = self._solve_sym_nonpsd(ql)
             # backup new {lambda : x}
-            self.last_lmbda = lmbda
-            self.last_x = x
+            self.last_lmbda = lmbda.copy()
+            self.last_x = x.copy()
         return np.hstack((self.A * x, self.ub - x, x))

@@ -124,13 +124,14 @@ class LagrangianDual(Optimizer):
 
         # compute an heuristic solution out of the solution x of
         # the Lagrangian relaxation by projecting x on the box
-        self.f.last_x[self.f.last_x < 0] = 0
-        idx = self.f.last_x > self.f.ub
-        self.f.last_x[idx] = self.f.ub[idx]
+        last_x = self.f.last_x.copy()
+        last_x[last_x < 0] = 0
+        idx = last_x > self.f.ub
+        last_x[idx] = self.f.ub[idx]
 
-        v = self.f.primal.function(self.f.last_x)
+        v = self.f.primal.function(last_x)
         if v < self.primal_f_x:
-            self.primal_x = self.f.last_x
+            self.primal_x = last_x
             self.primal_f_x = v
 
         gap = (self.primal_f_x - opt.f_x) / max(abs(self.primal_f_x), 1)
@@ -139,7 +140,7 @@ class LagrangianDual(Optimizer):
             print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
             print('\tgap: {: 1.4e}'.format(gap), end='')
             if not self.f.is_posdef:
-                if self.f.last_itn:
+                if self.f.last_itn:  # `cg` and `lsqr`
                     print('\titn: {:3d}'.format(self.f.last_itn), end='')
                 print('\trnorm: {:1.4e}'.format(self.f.last_rnorm), end='')
 
