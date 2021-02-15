@@ -144,7 +144,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                                        -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
             except np.linalg.LinAlgError:
                 xs[A] = self._solve_sym_nonpsd(self.f.Q[A, :][:, A],
-                                               -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
+                                               (self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
 
             if np.logical_and(xs[A] <= self.ub[A] + 1e-12, xs[A] >= -1e-12).all():
                 # the solution of the unconstrained problem is actually feasible
