@@ -115,7 +115,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
                 # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
 
                 # optimization solution (faster, more accurate):
-                if self.verbose:
+                if self.verbose():
                     print('\n')
                 quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
                 cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
@@ -168,7 +168,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
                 # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
 
                 # optimization solution (faster, more accurate):
-                if self.verbose:
+                if self.verbose():
                     print('\n')
                 quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
                 cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
@@ -244,7 +244,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
                 # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
 
                 # optimization solution (faster, more accurate):
-                if self.verbose:
+                if self.verbose():
                     print('\n')
                 quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
                 cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
@@ -297,7 +297,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
                 # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
 
                 # optimization solution (faster, more accurate):
-                if self.verbose:
+                if self.verbose():
                     print('\n')
                 quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
                 cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
