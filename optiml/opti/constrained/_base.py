@@ -84,7 +84,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         else:
 
             # LSQR `min ||Ax - b||^2` is formally equivalent to the normal equations:
-            #                       A^T A x = A^T b
+            #                           A^T A x = A^T b
 
             Q, ql = np.inner(self.Q, self.Q), self.Q.T.dot(ql)
 
