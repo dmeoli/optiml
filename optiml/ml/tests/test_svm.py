@@ -80,7 +80,7 @@ def test_solve_svr_as_bcqp_with_active_set():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
-    svr = DualSVR(kernel=linear, optimizer=ActiveSet)
+    svr = DualSVR(kernel=linear, optimizer=ActiveSet, nonpsd_solver='minres')
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
@@ -187,7 +187,7 @@ def test_solve_svc_as_bcqp_with_active_set():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ActiveSet))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ActiveSet, nonpsd_solver='minres'))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
