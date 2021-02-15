@@ -62,7 +62,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
 
         if self.nonpsd_solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
 
-            x, = lsqr(Q, -q)[0]
+            x = lsqr(Q, -q)[0]
 
         else:
 
