@@ -25,6 +25,7 @@ class LagrangianDual(Optimizer):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
+                 dual_verbose=False,
                  verbose=False):
         super().__init__(f=f,
                          x=x,
@@ -43,6 +44,7 @@ class LagrangianDual(Optimizer):
         self.mu = mu
         self.master_solver = master_solver
         self.master_verbose = master_verbose
+        self.dual_verbose = dual_verbose
         # initialize the primal problem
         self.primal_x = self.f.ub / 2  # starts from the middle of the box
         self.primal_f_x = self.f.primal.function(self.primal_x)
@@ -52,6 +54,8 @@ class LagrangianDual(Optimizer):
             self.f_x_history = [self.primal_f_x]
 
     def minimize(self):
+
+        self.f.verbose = lambda: self.is_verbose() and self.dual_verbose
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 

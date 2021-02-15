@@ -54,6 +54,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
         self.ub = np.asarray(ub, dtype=float)
+        self.verbose = lambda: False
         # backup {lambda : x}
         self.last_lmbda = None
         self.last_x = None
@@ -89,30 +90,40 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         """
         lmbda_p, lmbda_n = np.split(lmbda, 2)
         ql = self.q + lmbda_p - lmbda_n
-        if self.is_posdef:
-            x = cholesky_solve(self.L, -ql)
+        if np.array_equal(self.last_lmbda, lmbda):
+            x = self.last_x  # speedup: just restore optimal solution
         else:
-            # since Q is indefinite, i.e., the function is linear along the eigenvectors
-            # correspondent to the null eigenvalues, the system has not solutions, so we
-            # will choose the one that minimizes the residue in the least-squares sense
 
-            # from scipy.sparse.linalg import lsqr
-            # x, self.last_itn, self.last_rnorm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
+            if self.is_posdef:
+                x = cholesky_solve(self.L, -ql)
+            else:
+                # since Q is indefinite, i.e., the function is linear along the eigenvectors
+                # correspondent to the null eigenvalues, the system has not solutions, so we
+                # will choose the one that minimizes the residue in the least-squares sense
 
-            # LSQR is formally equivalent to applying CG to the normal equations:
-            #                       A^T A x = A^T b
+                # bad: does not exploit the symmetricity of Q
+                # from scipy.sparse.linalg import lsqr
+                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql)[:4]
 
-            # from scipy.sparse.linalg import minres
-            # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
-            # x, _ = minres(Q, ql)
-            # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+                # LSQR is formally equivalent to the normal equations:
+                #                       A^T A x = A^T b
 
-            quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
-            cg = ConjugateGradient(f=quad, wf=2, verbose=False).minimize()  # Hestenes-Stiefel
-            x, self.last_itn, = cg.x, cg.iter
-            self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
-        self.last_lmbda = lmbda
-        self.last_x = x
+                # numerical solution (slower, lower accurate):
+                # from scipy.sparse.linalg import minres
+                # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
+                # x = minres(Q, ql)[0]
+                # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+
+                # optimization solution (faster, more accurate):
+                if self.verbose:
+                    print('\n')
+                quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
+                cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
+                x, self.last_itn, = cg.x, cg.iter
+                self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+            self.last_lmbda = lmbda
+            self.last_x = x
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
@@ -130,32 +141,42 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         :param lmbda: the dual variable wrt evaluate the gradient
         :return: the gradient wrt lambda
         """
-        lmbda_p, lmbda_n = np.split(lmbda, 2)
-        ql = self.q + lmbda_p - lmbda_n
-        if self.is_posdef:
-            x = cholesky_solve(self.L, -ql)
+        if np.array_equal(self.last_lmbda, lmbda):
+            x = self.last_x  # speedup: just restore optimal solution
         else:
-            # since Q is indefinite, i.e., the function is linear along the eigenvectors
-            # correspondent to the null eigenvalues, the system has not solutions, so we
-            # will choose the one that minimizes the residue in the least-squares sense
+            lmbda_p, lmbda_n = np.split(lmbda, 2)
+            ql = self.q + lmbda_p - lmbda_n
 
-            # from scipy.sparse.linalg import lsqr
-            # x, self.last_itn, self.last_rnorm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
+            if self.is_posdef:
+                x = cholesky_solve(self.L, -ql)
+            else:
+                # since Q is indefinite, i.e., the function is linear along the eigenvectors
+                # correspondent to the null eigenvalues, the system has not solutions, so we
+                # will choose the one that minimizes the residue in the least-squares sense
 
-            # LSQR is formally equivalent to applying CG to the normal equations:
-            #                       A^T A x = A^T b
+                # bad: does not exploit the symmetricity of Q
+                # from scipy.sparse.linalg import lsqr
+                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql)[:4]
 
-            # from scipy.sparse.linalg import minres
-            # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
-            # x, _ = minres(Q, ql)
-            # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+                # LSQR is formally equivalent to the normal equations:
+                #                       A^T A x = A^T b
 
-            quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
-            cg = ConjugateGradient(f=quad, wf=2, verbose=False).minimize()  # Hestenes-Stiefel
-            x, self.last_itn, = cg.x, cg.iter
-            self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
-        self.last_lmbda = lmbda
-        self.last_x = x
+                # numerical solution (slower, lower accurate):
+                # from scipy.sparse.linalg import minres
+                # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
+                # x = minres(Q, ql)[0]
+                # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+
+                # optimization solution (faster, more accurate):
+                if self.verbose:
+                    print('\n')
+                quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
+                cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
+                x, self.last_itn, = cg.x, cg.iter
+                self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+            self.last_lmbda = lmbda
+            self.last_x = x
         return np.hstack((self.ub - x, x))
 
     def hessian(self, x):
@@ -198,30 +219,40 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
         """
         mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
         ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-        if self.is_posdef:
-            x = cholesky_solve(self.L, -ql)
+        if np.array_equal(self.last_lmbda, lmbda):
+            x = self.last_x  # speedup: just restore optimal solution
         else:
-            # since Q is indefinite, i.e., the function is linear along the eigenvectors
-            # correspondent to the null eigenvalues, the system has not solutions, so we
-            # will choose the one that minimizes the residue in the least-squares sense
 
-            # from scipy.sparse.linalg import lsqr
-            # x, self.last_itn, self.last_rnorm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
+            if self.is_posdef:
+                x = cholesky_solve(self.L, -ql)
+            else:
+                # since Q is indefinite, i.e., the function is linear along the eigenvectors
+                # correspondent to the null eigenvalues, the system has not solutions, so we
+                # will choose the one that minimizes the residue in the least-squares sense
 
-            # LSQR is formally equivalent to applying CG to the normal equations:
-            #                       A^T A x = A^T b
+                # bad: does not exploit the symmetricity of Q
+                # from scipy.sparse.linalg import lsqr
+                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql)[:4]
 
-            # from scipy.sparse.linalg import minres
-            # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
-            # x, _ = minres(Q, ql)
-            # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+                # LSQR is formally equivalent to the normal equations:
+                #                       A^T A x = A^T b
 
-            quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
-            cg = ConjugateGradient(f=quad, wf=2, verbose=False).minimize()  # Hestenes-Stiefel
-            x, self.last_itn, = cg.x, cg.iter
-            self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
-        self.last_lmbda = lmbda
-        self.last_x = x
+                # numerical solution (slower, lower accurate):
+                # from scipy.sparse.linalg import minres
+                # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
+                # x = minres(Q, ql)[0]
+                # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+
+                # optimization solution (faster, more accurate):
+                if self.verbose:
+                    print('\n')
+                quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
+                cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
+                x, self.last_itn, = cg.x, cg.iter
+                self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+            self.last_lmbda = lmbda
+            self.last_x = x
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
 
     def jacobian(self, lmbda):
@@ -239,30 +270,40 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
         :param lmbda: the dual variable wrt evaluate the gradient
         :return: the gradient wrt lambda
         """
-        mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-        ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-        if self.is_posdef:
-            x = cholesky_solve(self.L, -ql)
+        if np.array_equal(self.last_lmbda, lmbda):
+            x = self.last_x  # speedup: just restore optimal solution
         else:
-            # since Q is indefinite, i.e., the function is linear along the eigenvectors
-            # correspondent to the null eigenvalues, the system has not solutions, so we
-            # will choose the one that minimizes the residue in the least-squares sense
+            mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
+            ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
 
-            # from scipy.sparse.linalg import lsqr
-            # x, self.last_itn, self.last_rnorm = map(lsqr(self.Q, -ql).__getitem__, [0, 2, 3])
+            if self.is_posdef:
+                x = cholesky_solve(self.L, -ql)
+            else:
+                # since Q is indefinite, i.e., the function is linear along the eigenvectors
+                # correspondent to the null eigenvalues, the system has not solutions, so we
+                # will choose the one that minimizes the residue in the least-squares sense
 
-            # LSQR is formally equivalent to applying CG to the normal equations:
-            #                       A^T A x = A^T b
+                # bad: does not exploit the symmetricity of Q
+                # from scipy.sparse.linalg import lsqr
+                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql)[:4]
 
-            # from scipy.sparse.linalg import minres
-            # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
-            # x, _ = minres(Q, ql)
-            # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+                # LSQR is formally equivalent to the normal equations:
+                #                       A^T A x = A^T b
 
-            quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
-            cg = ConjugateGradient(f=quad, wf=2, verbose=False).minimize()  # Hestenes-Stiefel
-            x, self.last_itn, = cg.x, cg.iter
-            self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
-        self.last_lmbda = lmbda
-        self.last_x = x
+                # numerical solution (slower, lower accurate):
+                # from scipy.sparse.linalg import minres
+                # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
+                # x = minres(Q, ql)[0]
+                # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+
+                # optimization solution (faster, more accurate):
+                if self.verbose:
+                    print('\n')
+                quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
+                cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
+                x, self.last_itn, = cg.x, cg.iter
+                self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+            self.last_lmbda = lmbda
+            self.last_x = x
         return np.hstack((self.A * x, self.ub - x, x))
