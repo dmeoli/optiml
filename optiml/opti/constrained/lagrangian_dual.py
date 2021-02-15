@@ -77,6 +77,17 @@ class LagrangianDual(Optimizer):
                                                                          self.optimizer.line_search.sfgrd,
                                                                          self.optimizer.line_search.min_a)
 
+        elif issubclass(self.optimizer, ProximalBundle):
+
+            self.optimizer = self.optimizer(f=self.f,
+                                            x=self.x,
+                                            mu=self.mu,
+                                            max_iter=self.max_iter,
+                                            callback=self._update_primal_dual,
+                                            lagrangian=True,
+                                            master_solver=self.master_solver,
+                                            master_verbose=self.master_verbose,
+                                            verbose=self.verbose)
 
         elif issubclass(self.optimizer, StochasticOptimizer):
 
@@ -100,17 +111,9 @@ class LagrangianDual(Optimizer):
                                                 callback=self._update_primal_dual,
                                                 verbose=self.verbose)
 
-        elif issubclass(self.optimizer, ProximalBundle):
+        else:
 
-            self.optimizer = self.optimizer(f=self.f,
-                                            x=self.x,
-                                            mu=self.mu,
-                                            max_iter=self.max_iter,
-                                            callback=self._update_primal_dual,
-                                            lagrangian=True,
-                                            master_solver=self.master_solver,
-                                            master_verbose=self.master_verbose,
-                                            verbose=self.verbose)
+            raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
         self.__dict__.update(self.optimizer.minimize().__dict__)
         # assert np.all(self.x >= 0)

@@ -267,6 +267,10 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
                                                 random_state=self.random_state,
                                                 verbose=self.verbose).minimize()
 
+        else:
+
+            raise TypeError(f'{self.optimizer} is not an allowed optimizer')
+
         self._unpack(self.optimizer.x)
 
         return self

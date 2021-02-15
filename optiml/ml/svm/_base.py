@@ -466,6 +466,10 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                                                 random_state=self.random_state,
                                                 verbose=self.verbose).minimize()
 
+        else:
+
+            raise TypeError(f'{self.optimizer} is not an allowed optimizer')
+
         if self.fit_intercept and X.shape[1] > 1:
             self.loss.X = X
 
@@ -817,6 +821,10 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                                                 shuffle=self.shuffle,
                                                 random_state=self.random_state,
                                                 verbose=self.verbose).minimize()
+
+        else:
+
+            raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
         if self.fit_intercept and X.shape[1] > 1:
             self.loss.X = X
