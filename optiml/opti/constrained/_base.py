@@ -69,6 +69,47 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
     def f_star(self):
         return np.inf
 
+    def _symmetric_nonposdef_solve(self, ql):
+        # since Q is indefinite, i.e., the function is linear along the eigenvectors
+        # correspondent to the null eigenvalues, the system has not solutions, so we
+        # will choose the one that minimizes the residue in the least-squares sense
+
+        if self.verbose():
+            print('\n')
+
+        if self.solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
+
+            x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
+
+        else:
+
+            # LSQR is formally equivalent to the normal equations:
+            #                   Q^T Q x = Q^T ql
+
+            Q, ql = np.inner(self.Q, self.Q), self.Q.T.dot(ql)
+
+            if self.solver == 'minres':  # numerical solution (slower, lower accurate):
+
+                x = minres(Q, -ql, show=self.verbose())[0]
+
+            elif self.solver == 'cg':  # optimization solution (faster, more accurate):
+
+                if self.verbose():
+                    print(ConjugateGradient.__name__)
+
+                quad = Quadratic(Q, ql)
+                cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
+                x, self.last_itn, = cg.x, cg.iter
+
+            else:
+
+                raise TypeError(f'{self.solver} is not an allowed solver, '
+                                f'choose one of `cg`, `minres` and `lsqr`')
+
+            self.last_rnorm = np.linalg.norm(-ql - Q.dot(x))
+
+        return x
+
     def function(self, lmbda):
         """
         The Lagrangian relaxation is defined as:
@@ -95,44 +136,11 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         if np.array_equal(self.last_lmbda, lmbda):
             x = self.last_x  # speedup: just restore optimal solution
         else:
-
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                # since Q is indefinite, i.e., the function is linear along the eigenvectors
-                # correspondent to the null eigenvalues, the system has not solutions, so we
-                # will choose the one that minimizes the residue in the least-squares sense
-
-                # LSQR is formally equivalent to the normal equations:
-                #                       A^T A x = A^T b
-
-                if self.verbose():
-                    print('\n')
-
-                if self.solver == 'minres':  # numerical solution (slower, lower accurate):
-
-                    Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
-                    x = minres(Q, ql, show=self.verbose())[0]
-                    self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
-
-                elif self.solver == 'cg':  # optimization solution (faster, more accurate):
-
-                    if self.verbose():
-                        print(ConjugateGradient.__name__)
-
-                    quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
-                    cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
-                    x, self.last_itn, = cg.x, cg.iter
-                    self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
-
-                elif self.solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
-
-                    x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
-
-                else:
-
-                    raise TypeError(f'{self.solver} is not an allowed solver')
-
+                x = self._symmetric_nonposdef_solve(ql)
+            # backup new {lambda : x}
             self.last_lmbda = lmbda
             self.last_x = x
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
@@ -157,44 +165,11 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         else:
             lmbda_p, lmbda_n = np.split(lmbda, 2)
             ql = self.q + lmbda_p - lmbda_n
-
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                # since Q is indefinite, i.e., the function is linear along the eigenvectors
-                # correspondent to the null eigenvalues, the system has not solutions, so we
-                # will choose the one that minimizes the residue in the least-squares sense
-
-                # LSQR is formally equivalent to the normal equations:
-                #                       A^T A x = A^T b
-
-                if self.verbose():
-                    print('\n')
-
-                if self.solver == 'minres':  # numerical solution (slower, lower accurate):
-
-                    Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
-                    x = minres(Q, ql, show=self.verbose())[0]
-                    self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
-
-                elif self.solver == 'cg':  # optimization solution (faster, more accurate):
-
-                    if self.verbose():
-                        print(ConjugateGradient.__name__)
-
-                    quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
-                    cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
-                    x, self.last_itn, = cg.x, cg.iter
-                    self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
-
-                elif self.solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
-
-                    x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
-
-                else:
-
-                    raise TypeError(f'{self.solver} is not an allowed solver')
-
+                x = self._symmetric_nonposdef_solve(ql)
+            # backup new {lambda : x}
             self.last_lmbda = lmbda
             self.last_x = x
         return np.hstack((self.ub - x, x))
@@ -242,44 +217,11 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
         if np.array_equal(self.last_lmbda, lmbda):
             x = self.last_x  # speedup: just restore optimal solution
         else:
-
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                # since Q is indefinite, i.e., the function is linear along the eigenvectors
-                # correspondent to the null eigenvalues, the system has not solutions, so we
-                # will choose the one that minimizes the residue in the least-squares sense
-
-                # LSQR is formally equivalent to the normal equations:
-                #                       A^T A x = A^T b
-
-                if self.verbose():
-                    print('\n')
-
-                if self.solver == 'minres':  # numerical solution (slower, lower accurate):
-
-                    Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
-                    x = minres(Q, ql, show=self.verbose())[0]
-                    self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
-
-                elif self.solver == 'cg':  # optimization solution (faster, more accurate):
-
-                    if self.verbose():
-                        print(ConjugateGradient.__name__)
-
-                    quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
-                    cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
-                    x, self.last_itn, = cg.x, cg.iter
-                    self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
-
-                elif self.solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
-
-                    x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
-
-                else:
-
-                    raise TypeError(f'{self.solver} is not an allowed solver')
-
+                x = self._symmetric_nonposdef_solve(ql)
+            # backup new {lambda : x}
             self.last_lmbda = lmbda
             self.last_x = x
         return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
@@ -304,44 +246,11 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
         else:
             mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
             ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                # since Q is indefinite, i.e., the function is linear along the eigenvectors
-                # correspondent to the null eigenvalues, the system has not solutions, so we
-                # will choose the one that minimizes the residue in the least-squares sense
-
-                # LSQR is formally equivalent to the normal equations:
-                #                       A^T A x = A^T b
-
-                if self.verbose():
-                    print('\n')
-
-                if self.solver == 'minres':  # numerical solution (slower, lower accurate):
-
-                    Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
-                    x = minres(Q, ql, show=self.verbose())[0]
-                    self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
-
-                elif self.solver == 'cg':  # optimization solution (faster, more accurate):
-
-                    if self.verbose():
-                        print(ConjugateGradient.__name__)
-
-                    quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
-                    cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
-                    x, self.last_itn, = cg.x, cg.iter
-                    self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
-
-                elif self.solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
-
-                    x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
-
-                else:
-
-                    raise TypeError(f'{self.solver} is not an allowed solver')
-
+                x = self._symmetric_nonposdef_solve(ql)
+            # backup new {lambda : x}
             self.last_lmbda = lmbda
             self.last_x = x
         return np.hstack((self.A * x, self.ub - x, x))
