@@ -14,7 +14,7 @@ from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, squared_epsilon_in
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
-from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
+from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic, ActiveSet
 from ...opti.constrained import LagrangianDual
 from ...opti.constrained._base import LagrangianConstrainedQuadratic
 from ...opti.unconstrained import ProximalBundle
@@ -281,8 +281,8 @@ class DualSVM(SVM, ABC):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
-                 dual_solver='cg',
-                 dual_verbose=False,
+                 nonpsd_solver='cg',
+                 nonpsd_verbose=False,
                  verbose=False):
         super().__init__(C=C,
                          tol=tol,
@@ -307,8 +307,8 @@ class DualSVM(SVM, ABC):
         if isinstance(self.kernel, LinearKernel):
             self.coef_ = np.zeros(0)
         self.intercept_ = 0.
-        self.dual_solver = dual_solver
-        self.dual_verbose = dual_verbose
+        self.nonpsd_solver = nonpsd_solver
+        self.nonpsd_verbose = nonpsd_verbose
 
 
 class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
@@ -498,8 +498,8 @@ class DualSVC(ClassifierMixin, DualSVM):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
-                 dual_solver='cg',
-                 dual_verbose=False,
+                 nonpsd_solver='cg',
+                 nonpsd_verbose=False,
                  verbose=False):
         super().__init__(kernel=kernel,
                          C=C,
@@ -514,8 +514,8 @@ class DualSVC(ClassifierMixin, DualSVM):
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
-                         dual_solver=dual_solver,
-                         dual_verbose=dual_verbose,
+                         nonpsd_solver=nonpsd_solver,
+                         nonpsd_verbose=nonpsd_verbose,
                          verbose=verbose)
         self.lb = LabelBinarizer(neg_label=-1)
 
@@ -584,10 +584,20 @@ class DualSVC(ClassifierMixin, DualSVM):
                 Q += np.outer(y, y)
                 self.obj = Quadratic(Q, q)
 
-                self.optimizer = self.optimizer(f=self.obj,
-                                                ub=ub,
-                                                max_iter=self.max_iter,
-                                                verbose=self.verbose).minimize()
+                if issubclass(self.optimizer, ActiveSet):
+
+                    self.optimizer = self.optimizer(f=self.obj,
+                                                    ub=ub,
+                                                    max_iter=self.max_iter,
+                                                    nonpsd_solver=self.nonpsd_solver,
+                                                    verbose=self.verbose).minimize()
+
+                else:
+
+                    self.optimizer = self.optimizer(f=self.obj,
+                                                    ub=ub,
+                                                    max_iter=self.max_iter,
+                                                    verbose=self.verbose).minimize()
 
             elif issubclass(self.optimizer, Optimizer):
 
@@ -604,8 +614,8 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     mu=self.mu,
                                                     master_solver=self.master_solver,
                                                     master_verbose=self.master_verbose,
-                                                    dual_solver=self.dual_solver,
-                                                    dual_verbose=self.dual_verbose,
+                                                    nonpsd_solver=self.nonpsd_solver,
+                                                    nonpsd_verbose=self.nonpsd_verbose,
                                                     verbose=self.verbose).minimize()
 
                 else:
@@ -624,8 +634,8 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     mu=self.mu,
                                                     master_solver=self.master_solver,
                                                     master_verbose=self.master_verbose,
-                                                    dual_solver=self.dual_solver,
-                                                    dual_verbose=self.dual_verbose,
+                                                    nonpsd_solver=self.nonpsd_solver,
+                                                    nonpsd_verbose=self.nonpsd_verbose,
                                                     verbose=self.verbose).minimize()
 
                 if self.optimizer.status == 'stopped':
@@ -852,8 +862,8 @@ class DualSVR(RegressorMixin, DualSVM):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
-                 dual_solver='cg',
-                 dual_verbose=False,
+                 nonpsd_solver='cg',
+                 nonpsd_verbose=False,
                  verbose=False):
         super().__init__(kernel=kernel,
                          C=C,
@@ -868,8 +878,8 @@ class DualSVR(RegressorMixin, DualSVM):
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
-                         dual_solver=dual_solver,
-                         dual_verbose=dual_verbose,
+                         nonpsd_solver=nonpsd_solver,
+                         nonpsd_verbose=nonpsd_verbose,
                          verbose=verbose)
         if not epsilon >= 0:
             raise ValueError('epsilon must be >= 0')
@@ -944,10 +954,20 @@ class DualSVR(RegressorMixin, DualSVM):
                     Q += np.outer(e, e)
                     self.obj = Quadratic(Q, q)
 
-                    self.optimizer = self.optimizer(f=self.obj,
-                                                    ub=ub,
-                                                    max_iter=self.max_iter,
-                                                    verbose=self.verbose).minimize()
+                    if issubclass(self.optimizer, ActiveSet):
+
+                        self.optimizer = self.optimizer(f=self.obj,
+                                                        ub=ub,
+                                                        max_iter=self.max_iter,
+                                                        nonpsd_solver=self.nonpsd_solver,
+                                                        verbose=self.verbose).minimize()
+
+                    else:
+
+                        self.optimizer = self.optimizer(f=self.obj,
+                                                        ub=ub,
+                                                        max_iter=self.max_iter,
+                                                        verbose=self.verbose).minimize()
 
                 elif issubclass(self.optimizer, Optimizer):
 
@@ -964,8 +984,8 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         max_f_eval=self.max_f_eval,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
-                                                        dual_solver=self.dual_solver,
-                                                        dual_verbose=self.dual_verbose,
+                                                        nonpsd_solver=self.nonpsd_solver,
+                                                        nonpsd_verbose=self.nonpsd_verbose,
                                                         verbose=self.verbose).minimize()
 
                     else:
@@ -984,8 +1004,8 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         max_f_eval=self.max_f_eval,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
-                                                        dual_solver=self.dual_solver,
-                                                        dual_verbose=self.dual_verbose,
+                                                        nonpsd_solver=self.nonpsd_solver,
+                                                        nonpsd_verbose=self.nonpsd_verbose,
                                                         verbose=self.verbose).minimize()
 
                     if self.optimizer.status == 'stopped':
