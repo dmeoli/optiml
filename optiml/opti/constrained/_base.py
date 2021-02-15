@@ -1,6 +1,7 @@
 from abc import ABC
 
 import numpy as np
+from scipy.sparse.linalg import minres
 
 from optiml.opti import Optimizer
 from optiml.opti import Quadratic
@@ -54,6 +55,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
         self.ub = np.asarray(ub, dtype=float)
+        self.solver = 'cg'
         self.verbose = lambda: False
         # backup {lambda : x}
         self.last_lmbda = None
@@ -103,24 +105,30 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
                 # bad: does not exploit the symmetricity of Q
                 # from scipy.sparse.linalg import lsqr
-                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql)[:4]
+                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
 
                 # LSQR is formally equivalent to the normal equations:
                 #                       A^T A x = A^T b
 
-                # numerical solution (slower, lower accurate):
-                # from scipy.sparse.linalg import minres
-                # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
-                # x = minres(Q, ql)[0]
-                # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
-
-                # optimization solution (faster, more accurate):
                 if self.verbose():
                     print('\n')
-                quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
-                cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
-                x, self.last_itn, = cg.x, cg.iter
-                self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+                if self.solver == 'minres':  # numerical solution (slower, lower accurate):
+
+                    Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
+                    x = minres(Q, ql, show=self.verbose())[0]
+                    self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+
+                elif self.solver == 'cg':  # optimization solution (faster, more accurate):
+
+                    quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
+                    cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
+                    x, self.last_itn, = cg.x, cg.iter
+                    self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+                else:
+
+                    raise TypeError(f'{self.solver} is not an allowed solver')
 
             self.last_lmbda = lmbda
             self.last_x = x
@@ -156,24 +164,30 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
                 # bad: does not exploit the symmetricity of Q
                 # from scipy.sparse.linalg import lsqr
-                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql)[:4]
+                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
 
                 # LSQR is formally equivalent to the normal equations:
                 #                       A^T A x = A^T b
 
-                # numerical solution (slower, lower accurate):
-                # from scipy.sparse.linalg import minres
-                # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
-                # x = minres(Q, ql)[0]
-                # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
-
-                # optimization solution (faster, more accurate):
                 if self.verbose():
                     print('\n')
-                quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
-                cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
-                x, self.last_itn, = cg.x, cg.iter
-                self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+                if self.solver == 'minres':  # numerical solution (slower, lower accurate):
+
+                    Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
+                    x = minres(Q, ql, show=self.verbose())[0]
+                    self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+
+                elif self.solver == 'cg':  # optimization solution (faster, more accurate):
+
+                    quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
+                    cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
+                    x, self.last_itn, = cg.x, cg.iter
+                    self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+                else:
+
+                    raise TypeError(f'{self.solver} is not an allowed solver')
 
             self.last_lmbda = lmbda
             self.last_x = x
@@ -232,24 +246,30 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
 
                 # bad: does not exploit the symmetricity of Q
                 # from scipy.sparse.linalg import lsqr
-                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql)[:4]
+                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
 
                 # LSQR is formally equivalent to the normal equations:
                 #                       A^T A x = A^T b
 
-                # numerical solution (slower, lower accurate):
-                # from scipy.sparse.linalg import minres
-                # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
-                # x = minres(Q, ql)[0]
-                # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
-
-                # optimization solution (faster, more accurate):
                 if self.verbose():
                     print('\n')
-                quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
-                cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
-                x, self.last_itn, = cg.x, cg.iter
-                self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+                if self.solver == 'minres':  # numerical solution (slower, lower accurate):
+
+                    Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
+                    x = minres(Q, ql, show=self.verbose())[0]
+                    self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+
+                elif self.solver == 'cg':  # optimization solution (faster, more accurate):
+
+                    quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
+                    cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
+                    x, self.last_itn, = cg.x, cg.iter
+                    self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+                else:
+
+                    raise TypeError(f'{self.solver} is not an allowed solver')
 
             self.last_lmbda = lmbda
             self.last_x = x
@@ -285,24 +305,30 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
 
                 # bad: does not exploit the symmetricity of Q
                 # from scipy.sparse.linalg import lsqr
-                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql)[:4]
+                # x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
 
                 # LSQR is formally equivalent to the normal equations:
                 #                       A^T A x = A^T b
 
-                # numerical solution (slower, lower accurate):
-                # from scipy.sparse.linalg import minres
-                # Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
-                # x = minres(Q, ql)[0]
-                # self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
-
-                # optimization solution (faster, more accurate):
                 if self.verbose():
                     print('\n')
-                quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
-                cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
-                x, self.last_itn, = cg.x, cg.iter
-                self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+                if self.solver == 'minres':  # numerical solution (slower, lower accurate):
+
+                    Q, ql = np.inner(self.Q, self.Q), -self.Q.T.dot(ql)
+                    x = minres(Q, ql, show=self.verbose())[0]
+                    self.last_rnorm = np.linalg.norm(ql - Q.dot(x))
+
+                elif self.solver == 'cg':  # optimization solution (faster, more accurate):
+
+                    quad = Quadratic(np.inner(self.Q, self.Q), self.Q.T.dot(ql))
+                    cg = ConjugateGradient(f=quad, wf=2, verbose=self.verbose()).minimize()  # Hestenes-Stiefel
+                    x, self.last_itn, = cg.x, cg.iter
+                    self.last_rnorm = np.linalg.norm(quad.q - quad.Q.dot(x))
+
+                else:
+
+                    raise TypeError(f'{self.solver} is not an allowed solver')
 
             self.last_lmbda = lmbda
             self.last_x = x

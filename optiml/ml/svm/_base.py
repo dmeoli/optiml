@@ -281,6 +281,7 @@ class DualSVM(SVM, ABC):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
+                 dual_solver='cg',
                  dual_verbose=False,
                  verbose=False):
         super().__init__(C=C,
@@ -306,6 +307,7 @@ class DualSVM(SVM, ABC):
         if isinstance(self.kernel, LinearKernel):
             self.coef_ = np.zeros(0)
         self.intercept_ = 0.
+        self.dual_solver = dual_solver
         self.dual_verbose = dual_verbose
 
 
@@ -492,6 +494,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
+                 dual_solver='cg',
                  dual_verbose=False,
                  verbose=False):
         super().__init__(kernel=kernel,
@@ -507,6 +510,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
+                         dual_solver=dual_solver,
                          dual_verbose=dual_verbose,
                          verbose=verbose)
         self.lb = LabelBinarizer(neg_label=-1)
@@ -596,6 +600,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     mu=self.mu,
                                                     master_solver=self.master_solver,
                                                     master_verbose=self.master_verbose,
+                                                    dual_solver=self.dual_solver,
                                                     dual_verbose=self.dual_verbose,
                                                     verbose=self.verbose).minimize()
 
@@ -615,6 +620,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     mu=self.mu,
                                                     master_solver=self.master_solver,
                                                     master_verbose=self.master_verbose,
+                                                    dual_solver=self.dual_solver,
                                                     dual_verbose=self.dual_verbose,
                                                     verbose=self.verbose).minimize()
 
@@ -838,6 +844,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
+                 dual_solver='cg',
                  dual_verbose=False,
                  verbose=False):
         super().__init__(kernel=kernel,
@@ -853,6 +860,7 @@ class DualSVR(RegressorMixin, DualSVM):
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
+                         dual_solver=dual_solver,
                          dual_verbose=dual_verbose,
                          verbose=verbose)
         if not epsilon >= 0:
@@ -948,6 +956,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         max_f_eval=self.max_f_eval,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
+                                                        dual_solver=self.dual_solver,
                                                         dual_verbose=self.dual_verbose,
                                                         verbose=self.verbose).minimize()
 
@@ -967,6 +976,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         max_f_eval=self.max_f_eval,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
+                                                        dual_solver=self.dual_solver,
                                                         dual_verbose=self.dual_verbose,
                                                         verbose=self.verbose).minimize()
 
