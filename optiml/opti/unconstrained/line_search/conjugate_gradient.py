@@ -149,7 +149,8 @@ class ConjugateGradient(LineSearchOptimizer):
                          callback_args=callback_args,
                          verbose=verbose)
         if wf not in ('fr', 'pr', 'hs', 'dy'):
-            raise ValueError(f'unknown NCG formula {wf}')
+            raise ValueError(f'unknown NCG formula {wf}, choose '
+                             f'one of `fr`, `pr`, `hs` and `dy`')
         self.wf = wf
         if not r_start >= 0:
             raise ValueError('r_start must be >= 0')
