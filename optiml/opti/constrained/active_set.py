@@ -66,7 +66,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
 
         else:
 
-            # LSQR `min ||Ax - b||^2` is formally equivalent to the normal equations:
+            # LSQR `min ||Ax - b||` is formally equivalent to the normal equations:
             #                           A^T A x = A^T b
 
             Q, q = np.inner(Q, Q), Q.T.dot(q)
