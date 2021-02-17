@@ -36,7 +36,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
     #     necessarily the optimal one
 
     def __init__(self,
-                 f,
+                 quad,
                  ub,
                  x=None,
                  eps=1e-6,
@@ -45,7 +45,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                  callback_args=(),
                  nonpsd_solver='cg',
                  verbose=False):
-        super().__init__(f=f,
+        super().__init__(quad=quad,
                          ub=ub,
                          x=x,
                          eps=eps,

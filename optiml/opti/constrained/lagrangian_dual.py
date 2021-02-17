@@ -3,7 +3,7 @@ import numpy as np
 from . import LagrangianBoxConstrainedQuadratic
 from .. import Optimizer
 from ..unconstrained import ProximalBundle
-from ..unconstrained.line_search import LineSearchOptimizer
+from ..unconstrained.line_search import LineSearchOptimizer, ConjugateGradient
 from ..unconstrained.line_search.line_search import LagrangianArmijoWolfeLineSearch
 from ..unconstrained.stochastic import StochasticOptimizer, AdaGrad, StochasticMomentumOptimizer
 
@@ -14,6 +14,7 @@ class LagrangianDual(Optimizer):
                  f,
                  x=np.zeros,
                  optimizer=AdaGrad,
+                 wf='fr',
                  eps=1e-6,
                  step_size=0.01,
                  momentum_type='none',
@@ -37,6 +38,7 @@ class LagrangianDual(Optimizer):
                          verbose=verbose)
         if not isinstance(f, LagrangianBoxConstrainedQuadratic):
             raise TypeError(f'{f} is not an allowed constrained quadratic optimization function')
+        self.wf = wf
         self.optimizer = optimizer
         self.step_size = step_size
         self.momentum_type = momentum_type
@@ -62,12 +64,25 @@ class LagrangianDual(Optimizer):
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
-            self.optimizer = self.optimizer(f=self.f,
-                                            x=self.x,
-                                            max_iter=self.max_iter,
-                                            max_f_eval=self.max_f_eval,
-                                            callback=self._update_primal_dual,
-                                            verbose=self.verbose)
+            if issubclass(self.optimizer, ConjugateGradient):
+
+                self.optimizer = self.optimizer(f=self.f,
+                                                x=self.x,
+                                                wf=self.wf,
+                                                max_iter=self.max_iter,
+                                                max_f_eval=self.max_f_eval,
+                                                callback=self._update_primal_dual,
+                                                verbose=self.verbose)
+
+            else:
+
+                self.optimizer = self.optimizer(f=self.f,
+                                                x=self.x,
+                                                max_iter=self.max_iter,
+                                                max_f_eval=self.max_f_eval,
+                                                callback=self._update_primal_dual,
+                                                verbose=self.verbose)
+
             self.optimizer.line_search = LagrangianArmijoWolfeLineSearch(self.optimizer.f,
                                                                          self.optimizer.line_search.max_f_eval,
                                                                          self.optimizer.line_search.m1,
@@ -116,7 +131,7 @@ class LagrangianDual(Optimizer):
             raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
         self.__dict__.update(self.optimizer.minimize().__dict__)
-        # assert np.all(self.x >= 0)
+        # assert all(self.x >= 0)
         return self
 
     def _update_primal_dual(self, opt):

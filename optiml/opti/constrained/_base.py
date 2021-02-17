@@ -12,7 +12,7 @@ from optiml.opti.utils import cholesky_solve
 class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
 
     def __init__(self,
-                 f,
+                 quad,
                  ub,
                  x=None,
                  eps=1e-6,
@@ -20,9 +20,9 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
                  callback=None,
                  callback_args=(),
                  verbose=False):
-        if not isinstance(f, Quadratic):
-            raise TypeError(f'{f} is not an allowed quadratic function')
-        super().__init__(f=f,
+        if not isinstance(quad, Quadratic):
+            raise TypeError(f'{quad} is not an allowed quadratic function')
+        super().__init__(f=quad,
                          x=x or ub / 2,  # starts from the middle of the box
                          eps=eps,
                          max_iter=max_iter,
@@ -254,3 +254,6 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
         return np.hstack((self.A * x, self.ub - x, x))
+
+    def hessian(self, x):
+        raise NotImplementedError
