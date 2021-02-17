@@ -4,7 +4,6 @@ from . import LagrangianBoxConstrainedQuadratic
 from .. import Optimizer
 from ..unconstrained import ProximalBundle
 from ..unconstrained.line_search import LineSearchOptimizer, ConjugateGradient
-from ..unconstrained.line_search.line_search import LagrangianArmijoWolfeLineSearch
 from ..unconstrained.stochastic import StochasticOptimizer, AdaGrad, StochasticMomentumOptimizer
 
 
@@ -82,15 +81,6 @@ class LagrangianDual(Optimizer):
                                                 max_f_eval=self.max_f_eval,
                                                 callback=self._update_primal,
                                                 verbose=self.verbose)
-
-            self.optimizer.line_search = LagrangianArmijoWolfeLineSearch(self.optimizer.f,
-                                                                         self.optimizer.line_search.max_f_eval,
-                                                                         self.optimizer.line_search.m1,
-                                                                         self.optimizer.line_search.m2,
-                                                                         self.optimizer.line_search.a_start,
-                                                                         self.optimizer.line_search.tau,
-                                                                         self.optimizer.line_search.sfgrd,
-                                                                         self.optimizer.line_search.min_a)
 
         elif issubclass(self.optimizer, ProximalBundle):
 
