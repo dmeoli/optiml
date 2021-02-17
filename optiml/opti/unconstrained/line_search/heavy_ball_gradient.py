@@ -174,7 +174,7 @@ class HeavyBallGradient(LineSearchOptimizer):
                 self.status = 'optimal'
                 break
 
-            if self.iter > self.max_iter or self.f_eval > self.line_search.max_f_eval:
+            if self.iter >= self.max_iter or self.f_eval > self.line_search.max_f_eval:
                 self.status = 'stopped'
                 break
 
