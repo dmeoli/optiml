@@ -585,7 +585,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 if issubclass(self.optimizer, ActiveSet):
 
-                    self.optimizer = self.optimizer(f=self.obj,
+                    self.optimizer = self.optimizer(quad=self.obj,
                                                     ub=ub,
                                                     max_iter=self.max_iter,
                                                     nonpsd_solver=self.nonpsd_solver,
@@ -593,7 +593,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 else:
 
-                    self.optimizer = self.optimizer(f=self.obj,
+                    self.optimizer = self.optimizer(quad=self.obj,
                                                     ub=ub,
                                                     max_iter=self.max_iter,
                                                     verbose=self.verbose).minimize()
@@ -955,7 +955,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     if issubclass(self.optimizer, ActiveSet):
 
-                        self.optimizer = self.optimizer(f=self.obj,
+                        self.optimizer = self.optimizer(quad=self.obj,
                                                         ub=ub,
                                                         max_iter=self.max_iter,
                                                         nonpsd_solver=self.nonpsd_solver,
@@ -963,7 +963,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     else:
 
-                        self.optimizer = self.optimizer(f=self.obj,
+                        self.optimizer = self.optimizer(quad=self.obj,
                                                         ub=ub,
                                                         max_iter=self.max_iter,
                                                         verbose=self.verbose).minimize()
