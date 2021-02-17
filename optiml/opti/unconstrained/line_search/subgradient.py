@@ -203,7 +203,7 @@ class Subgradient(LineSearchOptimizer):
                 self.status = 'unbounded'
                 break
 
-            self.x = self.x - (a / self.ng) * self.g_x
+            self.x -= (a / self.ng) * self.g_x
 
             self.iter += 1
 

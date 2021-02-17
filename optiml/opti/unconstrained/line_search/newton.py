@@ -143,19 +143,22 @@ class Newton(LineSearchOptimizer):
 
     def minimize(self):
         last_x = np.zeros(self.f.ndim)  # last point visited in the line search
-        last_g = np.zeros(self.f.ndim)  # gradient of last_x
+        last_g_x = np.zeros(self.f.ndim)  # gradient of last_x
 
         self._print_header()
 
+        self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+        self.H_x = self.f.hessian(self.x)
+        self.ng = np.linalg.norm(self.g_x)
+
+        if self.eps < 0:
+            ng0 = -self.ng  # norm of first subgradient
+        else:
+            ng0 = 1  # un-scaled stopping criterion
+
         while True:
-            self.f_x, self.g_x, self.H_x = self.f.function(self.x), self.f.jacobian(self.x), self.f.hessian(self.x)
-            self.ng = np.linalg.norm(self.g_x)
 
-            if self.eps < 0:
-                ng0 = -self.ng  # norm of first subgradient
-            else:
-                ng0 = 1  # un-scaled stopping criterion
-
+            # output statistics
             self._print_info()
 
             try:
@@ -182,23 +185,30 @@ class Newton(LineSearchOptimizer):
                 if self.is_verbose():
                     print('\tdelta: {: 1.4e}'.format(self.delta), end='')
 
+            # compute search direction
             d = -np.linalg.inv(self.H_x).dot(self.g_x)
 
             phi_p0 = self.g_x.T.dot(d)
 
-            # compute step size: in Newton's method, the default initial step size is 1
-            a, self.f_x, last_x, last_g, self.f_eval = self.line_search.search(
-                d, self.x, last_x, last_g, self.f_eval, self.f_x, phi_p0, self.is_verbose())
+            # compute step size
+            a, last_f_x, last_x, last_g_x, self.f_eval = self.line_search.search(
+                d, self.x, last_x, last_g_x, self.f_eval, self.f_x, phi_p0, self.is_verbose())
 
+            # stopping criteria
             if a <= self.line_search.min_a:
                 self.status = 'error'
                 break
 
-            if self.f_x <= self.m_inf:
+            if last_f_x <= self.m_inf:
                 self.status = 'unbounded'
                 break
 
-            self.x = last_x
+            # update new point and gradient
+            self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
+            self.ng = np.linalg.norm(self.g_x)
+
+            # update Hessian
+            self.H_x = self.f.hessian(self.x)
 
             self.iter += 1
 

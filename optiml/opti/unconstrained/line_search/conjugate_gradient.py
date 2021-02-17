@@ -158,19 +158,21 @@ class ConjugateGradient(LineSearchOptimizer):
 
     def minimize(self):
         last_x = np.zeros(self.f.ndim)  # last point visited in the line search
-        last_g = np.zeros(self.f.ndim)  # gradient of last_x
+        last_g_x = np.zeros(self.f.ndim)  # gradient of last_x
 
         self._print_header()
 
+        self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+        self.ng = np.linalg.norm(self.g_x)
+
+        if self.eps < 0:
+            ng0 = -self.ng  # norm of first subgradient
+        else:
+            ng0 = 1  # un-scaled stopping criterion
+
         while True:
-            self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
-            self.ng = np.linalg.norm(self.g_x)
 
-            if self.eps < 0:
-                ng0 = -self.ng  # norm of first subgradient
-            else:
-                ng0 = 1  # un-scaled stopping criterion
-
+            # output statistics
             self._print_info()
 
             try:
@@ -200,14 +202,14 @@ class ConjugateGradient(LineSearchOptimizer):
                         print('\t(res)\t\t', end='')
                 else:
                     if self.wf == 'fr':  # Fletcher-Reeves
-                        beta = (self.ng / np.linalg.norm(past_g)) ** 2
+                        beta = (self.ng / np.linalg.norm(past_g_x)) ** 2
                     elif self.wf == 'pr':  # Polak-Ribiere
-                        beta = self.g_x.T.dot(self.g_x - past_g) / np.linalg.norm(past_g) ** 2
+                        beta = self.g_x.T.dot(self.g_x - past_g_x) / np.linalg.norm(past_g_x) ** 2
                         beta = max(beta, 0)
                     elif self.wf == 'hs':  # Hestenes-Stiefel
-                        beta = self.g_x.T.dot(self.g_x - past_g) / (self.g_x - past_g).T.dot(past_d)
+                        beta = self.g_x.T.dot(self.g_x - past_g_x) / (self.g_x - past_g_x).T.dot(past_d)
                     elif self.wf == 'dy':  # Dai-Yuan
-                        beta = self.ng ** 2 / (self.g_x - past_g).T.dot(past_d)
+                        beta = self.ng ** 2 / (self.g_x - past_g_x).T.dot(past_d)
                     if self.is_verbose():
                         print('\tbeta: {: 1.4e}'.format(beta), end='')
 
@@ -216,26 +218,27 @@ class ConjugateGradient(LineSearchOptimizer):
                 else:
                     d = -self.g_x
 
-            past_g = self.g_x  # previous gradient
+            past_g_x = self.g_x  # previous gradient
             past_d = d  # previous search direction
 
-            # compute step size
             phi_p0 = self.g_x.T.dot(d)
 
             # compute step size
-            a, self.f_x, last_x, last_g, self.f_eval = self.line_search.search(
-                d, self.x, last_x, last_g, self.f_eval, self.f_x, phi_p0, self.is_verbose())
+            a, last_f_x, last_x, last_g_x, self.f_eval = self.line_search.search(
+                d, self.x, last_x, last_g_x, self.f_eval, self.f_x, phi_p0, self.is_verbose())
 
+            # stopping criteria
             if a <= self.line_search.min_a:
                 self.status = 'error'
                 break
 
-            if self.f_x <= self.m_inf:
+            if last_f_x <= self.m_inf:
                 self.status = 'unbounded'
                 break
 
-            # update new point
-            self.x = last_x
+            # update new point and gradient
+            self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
+            self.ng = np.linalg.norm(self.g_x)
 
             self.iter += 1
 

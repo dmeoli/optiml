@@ -144,19 +144,38 @@ class BFGS(LineSearchOptimizer):
 
     def minimize(self):
         last_x = np.zeros(self.f.ndim)  # last point visited in the line search
-        last_g = np.zeros(self.f.ndim)  # gradient of last_x
+        last_g_x = np.zeros(self.f.ndim)  # gradient of last_x
 
         self._print_header()
 
+        self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+        self.ng = np.linalg.norm(self.g_x)
+
+        if self.eps < 0:
+            ng0 = -self.ng  # norm of first subgradient
+        else:
+            ng0 = 1  # un-scaled stopping criterion
+
         while True:
-            self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
-            self.ng = np.linalg.norm(self.g_x)
 
-            if self.eps < 0:
-                ng0 = -self.ng  # norm of first subgradient
-            else:
-                ng0 = 1  # un-scaled stopping criterion
+            # output statistics
+            self._print_info()
 
+            try:
+                self.callback()
+            except StopIteration:
+                break
+
+            # stopping criteria
+            if self.ng <= self.eps * ng0:
+                self.status = 'optimal'
+                break
+
+            if self.iter > self.max_iter or self.f_eval > self.line_search.max_f_eval:
+                self.status = 'stopped'
+                break
+
+            # compute approximation to Newton's direction
             if self.iter == 0:
                 if self.delta > 0:
                     # initial approximation of inverse of Hessian = scaled identity
@@ -176,42 +195,27 @@ class BFGS(LineSearchOptimizer):
                         self.H_x = self.H_x + (1e-6 - lambda_n) * np.identity(self.f.ndim)
                     self.H_x = np.linalg.inv(self.H_x)
 
-            self._print_info()
-
-            try:
-                self.callback()
-            except StopIteration:
-                break
-
-            # stopping criteria
-            if self.ng <= self.eps * ng0:
-                self.status = 'optimal'
-                break
-
-            if self.iter > self.max_iter or self.f_eval > self.line_search.max_f_eval:
-                self.status = 'stopped'
-                break
-
-            # compute approximation to Newton's direction
+            # compute search direction
             d = -self.H_x.dot(self.g_x)
 
             phi_p0 = self.g_x.T.dot(d)
 
-            # compute step size: as in Newton's method, the default initial step size is 1
-            a, self.f_x, last_x, last_g, self.f_eval = self.line_search.search(
-                d, self.x, last_x, last_g, self.f_eval, self.f_x, phi_p0, self.is_verbose())
+            # compute step size
+            a, last_f_x, last_x, last_g_x, self.f_eval = self.line_search.search(
+                d, self.x, last_x, last_g_x, self.f_eval, self.f_x, phi_p0, self.is_verbose())
 
+            # stopping criteria
             if a <= self.line_search.min_a:
                 self.status = 'error'
                 break
 
-            if self.f_x <= self.m_inf:
+            if last_f_x <= self.m_inf:
                 self.status = 'unbounded'
                 break
 
             # update approximation of the Hessian using the BFGS formula
             s = (last_x - self.x).reshape(len(self.g_x), 1)  # s^i = x^{i + 1} - x^i
-            y = (last_g - self.g_x).reshape(len(self.g_x), 1)  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
+            y = (last_g_x - self.g_x).reshape(len(self.g_x), 1)  # y^i = \nabla f(x^{i + 1}) - \nabla f(x^i)
 
             rho = y.T.dot(s).item()
             if rho < 1e-16:
@@ -227,7 +231,9 @@ class BFGS(LineSearchOptimizer):
             D = self.H_x.dot(y) * s.T
             self.H_x = self.H_x + rho * ((1 + rho * y.T.dot(self.H_x).dot(y)) * (s.dot(s.T)) - D - D.T)
 
-            self.x = last_x
+            # update new point and gradient
+            self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
+            self.ng = np.linalg.norm(self.g_x)
 
             self.iter += 1
 
