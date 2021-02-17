@@ -48,11 +48,11 @@ class LineSearch:
     def _f2phi(self, f, d, x, a, f_eval):
         # phi(a) = f(x + a * d)
         last_x = x + a * d
-        phi_a, last_g = f.function(last_x), f.jacobian(last_x)
+        phi_a, last_g_x = f.function(last_x), f.jacobian(last_x)
         f_eval += 1
-        return phi_a, last_x, last_g, f_eval
+        return phi_a, last_x, last_g_x, f_eval
 
-    def search(self, d, x, last_x, last_g, f_eval, phi0=None, phi_p0=None, verbose=False):
+    def search(self, d, x, last_x, last_g_x, f_eval, phi0=None, phi_p0=None, verbose=False):
         raise NotImplementedError
 
 
@@ -102,12 +102,12 @@ class BacktrackingLineSearch(LineSearch):
                          tau=tau,
                          min_a=min_a)
 
-    def search(self, d, x, last_x, last_g, f_eval, phi0=None, phi_p0=None, verbose=False):
+    def search(self, d, x, last_x, last_g_x, f_eval, phi0=None, phi_p0=None, verbose=False):
 
         _as = self.a_start
         ls_iter = 1  # count ls iterations
         while f_eval <= self.max_f_eval and _as > self.min_a:
-            phi_a, last_x, last_g, f_eval = self._f2phi(self.f, d, x, _as, f_eval)
+            phi_a, last_x, last_g_x, f_eval = self._f2phi(self.f, d, x, _as, f_eval)
             if phi_a <= phi0 + self.m1 * _as * phi_p0:  # Armijo condition
                 break
 
@@ -116,7 +116,7 @@ class BacktrackingLineSearch(LineSearch):
 
         if verbose:
             print('\tls: {:2d}\tastar: {: 1.4e}'.format(ls_iter, _as), end='')
-        return _as, phi_a, last_x, last_g, f_eval
+        return _as, phi_a, last_x, last_g_x, f_eval
 
 
 class ArmijoWolfeLineSearch(LineSearch):
@@ -188,18 +188,18 @@ class ArmijoWolfeLineSearch(LineSearch):
             raise ValueError('m2 has to lie in (0,1)')
         self.m2 = m2
 
-    def search(self, d, x, last_x, last_g, f_eval, phi0=None, phi_p0=None, verbose=False):
+    def search(self, d, x, last_x, last_g_x, f_eval, phi0=None, phi_p0=None, verbose=False):
 
         _as = self.a_start
         ls_iter = 1  # count iterations of first phase
         while f_eval <= self.max_f_eval:
-            phi_a, last_x, last_g, f_eval = self._f2phi(self.f, d, x, _as, f_eval)
-            phi_ps = d.T.dot(last_g)  # phi'(a) = <\nabla f(x + a * d), d>
+            phi_a, last_x, last_g_x, f_eval = self._f2phi(self.f, d, x, _as, f_eval)
+            phi_ps = d.T.dot(last_g_x)  # phi'(a) = <\nabla f(x + a * d), d>
             # Armijo and strong Wolfe conditions
             if phi_a <= phi0 + self.m1 * _as * phi_p0 and abs(phi_ps) <= -self.m2 * phi_p0:
                 if verbose:
                     print('\tls: {:2d}\tit: {:2d}\tastar: {: 1.4e}'.format(ls_iter, 0, _as), end='')
-                return _as, phi_a, last_x, last_g, f_eval
+                return _as, phi_a, last_x, last_g_x, f_eval
 
             if phi_ps >= 0:
                 break
@@ -221,8 +221,8 @@ class ArmijoWolfeLineSearch(LineSearch):
             # a = max(am * (1 + self.sfgrd), min(_as * (1 - self.sfgrd), a))
             a = max(am + (_as - am) * self.sfgrd, min(_as - (_as - am) * self.sfgrd, a))
 
-            phi_a, last_x, last_g, f_eval = self._f2phi(self.f, d, x, a, f_eval)
-            phi_p = d.T.dot(last_g)  # phi'(a) = <\nabla f(x + a * d), d>
+            phi_a, last_x, last_g_x, f_eval = self._f2phi(self.f, d, x, a, f_eval)
+            phi_p = d.T.dot(last_g_x)  # phi'(a) = <\nabla f(x + a * d), d>
             # Armijo and strong Wolfe conditions
             if phi_a <= phi0 + self.m1 * a * phi_p0 and abs(phi_p) <= -self.m2 * phi_p0:
                 break
@@ -242,20 +242,20 @@ class ArmijoWolfeLineSearch(LineSearch):
 
         if verbose:
             print('\tit: {:2d}\tastar: {: 1.4e}'.format(ls_iter, a), end='')
-        return a, phi_a, last_x, last_g, f_eval
+        return a, phi_a, last_x, last_g_x, f_eval
 
 
 class LagrangianArmijoWolfeLineSearch(ArmijoWolfeLineSearch):
 
-    def search(self, d, x, last_x, last_g, f_eval, phi0=None, phi_p0=None, verbose=False):
+    def search(self, d, x, last_x, last_g_x, f_eval, phi0=None, phi_p0=None, verbose=False):
 
         _as = self.a_start
         ls_iter = 1  # count iterations of first phase
         am = 0
         a = _as
         phi_pm = phi_p0
-        phi_a, last_x, last_g, f_eval = self._f2phi(self.f, d, x, _as, f_eval)
-        phi_ps = d.T.dot(last_g)  # phi'(a) = <\nabla f(x + a * d), d>
+        phi_a, last_x, last_g_x, f_eval = self._f2phi(self.f, d, x, _as, f_eval)
+        phi_ps = d.T.dot(last_g_x)  # phi'(a) = <\nabla f(x + a * d), d>
         while f_eval <= self.max_f_eval and _as - am > self.min_a and phi_ps > 1e-12:
             # compute the new value by safeguarded quadratic interpolation
             a = (am * phi_ps - _as * phi_pm) / (phi_ps - phi_pm)
@@ -263,8 +263,8 @@ class LagrangianArmijoWolfeLineSearch(ArmijoWolfeLineSearch):
             # a = max(am * (1 + self.sfgrd), min(_as * (1 - self.sfgrd), a))
             a = max(am + (_as - am) * self.sfgrd, min(_as - (_as - am) * self.sfgrd, a))
 
-            phi_a, last_x, last_g, f_eval = self._f2phi(self.f, d, x, a, f_eval)
-            phi_p = d.T.dot(last_g)  # phi'(a) = <\nabla f(x + a * d), d>
+            phi_a, last_x, last_g_x, f_eval = self._f2phi(self.f, d, x, a, f_eval)
+            phi_p = d.T.dot(last_g_x)  # phi'(a) = <\nabla f(x + a * d), d>
             # Armijo and strong Wolfe conditions
             if phi_a <= phi0 + self.m1 * a * phi_p0 and abs(phi_p) <= -self.m2 * phi_p0:
                 break
@@ -284,4 +284,4 @@ class LagrangianArmijoWolfeLineSearch(ArmijoWolfeLineSearch):
 
         if verbose:
             print('\tls: {:2d}\tastar: {: 1.4e}'.format(ls_iter, a), end='')
-        return a, phi_a, last_x, last_g, f_eval
+        return a, phi_a, last_x, last_g_x, f_eval
