@@ -71,7 +71,7 @@ class LagrangianDual(Optimizer):
                                                 wf=self.wf,
                                                 max_iter=self.max_iter,
                                                 max_f_eval=self.max_f_eval,
-                                                callback=self._update_primal_dual,
+                                                callback=self._update_primal,
                                                 verbose=self.verbose)
 
             else:
@@ -80,7 +80,7 @@ class LagrangianDual(Optimizer):
                                                 x=self.x,
                                                 max_iter=self.max_iter,
                                                 max_f_eval=self.max_f_eval,
-                                                callback=self._update_primal_dual,
+                                                callback=self._update_primal,
                                                 verbose=self.verbose)
 
             self.optimizer.line_search = LagrangianArmijoWolfeLineSearch(self.optimizer.f,
@@ -98,7 +98,7 @@ class LagrangianDual(Optimizer):
                                             x=self.x,
                                             mu=self.mu,
                                             max_iter=self.max_iter,
-                                            callback=self._update_primal_dual,
+                                            callback=self._update_primal,
                                             lagrangian=True,
                                             master_solver=self.master_solver,
                                             master_verbose=self.master_verbose,
@@ -114,7 +114,7 @@ class LagrangianDual(Optimizer):
                                                 epochs=self.max_iter,
                                                 momentum_type=self.momentum_type,
                                                 momentum=self.momentum,
-                                                callback=self._update_primal_dual,
+                                                callback=self._update_primal,
                                                 verbose=self.verbose)
 
             else:
@@ -123,7 +123,7 @@ class LagrangianDual(Optimizer):
                                                 x=self.x,
                                                 step_size=self.step_size,
                                                 epochs=self.max_iter,
-                                                callback=self._update_primal_dual,
+                                                callback=self._update_primal,
                                                 verbose=self.verbose)
 
         else:
@@ -131,10 +131,10 @@ class LagrangianDual(Optimizer):
             raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
         self.__dict__.update(self.optimizer.minimize().__dict__)
-        # assert all(self.x >= 0)
+        # assert all(self.x >= 0)  # Lagrange multipliers
         return self
 
-    def _update_primal_dual(self, opt):
+    def _update_primal(self, opt):
 
         if not isinstance(opt, ProximalBundle):
             # project the direction over the active constraints
