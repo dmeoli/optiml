@@ -70,9 +70,9 @@ def test_solve_linear_svr_with_stochastic_optimizers():
     # svr.fit(X_train, y_train)
     # assert svr.score(X_test, y_test) >= 0.77
 
-    # svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=RProp)
-    # svr.fit(X_train, y_train)
-    # assert svr.score(X_test, y_test) >= 0.77
+    svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=RProp)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.77
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=RMSProp)
     svr.fit(X_train, y_train)
@@ -278,13 +278,13 @@ def test_solve_linear_svc_with_stochastic_optimizers():
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.57
 
-    svc = OneVsRestClassifier(PrimalSVC(loss=squared_hinge, optimizer=AdaDelta))
-    svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.57
-
-    # svc = OneVsRestClassifier(PrimalSVC(loss=squared_hinge, optimizer=RProp))
+    # svc = OneVsRestClassifier(PrimalSVC(loss=squared_hinge, optimizer=AdaDelta))
     # svc = svc.fit(X_train, y_train)
     # assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=squared_hinge, optimizer=RProp))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
 
     svc = OneVsRestClassifier(PrimalSVC(loss=squared_hinge, optimizer=RMSProp))
     svc = svc.fit(X_train, y_train)

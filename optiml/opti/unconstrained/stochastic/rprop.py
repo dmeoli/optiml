@@ -64,14 +64,7 @@ class RProp(StochasticOptimizer):
 
             self.g_x = self.f.jacobian(self.x, *batch)
 
-            # compute search direction
-            d = -self.g_x
-
-            if self.is_lagrangian_dual():
-                # project the direction over the active constraints
-                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
-
-            grad_prod = g_x_m1 * d
+            grad_prod = g_x_m1 * self.g_x
 
             changes[grad_prod > 0] *= self.step_grow
             changes[grad_prod < 0] *= self.step_shrink
@@ -79,7 +72,7 @@ class RProp(StochasticOptimizer):
 
             step = changes * np.sign(self.g_x)
 
-            self.x += step
+            self.x -= step
 
             self.iter += 1
 
