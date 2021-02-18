@@ -76,9 +76,12 @@ class AMSGrad(StochasticMomentumOptimizer):
                 break
 
             if self.momentum_type == 'standard':
+
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
+
             elif self.momentum_type == 'nesterov':
+
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
                 self.x -= step1
