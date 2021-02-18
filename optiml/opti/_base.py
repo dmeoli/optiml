@@ -8,7 +8,7 @@ class Optimizer(ABC):
 
     def __init__(self,
                  f,
-                 x=np.random.uniform,
+                 x=None,
                  eps=1e-6,
                  max_iter=1000,
                  callback=None,
@@ -28,8 +28,11 @@ class Optimizer(ABC):
         if not isinstance(f, OptimizationFunction):
             raise TypeError(f'{f} is not an allowed optimization function')
         self.f = f
-        if hasattr(self.f, 'primal'):
-            x = np.zeros
+        if x is None:
+            if self.is_lagrangian_dual():
+                x = np.zeros
+            else:
+                x = np.random.uniform
         if callable(x):
             try:
                 self.x = x(size=f.ndim)
@@ -45,7 +48,7 @@ class Optimizer(ABC):
         self.max_iter = max_iter
         self.iter = 0
         self.status = 'unknown'
-        if hasattr(self.f, 'primal'):
+        if self.is_lagrangian_dual():
             # initialize the primal problem
             self.primal_x = self.f.ub / 2  # starts from the middle of the box
             self.primal_f_x = self.f.primal.function(self.primal_x)
@@ -62,9 +65,12 @@ class Optimizer(ABC):
         self.callback_args = callback_args
         self.verbose = verbose
 
+    def is_lagrangian_dual(self):
+        return hasattr(self.f, 'primal')
+
     def callback(self, args=()):
 
-        if hasattr(self.f, 'primal'):  # update primal
+        if self.is_lagrangian_dual():  # update primal
 
             # compute an heuristic solution out of the solution x of
             # the Lagrangian relaxation by projecting x on the box

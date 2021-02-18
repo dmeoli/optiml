@@ -110,7 +110,7 @@ class BFGS(LineSearchOptimizer):
 
     def __init__(self,
                  f,
-                 x=np.random.uniform,
+                 x=None,
                  eps=1e-6,
                  max_iter=1000,
                  max_f_eval=1000,
@@ -143,8 +143,8 @@ class BFGS(LineSearchOptimizer):
         self.delta = delta
 
     def minimize(self):
-        last_x = np.zeros(self.f.ndim)  # last point visited in the line search
-        last_g_x = np.zeros(self.f.ndim)  # gradient of last_x
+        last_x = np.zeros_like(self.x)  # last point visited in the line search
+        last_g_x = np.zeros_like(self.x)  # gradient of last_x
 
         self._print_header()
 
@@ -198,7 +198,7 @@ class BFGS(LineSearchOptimizer):
             # compute search direction
             d = -self.H_x.dot(self.g_x)
 
-            if hasattr(self.f, 'primal'):
+            if self.is_lagrangian_dual():
                 # project the direction over the active constraints
                 d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
@@ -244,7 +244,7 @@ class BFGS(LineSearchOptimizer):
         if self.verbose:
             print('\n')
 
-        if hasattr(self.f, 'primal'):
-            assert all(self.x >= 0)  # Lagrange multipliers
+        # if self.is_lagrangian_dual():
+        #     assert all(self.x >= 0)  # Lagrange multipliers
 
         return self

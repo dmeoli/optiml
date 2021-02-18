@@ -10,7 +10,7 @@ class LineSearchOptimizer(Optimizer, ABC):
 
     def __init__(self,
                  f,
-                 x=np.random.uniform,
+                 x=None,
                  eps=1e-6,
                  max_iter=1000,
                  max_f_eval=1000,
@@ -76,7 +76,7 @@ class LineSearchOptimizer(Optimizer, ABC):
         self.ng = 0
         self.m_inf = m_inf
         if 0 < m2 < 1:
-            if hasattr(self.f, 'primal'):  # Lagrangian dual
+            if self.is_lagrangian_dual():
                 self.line_search = LagrangianArmijoWolfeLineSearch(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a)
             else:
                 self.line_search = ArmijoWolfeLineSearch(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a)

@@ -134,7 +134,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
             # (and anyway, any QP problem with equality constraints reduces to an
             # unconstrained one)
 
-            xs = np.zeros(self.f.ndim)
+            xs = np.zeros_like(self.x)
             xs[U] = self.ub[U]
 
             try:
@@ -181,7 +181,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 # this means that d = xs - self.x is a descent direction, use it
                 # of course, only the "free" part really needs to be computed
 
-                d = np.zeros(self.f.ndim)
+                d = np.zeros_like(self.x)
                 d[A] = xs[A] - self.x[A]
 
                 # first, compute the maximum feasible step size max_t such that:

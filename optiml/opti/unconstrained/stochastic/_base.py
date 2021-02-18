@@ -12,7 +12,7 @@ class StochasticOptimizer(Optimizer, ABC):
 
     def __init__(self,
                  f,
-                 x=np.random.uniform,
+                 x=None,
                  step_size=0.01,
                  batch_size=None,
                  eps=1e-6,
@@ -116,7 +116,7 @@ class StochasticMomentumOptimizer(StochasticOptimizer, ABC):
 
     def __init__(self,
                  f,
-                 x=np.random.uniform,
+                 x=None,
                  step_size=0.01,
                  momentum_type='none',
                  momentum=0.9,

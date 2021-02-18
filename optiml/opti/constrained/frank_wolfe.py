@@ -76,7 +76,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
 
             # solve min { <g, y> : 0 <= y <= u }
-            y = np.zeros(self.f.ndim)
+            y = np.zeros_like(self.x)
             idx = self.g_x < 0
             y[idx] = self.ub[idx]
 

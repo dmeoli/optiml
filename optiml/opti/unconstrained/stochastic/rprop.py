@@ -7,7 +7,7 @@ class RProp(StochasticOptimizer):
 
     def __init__(self,
                  f,
-                 x=np.random.uniform,
+                 x=None,
                  batch_size=None,
                  eps=1e-6,
                  epochs=1000,
@@ -67,7 +67,7 @@ class RProp(StochasticOptimizer):
             # compute search direction
             d = -self.g_x
 
-            if hasattr(self.f, 'primal'):
+            if self.is_lagrangian_dual():
                 # project the direction over the active constraints
                 d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
@@ -88,7 +88,7 @@ class RProp(StochasticOptimizer):
         if self.verbose:
             print('\n')
 
-        # if hasattr(self.f, 'primal'):
+        # if self.is_lagrangian_dual():
         #     assert all(self.x >= 0)  # Lagrange multipliers
 
         return self
