@@ -56,6 +56,7 @@ class Adam(StochasticMomentumOptimizer):
         self._print_header()
 
         for batch in self.batches:
+
             self.f_x = self.f.function(self.x, *batch)
 
             self._print_info()
@@ -111,7 +112,7 @@ class Adam(StochasticMomentumOptimizer):
         if self.verbose:
             print('\n')
 
-        if hasattr(self.f, 'primal'):
-            assert all(self.x >= 0)  # Lagrange multipliers
+        # if hasattr(self.f, 'primal'):
+        #     assert all(self.x >= 0)  # Lagrange multipliers
 
         return self

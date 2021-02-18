@@ -38,6 +38,7 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
         self._print_header()
 
         for batch in self.batches:
+
             self.f_x = self.f.function(self.x, *batch)
 
             self._print_info()
@@ -55,32 +56,58 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
                 break
 
             if self.momentum_type == 'standard':
+
+                self.g_x = self.f.jacobian(self.x, *batch)
                 step_m1 = self.step
-                step1 = self.momentum * step_m1
+
+                # compute search direction
+                d = -self.g_x
+
+                if hasattr(self.f, 'primal'):
+                    # project the direction over the active constraints
+                    d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
+                self.step = self.step_size * d + self.momentum * step_m1
+                self.x += self.step
+
             elif self.momentum_type == 'nesterov':
+
                 step_m1 = self.step
-                step1 = self.momentum * step_m1
-                self.x -= step1
+                big_jump = self.momentum * step_m1
+                self.x += big_jump
+                self.g_x = self.f.jacobian(self.x, *batch)
 
-            self.g_x = self.f.jacobian(self.x, *batch)
-            step2 = self.step_size * self.g_x
+                # compute search direction
+                d = -self.g_x
 
-            if self.momentum_type == 'standard':
-                self.x -= step1 + step2
-            else:
-                self.x -= step2
+                if hasattr(self.f, 'primal'):
+                    # project the direction over the active constraints
+                    d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
-            if self.momentum_type != 'none':
-                self.step = step1 + step2
-            else:
-                self.step = step2
+                correction = self.step_size * d
+                self.x += correction
+                self.step = big_jump + correction
+
+            elif self.momentum_type == 'none':
+
+                self.g_x = self.f.jacobian(self.x, *batch)
+
+                # compute search direction
+                d = -self.g_x
+
+                if hasattr(self.f, 'primal'):
+                    # project the direction over the active constraints
+                    d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
+                self.step = self.step_size * d
+                self.x += self.step
 
             self.iter += 1
 
         if self.verbose:
             print('\n')
 
-        if hasattr(self.f, 'primal'):
-            assert all(self.x >= 0)  # Lagrange multipliers
+        # if hasattr(self.f, 'primal'):
+        #     assert all(self.x >= 0)  # Lagrange multipliers
 
         return self

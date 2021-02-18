@@ -45,7 +45,8 @@ class RProp(StochasticOptimizer):
         changes = np.zeros_like(self.x)
 
         for batch in self.batches:
-            self.f_x, self.g_x = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
+
+            self.f_x = self.f.function(self.x, *batch)
 
             self._print_info()
 
@@ -61,7 +62,16 @@ class RProp(StochasticOptimizer):
                 self.status = 'stopped'
                 break
 
-            grad_prod = g_x_m1 * self.g_x
+            self.g_x = self.f.jacobian(self.x, *batch)
+
+            # compute search direction
+            d = -self.g_x
+
+            if hasattr(self.f, 'primal'):
+                # project the direction over the active constraints
+                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
+            grad_prod = g_x_m1 * d
 
             changes[grad_prod > 0] *= self.step_grow
             changes[grad_prod < 0] *= self.step_shrink
@@ -69,7 +79,7 @@ class RProp(StochasticOptimizer):
 
             step = changes * np.sign(self.g_x)
 
-            self.x -= step
+            self.x += step
 
             self.iter += 1
 
@@ -78,7 +88,7 @@ class RProp(StochasticOptimizer):
         if self.verbose:
             print('\n')
 
-        if hasattr(self.f, 'primal'):
-            assert all(self.x >= 0)  # Lagrange multipliers
+        # if hasattr(self.f, 'primal'):
+        #     assert all(self.x >= 0)  # Lagrange multipliers
 
         return self

@@ -39,7 +39,8 @@ class RMSProp(StochasticOptimizer):
         self._print_header()
 
         for batch in self.batches:
-            self.f_x, self.g_x = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
+
+            self.f_x = self.f.function(self.x, *batch)
 
             self._print_info()
 
@@ -55,17 +56,26 @@ class RMSProp(StochasticOptimizer):
                 self.status = 'stopped'
                 break
 
-            self.moving_mean_squared = self.decay * self.moving_mean_squared + (1. - self.decay) * self.g_x ** 2
-            step = self.step_size * self.g_x / np.sqrt(self.moving_mean_squared)
+            self.g_x = self.f.jacobian(self.x, *batch)
 
-            self.x -= step
+            # compute search direction
+            d = -self.g_x
+
+            if hasattr(self.f, 'primal'):
+                # project the direction over the active constraints
+                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
+            self.moving_mean_squared = self.decay * self.moving_mean_squared + (1. - self.decay) * self.g_x ** 2
+            step = self.step_size * d / np.sqrt(self.moving_mean_squared)
+
+            self.x += step
 
             self.iter += 1
 
         if self.verbose:
             print('\n')
 
-        if hasattr(self.f, 'primal'):
-            assert all(self.x >= 0)  # Lagrange multipliers
+        # if hasattr(self.f, 'primal'):
+        #     assert all(self.x >= 0)  # Lagrange multipliers
 
         return self

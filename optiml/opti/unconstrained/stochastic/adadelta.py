@@ -44,7 +44,8 @@ class AdaDelta(StochasticOptimizer):
         self._print_header()
 
         for batch in self.batches:
-            self.f_x, self.g_x = self.f.function(self.x, *batch), self.f.jacobian(self.x, *batch)
+
+            self.f_x = self.f.function(self.x, *batch)
 
             self._print_info()
 
@@ -60,12 +61,21 @@ class AdaDelta(StochasticOptimizer):
                 self.status = 'stopped'
                 break
 
+            self.g_x = self.f.jacobian(self.x, *batch)
+
+            # compute search direction
+            d = -self.g_x
+
+            if hasattr(self.f, 'primal'):
+                # project the direction over the active constraints
+                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
             self.gms = self.decay * self.gms + (1. - self.decay) * self.g_x ** 2
-            delta = np.sqrt(self.sms + self.offset) / np.sqrt(self.gms + self.offset) * self.g_x
+            delta = np.sqrt(self.sms + self.offset) / np.sqrt(self.gms + self.offset) * d
 
             step = self.step_size * delta
 
-            self.x -= step
+            self.x += step
 
             self.sms = self.decay * self.sms + (1. - self.decay) * step ** 2
 
@@ -74,7 +84,7 @@ class AdaDelta(StochasticOptimizer):
         if self.verbose:
             print('\n')
 
-        if hasattr(self.f, 'primal'):
-            assert all(self.x >= 0)  # Lagrange multipliers
+        # if hasattr(self.f, 'primal'):
+        #     assert all(self.x >= 0)  # Lagrange multipliers
 
         return self
