@@ -218,6 +218,10 @@ class ConjugateGradient(LineSearchOptimizer):
                 else:
                     d = -self.g_x
 
+            if hasattr(self.f, 'primal'):
+                # project the direction over the active constraints
+                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
             past_g_x = self.g_x  # previous gradient
             past_d = d  # previous search direction
 
@@ -244,5 +248,8 @@ class ConjugateGradient(LineSearchOptimizer):
 
         if self.verbose:
             print('\n')
+
+        if hasattr(self.f, 'primal'):
+            assert all(self.x >= 0)  # Lagrange multipliers
 
         return self

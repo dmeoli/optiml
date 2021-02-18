@@ -43,7 +43,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                  max_iter=1000,
                  callback=None,
                  callback_args=(),
-                 nonpsd_solver='cg',
+                 nonposdef_solver='cg',
                  verbose=False):
         super().__init__(quad=quad,
                          ub=ub,
@@ -53,14 +53,14 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                          callback=callback,
                          callback_args=callback_args,
                          verbose=verbose)
-        self.nonpsd_solver = nonpsd_solver
+        self.nonposdef_solver = nonposdef_solver
 
-    def _solve_sym_nonpsd(self, Q, q):
+    def _solve_sym_nonposdef(self, Q, q):
         # since Q is indefinite, i.e., the function is linear along the eigenvectors
         # correspondent to the null eigenvalues, the system has not solutions, so we
         # will choose the one that minimizes the residue in the least-squares sense
 
-        if self.nonpsd_solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
+        if self.nonposdef_solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
 
             x = lsqr(Q, -q)[0]
 
@@ -71,18 +71,18 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
 
             Q, q = np.inner(Q, Q), Q.T.dot(q)
 
-            if self.nonpsd_solver == 'minres':  # numerical solution (slower, lower accurate):
+            if self.nonposdef_solver == 'minres':  # numerical solution (slower, lower accurate):
 
                 x = minres(Q, -q)[0]
 
-            elif self.nonpsd_solver == 'cg':  # optimization solution (faster, more accurate):
+            elif self.nonposdef_solver == 'cg':  # optimization solution (faster, more accurate):
 
                 quad = Quadratic(Q, q)
-                x = ConjugateGradient(f=quad, wf='hs').minimize().x  # Hestenes-Stiefel
+                x = ConjugateGradient(f=quad, wf='hs').minimize().x  # Hestenes-Stiefel formula
 
             else:
 
-                raise TypeError(f'{self.nonpsd_solver} is not an allowed solver, '
+                raise TypeError(f'{self.nonposdef_solver} is not an allowed solver, '
                                 f'choose one of `cg`, `minres` and `lsqr`')
 
         return x
@@ -143,8 +143,8 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 xs[A] = cholesky_solve(np.linalg.cholesky(self.f.Q[A, :][:, A]),
                                        -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
             except np.linalg.LinAlgError:
-                xs[A] = self._solve_sym_nonpsd(self.f.Q[A, :][:, A],
-                                               (self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
+                xs[A] = self._solve_sym_nonposdef(self.f.Q[A, :][:, A],
+                                                  (self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
 
             if np.logical_and(xs[A] <= self.ub[A] + 1e-12, xs[A] >= -1e-12).all():
                 # the solution of the unconstrained problem is actually feasible

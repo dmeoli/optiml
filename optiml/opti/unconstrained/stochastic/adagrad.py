@@ -55,14 +55,24 @@ class AdaGrad(StochasticOptimizer):
                 self.status = 'stopped'
                 break
 
-            self.gms += self.g_x ** 2
-            step = self.step_size * self.g_x / np.sqrt(self.gms + self.offset)
+            # compute search direction
+            d = -self.g_x
 
-            self.x -= step
+            if hasattr(self.f, 'primal'):
+                # project the direction over the active constraints
+                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
+            self.gms += self.g_x ** 2
+            step = self.step_size * d / np.sqrt(self.gms + self.offset)
+
+            self.x += step
 
             self.iter += 1
 
         if self.verbose:
             print('\n')
+
+        # if hasattr(self.f, 'primal'):
+        #     assert all(self.x >= 0)  # Lagrange multipliers
 
         return self

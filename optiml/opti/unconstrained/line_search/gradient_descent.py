@@ -195,6 +195,10 @@ class SteepestGradientDescent(LineSearchOptimizer):
             # compute search direction
             d = -self.g_x
 
+            if hasattr(self.f, 'primal'):
+                # project the direction over the active constraints
+                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
             phi_p0 = -self.ng * self.ng
 
             # compute step size
@@ -218,5 +222,8 @@ class SteepestGradientDescent(LineSearchOptimizer):
 
         if self.verbose:
             print('\n')
+
+        if hasattr(self.f, 'primal'):
+            assert all(self.x >= 0)  # Lagrange multipliers
 
         return self

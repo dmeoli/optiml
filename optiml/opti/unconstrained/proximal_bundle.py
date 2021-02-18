@@ -83,7 +83,6 @@ class ProximalBundle(Optimizer):
                  m_inf=-np.inf,
                  callback=None,
                  callback_args=(),
-                 lagrangian=False,
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
@@ -101,10 +100,10 @@ class ProximalBundle(Optimizer):
             raise ValueError('m1 has to lie in (0,1)')
         self.m1 = m1
         self.m_inf = m_inf
-        self.lagrangian = lagrangian
         self.master_solver = master_solver
         self.master_verbose = master_verbose
-        if self.f.ndim <= 3:
+        if ((hasattr(self.f, 'primal') and self.f.primal.ndim == 2)
+                or self.f.ndim <= 3):
             self.x0_history_ns = []
             self.x1_history_ns = []
             self.f_x_history_ns = []
@@ -127,8 +126,8 @@ class ProximalBundle(Optimizer):
 
         G = self.g_x.T  # matrix of subgradients
 
-        if self.lagrangian:
-            # project the direction over the active constraints
+        if hasattr(self.f, 'primal'):
+            # project the direction (-g_x) over the active constraints
             self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0)] = 0
 
         F = self.f_x - self.g_x.T.dot(self.x)  # vector of translated function values
@@ -196,8 +195,8 @@ class ProximalBundle(Optimizer):
 
             G = np.vstack((G, self.g_x.T))
 
-            if self.lagrangian:
-                # project the direction over the active constraints
+            if hasattr(self.f, 'primal'):
+                # project the direction (-g_x) over the active constraints
                 self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0)] = 0
 
             F = np.hstack((F, fd - self.g_x.T.dot(last_x)))
@@ -206,7 +205,8 @@ class ProximalBundle(Optimizer):
                 self.x = last_x
                 self.f_x = fd
             else:
-                if self.f.ndim <= 3:
+                if ((hasattr(self.f, 'primal') and self.f.primal.ndim == 2)
+                        or self.f.ndim <= 3):
                     self.x0_history_ns.append(self.x[0])
                     self.x1_history_ns.append(self.x[1])
                     self.f_x_history_ns.append(self.f_x)
@@ -215,5 +215,8 @@ class ProximalBundle(Optimizer):
 
         if self.verbose:
             print('\n')
+
+        if hasattr(self.f, 'primal'):
+            assert all(self.x >= 0)  # Lagrange multipliers
 
         return self

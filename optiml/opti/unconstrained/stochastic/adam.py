@@ -111,4 +111,7 @@ class Adam(StochasticMomentumOptimizer):
         if self.verbose:
             print('\n')
 
+        if hasattr(self.f, 'primal'):
+            assert all(self.x >= 0)  # Lagrange multipliers
+
         return self

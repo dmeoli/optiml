@@ -203,7 +203,14 @@ class Subgradient(LineSearchOptimizer):
                 self.status = 'unbounded'
                 break
 
-            self.x -= (a / self.ng) * self.g_x
+            # compute search direction
+            d = -self.g_x
+
+            if hasattr(self.f, 'primal'):
+                # project the direction over the active constraints
+                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
+            self.x += (a / self.ng) * d
 
             self.iter += 1
 
@@ -211,5 +218,8 @@ class Subgradient(LineSearchOptimizer):
 
         if self.verbose:
             print('\n')
+
+        if hasattr(self.f, 'primal'):
+            assert all(self.x >= 0)  # Lagrange multipliers
 
         return self

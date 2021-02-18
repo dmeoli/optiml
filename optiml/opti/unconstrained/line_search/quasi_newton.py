@@ -198,6 +198,10 @@ class BFGS(LineSearchOptimizer):
             # compute search direction
             d = -self.H_x.dot(self.g_x)
 
+            if hasattr(self.f, 'primal'):
+                # project the direction over the active constraints
+                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
             phi_p0 = self.g_x.T.dot(d)
 
             # compute step size
@@ -239,5 +243,8 @@ class BFGS(LineSearchOptimizer):
 
         if self.verbose:
             print('\n')
+
+        if hasattr(self.f, 'primal'):
+            assert all(self.x >= 0)  # Lagrange multipliers
 
         return self

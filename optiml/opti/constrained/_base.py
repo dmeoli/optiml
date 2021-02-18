@@ -41,11 +41,11 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
                     1/2 x^T Q x + q^T x : 0 <= x <= ub
     """
 
-    def __init__(self, quad, ub):
-        if not isinstance(quad, Quadratic):
-            raise TypeError(f'{quad} is not an allowed quadratic function')
-        super().__init__(quad.Q, quad.q)
-        self.primal = quad
+    def __init__(self, primal, ub, nonposdef_solver='cg', nonposdef_solver_verbose=False):
+        if not isinstance(primal, Quadratic):
+            raise TypeError(f'{primal} is not an allowed quadratic function')
+        super().__init__(primal.Q, primal.q)
+        self.primal = primal
         self.ndim *= 2
         try:
             self.L = np.linalg.cholesky(self.Q)
@@ -55,8 +55,8 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
         self.ub = np.asarray(ub, dtype=float)
-        self.solver = 'cg'
-        self.verbose = lambda: False
+        self.nonposdef_solver = nonposdef_solver
+        self.nonposdef_solver_verbose = nonposdef_solver_verbose
         # backup {lambda : x}
         self.last_lmbda = None
         self.last_x = None
@@ -69,17 +69,17 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
     def f_star(self):
         return np.inf
 
-    def _solve_sym_nonpsd(self, ql):
+    def _solve_sym_nonposdef(self, ql):
         # since Q is indefinite, i.e., the function is linear along the eigenvectors
         # correspondent to the null eigenvalues, the system has not solutions, so we
         # will choose the one that minimizes the residue in the least-squares sense
 
-        if self.verbose():
+        if self.nonposdef_solver_verbose:
             print('\n')
 
-        if self.solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
+        if self.nonposdef_solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
 
-            x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.verbose())[:4]
+            x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.nonposdef_solver_verbose)[:4]
 
         else:
 
@@ -88,22 +88,23 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
             Q, ql = np.inner(self.Q, self.Q), self.Q.T.dot(ql)
 
-            if self.solver == 'minres':  # numerical solution (slower, lower accurate):
+            if self.nonposdef_solver == 'minres':  # numerical solution (slower, lower accurate):
 
-                x = minres(Q, -ql, show=self.verbose())[0]
+                x = minres(Q, -ql, show=self.nonposdef_solver_verbose)[0]
 
-            elif self.solver == 'cg':  # optimization solution (faster, more accurate):
+            elif self.nonposdef_solver == 'cg':  # optimization solution (faster, more accurate):
 
-                if self.verbose():
+                if self.nonposdef_solver_verbose:
                     print(ConjugateGradient.__name__)
 
                 quad = Quadratic(Q, ql)
-                cg = ConjugateGradient(f=quad, wf='hs', verbose=self.verbose()).minimize()  # Hestenes-Stiefel
+                # Hestenes-Stiefel formula
+                cg = ConjugateGradient(f=quad, wf='hs', verbose=self.nonposdef_solver_verbose).minimize()
                 x, self.last_itn, = cg.x, cg.iter
 
             else:
 
-                raise TypeError(f'{self.solver} is not an allowed solver, '
+                raise TypeError(f'{self.nonposdef_solver} is not an allowed solver, '
                                 f'choose one of `cg`, `minres` and `lsqr`')
 
             self.last_rnorm = np.linalg.norm(-ql - Q.dot(x))
@@ -139,7 +140,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                x = self._solve_sym_nonpsd(ql)
+                x = self._solve_sym_nonposdef(ql)
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
@@ -168,7 +169,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                x = self._solve_sym_nonpsd(ql)
+                x = self._solve_sym_nonposdef(ql)
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
@@ -185,8 +186,9 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub
     """
 
-    def __init__(self, quad, A, ub):
-        super().__init__(quad, ub)
+    def __init__(self, primal, A, ub, nonposdef_solver='cg', nonposdef_solver_verbose=False):
+        super().__init__(primal=primal, ub=ub, nonposdef_solver=nonposdef_solver,
+                         nonposdef_solver_verbose=nonposdef_solver_verbose)
         self.ndim += int(self.ndim / 2)
         self.A = np.asarray(A, dtype=float)
 
@@ -220,7 +222,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                x = self._solve_sym_nonpsd(ql)
+                x = self._solve_sym_nonposdef(ql)
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
@@ -249,7 +251,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             if self.is_posdef:
                 x = cholesky_solve(self.L, -ql)
             else:
-                x = self._solve_sym_nonpsd(ql)
+                x = self._solve_sym_nonposdef(ql)
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()

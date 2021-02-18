@@ -1,10 +1,19 @@
+from abc import ABC
+
 import autograd.numpy as np
 from autograd import jacobian, hessian
 
 
-class Optimizer:
+class Optimizer(ABC):
 
-    def __init__(self, f, x=np.random.uniform, eps=1e-6, max_iter=1000, callback=None, callback_args=(), verbose=False):
+    def __init__(self,
+                 f,
+                 x=np.random.uniform,
+                 eps=1e-6,
+                 max_iter=1000,
+                 callback=None,
+                 callback_args=(),
+                 verbose=False):
         """
 
         :param f:        the objective function.
@@ -19,6 +28,8 @@ class Optimizer:
         if not isinstance(f, OptimizationFunction):
             raise TypeError(f'{f} is not an allowed optimization function')
         self.f = f
+        if hasattr(self.f, 'primal'):
+            x = np.zeros
         if callable(x):
             try:
                 self.x = x(size=f.ndim)
@@ -28,26 +39,72 @@ class Optimizer:
             self.x = np.asarray(x, dtype=float)
         self.f_x = np.nan
         self.g_x = np.zeros(0)
-        if self.f.ndim <= 3:
-            self.x0_history = []
-            self.x1_history = []
-            self.f_x_history = []
         self.eps = eps
         if not max_iter > 0:
             raise ValueError('max_iter must be > 0')
         self.max_iter = max_iter
         self.iter = 0
+        self.status = 'unknown'
+        if hasattr(self.f, 'primal'):
+            # initialize the primal problem
+            self.primal_x = self.f.ub / 2  # starts from the middle of the box
+            self.primal_f_x = self.f.primal.function(self.primal_x)
+            if self.f.primal.ndim == 2:
+                self.x0_history = [self.primal_x[0]]
+                self.x1_history = [self.primal_x[1]]
+                self.f_x_history = [self.primal_f_x]
+        else:
+            if self.f.ndim <= 3:
+                self.x0_history = []
+                self.x1_history = []
+                self.f_x_history = []
         self._callback = callback
         self.callback_args = callback_args
-        self.status = 'unknown'
         self.verbose = verbose
 
     def callback(self, args=()):
-        if self.f.ndim <= 3:
-            self.x0_history.append(self.x[0])
-            self.x1_history.append(self.x[1])
-            self.f_x_history.append(self.f_x)
-        if callable(self._callback):
+
+        if hasattr(self.f, 'primal'):  # update primal
+
+            # compute an heuristic solution out of the solution x of
+            # the Lagrangian relaxation by projecting x on the box
+            last_x = self.f.last_x.copy()
+            last_x[last_x < 0] = 0
+            idx = last_x > self.f.ub
+            last_x[idx] = self.f.ub[idx]
+
+            v = self.f.primal.function(last_x)
+            if v < self.primal_f_x:
+                self.primal_x = last_x
+                self.primal_f_x = v
+
+            gap = (self.primal_f_x - self.f_x) / max(abs(self.primal_f_x), 1)
+
+            if self.is_verbose():
+                print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
+                print('\tgap: {: 1.4e}'.format(gap), end='')
+                if not self.f.is_posdef:
+                    if self.f.last_itn:  # `cg` and `lsqr`
+                        print('\titn: {:3d}'.format(self.f.last_itn), end='')
+                    print('\trnorm: {:1.4e}'.format(self.f.last_rnorm), end='')
+
+            if self.f.primal.ndim == 2:
+                self.x0_history.append(self.primal_x[0])
+                self.x1_history.append(self.primal_x[1])
+                self.f_x_history.append(self.primal_f_x)
+
+            if gap <= self.eps:
+                self.status = 'optimal'
+                raise StopIteration
+
+        else:
+
+            if self.f.ndim <= 3:
+                self.x0_history.append(self.x[0])
+                self.x1_history.append(self.x[1])
+                self.f_x_history.append(self.f_x)
+
+        if callable(self._callback):  # custom callback
             self._callback(self, *args, *self.callback_args)
 
     def is_verbose(self):
@@ -63,7 +120,7 @@ class Optimizer:
         raise NotImplementedError
 
 
-class OptimizationFunction:
+class OptimizationFunction(ABC):
 
     def __init__(self, ndim=2):
         self.auto_jac = jacobian(self.function)

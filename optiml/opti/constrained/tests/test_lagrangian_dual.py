@@ -2,42 +2,47 @@ import numpy as np
 import pytest
 
 from optiml.opti import Quadratic
-from optiml.opti.constrained import LagrangianBoxConstrainedQuadratic, LagrangianDual, ProjectedGradient
+from optiml.opti.constrained import LagrangianBoxConstrainedQuadratic, ProjectedGradient
+from optiml.opti.unconstrained import ProximalBundle
 from optiml.opti.unconstrained.line_search import (Subgradient, SteepestGradientDescent, HeavyBallGradient,
                                                    ConjugateGradient, Newton, BFGS)
 from optiml.opti.utils import generate_box_constrained_quadratic
 
 Q, q, ub = generate_box_constrained_quadratic(ndim=2, seed=6)
 quad = Quadratic(Q, q)
-dual = LagrangianBoxConstrainedQuadratic(quad=quad, ub=ub)
+dual = LagrangianBoxConstrainedQuadratic(primal=quad, ub=ub)
 x_star = ProjectedGradient(quad=quad, ub=ub).minimize().x
 
 
+def test_LagrangianDual_with_ProximalBundle():
+    assert np.allclose(ProximalBundle(f=dual).minimize().primal_x, x_star, rtol=0.1)
+
+
 def test_LagrangianDual_with_Subgradient():
-    assert np.allclose(LagrangianDual(f=dual, optimizer=Subgradient).minimize().primal_x, x_star)
+    assert np.allclose(Subgradient(f=dual).minimize().primal_x, x_star, rtol=0.1)
 
 
 def test_LagrangianDual_with_SteepestGradientDescent():
-    assert np.allclose(LagrangianDual(f=dual, optimizer=SteepestGradientDescent).minimize().primal_x, x_star)
+    assert np.allclose(SteepestGradientDescent(f=dual).minimize().primal_x, x_star)
 
 
 def test_LagrangianDual_with_ConjugateGradient():
-    assert np.allclose(LagrangianDual(f=dual, optimizer=ConjugateGradient, wf='fr').minimize().primal_x, x_star)
-    assert np.allclose(LagrangianDual(f=dual, optimizer=ConjugateGradient, wf='hs').minimize().primal_x, x_star)
-    assert np.allclose(LagrangianDual(f=dual, optimizer=ConjugateGradient, wf='pr').minimize().primal_x, x_star)
-    assert np.allclose(LagrangianDual(f=dual, optimizer=ConjugateGradient, wf='dy').minimize().primal_x, x_star)
+    assert np.allclose(ConjugateGradient(f=dual, wf='fr').minimize().primal_x, x_star)
+    assert np.allclose(ConjugateGradient(f=dual, wf='hs').minimize().primal_x, x_star)
+    assert np.allclose(ConjugateGradient(f=dual, wf='pr').minimize().primal_x, x_star)
+    assert np.allclose(ConjugateGradient(f=dual, wf='dy').minimize().primal_x, x_star)
 
 
 def test_LagrangianDual_with_HeavyBallGradient():
-    assert np.allclose(LagrangianDual(f=dual, optimizer=HeavyBallGradient).minimize().primal_x, x_star)
+    assert np.allclose(HeavyBallGradient(f=dual).minimize().primal_x, x_star)
 
 
 # def test_LagrangianDual_with_Newton():
-#     assert np.allclose(LagrangianDual(f=dual, optimizer=Newton).minimize().primal_x, x_star)
+#     assert np.allclose(Newton(f=dual).minimize().primal_x, x_star)
 
 
 def test_LagrangianDual_with_BFGS():
-    assert np.allclose(LagrangianDual(f=dual, optimizer=BFGS).minimize().primal_x, x_star)
+    assert np.allclose(BFGS(f=dual).minimize().primal_x, x_star)
 
 
 if __name__ == "__main__":

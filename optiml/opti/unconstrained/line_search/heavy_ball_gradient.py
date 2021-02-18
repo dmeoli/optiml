@@ -188,6 +188,10 @@ class HeavyBallGradient(LineSearchOptimizer):
                     beta_i = -self.beta * self.ng / np.linalg.norm(past_d)
                 d = -self.g_x + beta_i * past_d
 
+            if hasattr(self.f, 'primal'):
+                # project the direction over the active constraints
+                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
             phi_p0 = self.g_x.T.dot(d)
 
             # compute step size
@@ -213,5 +217,8 @@ class HeavyBallGradient(LineSearchOptimizer):
 
         if self.verbose:
             print('\n')
+
+        if hasattr(self.f, 'primal'):
+            assert all(self.x >= 0)  # Lagrange multipliers
 
         return self
