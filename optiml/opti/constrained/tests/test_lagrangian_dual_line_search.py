@@ -3,7 +3,6 @@ import pytest
 
 from optiml.opti import Quadratic
 from optiml.opti.constrained import LagrangianBoxConstrainedQuadratic, ProjectedGradient
-from optiml.opti.unconstrained import ProximalBundle
 from optiml.opti.unconstrained.line_search import (Subgradient, SteepestGradientDescent, HeavyBallGradient,
                                                    ConjugateGradient, Newton, BFGS)
 from optiml.opti.utils import generate_box_constrained_quadratic
@@ -12,10 +11,6 @@ Q, q, ub = generate_box_constrained_quadratic(ndim=2, seed=6)
 quad = Quadratic(Q, q)
 dual = LagrangianBoxConstrainedQuadratic(primal=quad, ub=ub)
 x_star = ProjectedGradient(quad=quad, ub=ub).minimize().x
-
-
-def test_LagrangianDual_with_ProximalBundle():
-    assert np.allclose(ProximalBundle(f=dual).minimize().primal_x, x_star, rtol=0.1)
 
 
 def test_LagrangianDual_with_Subgradient():
