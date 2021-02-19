@@ -75,23 +75,25 @@ class AMSGrad(StochasticMomentumOptimizer):
                 self.status = 'stopped'
                 break
 
-            if self.momentum_type == 'standard':
-
+            if self.momentum_type == 'nesterov':
                 step_m1 = self.step
                 step1 = self.momentum * step_m1
-
-            elif self.momentum_type == 'nesterov':
-
-                step_m1 = self.step
-                step1 = self.momentum * step_m1
-                self.x -= step1
+                self.x += step1
 
             self.g_x = self.f.jacobian(self.x, *batch)
+
+            # compute search direction
+            d = -self.g_x
+
+            if self.is_lagrangian_dual():
+                # project the direction over the active constraints
+                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
 
-            self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * self.g_x  # update biased 1st moment estimate
+            # update biased 1st moment estimate
+            self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * d
             # update biased 2nd raw moment estimate
             self.est_mom2 = self.beta2 * est_mom2_m1 + (1. - self.beta2) * self.g_x ** 2
 
@@ -100,14 +102,20 @@ class AMSGrad(StochasticMomentumOptimizer):
             step2 = self.step_size * self.est_mom1 / (np.sqrt(est_mom2_crt) + self.offset)
 
             if self.momentum_type == 'standard':
-                self.x -= step1 + step2
-            else:
-                self.x -= step2
 
-            if self.momentum_type != 'none':
+                step_m1 = self.step
+                self.step = self.momentum * step_m1 + step2
+                self.x += self.step
+
+            elif self.momentum_type == 'nesterov':
+
+                self.x += step2
                 self.step = step1 + step2
-            else:
+
+            elif self.momentum_type == 'none':
+
                 self.step = step2
+                self.x += self.step
 
             self.iter += 1
 
