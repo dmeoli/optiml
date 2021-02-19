@@ -208,7 +208,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
                     max_t = min(self.line_search.a_start, min(-self.x[idx] / d[idx]))
                     self.line_search.a_start = max_t
 
-            phi_p0 = -self.ng * self.ng
+            phi_p0 = self.g_x.dot(d)
 
             # compute step size
             a, last_f_x, last_x, last_g_x, self.f_eval = self.line_search.search(
