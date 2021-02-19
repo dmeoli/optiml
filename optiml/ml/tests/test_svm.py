@@ -280,7 +280,7 @@ def test_solve_linear_svc_with_stochastic_optimizers():
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.57
 
-    svc = OneVsRestClassifier(PrimalSVC(loss=squared_hinge, optimizer=AdaDelta))
+    svc = OneVsRestClassifier(PrimalSVC(loss=squared_hinge, optimizer=AdaDelta, learning_rate=1.))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.57
 
