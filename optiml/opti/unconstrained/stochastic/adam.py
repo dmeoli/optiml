@@ -91,7 +91,8 @@ class Adam(StochasticMomentumOptimizer):
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
 
-            self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * self.g_x  # update biased 1st moment estimate
+            # update biased 1st moment estimate
+            self.est_mom1 = self.beta1 * est_mom1_m1 + (1. - self.beta1) * self.g_x
             # update biased 2nd raw moment estimate
             self.est_mom2 = self.beta2 * est_mom2_m1 + (1. - self.beta2) * self.g_x ** 2
 
@@ -101,8 +102,11 @@ class Adam(StochasticMomentumOptimizer):
             step2 = self.step_size * est_mom1_crt / (np.sqrt(est_mom2_crt) + self.offset)
 
             if self.momentum_type == 'standard':
+
                 self.x -= step1 + step2
+
             else:
+
                 self.x -= step2
 
             if self.momentum_type != 'none':

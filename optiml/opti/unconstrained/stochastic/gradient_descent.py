@@ -55,49 +55,34 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
                 self.status = 'stopped'
                 break
 
-            if self.momentum_type == 'standard':
-
-                self.g_x = self.f.jacobian(self.x, *batch)
-                step_m1 = self.step
-
-                # compute search direction
-                d = -self.g_x
-
-                if self.is_lagrangian_dual():
-                    # project the direction over the active constraints
-                    d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
-
-                self.step = self.step_size * d + self.momentum * step_m1
-                self.x += self.step
-
-            elif self.momentum_type == 'nesterov':
+            if self.momentum_type == 'nesterov':
 
                 step_m1 = self.step
                 big_jump = self.momentum * step_m1
                 self.x += big_jump
-                self.g_x = self.f.jacobian(self.x, *batch)
 
-                # compute search direction
-                d = -self.g_x
+            self.g_x = self.f.jacobian(self.x, *batch)
 
-                if self.is_lagrangian_dual():
-                    # project the direction over the active constraints
-                    d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+            # compute search direction
+            d = -self.g_x
+
+            if self.is_lagrangian_dual():
+                # project the direction over the active constraints
+                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
+            if self.momentum_type == 'standard':
+
+                step_m1 = self.step
+                self.step = self.step_size * d + self.momentum * step_m1
+                self.x += self.step
+
+            elif self.momentum_type == 'nesterov':
 
                 correction = self.step_size * d
                 self.x += correction
                 self.step = big_jump + correction
 
             elif self.momentum_type == 'none':
-
-                self.g_x = self.f.jacobian(self.x, *batch)
-
-                # compute search direction
-                d = -self.g_x
-
-                if self.is_lagrangian_dual():
-                    # project the direction over the active constraints
-                    d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
                 self.step = self.step_size * d
                 self.x += self.step

@@ -22,10 +22,7 @@ def test_LagrangianDual_with_SteepestGradientDescent():
 
 
 def test_LagrangianDual_with_ConjugateGradient():
-    assert np.allclose(ConjugateGradient(f=dual, wf='fr').minimize().primal_x, x_star)
-    assert np.allclose(ConjugateGradient(f=dual, wf='hs').minimize().primal_x, x_star)
-    assert np.allclose(ConjugateGradient(f=dual, wf='pr').minimize().primal_x, x_star)
-    assert np.allclose(ConjugateGradient(f=dual, wf='dy').minimize().primal_x, x_star)
+    assert np.allclose(ConjugateGradient(f=dual).minimize().primal_x, x_star)
 
 
 def test_LagrangianDual_with_HeavyBallGradient():
