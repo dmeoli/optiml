@@ -98,13 +98,13 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
             # min { 1/2 a^2 (d^T Q d) + a d^T (Q x + q) } [ + const ]
             #
             # => a = - d^T (Q x + q) / d^T Q d
-            den = d.T.dot(self.f.Q).dot(d)
+            den = d.dot(self.f.Q).dot(d)
 
             if den <= 1e-16:  # d^T Q d = 0 ==> f is linear along d
                 t = max_t  # just take the maximum possible step size
             else:
                 # optimal unbounded step size restricted to max feasible step
-                t = min(-self.g_x.T.dot(d) / den, max_t)
+                t = min(-self.g_x.dot(d) / den, max_t)
 
             self.x += t * d
 

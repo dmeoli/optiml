@@ -192,7 +192,7 @@ class Newton(LineSearchOptimizer):
                 # project the direction over the active constraints
                 d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
-            phi_p0 = self.g_x.T.dot(d)
+            phi_p0 = self.g_x.dot(d)
 
             # compute step size
             a, last_f_x, last_x, last_g_x, self.f_eval = self.line_search.search(

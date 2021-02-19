@@ -154,7 +154,7 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
         while True:
             self.f_x = self.f.function(self.x)
             xQx = self.x.dot(self.f.Q).dot(self.x)
-            p = -lp.T.dot(self.ub) - 0.5 * xQx
+            p = -lp.dot(self.ub) - 0.5 * xQx
             gap = (self.f_x - p) / max(abs(self.f_x), 1)
 
             if self.is_verbose():

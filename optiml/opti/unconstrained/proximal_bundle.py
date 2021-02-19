@@ -124,13 +124,13 @@ class ProximalBundle(Optimizer):
         else:
             ng0 = 1  # un-scaled stopping criterion
 
-        G = self.g_x.T  # matrix of subgradients
+        G = self.g_x  # matrix of subgradients
 
         if self.is_lagrangian_dual():
             # project the direction (-g_x) over the active constraints
             self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0)] = 0
 
-        F = self.f_x - self.g_x.T.dot(self.x)  # vector of translated function values
+        F = self.f_x - self.g_x.dot(self.x)  # vector of translated function values
 
         while True:
 
@@ -193,13 +193,13 @@ class ProximalBundle(Optimizer):
                 self.status = 'unbounded'
                 break
 
-            G = np.vstack((G, self.g_x.T))
+            G = np.vstack((G, self.g_x))
 
             if self.is_lagrangian_dual():
                 # project the direction (-g_x) over the active constraints
                 self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0)] = 0
 
-            F = np.hstack((F, fd - self.g_x.T.dot(last_x)))
+            F = np.hstack((F, fd - self.g_x.dot(last_x)))
 
             if fd <= self.f_x + self.m1 * (v - self.f_x):
                 self.x = last_x

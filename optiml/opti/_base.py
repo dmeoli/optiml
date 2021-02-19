@@ -209,7 +209,7 @@ class Quadratic(OptimizationFunction):
         :return:  the value of a general quadratic function if x, the optimal solution of a
                   linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
         """
-        return 0.5 * x.T.dot(self.Q).dot(x) + self.q.T.dot(x)
+        return 0.5 * x.dot(self.Q).dot(x) + self.q.dot(x)
 
     def jacobian(self, x):
         """

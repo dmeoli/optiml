@@ -194,7 +194,7 @@ class ArmijoWolfeLineSearch(LineSearch):
         ls_iter = 1  # count iterations of first phase
         while f_eval <= self.max_f_eval:
             phi_a, last_x, last_g_x, f_eval = self._f2phi(self.f, d, x, _as, f_eval)
-            phi_ps = d.T.dot(last_g_x)  # phi'(a) = <\nabla f(x + a * d), d>
+            phi_ps = d.dot(last_g_x)  # phi'(a) = <\nabla f(x + a * d), d>
             # Armijo and strong Wolfe conditions
             if phi_a <= phi0 + self.m1 * _as * phi_p0 and abs(phi_ps) <= -self.m2 * phi_p0:
                 if verbose:
@@ -222,7 +222,7 @@ class ArmijoWolfeLineSearch(LineSearch):
             a = max(am + (_as - am) * self.sfgrd, min(_as - (_as - am) * self.sfgrd, a))
 
             phi_a, last_x, last_g_x, f_eval = self._f2phi(self.f, d, x, a, f_eval)
-            phi_p = d.T.dot(last_g_x)  # phi'(a) = <\nabla f(x + a * d), d>
+            phi_p = d.dot(last_g_x)  # phi'(a) = <\nabla f(x + a * d), d>
             # Armijo and strong Wolfe conditions
             if phi_a <= phi0 + self.m1 * a * phi_p0 and abs(phi_p) <= -self.m2 * phi_p0:
                 break
@@ -255,7 +255,7 @@ class LagrangianArmijoWolfeLineSearch(ArmijoWolfeLineSearch):
         a = _as
         phi_pm = phi_p0
         phi_a, last_x, last_g_x, f_eval = self._f2phi(self.f, d, x, _as, f_eval)
-        phi_ps = d.T.dot(last_g_x)  # phi'(a) = <\nabla f(x + a * d), d>
+        phi_ps = d.dot(last_g_x)  # phi'(a) = <\nabla f(x + a * d), d>
         while f_eval <= self.max_f_eval and _as - am > self.min_a and phi_ps > 1e-12:
             # compute the new value by safeguarded quadratic interpolation
             a = (am * phi_ps - _as * phi_pm) / (phi_ps - phi_pm)
@@ -264,7 +264,7 @@ class LagrangianArmijoWolfeLineSearch(ArmijoWolfeLineSearch):
             a = max(am + (_as - am) * self.sfgrd, min(_as - (_as - am) * self.sfgrd, a))
 
             phi_a, last_x, last_g_x, f_eval = self._f2phi(self.f, d, x, a, f_eval)
-            phi_p = d.T.dot(last_g_x)  # phi'(a) = <\nabla f(x + a * d), d>
+            phi_p = d.dot(last_g_x)  # phi'(a) = <\nabla f(x + a * d), d>
             # Armijo and strong Wolfe conditions
             if phi_a <= phi0 + self.m1 * a * phi_p0 and abs(phi_p) <= -self.m2 * phi_p0:
                 break

@@ -144,7 +144,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
-        return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
+        return 0.5 * x.dot(self.Q).dot(x) + ql.dot(x) - lmbda_p.dot(self.ub)
 
     def jacobian(self, lmbda):
         """
@@ -227,7 +227,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
-        return 0.5 * x.T.dot(self.Q).dot(x) + ql.T.dot(x) - lmbda_p.T.dot(self.ub)
+        return 0.5 * x.dot(self.Q).dot(x) + ql.dot(x) - lmbda_p.dot(self.ub)
 
     def jacobian(self, lmbda):
         """

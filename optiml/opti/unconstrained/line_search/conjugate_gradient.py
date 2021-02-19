@@ -204,12 +204,12 @@ class ConjugateGradient(LineSearchOptimizer):
                     if self.wf == 'fr':  # Fletcher-Reeves
                         beta = (self.ng / np.linalg.norm(past_g_x)) ** 2
                     elif self.wf == 'pr':  # Polak-Ribiere
-                        beta = self.g_x.T.dot(self.g_x - past_g_x) / np.linalg.norm(past_g_x) ** 2
+                        beta = self.g_x.dot(self.g_x - past_g_x) / np.linalg.norm(past_g_x) ** 2
                         beta = max(beta, 0)
                     elif self.wf == 'hs':  # Hestenes-Stiefel
-                        beta = self.g_x.T.dot(self.g_x - past_g_x) / (self.g_x - past_g_x).T.dot(past_d)
+                        beta = self.g_x.dot(self.g_x - past_g_x) / (self.g_x - past_g_x).dot(past_d)
                     elif self.wf == 'dy':  # Dai-Yuan
-                        beta = self.ng ** 2 / (self.g_x - past_g_x).T.dot(past_d)
+                        beta = self.ng ** 2 / (self.g_x - past_g_x).dot(past_d)
                     if self.is_verbose():
                         print('\tbeta: {: 1.4e}'.format(beta), end='')
 
@@ -225,7 +225,7 @@ class ConjugateGradient(LineSearchOptimizer):
             past_g_x = self.g_x  # previous gradient
             past_d = d  # previous search direction
 
-            phi_p0 = self.g_x.T.dot(d)
+            phi_p0 = self.g_x.dot(d)
 
             # compute step size
             a, last_f_x, last_x, last_g_x, self.f_eval = self.line_search.search(

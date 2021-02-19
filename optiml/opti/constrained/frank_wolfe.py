@@ -82,7 +82,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
 
             # compute the lower bound: remember that the first-order approximation
             # is f(x) + g(y - x)
-            lb = self.f_x + self.g_x.T.dot(y - self.x)
+            lb = self.f_x + self.g_x.dot(y - self.x)
             if lb > best_lb:
                 best_lb = lb
 
@@ -120,13 +120,13 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
             #
             # ==> a = -d^T * (Q * x + q) / d^T * Q * d
             #
-            den = d.T.dot(self.f.Q).dot(d)
+            den = d.dot(self.f.Q).dot(d)
 
             if den <= 1e-16:  # d^T * Q * d = 0  ==>  f is linear along d
                 a = 1  # just take the maximum possible step size
             else:
                 # optimal unbounded step size restricted to max feasible step
-                a = min(-self.g_x.T.dot(d) / den, 1)
+                a = min(-self.g_x.dot(d) / den, 1)
 
             self.x += a * d
 
