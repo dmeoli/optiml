@@ -32,8 +32,8 @@ def test_LagrangianDual_with_HeavyBallGradient():
     assert np.allclose(HeavyBallGradient(f=dual).minimize().primal_x, x_star)
 
 
-# def test_LagrangianDual_with_Newton():
-#     assert np.allclose(Newton(f=dual).minimize().primal_x, x_star)
+def test_LagrangianDual_with_Newton():
+    assert np.allclose(Newton(f=dual).minimize().primal_x, x_star)
 
 
 def test_LagrangianDual_with_BFGS():

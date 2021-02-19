@@ -32,6 +32,7 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
                 - [x] Newton
                 - Quasi-Newton
                     - [x] BFGS
+                    - [ ] L-BFGS
         - Stochastic Methods
             - [x] Stochastic Gradient Descent
                 - [x] Momentum

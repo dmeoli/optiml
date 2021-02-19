@@ -175,8 +175,9 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             self.last_x = x.copy()
         return np.hstack((self.ub - x, x))
 
-    def hessian(self, x):
-        raise NotImplementedError
+    def hessian(self, lmbda):
+        return np.vstack((np.hstack((self.Q, np.zeros_like(self.Q))),
+                          np.hstack((np.zeros_like(self.Q), np.zeros_like(self.Q)))))
 
 
 class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
@@ -256,6 +257,3 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
         return np.hstack((self.A * x, self.ub - x, x))
-
-    def hessian(self, x):
-        raise NotImplementedError
