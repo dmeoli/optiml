@@ -70,9 +70,16 @@ class RProp(StochasticOptimizer):
             changes[grad_prod < 0] *= self.step_shrink
             changes = np.clip(changes, self.min_step, self.max_step)
 
-            step = changes * np.sign(self.g_x)
+            # compute search direction
+            d = -changes
 
-            self.x -= step
+            if self.is_lagrangian_dual():
+                # project the direction over the active constraints
+                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
+            step = d * np.sign(self.g_x)
+
+            self.x += step
 
             self.iter += 1
 
