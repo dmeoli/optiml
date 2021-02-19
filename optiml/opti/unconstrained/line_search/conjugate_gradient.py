@@ -222,6 +222,15 @@ class ConjugateGradient(LineSearchOptimizer):
                 # project the direction over the active constraints
                 d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
+                # first, compute the maximum feasible step size maxt such that
+                #
+                #   0 <= lambda(i) + maxt * d(i)   for all i
+
+                ind = d < 0  # negative gradient entries
+                if any(ind):
+                    max_t = min(self.line_search.a_start, min(-self.x[ind] / d[ind]))
+                    self.line_search.a_start = max_t
+
             past_g_x = self.g_x  # previous gradient
             past_d = d  # previous search direction
 

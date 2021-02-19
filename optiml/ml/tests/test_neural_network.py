@@ -10,7 +10,7 @@ from optiml.ml.neural_network.layers import FullyConnected
 from optiml.ml.neural_network.losses import mean_squared_error, mean_absolute_error, categorical_cross_entropy
 from optiml.ml.neural_network.regularizers import L2
 from optiml.opti.unconstrained import ProximalBundle
-from optiml.opti.unconstrained.line_search import BFGS
+from optiml.opti.unconstrained.line_search import Newton
 from optiml.opti.unconstrained.stochastic import Adam
 
 
@@ -18,7 +18,7 @@ def test_perceptron_regressor_with_line_search_optimizer():
     # aka linear regression
     X, y = load_boston(return_X_y=True)
     net = NeuralNetworkRegressor((FullyConnected(13, 1, linear, fit_intercept=False),),
-                                 loss=mean_squared_error, optimizer=BFGS).fit(X, y)
+                                 loss=mean_squared_error, optimizer=Newton).fit(X, y)
     assert np.allclose(net.coefs_[0].ravel(), np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y))
 
 
@@ -27,7 +27,7 @@ def test_perceptron_ridge_regressor_with_line_search_optimizer():
     X, y = load_boston(return_X_y=True)
     lmbda = 0.1
     net = NeuralNetworkRegressor((FullyConnected(13, 1, linear, coef_reg=L2(lmbda), fit_intercept=False),),
-                                 loss=mean_squared_error, optimizer=BFGS).fit(X, y)
+                                 loss=mean_squared_error, optimizer=Newton).fit(X, y)
     assert np.allclose(net.coefs_[0].ravel(),
                        np.linalg.inv(X.T.dot(X) + np.identity(net.loss.ndim) * lmbda).dot(X.T).dot(y))
 

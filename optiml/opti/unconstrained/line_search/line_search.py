@@ -246,6 +246,20 @@ class ArmijoWolfeLineSearch(LineSearch):
 
 
 class LagrangianArmijoWolfeLineSearch(ArmijoWolfeLineSearch):
+    """
+    Performs an Armijo-Wolfe Line Search.
+
+        phi0 = phi(0), phip0 = phi'(0) < 0
+
+     as > 0 is the first value to be tested, and it is also the *maximum*
+     possible step size: if phi'( as ) < 0 then the LS is immediately
+     terminated
+
+     m1 and m2 are the standard Armijo-Wolfe parameters; note that the strong
+     Wolfe condition is used
+
+    :returns the optimal step and the optimal f-value
+    """
 
     def search(self, d, x, last_x, last_g_x, f_eval, phi0=None, phi_p0=None, verbose=False):
 
