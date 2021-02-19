@@ -192,13 +192,13 @@ class Newton(LineSearchOptimizer):
                 # project the direction over the active constraints
                 d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
-                # first, compute the maximum feasible step size maxt such that
+                # first, compute the maximum feasible step size max_t such that
                 #
-                #   0 <= lambda(i) + maxt * d(i)   for all i
+                #   0 <= lambda[i] + max_t * d[i]   for all i
 
                 idx = d < 0  # negative gradient entries
                 if any(idx):
-                    max_t = min(self.line_search.a_start, min(-self.x[idx] / d[idx]))
+                    max_t = min(self.line_search.a_start, min(np.divide(-self.x[idx] / d[idx])))
                     self.line_search.a_start = max_t
 
             phi_p0 = self.g_x.dot(d)
