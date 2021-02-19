@@ -206,9 +206,9 @@ class BFGS(LineSearchOptimizer):
                 #
                 #   0 <= lambda(i) + maxt * d(i)   for all i
 
-                ind = d < 0  # negative gradient entries
-                if any(ind):
-                    max_t = min(self.line_search.a_start, min(-self.x[ind] / d[ind]))
+                idx = d < 0  # negative gradient entries
+                if any(idx):
+                    max_t = min(self.line_search.a_start, min(-self.x[idx] / d[idx]))
                     self.line_search.a_start = max_t
 
             phi_p0 = self.g_x.dot(d)
