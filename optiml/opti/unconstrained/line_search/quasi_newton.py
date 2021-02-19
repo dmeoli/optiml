@@ -233,7 +233,7 @@ class BFGS(LineSearchOptimizer):
                 print('\trho: {: 1.4e}'.format(rho), end='')
 
             D = self.H_x.dot(y) * s.T
-            self.H_x = self.H_x + rho * ((1 + rho * y.T.dot(self.H_x).dot(y)) * (s.dot(s.T)) - D - D.T)
+            self.H_x += rho * ((1 + rho * y.T.dot(self.H_x).dot(y)) * (s.dot(s.T)) - D - D.T)
 
             # update new point and gradient
             self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
