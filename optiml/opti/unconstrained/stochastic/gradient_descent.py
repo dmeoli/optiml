@@ -56,7 +56,6 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
                 break
 
             if self.momentum_type == 'nesterov':
-
                 step_m1 = self.step
                 big_jump = self.momentum * step_m1
                 self.x += big_jump
