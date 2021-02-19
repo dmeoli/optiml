@@ -91,7 +91,7 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
         if self.verbose:
             print('\n')
 
-        # if self.is_lagrangian_dual():
-        #     assert all(self.x >= 0)  # Lagrange multipliers
+        if self.is_lagrangian_dual():
+            assert all(self.x >= 0)  # Lagrange multipliers
 
         return self
