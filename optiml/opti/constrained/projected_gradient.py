@@ -86,7 +86,7 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
                 break
 
             # first, compute the maximum feasible step size max_t such that:
-            #   0 <= x[i] + max_t d[i] <= ub[i]   for all i
+            #   0 <= x[i] + max_t * d[i] <= ub[i]   for all i
 
             idx = d > 0  # positive gradient entries
             max_t = min((self.ub[idx] - self.x[idx]) / d[idx], default=np.inf)

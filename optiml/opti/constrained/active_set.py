@@ -185,7 +185,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 d[A] = xs[A] - self.x[A]
 
                 # first, compute the maximum feasible step size max_t such that:
-                #   0 <= self.x[i] + max_t d[i] <= u[i]   for all i
+                #   0 <= self.x[i] + max_t * d[i] <= u[i]   for all i
 
                 idx = np.logical_and(A, d > 0)  # positive gradient entries
                 max_t = min((self.ub[idx] - self.x[idx]) / d[idx], default=np.inf)
