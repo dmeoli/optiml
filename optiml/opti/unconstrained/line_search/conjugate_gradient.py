@@ -228,7 +228,7 @@ class ConjugateGradient(LineSearchOptimizer):
 
                 idx = d < 0  # negative gradient entries
                 if any(idx):
-                    max_t = min(self.line_search.a_start, min(np.divide(-self.x[idx], d[idx])))
+                    max_t = min(self.line_search.a_start, min(-self.x[idx] / d[idx]))
                     self.line_search.a_start = max_t
 
             past_g_x = self.g_x  # previous gradient
