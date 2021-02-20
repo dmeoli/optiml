@@ -32,7 +32,7 @@ class AdaGrad(StochasticOptimizer):
         if not offset > 0:
             raise ValueError('offset must be > 0')
         self.offset = offset
-        self.gms = 0
+        self.gms = np.zeros_like(self.x)
 
     def minimize(self):
 
@@ -64,6 +64,15 @@ class AdaGrad(StochasticOptimizer):
             if self.is_lagrangian_dual():
                 # project the direction over the active constraints
                 d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
+                # first, compute the maximum feasible step size max_t such that:
+                #
+                #   0 <= lambda[i] + max_t * d[i] / sqrt(gsm[i] + offset)   for all i
+
+                idx = d < 0  # negative gradient entries
+                if any(idx):
+                    max_t = min(-self.x[idx] / d[idx] * np.sqrt(self.gms[idx] + self.offset))
+                    self.step_size = max_t
 
             self.gms += self.g_x ** 2
             step = self.step_size * d / np.sqrt(self.gms + self.offset)

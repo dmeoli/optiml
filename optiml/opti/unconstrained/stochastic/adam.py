@@ -85,10 +85,6 @@ class Adam(StochasticMomentumOptimizer):
             # compute search direction
             d = -self.g_x
 
-            if self.is_lagrangian_dual():
-                # project the direction over the active constraints
-                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
-
             est_mom1_m1 = self.est_mom1
             est_mom2_m1 = self.est_mom2
 
@@ -122,8 +118,5 @@ class Adam(StochasticMomentumOptimizer):
 
         if self.verbose:
             print('\n')
-
-        if self.is_lagrangian_dual():
-            assert all(self.x >= 0)  # Lagrange multipliers
 
         return self

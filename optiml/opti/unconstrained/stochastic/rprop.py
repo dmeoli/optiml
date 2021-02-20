@@ -77,6 +77,15 @@ class RProp(StochasticOptimizer):
                 # project the direction over the active constraints
                 d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
+                # first, compute the maximum feasible step size max_t such that:
+                #
+                #   0 <= lambda[i] + max_t * d[i]   for all i
+
+                idx = d < 0  # negative gradient entries
+                if any(idx):
+                    max_t = min(-self.x[idx] / d[idx])
+                    self.step_size = max_t
+
             step = d * np.sign(self.g_x)
 
             self.x += step

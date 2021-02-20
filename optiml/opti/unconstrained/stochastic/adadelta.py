@@ -36,8 +36,8 @@ class AdaDelta(StochasticOptimizer):
         if not offset > 0:
             raise ValueError('offset must be > 0')
         self.offset = offset
-        self.gms = 0
-        self.sms = 0
+        self.gms = np.zeros_like(self.x)
+        self.sms = np.zeros_like(self.x)
 
     def minimize(self):
 
@@ -72,6 +72,17 @@ class AdaDelta(StochasticOptimizer):
 
             self.gms = self.decay * self.gms + (1. - self.decay) * self.g_x ** 2
             delta = np.sqrt(self.sms + self.offset) / np.sqrt(self.gms + self.offset) * d
+
+            if self.is_lagrangian_dual():
+
+                # first, compute the maximum feasible step size max_t such that:
+                #
+                #   0 <= lambda[i] + max_t * delta[i]   for all i
+
+                idx = d < 0  # negative gradient entries
+                if any(idx):
+                    max_t = min(-self.x[idx] / delta[idx])
+                    self.step_size = max_t
 
             step = self.step_size * delta
 
