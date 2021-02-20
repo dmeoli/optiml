@@ -180,7 +180,7 @@ class Newton(LineSearchOptimizer):
             if lambda_n < self.delta:
                 if self.is_verbose():
                     print('\tdelta: {: 1.4e}'.format(self.delta - lambda_n), end='')
-                self.H_x = self.H_x + (self.delta - lambda_n) * np.identity(len(self.g_x))
+                self.H_x += (self.delta - lambda_n) * np.identity(self.f.ndim)
             else:
                 if self.is_verbose():
                     print('\tdelta: {: 1.4e}'.format(self.delta), end='')

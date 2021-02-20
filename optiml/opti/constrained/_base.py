@@ -176,8 +176,9 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         return np.hstack((self.ub - x, x))
 
     def hessian(self, lmbda):
-        return np.vstack((np.hstack((self.Q, np.zeros_like(self.Q))),
-                          np.hstack((np.zeros_like(self.Q), np.zeros_like(self.Q)))))
+        H = np.zeros((self.ndim, self.ndim))
+        H[0:self.Q.shape[0], 0:self.Q.shape[1]] = self.Q
+        return H
 
 
 class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
