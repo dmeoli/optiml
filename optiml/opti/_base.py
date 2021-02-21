@@ -63,6 +63,9 @@ class Optimizer(ABC):
                 self.f_x_history = []
         self._callback = callback
         self.callback_args = callback_args
+        if self.is_lagrangian_dual():
+            nonposdef_solver_verbose = self.f.nonposdef_solver_verbose  # save value to avoid circular call
+            self.f.nonposdef_solver_verbose = lambda: nonposdef_solver_verbose if self.is_verbose() else False
         self.verbose = verbose
 
     def is_lagrangian_dual(self):

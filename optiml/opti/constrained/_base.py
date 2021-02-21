@@ -74,12 +74,15 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         # correspondent to the null eigenvalues, the system has not solutions, so we
         # will choose the one that minimizes the residue in the least-squares sense
 
-        if self.nonposdef_solver_verbose:
+        nonposdef_solver_verbose = self.nonposdef_solver_verbose() if callable(
+            self.nonposdef_solver_verbose) else self.nonposdef_solver_verbose
+
+        if nonposdef_solver_verbose:
             print('\n')
 
         if self.nonposdef_solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
 
-            x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=self.nonposdef_solver_verbose)[:4]
+            x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=nonposdef_solver_verbose)[:4]
 
         else:
 
@@ -90,16 +93,16 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
 
             if self.nonposdef_solver == 'minres':  # numerical solution (slower, lower accurate):
 
-                x = minres(Q, -ql, show=self.nonposdef_solver_verbose)[0]
+                x = minres(Q, -ql, show=nonposdef_solver_verbose)[0]
 
             elif self.nonposdef_solver == 'cg':  # optimization solution (faster, more accurate):
 
-                if self.nonposdef_solver_verbose:
+                if nonposdef_solver_verbose:
                     print(ConjugateGradient.__name__)
 
                 quad = Quadratic(Q, ql)
                 # Hestenes-Stiefel formula
-                cg = ConjugateGradient(f=quad, wf='hs', verbose=self.nonposdef_solver_verbose).minimize()
+                cg = ConjugateGradient(f=quad, wf='hs', verbose=nonposdef_solver_verbose).minimize()
                 x, self.last_itn, = cg.x, cg.iter
 
             else:

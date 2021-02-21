@@ -1,7 +1,6 @@
 __all__ = ['LineSearchOptimizer',
            'Subgradient',  # 0th order methods
-           # 1st order methods
-           'SteepestGradientDescent', 'ConjugateGradient', 'HeavyBallGradient',
+           'SteepestGradientDescent', 'ConjugateGradient', 'HeavyBallGradient',  # 1st order methods
            'Newton', 'BFGS']  # 2nd order methods
 
 from ._base import LineSearchOptimizer
