@@ -182,7 +182,7 @@ def test_solve_svr_as_qp_lagrangian_relaxation_with_line_search_optimizers():
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svr = DualSVR(kernel=linear, optimizer=StochasticGradientDescent, nonposdef_solver='minres', use_explicit_eq=True)
+    svr = DualSVR(kernel=linear, optimizer=SteepestGradientDescent, nonposdef_solver='minres', use_explicit_eq=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.48
 
