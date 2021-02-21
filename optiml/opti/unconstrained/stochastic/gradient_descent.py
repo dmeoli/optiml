@@ -77,7 +77,7 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
 
                 idx = d < 0  # negative gradient entries
                 if any(idx):
-                    max_t = min(-self.x[idx] / d[idx])
+                    max_t = min(self.step_size, min(-self.x[idx] / d[idx]))
                     self.step_size = max_t
 
             if self.momentum_type == 'standard':
