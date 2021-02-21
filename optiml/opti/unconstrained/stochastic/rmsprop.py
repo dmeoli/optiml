@@ -13,6 +13,7 @@ class RMSProp(StochasticOptimizer):
                  epochs=1000,
                  step_size=0.001,
                  decay=0.9,
+                 offset=1e-8,
                  callback=None,
                  callback_args=(),
                  shuffle=True,
@@ -32,6 +33,9 @@ class RMSProp(StochasticOptimizer):
         if not 0 <= decay < 1:
             raise ValueError('decay has to lie in [0, 1)')
         self.decay = decay
+        if not offset > 0:
+            raise ValueError('offset must be > 0')
+        self.offset = offset
         self.moving_mean_squared = np.ones_like(self.x)
 
     def minimize(self):
@@ -61,22 +65,23 @@ class RMSProp(StochasticOptimizer):
             # compute search direction
             d = -self.g_x
 
-            self.moving_mean_squared = self.decay * self.moving_mean_squared + (1. - self.decay) * self.g_x ** 2
-
             if self.is_lagrangian_dual():
                 # project the direction over the active constraints
                 d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
                 # first, compute the maximum feasible step size max_t such that:
                 #
-                #   0 <= lambda[i] + max_t * d[i] / sqrt(moving_mean_squared)   for all i
+                #   0 <= lambda[i] + max_t * d[i] / sqrt(moving_mean_squared[i] + offset)   for all i
+                #     -lambda[i] <= max_t * d[i] / sqrt(moving_mean_squared[i] + offset)
+                #     -lambda[i] / d[i] * sqrt(moving_mean_squared[i] + offset) <= max_t
 
                 idx = d < 0  # negative gradient entries
                 if any(idx):
-                    max_t = min(-self.x[idx] / d[idx] * np.sqrt(self.moving_mean_squared[idx]))
+                    max_t = min(-self.x[idx] / d[idx] * np.sqrt(self.moving_mean_squared[idx] + self.offset))
                     self.step_size = max_t
 
-            step = self.step_size * d / np.sqrt(self.moving_mean_squared)
+            self.moving_mean_squared = self.decay * self.moving_mean_squared + (1. - self.decay) * self.g_x ** 2
+            step = self.step_size * d / np.sqrt(self.moving_mean_squared + self.offset)
 
             self.x += step
 

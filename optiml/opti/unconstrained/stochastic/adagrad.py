@@ -68,6 +68,8 @@ class AdaGrad(StochasticOptimizer):
                 # first, compute the maximum feasible step size max_t such that:
                 #
                 #   0 <= lambda[i] + max_t * d[i] / sqrt(gsm[i] + offset)   for all i
+                #     -lambda[i] <= max_t * d[i] / sqrt(gsm[i] + offset)
+                #     -lambda[i] / d[i] * sqrt(gsm[i] + offset) <= max_t
 
                 idx = d < 0  # negative gradient entries
                 if any(idx):

@@ -70,21 +70,20 @@ class AdaDelta(StochasticOptimizer):
                 # project the direction over the active constraints
                 d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
-            self.gms = self.decay * self.gms + (1. - self.decay) * self.g_x ** 2
-            delta = np.sqrt(self.sms + self.offset) / np.sqrt(self.gms + self.offset) * d
-
-            if self.is_lagrangian_dual():
-
                 # first, compute the maximum feasible step size max_t such that:
                 #
-                #   0 <= lambda[i] + max_t * delta[i]   for all i
+                #   0 <= lambda[i] + max_t * d[i] * (sqrt(sms[i] + offset) / sqrt(gsm[i] + offset))   for all i
+                #     -lambda[i] <= max_t * d[i] * (sqrt(sms[i] + offset) / sqrt(gsm[i] + offset))
+                #     -lambda[i] / (d[i] / (sqrt(sms[i] + offset) * sqrt(gsm[i] + offset)) <= max_t
 
                 idx = d < 0  # negative gradient entries
                 if any(idx):
-                    max_t = min(-self.x[idx] / delta[idx])
+                    max_t = min(-self.x[idx] / (d[idx] / (np.sqrt(self.sms[idx] + self.offset) *
+                                                          np.sqrt(self.gms[idx] + self.offset))))
                     self.step_size = max_t
 
-            step = self.step_size * delta
+            self.gms = self.decay * self.gms + (1. - self.decay) * self.g_x ** 2
+            step = self.step_size * d * (np.sqrt(self.sms + self.offset) / np.sqrt(self.gms + self.offset))
 
             self.x += step
 
