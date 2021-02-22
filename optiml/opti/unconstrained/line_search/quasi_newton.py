@@ -272,6 +272,7 @@ class LBFGS(BFGS):
                          m1=m1,
                          m2=m2,
                          a_start=a_start,
+                         delta=delta,
                          tau=tau,
                          sfgrd=sfgrd,
                          m_inf=m_inf,
