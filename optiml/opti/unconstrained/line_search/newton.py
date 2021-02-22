@@ -136,10 +136,11 @@ class Newton(LineSearchOptimizer):
                          callback=callback,
                          callback_args=callback_args,
                          verbose=verbose)
-        self.H_x = np.zeros(0)
         if not delta > 0:
             raise ValueError('delta must be > 0')
         self.delta = delta
+        if self.is_lagrangian_dual():
+            raise ValueError('cannot solve lagrangian dual with a second order optimizer')
 
     def minimize(self):
         last_x = np.zeros_like(self.x)  # last point visited in the line search
