@@ -210,6 +210,17 @@ class Subgradient(LineSearchOptimizer):
                 # project the direction over the active constraints
                 d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
 
+                # first, compute the maximum feasible step size max_t such that:
+                #
+                #   0 <= lambda[i] + max_t * d[i]   for all i
+                #     -lambda[i] <= max_t * d[i]
+                #     -lambda[i] / d[i] <= max_t
+
+                idx = d < 0  # negative gradient entries
+                if any(idx):
+                    max_t = min(self.line_search.a_start, min(-self.x[idx] / d[idx]))
+                    a = max_t
+
             self.x += (a / self.ng) * d
 
             self.iter += 1
