@@ -68,7 +68,7 @@ def test_solve_linear_svr_with_stochastic_optimizers():
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=AdaDelta, learning_rate=1.)
     svr.fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.77
+    assert svr.score(X_test, y_test) >= 0.74
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=RProp)
     svr.fit(X_train, y_train)
@@ -393,7 +393,7 @@ def test_solve_svc_as_qp_lagrangian_relaxation_with_line_search_optimizers():
     svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=SteepestGradientDescent,
                                       nonposdef_solver='minres', use_explicit_eq=True))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97
+    assert svc.score(X_test, y_test) >= 0.94
 
     svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ConjugateGradient,
                                       nonposdef_solver='minres', use_explicit_eq=True))
@@ -440,7 +440,7 @@ def test_solve_svc_as_qp_lagrangian_relaxation_with_stochastic_optimizers():
     svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=StochasticGradientDescent,
                                       nonposdef_solver='minres', use_explicit_eq=True))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97
+    assert svc.score(X_test, y_test) >= 0.94
 
     svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=AdaGrad,
                                       nonposdef_solver='minres', use_explicit_eq=True))
