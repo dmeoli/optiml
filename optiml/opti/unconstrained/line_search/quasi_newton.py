@@ -198,19 +198,6 @@ class BFGS(LineSearchOptimizer):
             # compute search direction
             d = -self.H_x.dot(self.g_x)
 
-            if self.is_lagrangian_dual():
-                # project the direction over the active constraints
-                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
-
-                # first, compute the maximum feasible step size max_t such that:
-                #
-                #   0 <= lambda[i] + max_t * d[i]   for all i
-
-                idx = d < 0  # negative gradient entries
-                if any(idx):
-                    max_t = min(self.line_search.a_start, min(-self.x[idx] / d[idx]))
-                    self.line_search.a_start = max_t
-
             phi_p0 = self.g_x.dot(d)
 
             # compute step size
@@ -252,9 +239,6 @@ class BFGS(LineSearchOptimizer):
 
         if self.verbose:
             print('\n')
-
-        if self.is_lagrangian_dual():
-            assert all(self.x >= 0)  # Lagrange multipliers
 
         return self
 

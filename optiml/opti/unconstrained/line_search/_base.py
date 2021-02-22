@@ -2,6 +2,7 @@ from abc import ABC
 
 import numpy as np
 
+from . import Newton, BFGS
 from ... import Optimizer
 from .line_search import ArmijoWolfeLineSearch, BacktrackingLineSearch, LagrangianArmijoWolfeLineSearch
 
@@ -83,6 +84,8 @@ class LineSearchOptimizer(Optimizer, ABC):
         else:
             self.line_search = BacktrackingLineSearch(f, max_f_eval, m1, a_start, min_a, tau)
         self.f_eval = 1
+        if self.is_lagrangian_dual() and (isinstance(self, Newton) or isinstance(self, BFGS)):
+            raise ValueError('cannot solve lagrangian dual with a second order optimizer')
 
     def _print_header(self):
         if self.verbose:
