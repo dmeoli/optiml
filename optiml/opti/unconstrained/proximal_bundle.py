@@ -145,9 +145,12 @@ class ProximalBundle(Optimizer):
             # so we just keep the single constant fi - gi^T * xi instead of xi
             M = [v >= F + G @ (self.x + d)]
 
+            if self.is_lagrangian_dual():  # Lagrange multipliers
+                M += [d >= 0]
+
             if self.f.f_star() < np.inf:
                 # cheating: use information about f_star in the model
-                M = M + [v >= self.f.f_star()]
+                M += [v >= self.f.f_star()]
 
             # objective function
             c = v + self.mu * sum_squares(d) / 2
