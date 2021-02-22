@@ -64,6 +64,7 @@ class BacktrackingLineSearch(LineSearch):
 
     a_start > 0 is the first value to be tested, which is decreased by multiplying
     it by tau < 1 until the Armijo condition with parameter m1 is satisfied.
+
     :returns: the optimal step and the optimal f-value
     """
 
@@ -128,8 +129,10 @@ class ArmijoWolfeLineSearch(LineSearch):
     a_start > 0 is the first value to be tested: if phi'(as) < 0 then
     a_start is divided by tau < 1 (hence it is increased) until this
     does not happen any longer.
+
     m1 and m2 are the standard Armijo-Wolfe parameters;
     note that the strong Wolfe condition is used.
+
     :returns: the optimal step and the optimal f-value
     """
 
@@ -251,12 +254,12 @@ class LagrangianArmijoWolfeLineSearch(ArmijoWolfeLineSearch):
 
         phi0 = phi(0), phip0 = phi'(0) < 0
 
-     as > 0 is the first value to be tested, and it is also the *maximum*
-     possible step size: if phi'( as ) < 0 then the LS is immediately
-     terminated
+    a_start > 0 is the first value to be tested, and it is also the *maximum*
+    possible step size: if phi'( as ) < 0 then the LS is immediately
+    terminated
 
-     m1 and m2 are the standard Armijo-Wolfe parameters; note that the strong
-     Wolfe condition is used
+    m1 and m2 are the standard Armijo-Wolfe parameters;
+    note that the strong Wolfe condition is used.
 
     :returns the optimal step and the optimal f-value
     """

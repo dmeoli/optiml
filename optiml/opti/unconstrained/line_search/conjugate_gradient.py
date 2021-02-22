@@ -233,14 +233,14 @@ class ConjugateGradient(LineSearchOptimizer):
                     max_t = min(self.line_search.a_start, min(-self.x[idx] / d[idx]))
                     self.line_search.a_start = max_t
 
-            past_g_x = self.g_x  # previous gradient
-            past_d = d  # previous search direction
-
             phi_p0 = self.g_x.dot(d)
 
             # compute step size
             a, last_f_x, last_x, last_g_x, self.f_eval = self.line_search.search(
                 d, self.x, last_x, last_g_x, self.f_eval, self.f_x, phi_p0, self.is_verbose())
+
+            past_g_x = self.g_x  # previous gradient
+            past_d = d  # previous search direction
 
             # stopping criteria
             if a <= self.line_search.min_a:
