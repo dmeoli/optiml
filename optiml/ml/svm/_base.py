@@ -92,6 +92,7 @@ class SVM(BaseEstimator, ABC):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
+                 fit_intercept=True,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -108,6 +109,8 @@ class SVM(BaseEstimator, ABC):
         self.momentum_type = momentum_type
         self.momentum = momentum
         self.max_f_eval = max_f_eval
+        self.fit_intercept = fit_intercept
+        self.intercept_ = 0.
         self.mu = mu
         self.master_solver = master_solver
         self.master_verbose = master_verbose
@@ -163,6 +166,7 @@ class PrimalSVM(SVM, ABC):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
+                         fit_intercept=fit_intercept,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -177,8 +181,6 @@ class PrimalSVM(SVM, ABC):
         self.shuffle = shuffle
         self.random_state = random_state
         self.coef_ = np.zeros(0)
-        self.intercept_ = 0.
-        self.fit_intercept = fit_intercept
         if issubclass(self.optimizer, StochasticOptimizer):
             self.train_loss_history = []
             self.train_score_history = []
@@ -275,7 +277,7 @@ class DualSVM(SVM, ABC):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 use_explicit_eq=True,
+                 fit_intercept=True,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -290,6 +292,7 @@ class DualSVM(SVM, ABC):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
+                         fit_intercept=fit_intercept,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -301,10 +304,8 @@ class DualSVM(SVM, ABC):
                 not issubclass(optimizer, SMO) or
                 not issubclass(optimizer, Optimizer)):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
-        self.use_explicit_eq = use_explicit_eq
         if isinstance(self.kernel, LinearKernel):
             self.coef_ = np.zeros(0)
-        self.intercept_ = 0.
         self.nonposdef_solver = nonposdef_solver
         self.nonposdef_solver_verbose = nonposdef_solver_verbose
 
@@ -492,7 +493,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 use_explicit_eq=True,
+                 fit_intercept=True,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -508,7 +509,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
-                         use_explicit_eq=use_explicit_eq,
+                         fit_intercept=fit_intercept,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -549,7 +550,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
             lb = np.zeros(n_samples)  # lower bounds
 
-            if self.use_explicit_eq:
+            if self.fit_intercept:
 
                 alphas = solve_qp(P=Q,
                                   q=q,
@@ -599,7 +600,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
             elif issubclass(self.optimizer, Optimizer):
 
-                if self.use_explicit_eq:
+                if self.fit_intercept:
 
                     self.obj = LagrangianConstrainedQuadratic(primal=self.obj,
                                                               A=y,
@@ -875,7 +876,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 use_explicit_eq=True,
+                 fit_intercept=True,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -891,7 +892,7 @@ class DualSVR(RegressorMixin, DualSVM):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
-                         use_explicit_eq=use_explicit_eq,
+                         fit_intercept=fit_intercept,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -938,7 +939,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 lb = np.zeros(2 * n_samples)  # lower bounds
 
-                if self.use_explicit_eq:
+                if self.fit_intercept:
 
                     alphas = solve_qp(P=Q,
                                       q=q,
@@ -988,7 +989,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 elif issubclass(self.optimizer, Optimizer):
 
-                    if self.use_explicit_eq:
+                    if self.fit_intercept:
 
                         self.obj = LagrangianConstrainedQuadratic(primal=self.obj,
                                                                   A=e,
