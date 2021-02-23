@@ -281,8 +281,8 @@ class DualSVM(SVM, ABC):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
-                 nonposdef_solver='cg',
-                 nonposdef_solver_verbose=False,
+                 lagrangian_solver='minres',
+                 lagrangian_solver_verbose=False,
                  verbose=False):
         super().__init__(C=C,
                          tol=tol,
@@ -306,8 +306,8 @@ class DualSVM(SVM, ABC):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
         if isinstance(self.kernel, LinearKernel):
             self.coef_ = np.zeros(0)
-        self.nonposdef_solver = nonposdef_solver
-        self.nonposdef_solver_verbose = nonposdef_solver_verbose
+        self.lagrangian_solver = lagrangian_solver
+        self.lagrangian_solver_verbose = lagrangian_solver_verbose
 
 
 class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
@@ -497,8 +497,8 @@ class DualSVC(ClassifierMixin, DualSVM):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
-                 nonposdef_solver='cg',
-                 nonposdef_solver_verbose=False,
+                 lagrangian_solver='minres',
+                 lagrangian_solver_verbose=False,
                  verbose=False):
         super().__init__(kernel=kernel,
                          C=C,
@@ -513,8 +513,8 @@ class DualSVC(ClassifierMixin, DualSVM):
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
-                         nonposdef_solver=nonposdef_solver,
-                         nonposdef_solver_verbose=nonposdef_solver_verbose,
+                         lagrangian_solver=lagrangian_solver,
+                         lagrangian_solver_verbose=lagrangian_solver_verbose,
                          verbose=verbose)
         self.lb = LabelBinarizer(neg_label=-1)
 
@@ -583,20 +583,10 @@ class DualSVC(ClassifierMixin, DualSVM):
                 Q += np.outer(y, y)
                 self.obj = Quadratic(Q, q)
 
-                if issubclass(self.optimizer, ActiveSet):
-
-                    self.optimizer = self.optimizer(quad=self.obj,
-                                                    ub=ub,
-                                                    max_iter=self.max_iter,
-                                                    nonposdef_solver=self.nonposdef_solver,
-                                                    verbose=self.verbose).minimize()
-
-                else:
-
-                    self.optimizer = self.optimizer(quad=self.obj,
-                                                    ub=ub,
-                                                    max_iter=self.max_iter,
-                                                    verbose=self.verbose).minimize()
+                self.optimizer = self.optimizer(quad=self.obj,
+                                                ub=ub,
+                                                max_iter=self.max_iter,
+                                                verbose=self.verbose).minimize()
 
             elif issubclass(self.optimizer, Optimizer):
 
@@ -605,8 +595,8 @@ class DualSVC(ClassifierMixin, DualSVM):
                     self.obj = LagrangianConstrainedQuadratic(primal=self.obj,
                                                               A=y,
                                                               ub=ub,
-                                                              nonposdef_solver=self.nonposdef_solver,
-                                                              nonposdef_solver_verbose=self.nonposdef_solver_verbose)
+                                                              lagrangian_solver=self.lagrangian_solver,
+                                                              lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
                 else:
 
@@ -615,8 +605,8 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                     self.obj = LagrangianBoxConstrainedQuadratic(primal=self.obj,
                                                                  ub=ub,
-                                                                 nonposdef_solver=self.nonposdef_solver,
-                                                                 nonposdef_solver_verbose=self.nonposdef_solver_verbose)
+                                                                 lagrangian_solver=self.lagrangian_solver,
+                                                                 lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
                 if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -880,8 +870,8 @@ class DualSVR(RegressorMixin, DualSVM):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
-                 nonposdef_solver='cg',
-                 nonposdef_solver_verbose=False,
+                 lagrangian_solver='minres',
+                 lagrangian_solver_verbose=False,
                  verbose=False):
         super().__init__(kernel=kernel,
                          C=C,
@@ -896,8 +886,8 @@ class DualSVR(RegressorMixin, DualSVM):
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
-                         nonposdef_solver=nonposdef_solver,
-                         nonposdef_solver_verbose=nonposdef_solver_verbose,
+                         lagrangian_solver=lagrangian_solver,
+                         lagrangian_solver_verbose=lagrangian_solver_verbose,
                          verbose=verbose)
         if not epsilon >= 0:
             raise ValueError('epsilon must be >= 0')
@@ -972,20 +962,10 @@ class DualSVR(RegressorMixin, DualSVM):
                     Q += np.outer(e, e)
                     self.obj = Quadratic(Q, q)
 
-                    if issubclass(self.optimizer, ActiveSet):
-
-                        self.optimizer = self.optimizer(quad=self.obj,
-                                                        ub=ub,
-                                                        max_iter=self.max_iter,
-                                                        nonposdef_solver=self.nonposdef_solver,
-                                                        verbose=self.verbose).minimize()
-
-                    else:
-
-                        self.optimizer = self.optimizer(quad=self.obj,
-                                                        ub=ub,
-                                                        max_iter=self.max_iter,
-                                                        verbose=self.verbose).minimize()
+                    self.optimizer = self.optimizer(quad=self.obj,
+                                                    ub=ub,
+                                                    max_iter=self.max_iter,
+                                                    verbose=self.verbose).minimize()
 
                 elif issubclass(self.optimizer, Optimizer):
 
@@ -994,8 +974,8 @@ class DualSVR(RegressorMixin, DualSVM):
                         self.obj = LagrangianConstrainedQuadratic(primal=self.obj,
                                                                   A=e,
                                                                   ub=ub,
-                                                                  nonposdef_solver=self.nonposdef_solver,
-                                                                  nonposdef_solver_verbose=self.nonposdef_solver_verbose)
+                                                                  lagrangian_solver=self.lagrangian_solver,
+                                                                  lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
                     else:
 
@@ -1004,8 +984,8 @@ class DualSVR(RegressorMixin, DualSVM):
 
                         self.obj = LagrangianBoxConstrainedQuadratic(primal=self.obj,
                                                                      ub=ub,
-                                                                     nonposdef_solver=self.nonposdef_solver,
-                                                                     nonposdef_solver_verbose=self.nonposdef_solver_verbose)
+                                                                     lagrangian_solver=self.lagrangian_solver,
+                                                                     lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 

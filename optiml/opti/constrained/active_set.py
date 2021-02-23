@@ -1,9 +1,7 @@
 import numpy as np
 from scipy.sparse.linalg import lsqr, minres
 
-from optiml.opti import Quadratic
 from optiml.opti.constrained import BoxConstrainedQuadraticOptimizer
-from optiml.opti.unconstrained.line_search import ConjugateGradient
 from optiml.opti.utils import cholesky_solve
 
 
@@ -43,7 +41,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                  max_iter=1000,
                  callback=None,
                  callback_args=(),
-                 nonposdef_solver='cg',
+                 sym_nonposdef_solver='minres',
                  verbose=False):
         super().__init__(quad=quad,
                          ub=ub,
@@ -53,37 +51,34 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                          callback=callback,
                          callback_args=callback_args,
                          verbose=verbose)
-        self.nonposdef_solver = nonposdef_solver
+        self.sym_nonposdef_solver = sym_nonposdef_solver
 
     def _solve_sym_nonposdef(self, Q, q):
         # since Q is indefinite, i.e., the function is linear along the eigenvectors
         # correspondent to the null eigenvalues, the system has not solutions, so we
         # will choose the one that minimizes the residue in the least-squares sense
+        # see more @ https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html#solving-linear-problems
 
-        if self.nonposdef_solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
+        # bad numerical solution: does not exploit the symmetricity of Q, waiting for `symmlq` in scipy
+        if self.sym_nonposdef_solver == 'lsqr':
 
             x = lsqr(Q, -q)[0]
 
         else:
 
-            # LSQR `min ||Ax - b||` is formally equivalent to the normal equations:
+            # `min ||Ax - b||` is formally equivalent to solve the linear system:
             #                           A^T A x = A^T b
 
             Q, q = np.inner(Q, Q), Q.T.dot(q)
 
-            if self.nonposdef_solver == 'minres':  # numerical solution (slower, lower accurate):
+            if self.sym_nonposdef_solver == 'minres':
 
                 x = minres(Q, -q)[0]
 
-            elif self.nonposdef_solver == 'cg':  # optimization solution (faster, more accurate):
-
-                quad = Quadratic(Q, q)
-                x = ConjugateGradient(f=quad, wf='hs').minimize().x  # Hestenes-Stiefel formula
-
             else:
 
-                raise TypeError(f'{self.nonposdef_solver} is not an allowed solver, '
-                                f'choose one of `cg`, `minres` and `lsqr`')
+                raise TypeError(f'{self.sym_nonposdef_solver} is not an allowed solver, '
+                                f'choose one of `minres` or `lsqr`')
 
         return x
 

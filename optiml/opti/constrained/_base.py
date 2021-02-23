@@ -3,9 +3,7 @@ from abc import ABC
 import numpy as np
 from scipy.sparse.linalg import minres, lsqr
 
-from optiml.opti import Optimizer
-from optiml.opti import Quadratic
-from optiml.opti.unconstrained.line_search import ConjugateGradient
+from optiml.opti import Optimizer, Quadratic
 from optiml.opti.utils import cholesky_solve
 
 
@@ -41,7 +39,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
                     1/2 x^T Q x + q^T x : 0 <= x <= ub
     """
 
-    def __init__(self, primal, ub, nonposdef_solver='cg', nonposdef_solver_verbose=False):
+    def __init__(self, primal, ub, lagrangian_solver='minres', lagrangian_solver_verbose=False):
         if not isinstance(primal, Quadratic):
             raise TypeError(f'{primal} is not an allowed quadratic function')
         super().__init__(primal.Q, primal.q)
@@ -55,8 +53,8 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
         self.ub = np.asarray(ub, dtype=float)
-        self.nonposdef_solver = nonposdef_solver
-        self.nonposdef_solver_verbose = nonposdef_solver_verbose
+        self.lagrangian_solver = lagrangian_solver
+        self.lagrangian_solver_verbose = lagrangian_solver_verbose
         # backup {lambda : x}
         self.last_lmbda = None
         self.last_x = None
@@ -73,42 +71,34 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         # since Q is indefinite, i.e., the function is linear along the eigenvectors
         # correspondent to the null eigenvalues, the system has not solutions, so we
         # will choose the one that minimizes the residue in the least-squares sense
+        # see more @ https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html#solving-linear-problems
 
-        nonposdef_solver_verbose = self.nonposdef_solver_verbose() if callable(
-            self.nonposdef_solver_verbose) else self.nonposdef_solver_verbose
+        lagrangian_solver_verbose = self.lagrangian_solver_verbose() if callable(
+            self.lagrangian_solver_verbose) else self.lagrangian_solver_verbose
 
-        if nonposdef_solver_verbose:
+        if lagrangian_solver_verbose:
             print('\n')
 
-        if self.nonposdef_solver == 'lsqr':  # bad numerical solution: does not exploit the symmetricity of Q
+        # bad numerical solution: does not exploit the symmetricity of Q, waiting for `symmlq` in scipy
+        if self.lagrangian_solver == 'lsqr':
 
-            x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=nonposdef_solver_verbose)[:4]
+            x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=lagrangian_solver_verbose)[:4]
 
         else:
 
-            # LSQR `min ||Ax - b||` is formally equivalent to the normal equations:
+            # `min ||Ax - b||` is formally equivalent to solve the linear system:
             #                           A^T A x = A^T b
 
             Q, ql = np.inner(self.Q, self.Q), self.Q.T.dot(ql)
 
-            if self.nonposdef_solver == 'minres':  # numerical solution (slower, lower accurate):
+            if self.lagrangian_solver == 'minres':
 
-                x = minres(Q, -ql, show=nonposdef_solver_verbose)[0]
-
-            elif self.nonposdef_solver == 'cg':  # optimization solution (faster, more accurate):
-
-                if nonposdef_solver_verbose:
-                    print(ConjugateGradient.__name__)
-
-                quad = Quadratic(Q, ql)
-                # Hestenes-Stiefel formula
-                cg = ConjugateGradient(f=quad, wf='hs', verbose=nonposdef_solver_verbose).minimize()
-                x, self.last_itn, = cg.x, cg.iter
+                x = minres(Q, -ql, show=lagrangian_solver_verbose)[0]
 
             else:
 
-                raise TypeError(f'{self.nonposdef_solver} is not an allowed solver, '
-                                f'choose one of `cg`, `minres` and `lsqr`')
+                raise TypeError(f'{self.lagrangian_solver} is not an allowed solver, '
+                                f'choose one of `minres` or `lsqr`')
 
             self.last_rnorm = np.linalg.norm(-ql - Q.dot(x))
 
@@ -191,9 +181,9 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub
     """
 
-    def __init__(self, primal, A, ub, nonposdef_solver='cg', nonposdef_solver_verbose=False):
-        super().__init__(primal=primal, ub=ub, nonposdef_solver=nonposdef_solver,
-                         nonposdef_solver_verbose=nonposdef_solver_verbose)
+    def __init__(self, primal, A, ub, lagrangian_solver='minres', lagrangian_solver_verbose=False):
+        super().__init__(primal=primal, ub=ub, lagrangian_solver=lagrangian_solver,
+                         lagrangian_solver_verbose=lagrangian_solver_verbose)
         self.ndim += int(self.ndim / 2)
         self.A = np.asarray(A, dtype=float)
 

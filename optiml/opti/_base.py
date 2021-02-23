@@ -64,8 +64,8 @@ class Optimizer(ABC):
         self._callback = callback
         self.callback_args = callback_args
         if self.is_lagrangian_dual():
-            nonposdef_solver_verbose = self.f.nonposdef_solver_verbose  # save value to avoid circular call
-            self.f.nonposdef_solver_verbose = lambda: nonposdef_solver_verbose if self.is_verbose() else False
+            lagrangian_solver_verbose = self.f.lagrangian_solver_verbose  # save value to avoid circular call
+            self.f.lagrangian_solver_verbose = lambda: lagrangian_solver_verbose if self.is_verbose() else False
         self.verbose = verbose
 
     def is_lagrangian_dual(self):
@@ -93,7 +93,7 @@ class Optimizer(ABC):
                 print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
                 print('\tgap: {: 1.4e}'.format(gap), end='')
                 if not self.f.is_posdef:
-                    if self.f.last_itn:  # `cg` and `lsqr`
+                    if self.f.last_itn:  # `lsqr`
                         print('\titn: {:3d}'.format(self.f.last_itn), end='')
                     print('\trnorm: {:1.4e}'.format(self.f.last_rnorm), end='')
 
