@@ -54,6 +54,9 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
             - [x] AdaDelta
             - [x] RProp
             - [x] RMSProp
+                - [x] Momentum
+                    - [x] standard
+                    - [x] Nesterov
         - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface to 
           [ecos](https://github.com/embotech/ecos), [osqp](https://github.com/oxfordcontrol/osqp), 
           [scs](https://github.com/cvxgrp/scs), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
