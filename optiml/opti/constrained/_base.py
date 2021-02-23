@@ -100,7 +100,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
                 raise TypeError(f'{self.lagrangian_solver} is not an allowed solver, '
                                 f'choose one of `minres` or `lsqr`')
 
-            self.last_rnorm = np.linalg.norm(-ql - Q.dot(x))
+            self.last_rnorm = np.linalg.norm(-ql - Q.dot(x))  # || b - Ax ||
 
         return x
 
