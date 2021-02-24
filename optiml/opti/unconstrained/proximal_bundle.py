@@ -162,7 +162,12 @@ class ProximalBundle(Optimizer):
             Problem(Minimize(c), M).solve(solver=self.master_solver.upper(),
                                           verbose=self.is_verbose() and self.master_verbose)
 
-            d = -d.value.ravel()
+            try:
+                d = -d.value.ravel()
+            except AttributeError:
+                self.status = 'error'
+                break
+
             v = v.value.item()
 
             self.nd = np.linalg.norm(d)
