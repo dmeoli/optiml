@@ -416,6 +416,8 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
             if self.optimizer.status == 'stopped':
                 warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
+            elif self.optimizer.status == 'error':
+                warnings.warn('failure while computing direction for the master problem', ConvergenceWarning)
 
             self._unpack(self.optimizer.x)
 
@@ -615,6 +617,14 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     max_f_eval=self.max_f_eval,
                                                     verbose=self.verbose).minimize()
 
+                    if self.optimizer.status == 'stopped':
+                        if self.optimizer.iter >= self.max_iter:
+                            warnings.warn('max_iter reached but the optimization has not converged yet',
+                                          ConvergenceWarning)
+                        elif self.optimizer.f_eval >= self.max_f_eval:
+                            warnings.warn('max_f_eval reached but the optimization has not converged yet',
+                                          ConvergenceWarning)
+
                 elif issubclass(self.optimizer, ProximalBundle):
 
                     self.optimizer = self.optimizer(f=self.obj,
@@ -623,6 +633,11 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     master_solver=self.master_solver,
                                                     master_verbose=self.master_verbose,
                                                     verbose=self.verbose).minimize()
+
+                    if self.optimizer.status == 'stopped':
+                        warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
+                    elif self.optimizer.status == 'error':
+                        warnings.warn('failure while computing direction for the master problem', ConvergenceWarning)
 
                 elif issubclass(self.optimizer, StochasticOptimizer):
 
@@ -646,15 +661,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                     raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-                if self.optimizer.status == 'stopped':
-                    if self.optimizer.iter >= self.max_iter:
-                        warnings.warn('max_iter reached but the optimization has not converged yet',
-                                      ConvergenceWarning)
-                    elif hasattr(self.optimizer, 'f_eval') and self.optimizer.f_eval >= self.max_f_eval:
-                        warnings.warn('max_f_eval reached but the optimization has not converged yet',
-                                      ConvergenceWarning)
-
-            alphas = self.optimizer.primal_x if hasattr(self.optimizer.f, 'primal') else self.optimizer.x
+            alphas = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
 
         sv = alphas > 1e-6
         self.support_ = np.arange(len(alphas))[sv]
@@ -790,6 +797,8 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
             if self.optimizer.status == 'stopped':
                 warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
+            elif self.optimizer.status == 'error':
+                warnings.warn('failure while computing direction for the master problem', ConvergenceWarning)
 
             self._unpack(self.optimizer.x)
 
@@ -994,6 +1003,14 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         max_f_eval=self.max_f_eval,
                                                         verbose=self.verbose).minimize()
 
+                        if self.optimizer.status == 'stopped':
+                            if self.optimizer.iter >= self.max_iter:
+                                warnings.warn('max_iter reached but the optimization has not converged yet',
+                                              ConvergenceWarning)
+                            elif self.optimizer.f_eval >= self.max_f_eval:
+                                warnings.warn('max_f_eval reached but the optimization has not converged yet',
+                                              ConvergenceWarning)
+
                     elif issubclass(self.optimizer, ProximalBundle):
 
                         self.optimizer = self.optimizer(f=self.obj,
@@ -1002,6 +1019,13 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
                                                         verbose=self.verbose).minimize()
+
+                        if self.optimizer.status == 'stopped':
+                            warnings.warn('max_iter reached but the optimization has not converged yet',
+                                          ConvergenceWarning)
+                        elif self.optimizer.status == 'error':
+                            warnings.warn('failure while computing direction for the master problem',
+                                          ConvergenceWarning)
 
                     elif issubclass(self.optimizer, StochasticOptimizer):
 
@@ -1025,15 +1049,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                         raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-                    if self.optimizer.status == 'stopped':
-                        if self.optimizer.iter >= self.max_iter:
-                            warnings.warn('max_iter reached but the optimization has not converged yet',
-                                          ConvergenceWarning)
-                        elif hasattr(self.optimizer, 'f_eval') and self.optimizer.f_eval >= self.max_f_eval:
-                            warnings.warn('max_f_eval reached but the optimization has not converged yet',
-                                          ConvergenceWarning)
-
-                alphas = self.optimizer.primal_x if hasattr(self.optimizer.f, 'primal') else self.optimizer.x
+                alphas = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
 
             alphas_p, alphas_n = np.split(alphas, 2)
 

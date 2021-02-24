@@ -222,6 +222,8 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
 
             if self.optimizer.status == 'stopped':
                 warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
+            elif self.optimizer.status == 'error':
+                warnings.warn('failure while computing direction for the master problem', ConvergenceWarning)
 
         elif issubclass(self.optimizer, StochasticOptimizer):
 
