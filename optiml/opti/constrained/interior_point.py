@@ -1,7 +1,7 @@
 import numpy as np
+from scipy.linalg import cho_factor, cho_solve
 
 from optiml.opti.constrained import BoxConstrainedQuadraticOptimizer
-from optiml.opti.utils import cholesky_solve
 
 
 class InteriorPoint(BoxConstrainedQuadraticOptimizer):
@@ -194,7 +194,7 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
 
             # and use Cholesky to solve the system since
             # H is a symmetric positive definite matrix
-            dx = cholesky_solve(np.linalg.cholesky(H), w)
+            dx = cho_solve(cho_factor(H), w)
 
             dlp = (mu * np.ones(self.f.ndim) + lp * dx) / umx - lp
 

@@ -1,10 +1,10 @@
 from abc import ABC
 
 import numpy as np
+from scipy.linalg import cho_solve, cho_factor
 from scipy.sparse.linalg import minres, lsqr
 
 from optiml.opti import Optimizer, Quadratic
-from optiml.opti.utils import cholesky_solve
 
 
 class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
@@ -46,7 +46,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         self.primal = primal
         self.ndim *= 2
         try:
-            self.L = np.linalg.cholesky(self.Q)
+            self.L, self.low = cho_factor(self.Q)
             self.is_posdef = True
         except np.linalg.LinAlgError:
             self.is_posdef = False
@@ -131,7 +131,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
             if self.is_posdef:
-                x = cholesky_solve(self.L, -ql)
+                x = cho_solve((self.L, self.low), -ql)
             else:
                 x = self._solve_sym_nonposdef(ql)
             # backup new {lambda : x}
@@ -160,7 +160,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
             lmbda_p, lmbda_n = np.split(lmbda, 2)
             ql = self.q + lmbda_p - lmbda_n
             if self.is_posdef:
-                x = cholesky_solve(self.L, -ql)
+                x = cho_solve((self.L, self.low), -ql)
             else:
                 x = self._solve_sym_nonposdef(ql)
             # backup new {lambda : x}
@@ -215,7 +215,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
             if self.is_posdef:
-                x = cholesky_solve(self.L, -ql)
+                x = cho_solve((self.L, self.low), -ql)
             else:
                 x = self._solve_sym_nonposdef(ql)
             # backup new {lambda : x}
@@ -244,7 +244,7 @@ class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
             mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
             ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
             if self.is_posdef:
-                x = cholesky_solve(self.L, -ql)
+                x = cho_solve((self.L, self.low), -ql)
             else:
                 x = self._solve_sym_nonposdef(ql)
             # backup new {lambda : x}

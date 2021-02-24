@@ -1,8 +1,8 @@
 import numpy as np
+from scipy.linalg import cho_solve, cho_factor
 from scipy.sparse.linalg import lsqr, minres
 
 from optiml.opti.constrained import BoxConstrainedQuadraticOptimizer
-from optiml.opti.utils import cholesky_solve
 
 
 class ActiveSet(BoxConstrainedQuadraticOptimizer):
@@ -135,8 +135,8 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
             try:
                 # use the Cholesky factorization to solve the linear system if Q_{AA}
                 # is symmetric and positive definite, i.e., the function is convex
-                xs[A] = cholesky_solve(np.linalg.cholesky(self.f.Q[A, :][:, A]),
-                                       -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
+                xs[A] = cho_solve(cho_factor(self.f.Q[A, :][:, A]),
+                                  -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
             except np.linalg.LinAlgError:
                 xs[A] = self._solve_sym_nonposdef(self.f.Q[A, :][:, A],
                                                   (self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))

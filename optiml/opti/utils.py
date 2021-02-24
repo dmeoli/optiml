@@ -6,14 +6,6 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from .unconstrained import ProximalBundle
 
 
-# linear algebra utils
-
-def cholesky_solve(L, b):
-    """Solve a symmetric positive definite linear
-    system L L^T x = b using Cholesky factorization"""
-    return np.linalg.solve(L.T, np.linalg.solve(L, b))
-
-
 # bcqp generator
 
 def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_min=8, ub_max=12, seed=None):
