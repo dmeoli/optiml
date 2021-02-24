@@ -414,9 +414,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                                             master_verbose=self.master_verbose,
                                             verbose=self.verbose).minimize()
 
-            if self.optimizer.status == 'stopped':
-                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
-            elif self.optimizer.status == 'error':
+            if self.optimizer.status == 'error':
                 warnings.warn('failure while computing direction for the master problem', ConvergenceWarning)
 
             self._unpack(self.optimizer.x)
@@ -634,9 +632,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                     master_verbose=self.master_verbose,
                                                     verbose=self.verbose).minimize()
 
-                    if self.optimizer.status == 'stopped':
-                        warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
-                    elif self.optimizer.status == 'error':
+                    if self.optimizer.status == 'error':
                         warnings.warn('failure while computing direction for the master problem', ConvergenceWarning)
 
                 elif issubclass(self.optimizer, StochasticOptimizer):
@@ -795,9 +791,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                                             master_verbose=self.master_verbose,
                                             verbose=self.verbose).minimize()
 
-            if self.optimizer.status == 'stopped':
-                warnings.warn('max_iter reached but the optimization has not converged yet', ConvergenceWarning)
-            elif self.optimizer.status == 'error':
+            if self.optimizer.status == 'error':
                 warnings.warn('failure while computing direction for the master problem', ConvergenceWarning)
 
             self._unpack(self.optimizer.x)
@@ -1020,10 +1014,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         master_verbose=self.master_verbose,
                                                         verbose=self.verbose).minimize()
 
-                        if self.optimizer.status == 'stopped':
-                            warnings.warn('max_iter reached but the optimization has not converged yet',
-                                          ConvergenceWarning)
-                        elif self.optimizer.status == 'error':
+                        if self.optimizer.status == 'error':
                             warnings.warn('failure while computing direction for the master problem',
                                           ConvergenceWarning)
 

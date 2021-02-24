@@ -212,9 +212,9 @@ class ProximalBundle(Optimizer):
             if fd <= self.f_x + self.m1 * (v - self.f_x):  # SS: serious step
                 self.x = last_x
                 self.f_x = fd
-            else:
+            else:  # NS: null step
                 if ((self.is_lagrangian_dual() and self.f.primal.ndim == 2)
-                        or self.f.ndim <= 3):  # NS: null step
+                        or self.f.ndim <= 3):
                     self.x0_history_ns.append(self.x[0])
                     self.x1_history_ns.append(self.x[1])
                     self.f_x_history_ns.append(self.f_x)
