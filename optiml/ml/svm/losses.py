@@ -23,8 +23,9 @@ class SVMLoss(OptimizationFunction, ABC):
             y_batch = self.y
 
         n_samples = X_batch.shape[0]
+        y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function
         return (1 / (2 * n_samples) * np.linalg.norm(packed_coef_inter) ** 2 +  # regularization term
-                self.svm.C / n_samples * np.sum(self.loss(np.dot(X_batch, packed_coef_inter), y_batch)))  # loss
+                self.svm.C / n_samples * np.sum(self.loss(y_pred, y_batch)))  # loss term
 
     def loss(self, y_pred, y_true):
         raise NotImplementedError
@@ -59,7 +60,7 @@ class Hinge(SVMLoss):
         return np.maximum(0, 1 - y_true * y_pred)
 
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
-        y_pred = np.dot(X_batch, packed_coef_inter)
+        y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function
         idx = np.argwhere(y_batch * y_pred < 1.).ravel()
         return np.dot(y_batch[idx], X_batch[idx])
 
@@ -95,7 +96,7 @@ class EpsilonInsensitive(SVMLoss):
         return np.maximum(0, np.abs(y_pred - y_true) - self.epsilon)
 
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
-        y_pred = np.dot(X_batch, packed_coef_inter)
+        y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function
         idx = np.argwhere(np.abs(y_pred - y_batch) > self.epsilon).ravel()
         return np.dot(y_batch[idx] - y_pred[idx], X_batch[idx])
 

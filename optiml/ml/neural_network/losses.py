@@ -79,14 +79,12 @@ class MeanSquaredError(NeuralNetworkLoss):
         return np.full(fill_value=np.nan, shape=self.ndim)
 
     def loss(self, y_pred, y_true):
-        assert y_pred.shape == y_true.shape
         return np.sum(np.square(y_pred - y_true))
 
 
 class MeanAbsoluteError(NeuralNetworkLoss):
 
     def loss(self, y_pred, y_true):
-        assert y_pred.shape == y_true.shape
         return np.sum(np.abs(y_pred - y_true))
 
     def delta(self, y_pred, y_true):
@@ -99,9 +97,7 @@ class BinaryCrossEntropy(NeuralNetworkLoss):
     or regression between 0 and 1 with sigmoid output layer"""
 
     def loss(self, y_pred, y_true):
-        assert y_pred.shape == y_true.shape
-        return -np.sum(xlogy(y_true, y_pred) +
-                       xlogy(1. - y_true, 1. - y_pred))
+        return -np.sum(xlogy(y_true, y_pred) + xlogy(1. - y_true, 1. - y_pred))
 
 
 class CategoricalCrossEntropy(NeuralNetworkLoss):
@@ -109,7 +105,6 @@ class CategoricalCrossEntropy(NeuralNetworkLoss):
     classification with softmax output layer and one-hot encoded target data"""
 
     def loss(self, y_pred, y_true):
-        assert y_pred.shape == y_true.shape
         return -np.sum(xlogy(y_true, y_pred))
 
     def delta(self, y_pred, y_true):
