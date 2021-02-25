@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 
 from .kernels import gaussian, Kernel, LinearKernel
-from .losses import squared_hinge, SVMLoss, SVCLoss, SVRLoss, squared_epsilon_insensitive
+from .losses import squared_hinge, SVMLoss, squared_epsilon_insensitive
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
@@ -353,8 +353,8 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                          master_solver=master_solver,
                          master_verbose=master_verbose,
                          verbose=verbose)
-        if not issubclass(loss, SVCLoss):
-            raise TypeError(f'{loss} is not an allowed LinearSVC loss function')
+        if not loss._loss_type == 'classifier':
+            raise TypeError(f'{loss} is not an allowed SVC loss function')
         self.lb = LabelBinarizer(neg_label=-1)
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
@@ -729,8 +729,8 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                          master_solver=master_solver,
                          master_verbose=master_verbose,
                          verbose=verbose)
-        if not issubclass(loss, SVRLoss):
-            raise TypeError(f'{loss} is not an allowed LinearSVR loss function')
+        if not loss._loss_type == 'regressor':
+            raise TypeError(f'{loss} is not an allowed SVR loss function')
         if not epsilon >= 0:
             raise ValueError('epsilon must be >= 0')
         self.epsilon = epsilon
