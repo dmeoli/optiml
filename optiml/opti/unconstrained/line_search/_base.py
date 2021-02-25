@@ -93,7 +93,7 @@ class LineSearchOptimizer(Optimizer, ABC):
 
     def _print_info(self):
         if self.is_verbose():
-            print('\n{:4d}\t{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_eval, self.f_x, self.ng), end='')
+            print('\n{:4d}\t{:5d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_eval, self.f_x, self.ng), end='')
             if self.f.f_star() < np.inf:
                 print('\t{: 1.4e}'.format(self.f_x - self.f.f_star()), end='')
                 if self.prev_f_x < np.inf:

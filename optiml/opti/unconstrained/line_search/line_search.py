@@ -116,7 +116,7 @@ class BacktrackingLineSearch(LineSearch):
             ls_iter += 1
 
         if verbose:
-            print('\tls: {:2d}\tastar: {: 1.4e}'.format(ls_iter, _as), end='')
+            print('\tls: {:5d}\tastar: {: 1.4e}'.format(ls_iter, _as), end='')
         return _as, phi_a, last_x, last_g_x, f_eval
 
 
@@ -201,7 +201,7 @@ class ArmijoWolfeLineSearch(LineSearch):
             # Armijo and strong Wolfe conditions
             if phi_a <= phi0 + self.m1 * _as * phi_p0 and abs(phi_ps) <= -self.m2 * phi_p0:
                 if verbose:
-                    print('\tls: {:2d}\tit: {:2d}\tastar: {: 1.4e}'.format(ls_iter, 0, _as), end='')
+                    print('\tls: {:5d}\tit: {:5d}\tastar: {: 1.4e}'.format(ls_iter, 0, _as), end='')
                 return _as, phi_a, last_x, last_g_x, f_eval
 
             if phi_ps >= 0:
@@ -211,7 +211,7 @@ class ArmijoWolfeLineSearch(LineSearch):
             ls_iter += 1
 
         if verbose:
-            print('\tls: {:2d}'.format(ls_iter), end='')
+            print('\tls: {:5d}'.format(ls_iter), end='')
         ls_iter = 1  # count iterations of second phase
 
         am = 0
@@ -244,7 +244,7 @@ class ArmijoWolfeLineSearch(LineSearch):
             ls_iter += 1
 
         if verbose:
-            print('\tit: {:2d}\tastar: {: 1.4e}'.format(ls_iter, a), end='')
+            print('\tit: {:5d}\tastar: {: 1.4e}'.format(ls_iter, a), end='')
         return a, phi_a, last_x, last_g_x, f_eval
 
 
@@ -300,5 +300,5 @@ class LagrangianArmijoWolfeLineSearch(ArmijoWolfeLineSearch):
             ls_iter += 1
 
         if verbose:
-            print('\tls: {:2d}\tastar: {: 1.4e}'.format(ls_iter, a), end='')
+            print('\tls: {:5d}\tastar: {: 1.4e}'.format(ls_iter, a), end='')
         return a, phi_a, last_x, last_g_x, f_eval
