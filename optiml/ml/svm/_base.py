@@ -739,7 +739,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
             self.train_score_history.append(r2)
             if opt.is_verbose():
                 print('\tr2: {: 1.4f}'.format(r2), end='')
-            if self.early_stopping:
+            if self.validation_split:
                 val_r2 = self.score(X_val[:, :-1], y_val)
                 self.val_score_history.append(val_r2)
                 if opt.is_verbose():
