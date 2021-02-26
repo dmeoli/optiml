@@ -535,9 +535,9 @@ class DualSVC(ClassifierMixin, DualSVM):
 
         ub = np.ones(n_samples) * self.C  # upper bounds
 
-        self.obj = Quadratic(Q, q)
-
         if self.optimizer == SMOClassifier:
+
+            self.obj = Quadratic(Q, q)
 
             self.optimizer = SMOClassifier(self.obj, X, y, K, self.kernel, self.C,
                                            self.tol, self.verbose).minimize()
@@ -564,7 +564,6 @@ class DualSVC(ClassifierMixin, DualSVM):
             else:
 
                 Q += np.outer(y, y)
-                self.obj = Quadratic(Q, q)
 
                 alphas = solve_qp(P=Q,
                                   q=q,
@@ -592,7 +591,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 if self.fit_intercept:
 
-                    self.obj = LagrangianConstrainedQuadratic(primal=self.obj,
+                    self.obj = LagrangianConstrainedQuadratic(primal=Quadratic(Q, q),
                                                               A=y,
                                                               ub=ub,
                                                               lagrangian_solver=self.lagrangian_solver,
@@ -601,9 +600,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                 else:
 
                     Q += np.outer(y, y)
-                    self.obj = Quadratic(Q, q)
-
-                    self.obj = LagrangianBoxConstrainedQuadratic(primal=self.obj,
+                    self.obj = LagrangianBoxConstrainedQuadratic(primal=Quadratic(Q, q),
                                                                  ub=ub,
                                                                  lagrangian_solver=self.lagrangian_solver,
                                                                  lagrangian_solver_verbose=self.lagrangian_solver_verbose)
@@ -913,9 +910,9 @@ class DualSVR(RegressorMixin, DualSVM):
 
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
-        self.obj = Quadratic(Q, q)
-
         if self.optimizer == SMORegression:
+
+            self.obj = Quadratic(Q, q)
 
             self.optimizer = SMORegression(self.obj, X, y, K, self.kernel, self.C,
                                            self.epsilon, self.tol, self.verbose).minimize()
@@ -974,7 +971,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     if self.fit_intercept:
 
-                        self.obj = LagrangianConstrainedQuadratic(primal=self.obj,
+                        self.obj = LagrangianConstrainedQuadratic(primal=Quadratic(Q, q),
                                                                   A=e,
                                                                   ub=ub,
                                                                   lagrangian_solver=self.lagrangian_solver,
@@ -983,9 +980,7 @@ class DualSVR(RegressorMixin, DualSVM):
                     else:
 
                         Q += np.outer(e, e)
-                        self.obj = Quadratic(Q, q)
-
-                        self.obj = LagrangianBoxConstrainedQuadratic(primal=self.obj,
+                        self.obj = LagrangianBoxConstrainedQuadratic(primal=Quadratic(Q, q),
                                                                      ub=ub,
                                                                      lagrangian_solver=self.lagrangian_solver,
                                                                      lagrangian_solver_verbose=self.lagrangian_solver_verbose)
