@@ -52,7 +52,7 @@ The error function for SVM regression can then be written as:
     \end{aligned} \tag{2.5}
 \end{equation}
 
-\subsection{Primal Formulation}
+\subsection{Primal Formulations}
 
 \subsubsection{Epsilon-insensitive loss}
 
@@ -74,7 +74,11 @@ To provide a continuously differentiable function the optimization problem (2.6)
 
 where we make use of the \emph{squared epsilon-insensitive} loss that quadratically penalized slacks $\xi$ and is called $\mathcal{L}_2$-SVR.
 
-\subsection{Wolfe Dual Formulation}
+\pagebreak
+
+\subsection{Dual Formulations}
+
+\subsubsection{Wolfe Dual}
 
 To reformulate the (2.5) as a \emph{Wolfe dual}, we introduce Lagrange multipliers $\alpha_i^+ \geq 0, \alpha_i^- \geq 0, \mu_i^+ \geq 0, \mu_i^- \geq 0 \ \forall_i$:
 
@@ -162,4 +166,4 @@ As before it is better to average over all the indices $i$ in $S$:
     b=\displaystyle \frac{1}{N_s}\sum_{s\in S}y_s-\epsilon-\sum_{m \in S}(\alpha_m^+ - \alpha_m^-)\langle x_m, x_s \rangle \tag{2.18}
 \end{equation}
 
-\subsection{Lagrangian Dual Formulation}
+\subsubsection{Lagrangian Dual}

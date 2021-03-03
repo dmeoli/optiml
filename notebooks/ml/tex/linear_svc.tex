@@ -3,7 +3,7 @@
 Given $n$ training points, where each input $x_i$ has $m$ attributes, i.e., is of dimensionality $m$, and is in one of two classes $y_i=\pm1$, i.e., our training data is of the form:
 
 \begin{equation}
-	\{(x_i,y_i), x_i\in\Re^{m}, y_i=\pm1, i=1, \dots, n\} \tag{1.1}
+	\{(x_i,y_i), x_i\in\Re^{m}, y_i=\pm1, i=1, \dots, n\} \label{eq:svc_data}
 \end{equation}
 
 For simplicity we first assume that data are (not fully) linearly separable in the input space $x$, meaning that we can draw a line separating the two classes when $m=2$, a plane for $m=3$ and, more in general, a hyperplane for an arbitrary $m$.
@@ -13,10 +13,10 @@ Support vectors are the examples closest to the separating hyperplane and the ai
 This hyperplane is represented by the equation $w^T x + b=0$. So, we need to find $w$ and $b$ so that our training data can be described by:
 
 \begin{equation}
-    w^T x_i + b\geq+1-\xi_i, \forall y_i=+1 \tag{1.2a}
+    w^T x_i + b\geq+1-\xi_i, \forall y_i=+1 \label{eq:svc_const1}
 \end{equation}
 \begin{equation}
-    w^T x_i + b\leq-1+\xi_i, \forall y_i=-1 \tag{1.2b}
+    w^T x_i + b\leq-1+\xi_i, \forall y_i=-1 \label{eq:svc_const2}
 \end{equation}
 
 $$\xi_i\geq 0 \ \forall_i$$
@@ -26,18 +26,18 @@ where the positive slack variables $\xi_i$ are introduced to allow missclassifie
 These two equations can be combined into:
 
 \begin{equation}
-    y_i (w^T x_i + b) \geq 1 - \xi_i \ \forall_i \tag{1.3}
+    y_i (w^T x_i + b) \geq 1 - \xi_i \ \forall_i \label{eq:svc_const}
 \end{equation}
 
 $$\xi_i\geq 0 \ \forall_i$$
 
-The margin is equal to $\displaystyle \frac{1}{\Vert w\Vert}$ and maximizing it subject to the constraint in (1.3) while as we are trying to reduce the number of misclassifications is equivalent to finding:
+The margin is equal to $\displaystyle \frac{1}{\Vert w\Vert}$ and maximizing it subject to the constraint in \ref{eq:svc_const} while as we are trying to reduce the number of misclassifications is equivalent to finding:
 
 \begin{equation}
     \begin{aligned}
         \min_{w,b,\xi} \quad & \Vert w \Vert + C \sum_{i=1}^{n} \xi_i \\
             \textrm{subject to} \quad & y_i (w^T x_i + b) \geq 1 - \xi_i \ \forall_i \\ & \xi_i \geq 0 \ \forall_i
-    \end{aligned} \tag{1.4}
+    \end{aligned} \label{eq:svc_obj}
 \end{equation}
 
 Minimizing $\Vert w\Vert$ is equivalent to minimizing $\displaystyle \frac{1}{2}\Vert w\Vert^{2}$, but in this form we will deal with a convex optimization problem that has more desirable convergence properties. So we need to find:
@@ -46,19 +46,19 @@ Minimizing $\Vert w\Vert$ is equivalent to minimizing $\displaystyle \frac{1}{2}
     \begin{aligned}
         \min_{w,b,\xi} \quad & \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^{n} \xi_i \\
             \textrm{subject to} \quad & y_i (w^T x_i + b) \geq 1 - \xi_i \ \forall_i \\ & \xi_i \geq 0 \ \forall_i
-    \end{aligned} \tag{1.5}
+    \end{aligned} \label{eq:quad_svc_obj}
 \end{equation}
 
 where the parameter $C$ controls the trade-off between the slack variable penalty and the size of the margin.
 
-\subsection{Primal Formulation}
+\subsection{Primal Formulations}
 
 \subsubsection{Hinge loss}
 
 This quadratic optimization problem can be equivalently formulated as: 
 
 \begin{equation}
-    \min_{w,b} \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b)) \tag{1.6}
+    \min_{w,b} \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b)) \label{eq:svc_hinge}
 \end{equation}
 
 where we make use of the \emph{hinge} loss defined as:
@@ -68,13 +68,13 @@ where we make use of the \emph{hinge} loss defined as:
 	\begin{cases}
 		0 & \text{if } y (w^T x + b) \geq 1 \\
 		1 - y (w^T x + b) & \text{otherwise} \\
-	\end{cases} \tag{1.7a}
+	\end{cases} \label{eq:hinge1}
 \end{equation}
 
 or, alternatively:
 
 \begin{equation}
-	\mathcal{L}_1 = \max(0, 1 - y (w^T x + b)) \tag{1.7b}
+	\mathcal{L}_1 = \max(0, 1 - y (w^T x + b)) \label{eq:hinge2}
 \end{equation}
 
 The above formulation penalizes slacks $\xi$ linearly and is called $\mathcal{L}_1$-SVC.
@@ -86,64 +86,66 @@ The \emph{hinge} loss is a convex function and it is nondifferentiable due to it
         \begin{cases}
             -y x & \text{if } y (w^T x + b) < 1 \\
             0 & \text{otherwise} \\ 
-        \end{cases} \tag{1.8}
+        \end{cases} \label{eq:hinge_der}
 \end{equation}
 
 To simplify the notation and so also the algorithms the bias term $b$ is handled by augmenting the vector $w$ and each instance $x_i$ with an additional dimension:
 
-$$
-w^T = [w^T, b] \\
-x_i^T = [x_i^T, 1]
-$$
+$$w^T = [w^T, b]$$
+$$x_i^T = [x_i^T, 1]$$
 
-So, we can rewrite the (1.6) as follows:
+So, we can rewrite the \ref{eq:svc_hinge} as follows:
 
 \begin{equation}
-    \min_{w} \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i)) \tag{1.9}
+    \min_{w} \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i)) \label{eq:primal_svc_hinge}
 \end{equation}
 
 with the advantages of having convex properties of the objective function useful for convergence analysis and the possibility to directly apply algorithms designed for models without the bias term.
 
-Please notice that in terms of numerical optimization the formulation (1.6) is not equivalent to the (1.9) since in the first one the bias term $b$ does not contribute to the regularization term; but in machine learning sense, numerical experiments in \cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
+Please notice that in terms of numerical optimization the formulation \ref{eq:svc_hinge} is not equivalent to the \ref{eq:primal_svc_hinge} since in the first one the bias term $b$ does not contribute to the regularization term; but in machine learning sense, numerical experiments in \cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
 
 \subsubsection{Squared Hinge loss}
 
-Since smoothed versions of objective functions may be preferred for optimization, we can reformulate the (1.9) as:
+Since smoothed versions of objective functions may be preferred for optimization, we can reformulate the \ref{eq:primal_svc_hinge} as:
 
 \begin{equation}
-    \min_{w} \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i))^2 \tag{1.10}
+    \min_{w} \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i))^2 \label{eq:primal_svc_sq_hinge}
 \end{equation}
 
 where we make use of the \emph{squared hinge} loss that quadratically penalized slacks $\xi$ and is called $\mathcal{L}_2$-SVC.
 
-\subsection{Wolfe Dual Formulation}
+\pagebreak
 
-To reformulate the (1.5) as a \emph{Wolfe dual}, we need to allocate the Lagrange multipliers $\alpha_i\geq 0, \mu_i \geq 0 \ \forall_i$:
+\subsection{Dual Formulations}
+
+\subsubsection{Wolfe Dual}
+
+To reformulate the \ref{eq:quad_svc_obj} as a \emph{Wolfe dual}, we need to allocate the Lagrange multipliers $\alpha_i\geq 0, \mu_i \geq 0 \ \forall_i$:
 
 \begin{equation}
-    \max_{\alpha,\mu} \min_{w,b,\xi} \mathcal{W}(w,b,\xi,\alpha,\mu) = \frac{1}{2}\Vert w\Vert^{2}+C\sum_{i=1}^n\xi_i-\sum_{i=1}^n\alpha_i(y_i(w^T x_i + b)-1+\xi_i)-\sum_{i=1}^n\mu_i\xi_i \tag{1.11}
+    \max_{\alpha,\mu} \min_{w,b,\xi} \mathcal{W}(w,b,\xi,\alpha,\mu) = \frac{1}{2}\Vert w\Vert^{2}+C\sum_{i=1}^n\xi_i-\sum_{i=1}^n\alpha_i(y_i(w^T x_i + b)-1+\xi_i)-\sum_{i=1}^n\mu_i\xi_i \label{eq:svc_wolfe_dual}
 \end{equation}
 
 We wish to find the $w$, $b$ and $\xi_i$ which minimizes, and the $\alpha$ and $\mu$ which maximizes $\mathcal{W}$, provided $\alpha_i\geq 0, \mu_i \geq 0 \ \forall_i$. We can do this by differentiating $\mathcal{W}$ wrt $w$ and $b$ and setting the derivatives to 0:
 
 \begin{equation}
-	\frac{\partial \mathcal{W}}{\partial w}=w-\sum_{i=1}^{n}\alpha_i y_i x_i \Rightarrow w=\sum_{i=1}^{n}\alpha_i y_i x_i \tag{1.12}
+	\frac{\partial \mathcal{W}}{\partial w}=w-\sum_{i=1}^{n}\alpha_i y_i x_i \Rightarrow w=\sum_{i=1}^{n}\alpha_i y_i x_i \label{eq:svc_wolfe_der_w}
 \end{equation}
 
 \begin{equation}
-	\frac{\partial \mathcal{W}}{\partial b}=-\sum_{i=1}^{n}\alpha_i y_i\Rightarrow\sum_{i=1}^{n}\alpha_i y_i=0 \tag{1.13}
+	\frac{\partial \mathcal{W}}{\partial b}=-\sum_{i=1}^{n}\alpha_i y_i\Rightarrow\sum_{i=1}^{n}\alpha_i y_i=0 \label{eq:svc_wolfe_der_b}
 \end{equation}
 
 \begin{equation}
-	\frac{\partial \mathcal{W}}{\partial\xi_i}=0\Rightarrow C=\alpha_i+\mu_i \tag{1.14}
+	\frac{\partial \mathcal{W}}{\partial\xi_i}=0\Rightarrow C=\alpha_i+\mu_i \label{eq:svc_wolfe_der_xi}
 \end{equation}
 
-Substituting (1.12) and (1.13) into (1.11) together with $\mu_i\geq 0 \ \forall_i$, which implies that $\alpha\leq C$, gives a new formulation being dependent on $\alpha$. We therefore need to find:
+Substituting \ref{eq:svc_wolfe_der_w} and \ref{eq:svc_wolfe_der_b} into \ref{eq:svc_wolfe_dual} together with $\mu_i\geq 0 \ \forall_i$, which implies that $\alpha\leq C$, gives a new formulation being dependent on $\alpha$. We therefore need to find:
 
 \begin{align*}
     \max_{\alpha} \mathcal{W}(\alpha) &= \sum_{i=1}^{n}\alpha_i - \frac{1}{2}\sum_{i,j}\alpha_i\alpha_j y_i y_j \langle x_i, x_j \rangle \\
     &= \sum_{i=1}^{n}\alpha_i - \frac{1}{2}\sum_{i,j}\alpha_i Q_{ij}\alpha_j \ \text{where} \ Q_{ij} = y_i y_j \langle x_i, x_j \rangle \\
-    &= \sum_{i=1}^{n}\alpha_i - \frac{1}{2}\alpha^T Q\alpha \ \text{subject to} \ 0\leq\alpha_i\leq C \ \forall_i, \sum_{i=1}^{n}\alpha_i y_i=0 \tag{1.15}
+    &= \sum_{i=1}^{n}\alpha_i - \frac{1}{2}\alpha^T Q\alpha \ \text{subject to} \ 0\leq\alpha_i\leq C \ \forall_i, \sum_{i=1}^{n}\alpha_i y_i=0 \label{eq:svc_max_wolfe_dual}
 \end{align*}
 
 or, alternatively:
@@ -152,61 +154,61 @@ or, alternatively:
     \begin{aligned}
         \min_{\alpha} \quad & \frac{1}{2}\alpha^T Q\alpha+q^T\alpha \\
             \textrm{subject to} \quad & 0\leq\alpha_i\leq C \ \forall_i \\ & y^T\alpha=0
-    \end{aligned} \tag{1.16}
+    \end{aligned} \label{eq:svc_min_wolfe_dual}
 \end{equation}
 
 where $q^T = [1, \dots, 1]$.
 
-By solving (1.16) we will know $\alpha$ and, from (1.12), we will get $w$, so we need to calculate $b.$
+By solving \ref{eq:svc_min_wolfe_dual} we will know $\alpha$ and, from \ref{eq:svc_wolfe_der_w}, we will get $w$, so we need to calculate $b.$
 
-We know that any data point satisfying (1.13) which is a support vector $x_s$ will have the form:
+We know that any data point satisfying \ref{eq:svc_wolfe_der_b} which is a support vector $x_s$ will have the form:
 
 \begin{equation}
-	y_s(w^T x_s + b)=1 \tag{1.17}
+	y_s(w^T x_s + b)=1 \label{eq:svc_sv_const1}
 \end{equation}
 
-and, by substituting in (1.12), we get:
+and, by substituting in \ref{eq:svc_wolfe_der_w}, we get:
 
 \begin{equation}
-	y_s\big(\sum_{m\in S}\alpha_m y_m \langle x_m, x_s \rangle +b\big)=1 \tag{1.18}
+	y_s\big(\sum_{m\in S}\alpha_m y_m \langle x_m, x_s \rangle +b\big)=1 \label{eq:svc_sv_const2}
 \end{equation}
 
 where $s$ denotes the set of indices of the support vectors and is determined by finding the indices $i$ where $\alpha_i>0$, i.e., nonzero Lagrange multipliers.
 
-Multiplying through by $y_s$ and then using $y_s^2=1$ from (1.2a) and (1.2b):
+Multiplying through by $y_s$ and then using $y_s^2=1$ from \ref{eq:svc_const1} and \ref{eq:svc_const2}:
 
 \begin{equation}
-	y_s^2\big(\sum_{m\in S}\alpha_m y_m \langle x_m, x_s \rangle +b\big)=y_s \tag{1.19}
+	y_s^2\big(\sum_{m\in S}\alpha_m y_m \langle x_m, x_s \rangle +b\big)=y_s \label{eq:svc_sv_sq_const2}
 \end{equation}
 \begin{equation}
-	b=y_s-\sum_{m\in S}\alpha_m y_m \langle x_m, x_s \rangle \tag{1.20}
+	b=y_s-\sum_{m\in S}\alpha_m y_m \langle x_m, x_s \rangle \label{eq:svc_b}
 \end{equation}
 
 
 Instead of using an arbitrary support vector $x_s$, it is better to take an average over all of the support vectors in $S$:
 
 \begin{equation}
-	b=\frac{1}{N_s}\sum_{s\in S} y_s-\sum_{m\in S}\alpha_m y_m \langle x_m, x_s \rangle \tag{1.21}
+	b=\frac{1}{N_s}\sum_{s\in S} y_s-\sum_{m\in S}\alpha_m y_m \langle x_m, x_s \rangle \label{eq:svc_b_avg}
 \end{equation}
 
 We now have the variables $w$ and $b$ that define our separating hyperplane's optimal orientation and hence our support vector machine. Each new point $x'$ is classified by evaluating:
 
 \begin{equation}
-    y'=\operatorname{sgn}\big(\sum_{i=1}^{n}\alpha_i y_i\langle x_i, x' \rangle+b\big) \tag{1.22}
+    y'=\operatorname{sgn}\big(\sum_{i=1}^{n}\alpha_i y_i\langle x_i, x' \rangle+b\big) \label{eq:svc_pred}
 \end{equation}
 
-Since the SMO method is designed to deal the equality constraint explicitly we will make use of the formulation (1.16) but, for completeness reasons, we report below the box-constrained dual formulation \cite{hsu2002simple} that arises from the primal (1.9) where the bias term $b$ is embedded into the weight vector $w$:
+From \ref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. We report below the box-constrained dual formulation \cite{hsu2002simple} that arises from the primal \ref{eq:primal_svc_hinge} where the bias term $b$ is embedded into the weight vector $w$:
 
 \begin{equation}
     \begin{aligned}
         \min_{\alpha} \quad & \frac{1}{2} \alpha^T (Q + yy^T)\alpha+q^T\alpha \\
             \textrm{subject to} \quad & 0\leq\alpha_i\leq C \ \forall_i
-    \end{aligned} \tag{1.23}
+    \end{aligned} \label{eq:svc_min_bcqp_wolf_dual}
 \end{equation}
 
-\subsection{Lagrangian Dual Formulation}
+\subsubsection{Lagrangian Dual}
 
-In order to relax the constraints in the \emph{Wolfe dual} formulation (1.16) we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrangian multipliers $\mu \geq 0, \lambda_+ \geq 0$, $\lambda_- \geq 0$:
+In order to relax the constraints in the \emph{Wolfe dual} formulation \ref{eq:svc_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrangian multipliers $\mu \geq 0, \lambda_+ \geq 0$, $\lambda_- \geq 0$:
 
 \begin{align*}
     \max_{\mu,\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\mu,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T Q\alpha+q^T\alpha - \mu^T (y^T \alpha) - \lambda_+^T (ub - \alpha) - \lambda_-^T \alpha \\
@@ -249,8 +251,7 @@ If the Hessian matrix Q is indefinite, i.e., the Lagrangian function is not stri
 
 Since we are dealing with a symmetric but indefinite linear system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, which computes the vector $\alpha$ that minimizes $\Vert Q \alpha - b \Vert$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
 
-
-From (1.16) we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of (1.24) is reduced of 1/3 by removing the multipliers $\mu$ which was allocated to control the equality constraint $y^T \alpha=0$, so we will end up solving exactly the problem (1.23).
+From \ref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of (1.24) is reduced of 1/3 by removing the multipliers $\mu$ which was allocated to control the equality constraint $y^T \alpha=0$, so we will end up solving exactly the problem \ref{eq:svc_min_bcqp_wolf_dual}.
 
 \begin{align*}
     \max_{\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T (Q + yy^T)\alpha+q^T\alpha - \lambda_+^T (ub - \alpha) - \lambda_-^T \alpha \\

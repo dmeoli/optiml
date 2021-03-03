@@ -1,5 +1,7 @@
 \section{Sequential Minimal Optimization}
 
+\subsection{Classification}
+
 The \emph{Sequential Minimal Optimization (SMO)} \cite{platt1998sequential} method is the most popular approach for solving the SVM QP problem without any extra $Q$ matrix storage required by common QP methods. The advantage of SMO lies in the fact that it performs a series of two-point optimizations since we deal with just one equality constraint, i.e., $y^T \alpha=0$, so the Lagrange multipliers can be solved analitically.
 
 At each iteration, SMO chooses two $\alpha_i$ to jointly optimize, let $\alpha_1$ and $\alpha_2$, finds the optimal values for these multipliers and update the SVM to reflect these new values. In order to solve for two Lagrange multipliers, SMO first computes the constraints over these and then solves for the constrained minimum. Since there are only two multipliers, the bound constraints cause the Lagrange multipliers to lie within a box, while the linear equality constraint causes the Lagrange multipliers to lie on a diagonal line inside the box. So, the constrained minimum must lie there.
@@ -60,3 +62,5 @@ Since the Karush-Kuhn-Tucker (KKT) conditions are necessary and sufficient condi
 \end{equation}
 
 the steps described above will be iterate as long as there will be an example that violates these KKT conditions.
+
+\subsection{Regression}
