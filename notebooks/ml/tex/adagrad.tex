@@ -6,14 +6,14 @@ Due to the nondifferentiability of the \emph{hinge} loss, we might end up in a s
 
 We use the variable $s_t$ to accumulate past gradient variance as follows:
 	
-\begin{equation}
+\begin{equation} \label{eq:adagrad}
 	\begin{split}
-    \begin{aligned}
-        g_t & = \partial_{{w_t}} \mathcal{L}(y_t, f(x_t, w)) \\
-        s_t & = s_{t-1} + g_t^2 \\
-        w_{t+1} & = w_t - \frac{\eta}{\sqrt{s_t + \epsilon}} \cdot g_t
-    \end{aligned}
-\end{split}
+    	\begin{aligned}
+        	g_t & = \partial_{{w_t}} \mathcal{L}(y_t, f(x_t, w)) \\
+        	s_t & = s_{t-1} + g_t^2 \\
+        	w_{t+1} & = w_t - \frac{\eta}{\sqrt{s_t + \epsilon}} \cdot g_t
+    	\end{aligned}
+	\end{split}
 \end{equation}
 
 where $\epsilon$ is an additive constant that ensures that we do not divide by 0. 
