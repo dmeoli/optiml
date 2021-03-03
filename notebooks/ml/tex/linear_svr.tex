@@ -166,4 +166,91 @@ As before it is better to average over all the indices $i$ in $S$:
     b=\displaystyle \frac{1}{N_s}\sum_{s\in S}y_s-\epsilon-\sum_{m \in S}(\alpha_m^+ - \alpha_m^-)\langle x_m, x_s \rangle \tag{2.18}
 \end{equation}
 
+From \ref{eq:svr_min_wolfe_dual} we can notice that the equality constraint $e^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. We report below the box-constrained dual formulation \cite{hsu2002simple} that arises from the primal \ref{eq:primal_svr_hinge} where the bias term $b$ is embedded into the weight vector $w$:
+
+\begin{equation} \label{eq:svr_min_bcqp_wolf_dual}
+    \begin{aligned}
+        \min_{\alpha} \quad & \frac{1}{2} \alpha^T (Q + ee^T)\alpha+q^T\alpha \\
+            \textrm{subject to} \quad & 0\leq\alpha_i\leq C \ \forall_i
+    \end{aligned}
+\end{equation}
+
 \subsubsection{Lagrangian Dual}
+
+In order to relax the constraints in the \emph{Wolfe dual} formulation \ref{eq:svr_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrangian multipliers $\mu \geq 0, \lambda_+ \geq 0$, $\lambda_- \geq 0$:
+
+\begin{equation} \label{eq:svr_lagrangian_dual}
+	\begin{aligned}
+		    \max_{\mu,\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\mu,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T Q\alpha+q^T\alpha - \mu^T (e^T \alpha) - \lambda_+^T (ub - \alpha) - \lambda_-^T \alpha \\
+    &= \frac{1}{2} \alpha^T Q\alpha + (q - \mu e + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T ub
+	\end{aligned}
+\end{equation}
+
+where the upper bound $ub^T = [C, \dots, C]$.
+
+Taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings it to 0 gives:
+
+\begin{equation} \label{eq:svr_lagrangian_der_a}
+	\frac{\partial \mathcal{L}}{\partial \alpha}=0\Rightarrow Q \alpha + (q - \mu e + \lambda_+ - \lambda_-) = 0
+\end{equation}
+
+With $\alpha$ optimal solution of the linear system:
+
+\begin{equation} \label{eq:svr_lagrangian_sol}
+    Q \alpha = - (q - \mu e + \lambda_+ - \lambda_-)
+\end{equation}
+
+the gradient wrt $\mu$, $\lambda_+$ and $\lambda_-$ are:
+
+\begin{equation} \label{eq:svr_lagrangian_der_mu}
+	\frac{\partial \mathcal{L}}{\partial \mu}=-e \alpha
+\end{equation}
+
+\begin{equation} \label{eq:svr_lagrangian_der_lp}
+	\frac{\partial \mathcal{L}}{\partial \lambda_+}=\alpha - ub
+\end{equation}
+
+\begin{equation} \label{eq:svr_lagrangian_der_lm}
+    \frac{\partial \mathcal{L}}{\partial \lambda_-}=-\alpha
+\end{equation}
+
+If the Hessian matrix Q is indefinite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues, the Lagrangian dual relaxation will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute the gradient, we will choose $\alpha$ in such a way as the one that minimizes the residue, i.e. the least-squares solution:
+
+\begin{equation} \label{eq:svr_lagrangian_krylov_sol}
+	\min_{\alpha \in K_n(Q, b)} \Vert Q \alpha - b \Vert \ \text{where} \ b = - (q - \mu e + \lambda_+ - \lambda_-)
+\end{equation}
+
+Since we are dealing with a symmetric but indefinite linear system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, which computes the vector $\alpha$ that minimizes $\Vert Q \alpha - b \Vert$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
+
+From \ref{eq:svr_min_wolfe_dual} we can notice that the equality constraint $e^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of \ref{eq:eq:svr_lagrangian_dua} is reduced of 1/3 by removing the multipliers $\mu$ which was allocated to control the equality constraint $e^T \alpha=0$, so we will end up solving exactly the problem \ref{eq:svr_min_bcqp_wolf_dual}.
+
+\begin{equation} \label{eq:svr_bcqp_lagrangian_dual}
+	\begin{aligned}
+    	\max_{\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T (Q + ee^T)\alpha+q^T\alpha - \lambda_+^T (ub - \alpha) - \lambda_-^T \alpha \\
+    &= \frac{1}{2} \alpha^T (Q + ee^T)\alpha + (q + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T ub
+	\end{aligned}
+\end{equation}
+
+where, again, the upper bound $ub^T = [C, \dots, C]$.
+
+Now, taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings it to 0 gives:
+
+\begin{equation} \label{eq:svr_bcqp_lagrangian_der_a}
+	\frac{\partial \mathcal{L}}{\partial \alpha}=0\Rightarrow (Q + ee^T) \alpha + (q + \lambda_+ - \lambda_-) = 0
+\end{equation}
+
+With $\alpha$ optimal solution of the linear system:
+
+\begin{equation} \label{eq:svr_bcqp_lagrangian_sol}
+    (Q + ee^T) \alpha = - (q + \lambda_+ - \lambda_-)
+\end{equation}
+
+the gradient wrt $\lambda_+$ and $\lambda_-$ are:
+
+\begin{equation} \label{eq:svr_bcqp_lagrangian_der_lp}
+	\frac{\partial \mathcal{L}}{\partial \lambda_+}=\alpha - ub
+\end{equation}
+
+\begin{equation} \label{eq:svr_bcqp_lagrangian_der_lm}
+    \frac{\partial \mathcal{L}}{\partial \lambda_-}=-\alpha
+\end{equation}
