@@ -1,0 +1,19 @@
+\section{AdaGrad}
+
+Due to the nondifferentiability of the \emph{hinge} loss, we might end up in a situation where some components of the gradient are very small and others large. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
+
+\emph{AdaGrad} \cite{duchi2011adaptive} addresses this problem by introducing the aggregate of the squares of previously observed gradients to adjust the learning rate. This has two benefits: first, we no longer need to decide just when a gradient is large enough. Second, it scales automatically with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment.
+
+We use the variable $s_t$ to accumulate past gradient variance as follows:
+	
+\begin{equation}
+	\begin{split}
+    \begin{aligned}
+        g_t & = \partial_{{w_t}} \mathcal{L}(y_t, f(x_t, w)) \\
+        s_t & = s_{t-1} + g_t^2 \\
+        w_{t+1} & = w_t - \frac{\eta}{\sqrt{s_t + \epsilon}} \cdot g_t
+    \end{aligned}
+\end{split}
+\end{equation}
+
+where $\epsilon$ is an additive constant that ensures that we do not divide by 0. 

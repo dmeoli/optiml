@@ -13,3 +13,10 @@ __pycache__
 # PyPI
 optiml.egg-info
 dist
+
+# LaTeX
+*.out
+*.aux
+*.log
+*.gz
+*.toc

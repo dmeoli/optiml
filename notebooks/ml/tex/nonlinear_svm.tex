@@ -1,0 +1,43 @@
+\section{Nonliner Support Vector Machines}
+
+When applying our SVM to linearly separable data we have started by creating a matrix $Q$ from the dot product of our input variables:
+
+\begin{equation}
+	Q_{ij}=y_i y_j k(x_i,x_j) \tag{3.1}
+\end{equation}
+
+where $k(x_i,x_j)$ is an example of a family of functions called \emph{kernel functions} and:  
+
+\begin{equation}
+	k(x_i,x_j)=\langle x_i, x_j \rangle= x_i^T x_j \tag{3.2}
+\end{equation}
+
+is known as \emph{linear} kernel.
+
+The reason that this \emph{kernel trick} is useful is that there are many classification/regression problems that are not linearly separable/regressable in the space of the inputs $x$, which might be in a higher dimensionality feature space given a suitable mapping $x \rightarrow \phi(x)$.
+
+\subsection{Polynomial Kernel}
+
+The \emph{polynomial} kernel is defined as:
+
+\begin{equation}
+	k(x_i,x_j)=(\gamma \langle x_i, x_j\rangle + r)^d \tag{3.3}
+\end{equation}
+
+where $\gamma$ define how far the influence of a single training example reaches (low values meaning ‘far’ and high values meaning ‘close’).
+
+\subsection{Gaussian RBF Kernel}
+
+The \emph{gaussian} kernel is defined as:
+
+\begin{equation}
+	k(x_i,x_j)=\exp(-\frac{\|x_i-x_j\|^2}{2\sigma^2}) \tag{3.4a}
+\end{equation}
+
+or, equivalently, as:
+
+\begin{equation}
+	k(x_i,x_j)=\exp(-\gamma \|x_i-x_j\|^2) \tag{3.4b}
+\end{equation}
+
+where $\displaystyle \gamma=\frac{1}{2\sigma^2}$ define how far the influence of a single training example reaches (low values meaning ‘far’ and high values meaning ‘close’).

@@ -1,0 +1,9 @@
+\section{Abstract}
+
+A \emph{Support Vector Machine} is a learning model used both for \emph{classification} and \emph{regression} tasks whose goal is to constructs a \emph{maximum margin separator}, a decision boundary with the largest distance from the nearest training data points.
+
+The aim of this report is to compare the \emph{primal}, the \emph{Wolfe dual} and the \emph{Lagrangian dual} formulations of a learning model known as \emph{Support Vector Machine} in terms of \emph{numerical precision}, \emph{time}, \emph{accuracy} and \emph{complexity}, i.e., the \emph{number of support vectors}.
+
+Firstly, I will provide a detailed mathematical derivation of the SVM model for the \emph{classification} and the \emph{regression} problem for all the possible formulation, then, for each of them, I will describe an algorithm to solve the optimization problem that arises from the formulation of the problem.
+
+Finally, I will show some experiments for \emph{linearly} and \emph{nonlinearly} separable generated datasets to compare the performace of different \emph{kernels}, also by comparing the \emph{custom} results with \emph{sklearn} SVM implementations, i.e, \emph{liblinear} and \emph{libsvm} implementations, and \emph{cvxopt} QP solver.

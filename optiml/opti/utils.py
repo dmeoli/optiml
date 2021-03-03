@@ -190,4 +190,3 @@ def plot_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max):
         # 2D trajectory optimization plot
         fig.axes[1].quiver(opt.x0_history_ns[:-1], opt.x1_history_ns[:-1], angles_x, angles_y,
                            scale_units='xy', angles='xy', scale=1, color='b')
-    plt.show()

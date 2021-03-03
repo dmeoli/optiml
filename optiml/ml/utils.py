@@ -172,8 +172,6 @@ def plot_svm_hyperplane(svm, X, y):
         ax.plot(_X, Z + svm.epsilon, color='grey', linestyle='--', linewidth=1)
         ax.plot(_X, Z - svm.epsilon, color='grey', linestyle='--', linewidth=1)
 
-    plt.show()
-
 
 def plot_validation_curve(estimator, X, y, param_name, param_range, scorer, cv=5):
     plt.style.use('ggplot')
@@ -198,7 +196,6 @@ def plot_validation_curve(estimator, X, y, param_name, param_range, scorer, cv=5
                      mean_test_score + std_test_score, alpha=0.2, color='darkorange')
 
     plt.legend().get_frame().set_facecolor('white')
-    plt.show()
 
 
 def plot_learning_curve(estimator, X, y, scorer, cv=5, train_sizes=np.linspace(.1, 1.0, 5),
@@ -226,7 +223,6 @@ def plot_learning_curve(estimator, X, y, scorer, cv=5, train_sizes=np.linspace(.
                      mean_test_score - std_test_score, color='darkorange', alpha=0.2)
 
     plt.legend().get_frame().set_facecolor('white')
-    plt.show()
 
 
 def plot_model_loss(train_loss_history, val_loss_history=None):
@@ -242,7 +238,6 @@ def plot_model_loss(train_loss_history, val_loss_history=None):
     loss.set_xlabel('epoch')
     loss.set_ylabel('loss')
     loss.legend(['training', 'validation']).get_frame().set_facecolor('white')
-    plt.show()
 
 
 def plot_model_accuracy(train_score_history, val_score_history=None):
@@ -258,4 +253,3 @@ def plot_model_accuracy(train_score_history, val_score_history=None):
     accuracy.set_xlabel('epoch')
     accuracy.set_ylabel('accuracy')
     accuracy.legend(['training', 'validation']).get_frame().set_facecolor('white')
-    plt.show()

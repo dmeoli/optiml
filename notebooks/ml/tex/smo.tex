@@ -1,0 +1,62 @@
+\section{Sequential Minimal Optimization}
+
+The \emph{Sequential Minimal Optimization (SMO)} \cite{platt1998sequential} method is the most popular approach for solving the SVM QP problem without any extra $Q$ matrix storage required by common QP methods. The advantage of SMO lies in the fact that it performs a series of two-point optimizations since we deal with just one equality constraint, i.e., $y^T \alpha=0$, so the Lagrange multipliers can be solved analitically.
+
+At each iteration, SMO chooses two $\alpha_i$ to jointly optimize, let $\alpha_1$ and $\alpha_2$, finds the optimal values for these multipliers and update the SVM to reflect these new values. In order to solve for two Lagrange multipliers, SMO first computes the constraints over these and then solves for the constrained minimum. Since there are only two multipliers, the bound constraints cause the Lagrange multipliers to lie within a box, while the linear equality constraint causes the Lagrange multipliers to lie on a diagonal line inside the box. So, the constrained minimum must lie there.
+
+The ends of the diagonal line segment in terms of $\alpha_2$ can be espressed as follow if the target $y_1 \ne y_2$:
+
+\begin{equation}
+L = max(0, \alpha_2 - \alpha_1) \\
+H = min(C, C + \alpha_2 - \alpha_1) \tag{7.1}
+\end{equation}
+
+or, alternatively, if the target $y_1 = y_2$:
+
+\begin{equation}
+L = max(0, \alpha_2 + \alpha_1 - C) \\
+H = min(C, \alpha_2 + \alpha_1) \tag{7.2}
+\end{equation}
+
+The second derivative of the objective quadratic function along the diagonl line can be expressed as:
+
+\begin{equation}
+\eta = K(x_1, x_1) + K(x_2, x_2) - 2K(x_1, x_2) \tag{7.3}
+\end{equation}
+
+that will be grather than zero if the kernel matrix will be positive definite, so there will be a minimum along the linear equality constraints that will be:
+
+\begin{equation}
+	\alpha_2^{new} = \alpha_2 + \frac{y_2(E_1 - E_2)}{\eta} \tag{7.4}
+\end{equation}
+
+where $E_i = u_i - y_i$ is the error on the $i$-th training example and $u_i$ is the output of the SVM for the same.
+
+Then, the box-constrained minimum is found by clipping the unconstrained minimum to the ends of the line segment:
+
+\begin{equation}
+    \alpha_2^{clipped} =
+        \begin{cases}
+            H & \text{if } \alpha_2^{new} \geq H \\
+            \alpha_2^{new} & \text{if } L < \alpha_2^{new} < H \\
+            L & \text{if } \alpha_2^{new} \leq L \\
+        \end{cases} \tag{7.5}
+\end{equation}
+
+Finally, the value of $\alpha_1$ is computed from the new clipped $\alpha_2$ as:
+
+\begin{equation}
+	\alpha_1^{new} = \alpha_1 + s (\alpha_2 - \alpha_2^{clipped}) \tag{7.6}
+\end{equation}
+
+where $s = y_1 y_2$.
+
+Since the Karush-Kuhn-Tucker (KKT) conditions are necessary and sufficient conditions for optimality of a positive definite QP problem and the KKT conditions for the problem (1.16) are:
+
+\begin{equation}
+	\alpha_i = 0 \Leftrightarrow y_i u_i \geq 1 \\
+	0 < \alpha_i < C \Leftrightarrow y_i u_i = 1 \\
+	\alpha_i = C \Leftrightarrow y_i u_i \leq 1 \tag{7.7}
+\end{equation}
+
+the steps described above will be iterate as long as there will be an example that violates these KKT conditions.

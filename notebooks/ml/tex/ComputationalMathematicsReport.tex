@@ -1,0 +1,84 @@
+\documentclass[10pt]{article}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{hyperref}
+
+% includes references in the table of contents
+\usepackage[nottoc]{tocbibind}
+
+\bibliographystyle{unsrt}
+\bibliography{bibliography}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{vmargin}
+\setmarginsrb{2cm}  % left margin
+             {2cm}  % top margin
+             {2cm}  % right margin
+             {2cm}  % bottom margin
+             {1.5cm}  % head height
+             {1cm}  % head sep
+             {1.5cm}  % foot height
+             {1cm}  % foot sep
+             
+\title{Support Vector Machines}
+\author{Donato Meoli}
+\date{March, 2021}
+
+\makeatletter
+\let\thetitle\@title
+\let\theauthor\@author
+\let\thedate\@date
+\makeatother
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Computational Mathematics}
+\lhead{\thetitle}
+\cfoot{\thepage}
+
+\begin{document}
+
+\begin{titlepage}
+	\centering
+    \vspace*{0.5 cm}
+    \includegraphics[scale = 0.5]{img/unipi.png}\\[1.0 cm]
+    \textsc{\LARGE University of Pisa}\\[0.5 cm]
+    \textsc{\Large Department of Computer Science}\\[1.5 cm]
+	\textsc{\large Computational Mathematics \\ Wildcard Project nr. 5 with Machine Learning \\ Group 35}\\[0.5 cm]
+	\rule{\linewidth}{0.2 mm} \\[0.4 cm]
+	{ \huge \bfseries \thetitle}\\
+	\rule{\linewidth}{0.2 mm} \\[1.5 cm]
+	\centering \textsc{\large \emph{Author:}}\\[0.5 cm]
+	\begin{minipage}{0.4\textwidth}
+		\begin{center} \large
+			\textbf{\theauthor}
+			\texttt{d.meoli@studenti.unipi.it}
+		\end{center}
+		\end{minipage}~
+		\begin{minipage}{0.4\textwidth}
+	\end{minipage}\\[2 cm]
+	{\large \thedate}\\[2 cm]
+	\vfill
+\end{titlepage}
+
+\tableofcontents
+
+\pagebreak
+
+\input{track}
+\input{abstract}
+
+\pagebreak
+
+\input{linear_svc}
+\input{linear_svr}
+\input{nonlinear_svm}
+\input{adagrad}
+\input{smo}
+\input{experiments}
+\input{conclusions}
+
+\end{document}
