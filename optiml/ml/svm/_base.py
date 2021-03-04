@@ -487,7 +487,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  kernel=gaussian,
                  C=1.,
                  tol=1e-3,
-                 optimizer=SMOClassifier,
+                 optimizer='smo',
                  max_iter=1000,
                  learning_rate=0.1,
                  momentum_type='none',
@@ -535,7 +535,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
         ub = np.ones(n_samples) * self.C  # upper bounds
 
-        if self.optimizer == SMOClassifier:
+        if self.optimizer == 'smo':
 
             self.obj = Quadratic(Q, q)
 
@@ -860,7 +860,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  C=1.,
                  epsilon=0.1,
                  tol=1e-3,
-                 optimizer=SMORegression,
+                 optimizer='smo',
                  max_iter=1000,
                  learning_rate=0.1,
                  momentum_type='none',
@@ -910,7 +910,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
-        if self.optimizer == SMORegression:
+        if self.optimizer == 'smo':
 
             self.obj = Quadratic(Q, q)
 

@@ -51,6 +51,8 @@ Minimizing $\Vert w\Vert$ is equivalent to minimizing $\displaystyle \frac{1}{2}
 
 where the parameter $C$ controls the trade-off between the slack variable penalty and the size of the margin.
 
+\includegraphics[scale=0.5]{img/svc_hyperplane.png}
+
 \subsection{Primal Unconstrained Formulations}
 
 The general primal unconstrained formulation takes the form:
@@ -97,6 +99,8 @@ The \emph{hinge} loss is a convex function and it is nondifferentiable due to it
         \end{cases}
 \end{equation}
 
+\includegraphics[scale=0.5]{img/svc_hinge_loss.png}
+
 \subsubsection{Squared Hinge loss}
 
 Since smoothed versions of objective functions may be preferred for optimization, we can reformulate \ref{eq:svc_hinge} as:
@@ -106,6 +110,8 @@ Since smoothed versions of objective functions may be preferred for optimization
 \end{equation}
 
 where we make use of the \emph{squared hinge} loss that quadratically penalized slacks $\xi$ and is called $\mathcal{L}_2$-SVC.
+
+\includegraphics[scale=0.5]{img/svc_squared_hinge_loss.png}
 
 \bigskip
 \bigskip
