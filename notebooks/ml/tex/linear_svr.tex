@@ -1,4 +1,4 @@
-\section{Linar Support Vector Regression}
+\section{Linear Support Vector Regression}
 
 In the case of regression the goal is to predict a real-valued output for $y'$ so that our training data is of the form:
 
@@ -185,12 +185,12 @@ In order to relax the constraints in the \emph{Wolfe dual} formulation \ref{eq:s
 
 \begin{equation} \label{eq:svr_lagrangian_dual}
 	\begin{aligned}
-		    \max_{\mu,\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\mu,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T Q\alpha+q^T\alpha - \mu^T (e^T \alpha) - \lambda_+^T (ub - \alpha) - \lambda_-^T \alpha \\
-    &= \frac{1}{2} \alpha^T Q\alpha + (q - \mu e + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T ub
+		    \max_{\mu,\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\mu,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T Q\alpha+q^T\alpha - \mu^T (e^T \alpha) - \lambda_+^T (u - \alpha) - \lambda_-^T \alpha \\
+    &= \frac{1}{2} \alpha^T Q\alpha + (q - \mu e + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T u
 	\end{aligned}
 \end{equation}
 
-where the upper bound $ub^T = [C, \dots, C]$.
+where the upper bound $u^T = [C, \dots, C]$.
 
 Taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings it to 0 gives:
 
@@ -211,7 +211,7 @@ the gradient wrt $\mu$, $\lambda_+$ and $\lambda_-$ are:
 \end{equation}
 
 \begin{equation} \label{eq:svr_lagrangian_der_lp}
-	\frac{\partial \mathcal{L}}{\partial \lambda_+}=\alpha - ub
+	\frac{\partial \mathcal{L}}{\partial \lambda_+}=\alpha - u
 \end{equation}
 
 \begin{equation} \label{eq:svr_lagrangian_der_lm}
@@ -221,7 +221,10 @@ the gradient wrt $\mu$, $\lambda_+$ and $\lambda_-$ are:
 If the Hessian matrix Q is indefinite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues, the Lagrangian dual relaxation will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute the gradient, we will choose $\alpha$ in such a way as the one that minimizes the residue, i.e. the least-squares solution:
 
 \begin{equation} \label{eq:svr_lagrangian_krylov_sol}
-	\min_{\alpha \in K_n(Q, b)} \Vert Q \alpha - b \Vert \ \text{where} \ b = - (q - \mu e + \lambda_+ - \lambda_-)
+	\begin{aligned}
+		\min_{\alpha \in K_n(Q, b)} \quad & \Vert Q \alpha - b \Vert \\ 
+		\textrm{where} \quad & b = - (q - \mu e + \lambda_+ - \lambda_-)
+	\end{aligned}
 \end{equation}
 
 Since we are dealing with a symmetric but indefinite linear system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, which computes the vector $\alpha$ that minimizes $\Vert Q \alpha - b \Vert$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
@@ -230,12 +233,12 @@ From \ref{eq:svr_min_wolfe_dual} we can notice that the equality constraint $e^T
 
 \begin{equation} \label{eq:svr_bcqp_lagrangian_dual}
 	\begin{aligned}
-    	\max_{\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T (Q + ee^T)\alpha+q^T\alpha - \lambda_+^T (ub - \alpha) - \lambda_-^T \alpha \\
-    &= \frac{1}{2} \alpha^T (Q + ee^T)\alpha + (q + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T ub
+    	\max_{\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T (Q + ee^T)\alpha+q^T\alpha - \lambda_+^T (u - \alpha) - \lambda_-^T \alpha \\
+    &= \frac{1}{2} \alpha^T (Q + ee^T)\alpha + (q + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T u
 	\end{aligned}
 \end{equation}
 
-where, again, the upper bound $ub^T = [C, \dots, C]$.
+where, again, the upper bound $u^T = [C, \dots, C]$.
 
 Now, taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings it to 0 gives:
 
@@ -252,7 +255,7 @@ With $\alpha$ optimal solution of the linear system:
 the gradient wrt $\lambda_+$ and $\lambda_-$ are:
 
 \begin{equation} \label{eq:svr_bcqp_lagrangian_der_lp}
-	\frac{\partial \mathcal{L}}{\partial \lambda_+}=\alpha - ub
+	\frac{\partial \mathcal{L}}{\partial \lambda_+}=\alpha - u
 \end{equation}
 
 \begin{equation} \label{eq:svr_bcqp_lagrangian_der_lm}
