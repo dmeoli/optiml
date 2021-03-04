@@ -3,128 +3,132 @@
 In the case of regression the goal is to predict a real-valued output for $y'$ so that our training data is of the form:
 
 \begin{equation}
-	\{(x_i,y_i), x\in\Re^{m}, y_i\in\Re, i=1, \dots, n\} \tag{2.1}
+	\{(x_i,y_i), x\in\Re^{m}, y_i\in\Re, i=1, \dots, n\} \label{eq:svr_data}
 \end{equation}
 
-The regression SVM use a loss function that not allocating a penalty if the predicted value $y'_i$ is less than a distance $\epsilon$ away from the actual value $y_i$, i.e., if $|y_i-y'_i| \leq \epsilon$, where $y'_i = w^T x_i + b$. This is formally described by:
+The regression SVM use a loss function that not allocating a penalty if the predicted value $y'_i$ is less than a distance $\epsilon$ away from the actual value $y_i$, i.e., if $|y_i-y'_i| \leq \epsilon$, where $y'_i = w^T x_i + b$. The region bound by $y'_i\pm\epsilon \ \forall_i$ is called an $\epsilon$-insensitive tube. The output variables which are outside the tube are given one of two slack variable penalties depending on whether they lie above, $\xi^+$, or below, $\xi^-$, the tube, provided $\xi^+ \geq 0$ and $\xi^- \geq 0 \ \forall_i$:
 
-\begin{equation}
+\begin{equation} \label{eq:svr_consts}
+	\begin{aligned}
+		& y_i\leq y'_i+\epsilon+\xi^+ \ \forall_i \\
+    	& y_i\geq y'_i-\epsilon-\xi^- \ \forall_i \\
+    	& \xi_i^+, \xi_i^- \geq 0 \ \forall_i
+	\end{aligned}
+\end{equation}
+
+The objective function for SVR can then be written as:
+
+\begin{equation} \label{eq:quad_svr_obj}
+    \begin{aligned}
+        \min_{w,b,\xi^+,\xi^-} \quad & \frac{1}{2}\Vert w\Vert^{2} + C \sum_{i=1}^{n}(\xi_i^+ + \xi_i^-) \\
+            \textrm{subject to} \quad & y_i - w^T x_i - b \leq \epsilon + \xi_i^+ \ \forall_i \\ & w^T x_i + b - y_i \leq \epsilon + \xi_i^- \ \forall_i \\ & \xi_i^+, \xi_i^- \geq 0 \ \forall_i
+    \end{aligned}
+\end{equation}
+
+\subsection{Primal Unconstrained Formulations}
+
+The general primal unconstrained formulation takes the same form of \ref{eq:primal_svc}.
+
+\subsubsection{Epsilon-insensitive loss}
+
+The quadratic optimization problem \ref{eq:quad_svr_obj} can be equivalently formulated as: 
+
+\begin{equation} \label{eq:svr_eps}
+	\min_{w,b} \frac{1}{2} \Vert w\Vert^{2} + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)
+\end{equation}
+
+where we make use of the \emph{epsilon-insensitive} loss defined as:
+
+\begin{equation} \label{eq:eps_loss1}
 	\mathcal{L}_\epsilon = 
 	\begin{cases}
 		0 & \text{if } |y - (w^T x + b)| \leq \epsilon \\
 		|y - (w^T x + b)| - \epsilon & \text{otherwise} \\
-	\end{cases} \tag{2.2a}
+	\end{cases}
 \end{equation}
 
-or, alternatively:
+or, equivalently:
 
-\begin{equation}
-	\mathcal{L}_\epsilon = \max(0, |y - (w^T x + b)| - \epsilon) \tag{2.2b}
+\begin{equation} \label{eq:eps_loss2}
+	\mathcal{L}_\epsilon = \max(0, |y - (w^T x + b)| - \epsilon)
 \end{equation}
 
 The above formulation penalizes slacks $\xi$ linearly and is called $\mathcal{L}_1$-SVR.
 
-As the \emph{hinge} loss, also the \emph{epsilon insensitive} loss is a convex function and it is not differentiable due to its nonsmoothness in $\pm\epsilon$, but has a subgradient wrt $w$ that is given by:
+As the \emph{hinge} loss, also the \emph{epsilon insensitive} loss is a convex function and it is nondifferentiable due to its nonsmoothness in $\pm\epsilon$, but has a subgradient wrt $w$ that is given by:
 
-\begin{equation}
-    \displaystyle \frac{\partial \mathcal{L_\epsilon}}{\partial w}=
-        \begin{cases}
+\begin{equation} \label{eq:eps_loss_der}
+	\frac{\partial \mathcal{L_\epsilon}}{\partial w}=
+		\begin{cases}
             (y - (w^T x + b)) x & \text{if } |y - (w^T x + b)| > \epsilon \\
             0 & \text{otherwise} \\ 
-        \end{cases} \tag{2.3}
+        \end{cases}
 \end{equation}
-
-The region bound by $y'_i\pm\epsilon \ \forall_i$ is called an $\epsilon$-insensitive tube. The output variables which are outside the tube are given one of two slack variable penalties depending on whether they lie above, $\xi^+$, or below, $\xi^-$, the tube, provided $\xi^+ \geq 0$ and $\xi^- \geq 0 \ \forall_i$:
-
-\begin{equation}
-    y_i\leq y'_i+\epsilon+\xi^+ \tag{2.4a}
-\end{equation}
-\begin{equation}
-    y_i\geq y'_i-\epsilon-\xi^- \tag{2.4b}
-\end{equation}
-
-The error function for SVM regression can then be written as:
-
-\begin{equation}
-    \begin{aligned}
-        \min_{w,b,\xi^+,\xi^-} \quad & \frac{1}{2}\Vert w\Vert^{2} + C \sum_{i=1}^{n}(\xi_i^+ + \xi_i^-) \\
-            \textrm{subject to} \quad & y_i - w^T x_i - b \leq \epsilon + \xi_i^+ \ \forall_i \\ & w^T x_i + b - y_i \leq \epsilon + \xi_i^- \ \forall_i \\ & \xi_i^+, \xi_i^- \geq 0 \ \forall_i
-    \end{aligned} \tag{2.5}
-\end{equation}
-
-\subsection{Primal Formulations}
-
-\subsubsection{Epsilon-insensitive loss}
-
-This optimization problem can be formulated with the bias term $b$ embedded into the weight vector $w$ as:
-
-\begin{equation}
-    \min_ {w} \frac{1}{2} \Vert w\Vert^{2} + C \sum_{i=1}^n \max(0, |y_i - w^T x_i| - \epsilon) \tag{2.6}
-\end{equation}
-
-where we make use of the \emph{epsilon-insensitive} loss.
 
 \subsubsection{Squared Epsilon-insensitive loss}
 
-To provide a continuously differentiable function the optimization problem (2.6) can be formulated as: 
+To provide a continuously differentiable function the optimization problem \ref{eq:svr_eps} can be formulated as: 
 
-\begin{equation}
-    \min_ {w} \frac{1}{2} \Vert w\Vert^{2} + C \sum_{i=1}^n \max(0, |y_i - w^T x_i| - \epsilon)^2 \tag{2.7}
+\begin{equation} \label{eq:svr_sq_eps}
+    \min_{w,b} \frac{1}{2} \Vert w\Vert^{2} + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)^2
 \end{equation}
 
 where we make use of the \emph{squared epsilon-insensitive} loss that quadratically penalized slacks $\xi$ and is called $\mathcal{L}_2$-SVR.
-
-\pagebreak
 
 \subsection{Dual Formulations}
 
 \subsubsection{Wolfe Dual}
 
-To reformulate the (2.5) as a \emph{Wolfe dual}, we introduce Lagrange multipliers $\alpha_i^+ \geq 0, \alpha_i^- \geq 0, \mu_i^+ \geq 0, \mu_i^- \geq 0 \ \forall_i$:
+To reformulate the \ref{eq:quad_svr_obj} as a \emph{Wolfe dual}, we introduce the Lagrange multipliers $\alpha_i^+ \geq 0, \alpha_i^- \geq 0, \mu_i^+ \geq 0, \mu_i^- \geq 0 \ \forall_i$:
 
-\begin{align*}
-    \max_{\alpha^+,\alpha^-,\mu^+,\mu^-} \min_{w,b,\xi^+,\xi^-} \mathcal{W}(w,b,\xi^+,\xi^-,\alpha^+,\alpha^-,\mu^+,\mu^-) \displaystyle = \frac{1}{2}\Vert w\Vert^{2}+C \sum_{i=1}^n(\xi_i^+ + \xi_i^-)-\sum_{i=1}^n(\mu_i^+ \xi_i^+ + \mu_i^- \xi_i^-) \\ -\sum_{i=1}^n\alpha_i^+(\epsilon+\xi_i^+ + y'_i-y_i)-\sum_{i=1}^n\alpha_i^-(\epsilon+\xi_i^- - y'_i+y_i) \tag{2.8}
-\end{align*}
-
-Substituting for $y_i$, differentiating wrt $w, b, \xi^+$, $\xi^-$ and setting the derivatives to $0$:
-
-\begin{equation}
-    \displaystyle \frac{\partial \mathcal{W}}{\partial w}=w-\sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-) x_i \Rightarrow w=\sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-) x_i \tag{2.9}
-\end{equation}
-\begin{equation}
-    \displaystyle \frac{\partial \mathcal{W}}{\partial b}=-\sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-)\Rightarrow \sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-)=0 \tag{2.10}
-\end{equation}
-\begin{equation}
-    \displaystyle \frac{\partial \mathcal{W}}{\partial\xi_i^+}=0\Rightarrow C=\alpha_i^+ + \mu_i^+ \tag{2.11}
-\end{equation}
-\begin{equation}
-    \displaystyle \frac{\partial \mathcal{W}}{\partial\xi_i^-}=0\Rightarrow C=\alpha_i^- + \mu_i^- \tag{2.12}
+\begin{equation} \label{eq:svr_wolfe_dual}
+	\begin{aligned}
+    	\max_{\alpha^+,\alpha^-,\mu^+,\mu^-} \min_{w,b,\xi^+,\xi^-} \mathcal{W}(w,b,\xi^+,\xi^-,\alpha^+,\alpha^-,\mu^+,\mu^-) = \frac{1}{2}\Vert w\Vert^{2}+C \sum_{i=1}^n(\xi_i^+ + \xi_i^-)-\sum_{i=1}^n(\mu_i^+ \xi_i^+ + \mu_i^- \xi_i^-) \\ -\sum_{i=1}^n\alpha_i^+(\epsilon+\xi_i^+ + y'_i-y_i)-\sum_{i=1}^n\alpha_i^-(\epsilon+\xi_i^- - y'_i+y_i)
+	\end{aligned}
 \end{equation}
 
-Substituting (2.9) and (2.10) in, we now need to maximize $\mathcal{W}$ wrt $\alpha_i^+$ and $\alpha_i^-$, where $\alpha_i^+ \geq 0,\ \alpha_i^- \geq 0 \ \forall_i$:
+Substituting for $y_i$, differentiating wrt $w, b, \xi^+$, $\xi^-$ and setting the derivatives to $0$ gives:
 
-\begin{equation}
-    \max_{\alpha^+,\alpha^-} \mathcal{W}(\alpha^+,\alpha^-) = \displaystyle \sum_{i=1}^{n}y_i(\alpha_i^+ - \alpha_i^-)-\epsilon\sum_{i=1}^{n}(\alpha_i^+ + \alpha_i^-)-\frac{1}{2}\sum_{i,j}(\alpha_i^+ - \alpha_i^-)\langle x_i, x_j \rangle(\alpha_j ^+ - \alpha_j ^-) \tag{2.13}
+\begin{equation} \label{eq:svr_wolfe_der_w}
+	\frac{\partial \mathcal{W}}{\partial w}=w-\sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-) x_i \Rightarrow w=\sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-) x_i
 \end{equation}
 
-Using $\mu_i^+ \geq 0$ and $\mu_i^- \geq 0$ together with (2.9) and (2.10) means that $\alpha_i^+ \leq C$ and $\alpha_i^- \leq C$. We therefore need to find:
+\begin{equation} \label{eq:svr_wolfe_der_b}
+	\frac{\partial \mathcal{W}}{\partial b}=-\sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-)\Rightarrow \sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-)=0
+\end{equation}
 
-\begin{equation}
+\begin{equation}\label{eq:svr_wolfe_der_xip}
+	\frac{\partial \mathcal{W}}{\partial\xi_i^+}=0\Rightarrow C=\alpha_i^+ + \mu_i^+
+\end{equation}
+
+\begin{equation} \label{eq:svr_wolfe_der_xim}
+	\frac{\partial \mathcal{W}}{\partial\xi_i^-}=0\Rightarrow C=\alpha_i^- + \mu_i^-
+\end{equation}
+
+Substituting \ref{eq:svr_wolfe_der_w} and \ref{eq:svr_wolfe_der_b} in, we now need to maximize $\mathcal{W}$ wrt $\alpha_i^+$ and $\alpha_i^-$, where $\alpha_i^+ \geq 0,\ \alpha_i^- \geq 0 \ \forall_i$:
+
+\begin{equation} \label{eq:svr_max_wolfe_dual}
+    \max_{\alpha^+,\alpha^-} \mathcal{W}(\alpha^+,\alpha^-) = \sum_{i=1}^{n}y_i(\alpha_i^+ - \alpha_i^-)-\epsilon\sum_{i=1}^{n}(\alpha_i^+ + \alpha_i^-)-\frac{1}{2}\sum_{i,j}(\alpha_i^+ - \alpha_i^-)\langle x_i, x_j \rangle(\alpha_j ^+ - \alpha_j ^-)
+\end{equation}
+
+Using $\mu_i^+ \geq 0$ and $\mu_i^- \geq 0$ together with \ref{eq:svr_wolfe_der_w} and \ref{eq:svr_wolfe_der_b} means that $\alpha_i^+ \leq C$ and $\alpha_i^- \leq C$. We therefore need to find:
+
+\begin{equation} \label{eq:svr_min_wolfe_dual}
     \begin{aligned}
         \min_{\alpha^+,\alpha^-} \quad & \frac{1}{2}(\alpha^+ - \alpha^-)^TK(\alpha^+ - \alpha^-)+\epsilon q^T(\alpha^+ + \alpha^-)-y^T(\alpha^+ - \alpha^-) \\
             \textrm{subject to} \quad & 0\leq\alpha_i^+,\alpha_i^- \leq C \ \forall_i \\ & q^T(\alpha^+ - \alpha^-)=0
-    \end{aligned} \tag{2.14}
+    \end{aligned}
 \end{equation}
 
 where $q^T = [1, \dots, 1]$.
 
-We can write the (2.14) in a standard quadratic form as:
+We can write the \ref{eq:svr_min_wolfe_dual} in a standard quadratic form as:
 
 \begin{equation}
-    \begin{aligned}
+    \begin{aligned} \label{eq:svr_min_qp_wolfe_dual}
         \min_{\alpha} \quad & \frac{1}{2}\alpha^T Q\alpha-q^T\alpha \\
             \textrm{subject to} \quad & 0\leq\alpha_i\leq C \ \forall_i \\ & e^T\alpha=0
-    \end{aligned} \tag{2.15}
+    \end{aligned}
 \end{equation}
 
 where the Hessian matrix $Q$ is 
@@ -148,22 +152,22 @@ $
 
 Each new predictions $y'$ can be found using:
 
-\begin{equation}
-    y'=\displaystyle \sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-)\langle x_i, x' \rangle+b \tag{2.16}
+\begin{equation} \label{eq:svr_pred}
+    y'= \sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-)\langle x_i, x' \rangle+b
 \end{equation}
 
 A set $S$ of support vectors $x_s$ can be created by finding the indices $i$ where $0\leq\alpha\leq C$ and $\xi_i^+=0$ or $\xi_i^-=0$.
 
 This gives us:
 
-\begin{equation}
-    b=y_s-\displaystyle \epsilon-\sum_{m\in S}(\alpha_m^+ -\alpha_m^-) \langle x_m, x_s \rangle \tag{2.17}
+\begin{equation} \label{eq:svr_b}
+    b=y_s-\epsilon-\sum_{m\in S}(\alpha_m^+ -\alpha_m^-) \langle x_m, x_s \rangle
 \end{equation}
 
 As before it is better to average over all the indices $i$ in $S$:
 
-\begin{equation}
-    b=\displaystyle \frac{1}{N_s}\sum_{s\in S}y_s-\epsilon-\sum_{m \in S}(\alpha_m^+ - \alpha_m^-)\langle x_m, x_s \rangle \tag{2.18}
+\begin{equation} \label{eq:svr_b_avg}
+    b=\frac{1}{N_s}\sum_{s\in S}y_s-\epsilon-\sum_{m \in S}(\alpha_m^+ - \alpha_m^-)\langle x_m, x_s \rangle
 \end{equation}
 
 From \ref{eq:svr_min_wolfe_dual} we can notice that the equality constraint $e^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. We report below the box-constrained dual formulation \cite{hsu2002simple} that arises from the primal \ref{eq:primal_svr_hinge} where the bias term $b$ is embedded into the weight vector $w$:
