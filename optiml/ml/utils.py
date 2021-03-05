@@ -40,7 +40,7 @@ def generate_linearly_separable_overlap_data(size=100, random_state=None):
     return np.vstack((X1, X2)), np.hstack((y1, y2))
 
 
-def generate_non_linearly_separable_data(size=100, random_state=None):
+def generate_nonlinearly_separable_data(size=100, random_state=None):
     rs = np.random.RandomState(random_state)
     mean1 = [-1, 2]
     mean2 = [1, -1]
@@ -56,7 +56,7 @@ def generate_non_linearly_separable_data(size=100, random_state=None):
     return np.vstack((X1, X2)), np.hstack((y1, y2))
 
 
-def generate_non_linearly_regression_data(size=100, random_state=None):
+def generate_nonlinearly_regression_data(size=100, random_state=None):
     rs = np.random.RandomState(random_state)
     X = np.sort(4 * np.pi * rs.uniform(size=size))
     y = np.sin(X)

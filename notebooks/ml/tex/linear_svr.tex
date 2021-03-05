@@ -25,7 +25,9 @@ The objective function for SVR can then be written as:
     \end{aligned}
 \end{equation}
 
-\subsection{Primal Unconstrained Formulations}
+\includegraphics[scale=0.5]{img/svr_hyperplane.png}
+
+\subsection{Primal Formulations}
 
 The general primal unconstrained formulation takes the same form of \ref{eq:primal_svc}.
 
@@ -64,6 +66,8 @@ As the \emph{hinge} loss, also the \emph{epsilon insensitive} loss is a convex f
             0 & \text{otherwise} \\ 
         \end{cases}
 \end{equation}
+
+\includegraphics[scale=0.5]{img/svr_eps_loss.png}
 
 \subsubsection{Squared Epsilon-insensitive loss}
 
