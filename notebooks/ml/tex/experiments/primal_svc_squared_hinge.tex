@@ -1,12 +1,12 @@
 \begin{tabular}{llrrrrr}
 \toprule
-  C & optimizer &  fit\_time &  train\_accuracy &  test\_accuracy &  nr\_train\_sv &  nr\_test\_sv \\
+   solver &   C &  fit\_time &  train\_accuracy &  val\_accuracy &  nr\_train\_sv &  nr\_val\_sv \\
 \midrule
-  1 &    custom &  0.914336 &        0.977500 &       0.980024 &           12 &           6 \\
-  1 & liblinear &  0.001110 &        0.977500 &       0.965023 &           18 &           9 \\
- 10 &    custom &  0.887345 &        0.982512 &       0.980024 &            7 &           4 \\
- 10 & liblinear &  0.001477 &        0.977500 &       0.964948 &           12 &           7 \\
-100 &    custom &  0.719462 &        0.967512 &       0.970074 &            4 &           3 \\
-100 & liblinear &  0.001678 &        0.980006 &       0.964948 &           13 &           7 \\
+liblinear &   1 &  0.001691 &        0.964987 &      0.969923 &           24 &         13 \\
+      sgd &   1 &  0.827042 &        0.977518 &      0.980100 &           11 &          6 \\
+liblinear &  10 &  0.002881 &        0.964987 &      0.974974 &           19 &         11 \\
+      sgd &  10 &  0.827676 &        0.982531 &      0.985075 &            6 &          4 \\
+liblinear & 100 &  0.003331 &        0.962500 &      0.969998 &           18 &         10 \\
+      sgd & 100 &  0.676569 &        0.985019 &      0.980100 &            4 &          1 \\
 \bottomrule
 \end{tabular}
