@@ -58,7 +58,7 @@ def generate_nonlinearly_separable_data(size=100, random_state=None):
 
 def generate_nonlinearly_regression_data(size=100, random_state=None):
     rs = np.random.RandomState(random_state)
-    X = np.sort(4 * np.pi * rs.uniform(size=size))
+    X = np.sort(2 * np.pi * rs.uniform(size=size))
     y = np.sin(X)
     y += 0.25 * (0.5 - rs.uniform(size=size))  # noise
     return X.reshape(-1, 1), y
