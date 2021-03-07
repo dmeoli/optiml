@@ -94,8 +94,8 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
     
     &NewLine;
               
-    | SVC         | SVR         |
-    |    :----:   |    :----:   |
+    | SVC          | SVR          |
+    |    :----:    |    :----:    |
     | Linear kernel     | Linear kernel     |
     | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/linear_dual_svc_hyperplane.png)   | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/linear_dual_svr_hyperplane.png)   |
     | Polynomial kernel | Polynomial kernel |
