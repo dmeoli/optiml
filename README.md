@@ -99,9 +99,9 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
     | Linear kernel     | Linear kernel     |
     | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/linear_dual_svc_hyperplane.png)   | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/linear_dual_svr_hyperplane.png)   |
     | Polynomial kernel | Polynomial kernel |
-    | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/poly_dual_svc_hyperplane.png)     | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/poly_dual_svc_hyperplane.png)     |
+    | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/poly_dual_svc_hyperplane.png)     | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/poly_dual_svr_hyperplane.png)     |
     | Gaussian kernel   | Gaussian kernel   |
-    | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/gaussian_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/gaussian_dual_svc_hyperplane.png) |
+    | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/gaussian_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/gaussian_dual_svr_hyperplane.png) |
 
     - [x] Neural Networks
         - [x] Neural Network Classifier
