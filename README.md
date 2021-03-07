@@ -92,10 +92,12 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
             [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), 
             [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
     
-    | SVC      | SVR |
+    | SVC         | SVR         |
     | ----------- | ----------- |
-    | <img src="notebooks/ml/tex/img/linear_dual_svc_hyperplane.png" alt="Linear SVM hard margin."/>      | Title       |
-    | Paragraph   | Text        |
+    | <img src="notebooks/ml/tex/img/svc_hinge_loss.png" alt="Linear SVM hard margin."/>   | <img src="notebooks/ml/tex/img/svr_eps_loss.png" alt="Linear SVM hard margin."/>        |
+    | <img src="notebooks/ml/tex/img/linear_dual_svc_hyperplane.png" alt="Linear SVM hard margin."/>      | <img src="notebooks/ml/tex/img/linear_dual_svr_hyperplane.png" alt="Linear SVM hard margin."/>       |
+    | <img src="notebooks/ml/tex/img/poly_dual_svc_hyperplane.png" alt="Linear SVM hard margin."/>   | <img src="notebooks/ml/tex/img/poly_dual_svr_hyperplane.png" alt="Linear SVM hard margin."/>        |
+    | <img src="notebooks/ml/tex/img/gaussian_dual_svc_hyperplane.png" alt="Linear SVM hard margin."/>   | <img src="notebooks/ml/tex/img/gaussian_dual_svr_hyperplane.png" alt="Linear SVM hard margin."/>        |
 
     - [x] Neural Networks
         - [x] Neural Network Classifier
