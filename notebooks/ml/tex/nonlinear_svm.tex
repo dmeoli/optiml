@@ -32,8 +32,17 @@ The \emph{polynomial} kernel is defined as:
 
 where $\gamma$ define how far the influence of a single training example reaches (low values meaning ‘far’ and high values meaning ‘close’).
 
-\includegraphics[scale=0.5]{img/poly_dual_svc_hyperplane.png}
-\includegraphics[scale=0.5]{img/poly_dual_svr_hyperplane.png}
+\begin{figure}[h!]
+	\includegraphics[scale=0.5]{img/poly_dual_svc_hyperplane.png}
+  	\caption{Polynomial SVC hyperplane}
+  	\label{fig:poly_dual_svc_hyperplane}
+\end{figure}
+
+\begin{figure}[h!]
+	\includegraphics[scale=0.5]{img/poly_dual_svr_hyperplane.png}
+	\caption{Polynomial SVR hyperplane}
+	\label{fig:poly_dual_svr_hyperplane}
+\end{figure}
 
 \subsection{Gaussian kernel}
 
@@ -51,5 +60,14 @@ or, equivalently, as:
 
 where $\displaystyle \gamma=\frac{1}{2\sigma^2}$ define how far the influence of a single training example reaches (low values meaning ‘far’ and high values meaning ‘close’).
 
-\includegraphics[scale=0.5]{img/gaussian_dual_svc_hyperplane.png}
-\includegraphics[scale=0.5]{img/gaussian_dual_svr_hyperplane.png}
+\begin{figure}[h!]
+	\includegraphics[scale=0.5]{img/gaussian_dual_svc_hyperplane.png}
+	\caption{Gaussian SVC hyperplane}
+	\label{fig:gaussian_dual_svc_hyperplane}
+\end{figure}
+
+\begin{figure}[h!]
+	\includegraphics[scale=0.5]{img/gaussian_dual_svr_hyperplane.png}
+	\caption{Gaussian SVR hyperplane}
+	\label{fig:gaussian_dual_svr_hyperplane}
+\end{figure}
