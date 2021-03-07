@@ -22,3 +22,6 @@ dist
 *.toc
 *.lof
 *.lot
+*.dvi
+*.blg
+*.bbl
