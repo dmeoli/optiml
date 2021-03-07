@@ -91,6 +91,12 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
             - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
             [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), 
             [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
+    
+    | SVC      | SVR |
+    | ----------- | ----------- |
+    | <img src="notebooks/ml/tex/img/linear_dual_svc_hyperplane.png" alt="Linear SVM hard margin."/>      | Title       |
+    | Paragraph   | Text        |
+
     - [x] Neural Networks
         - [x] Neural Network Classifier
         - [x] Neural Network Regressor
