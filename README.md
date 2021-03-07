@@ -79,8 +79,8 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
                 - [x] Squared Hinge (L2 Loss)                            
         - [x] Support Vector Regression
             - Losses
-                - [x] Epsilon-Insensitive (L1 Loss)
-                - [x] Squared Epsilon-Insensitive (L2 Loss)
+                - [x] Epsilon-insensitive (L1 Loss)
+                - [x] Squared Epsilon-insensitive (L2 Loss)
         - Kernels
             - [x] Linear
             - [x] Polynomial
