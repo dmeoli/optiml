@@ -1,12 +1,12 @@
-\begin{tabular}{llrrrrr}
+\begin{tabular}{llrrrrrrr}
 \toprule
-   solver &   C &  fit\_time &  train\_accuracy &  val\_accuracy &  nr\_train\_sv &  nr\_val\_sv \\
+   solver &   C &  fit\_time &  train\_accuracy &  val\_accuracy &  train\_n\_iter &  val\_n\_iter &  nr\_train\_sv &  nr\_val\_sv \\
 \midrule
-  adagrad &   1 &  0.002570 &        0.990012 &      0.985075 &           10 &          4 \\
-liblinear &   1 &  0.002726 &        0.967531 &      0.960124 &           13 &          8 \\
-  adagrad &  10 &  0.003505 &        0.992500 &      0.990050 &            5 &          2 \\
-liblinear &  10 &  0.003951 &        0.970037 &      0.965099 &            8 &          4 \\
-  adagrad & 100 &  0.004878 &        0.992500 &      0.990050 &            4 &          2 \\
-liblinear & 100 &  0.005037 &        0.967549 &      0.970149 &           10 &          3 \\
+  adagrad &   1 &  0.778783 &        0.992500 &      0.984999 &           999 &         999 &            9 &          5 \\
+liblinear &   1 &  0.001261 &        0.972487 &      0.964873 &           303 &         303 &           14 &          8 \\
+  adagrad &  10 &  0.873939 &        0.989975 &      0.979949 &           999 &         999 &            4 &          3 \\
+liblinear &  10 &  0.001527 &        0.974993 &      0.969923 &           711 &         711 &            9 &          7 \\
+  adagrad & 100 &  0.695373 &        0.989975 &      0.979949 &           999 &         999 &            4 &          3 \\
+liblinear & 100 &  0.001852 &        0.974993 &      0.969998 &          1000 &        1000 &            9 &          4 \\
 \bottomrule
 \end{tabular}
