@@ -91,15 +91,17 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
             - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
             [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), 
             [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
+    
+    &NewLine;
               
     | SVC         | SVR         |
     |    :----:   |    :----:   |
-    | Linear kernel         | Linear kernel         |
-    | <img src="notebooks/ml/tex/img/linear_dual_svc_hyperplane.png"/>      | <img src="notebooks/ml/tex/img/linear_dual_svr_hyperplane.png"/>       |
-    | Polynomial kernel         | Polynomial kernel         |
-    | <img src="notebooks/ml/tex/img/poly_dual_svc_hyperplane.png"/>   | <img src="notebooks/ml/tex/img/poly_dual_svr_hyperplane.png"/>        |
-    | Gaussian kernel         | Gaussian kernel         |
-    | <img src="notebooks/ml/tex/img/gaussian_dual_svc_hyperplane.png"/>   | <img src="notebooks/ml/tex/img/gaussian_dual_svr_hyperplane.png"/>        |
+    | Linear kernel     | Linear kernel     |
+    | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/linear_dual_svc_hyperplane.png)   | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/linear_dual_svr_hyperplane.png)   |
+    | Polynomial kernel | Polynomial kernel |
+    | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/poly_dual_svc_hyperplane.png)     | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/poly_dual_svc_hyperplane.png)     |
+    | Gaussian kernel   | Gaussian kernel   |
+    | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/gaussian_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/gaussian_dual_svc_hyperplane.png) |
 
     - [x] Neural Networks
         - [x] Neural Network Classifier
