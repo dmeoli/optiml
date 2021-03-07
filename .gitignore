@@ -20,3 +20,5 @@ dist
 *.log
 *.gz
 *.toc
+*.lof
+*.lot
