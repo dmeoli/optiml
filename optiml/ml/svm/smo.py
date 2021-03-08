@@ -22,6 +22,7 @@ class SMO(ABC):
         self.C = C
         self.errors = np.zeros(len(X))
         self.tol = tol
+        self.iter = 0
         self.verbose = verbose
 
     def _take_step(self, i1, i2):
@@ -283,7 +284,6 @@ class SMOClassifier(SMO):
 
         num_changed = 0
         examine_all = True
-        loop_counter = 0
         while num_changed > 0 or examine_all:
             num_changed = 0
             # loop over all training examples
@@ -304,10 +304,10 @@ class SMOClassifier(SMO):
             elif num_changed == 0:
                 examine_all = True
 
-            if self.verbose and not loop_counter % self.verbose:
-                print('{:4d}\t{: 1.4e}'.format(loop_counter, self.quad.function(self.alphas)))
+            if self.verbose and not self.iter % self.verbose:
+                print('{:4d}\t{: 1.4e}'.format(self.iter, self.quad.function(self.alphas)))
 
-            loop_counter += 1
+            self.iter += 1
 
         self.b = -(self.b_low + self.b_up) / 2
 
@@ -680,7 +680,6 @@ class SMORegression(SMO):
 
         num_changed = 0
         examine_all = True
-        loop_counter = 0
         while num_changed > 0 or examine_all:
             num_changed = 0
             # loop over all training examples
@@ -701,11 +700,11 @@ class SMORegression(SMO):
             elif num_changed == 0:
                 examine_all = True
 
-            if self.verbose and not loop_counter % self.verbose:
+            if self.verbose and not self.iter % self.verbose:
                 print('{:4d}\t{: 1.4e}'.format(
-                    loop_counter, self.quad.function(np.hstack((self.alphas_p, self.alphas_n)))))
+                    self.iter, self.quad.function(np.hstack((self.alphas_p, self.alphas_n)))))
 
-            loop_counter += 1
+            self.iter += 1
 
         self.b = (self.b_low + self.b_up) / 2
 
