@@ -75,34 +75,37 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
             - Lagrangian Dual
         - [x] Support Vector Classifier
             - Losses
-                - [x] Hinge (L1 Loss)
-                - [x] Squared Hinge (L2 Loss)                            
+                - [x] Hinge (L1 Loss) ![svc_hinge_loss](notebooks/ml/tex/img/svc_hinge_loss.png)
+                - [x] Squared Hinge (L2 Loss) ![svc_squared_hinge_loss](notebooks/ml/tex/img/svc_squared_hinge_loss.png)
         - [x] Support Vector Regression
             - Losses
-                - [x] Epsilon-insensitive (L1 Loss)
-                - [x] Squared Epsilon-insensitive (L2 Loss)
+                - [x] Epsilon-insensitive (L1 Loss) ![svr_eps_loss](notebooks/ml/tex/img/svr_eps_loss.png)
+                - [x] Squared Epsilon-insensitive (L2 Loss) ![svr_squared_eps_loss](notebooks/ml/tex/img/svr_squared_eps_loss.png)
         - Kernels
             - [x] Linear
+                
+                | SVC          | SVR          |
+                |    :----:    |    :----:    |
+                | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/linear_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/linear_dual_svr_hyperplane.png) |
+                
             - [x] Polynomial
+                 
+                | SVC          | SVR          |
+                |    :----:    |    :----:    |
+                | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/poly_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/poly_dual_svr_hyperplane.png) |              
+                
             - [x] Gaussian
+                
+                | SVC          | SVR          |
+                |    :----:    |    :----:    |
+                | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/gaussian_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/gaussian_dual_svr_hyperplane.png) |
+                
             - [x] Sigmoid
         - Optimizers (ad hoc)
-            - [x] Sequential Minimal Optimization
+            - [x] Sequential Minimal Optimization (SMO)
             - [x] QP solver with [qpsolvers](https://github.com/stephane-caron/qpsolvers) interface to 
             [cvxopt](https://github.com/cvxopt/cvxopt), [quadprog](https://github.com/rmcgibbo/quadprog), 
             [qpOASES](https://github.com/coin-or/qpOASES), [etc](https://github.com/stephane-caron/qpsolvers#solvers).
-    
-    &NewLine;
-              
-    | SVC          | SVR          |
-    |    :----:    |    :----:    |
-    | Linear kernel     | Linear kernel     |
-    | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/linear_dual_svc_hyperplane.png)   | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/linear_dual_svr_hyperplane.png)   |
-    | Polynomial kernel | Polynomial kernel |
-    | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/poly_dual_svc_hyperplane.png)     | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/poly_dual_svr_hyperplane.png)     |
-    | Gaussian kernel   | Gaussian kernel   |
-    | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/gaussian_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/gaussian_dual_svr_hyperplane.png) |
-
     - [x] Neural Networks
         - [x] Neural Network Classifier
         - [x] Neural Network Regressor
