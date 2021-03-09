@@ -20,7 +20,7 @@ where $k(x_i,x_j)$ is an example of a family of functions called \emph{kernel fu
 
 is known as \emph{linear} kernel.
 
-The reason that this \emph{kernel trick} is useful is that there are many classification/regression problems that are not linearly separable/regressable in the space of the inputs $x$, which might be in a higher dimensionality feature space given a suitable mapping $x \rightarrow \phi(x)$.
+The reason that this \emph{kernel trick} is useful is that there are many classification/regression problems that are nonlinearly separable/regressable in the \emph{input space}, which might be in a higher dimensionality \emph{feature space} given a suitable mapping $x \rightarrow \phi(x)$.
 
 \subsection{Polynomial kernel}
 
@@ -32,7 +32,7 @@ The \emph{polynomial} kernel is defined as:
 
 where $\gamma$ define how far the influence of a single training example reaches (low values meaning ‘far’ and high values meaning ‘close’).
 
-\begin{figure}
+\begin{figure}[h!]
 	\centering
 	\begin{subfigure}{.49\textwidth}
 		\centering
@@ -58,7 +58,7 @@ The \emph{gaussian} kernel is defined as:
 	k(x_i,x_j)=\exp(-\frac{\|x_i-x_j\|^2}{2\sigma^2})
 \end{equation}
 
-or, equivalently, as:
+or, equivalently:
 
 \begin{equation} \label{eq:gaussian_kernel2}
 	k(x_i,x_j)=\exp(-\gamma \|x_i-x_j\|^2)
@@ -66,7 +66,7 @@ or, equivalently, as:
 
 where $\displaystyle \gamma=\frac{1}{2\sigma^2}$ define how far the influence of a single training example reaches (low values meaning ‘far’ and high values meaning ‘close’).
 
-\begin{figure}
+\begin{figure}[h!]
 	\centering
 	\begin{subfigure}{.49\textwidth}
 		\centering

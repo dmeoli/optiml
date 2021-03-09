@@ -58,7 +58,9 @@ where the parameter $C$ controls the trade-off between the slack variable penalt
 	\label{fig:linear_dual_svc_hyperplane}
 \end{figure}
 
-\subsection{Primal Formulations}
+\subsection{Hinge loss}
+
+\subsubsection{Primal formulation}
 
 The general primal unconstrained formulation takes the form:
 
@@ -67,8 +69,6 @@ The general primal unconstrained formulation takes the form:
 \end{equation}
 
 where $\mathcal{R}(w, b)$ is the \emph{regularization term} and $\mathcal{L}(w,b;x_i,y_i)$ is the \emph{loss function} associated with the observation $(x_i,y_i)$.
-
-\subsubsection{Hinge loss}
 
 The quadratic optimization problem \ref{eq:quad_svc_obj} can be equivalently formulated as: 
 
@@ -107,29 +107,9 @@ The \emph{hinge} loss is a convex function and it is nondifferentiable due to it
 \begin{figure}[h!]
 	\centering
   	\includegraphics[scale=0.5]{img/svc_hinge_loss.png}
-  	\caption{SVC Hinge loss}
+  	\caption{SVC Hinge loss with optimization steps}
   	\label{fig:svc_hinge_loss}
 \end{figure}
-
-\subsubsection{Squared Hinge loss}
-
-Since smoothed versions of objective functions may be preferred for optimization, we can reformulate \ref{eq:svc_hinge} as:
-
-\begin{equation} \label{eq:svc_sq_hinge}
-    \min_{w,b} \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))^2
-\end{equation}
-
-where we make use of the \emph{squared hinge} loss that quadratically penalized slacks $\xi$ and is called $\mathcal{L}_2$-SVC.
-
-\begin{figure}[h!]
-	\centering
-  	\includegraphics[scale=0.5]{img/svc_squared_hinge_loss.png}
-  	\caption{SVC Squared Hinge loss}
-  	\label{fig:svc_squared_hinge_loss}
-\end{figure}
-
-\bigskip
-\bigskip
 
 To simplify the notation and so also the design of the algorithms, the simplest approach to learn the bias term $b$ is that of including that into the \emph{regularization term}; so we can rewrite \ref{eq:svc_hinge} and \ref{eq:svc_sq_hinge} as follows:
 
@@ -150,9 +130,7 @@ with the advantages of having convex properties of the objective function useful
 
 Notice that in terms of numerical optimization the formulations \ref{eq:svc_hinge} and \ref{eq:svc_sq_hinge} are not equivalent to \ref{eq:primal_svc_hinge1} or \ref{eq:primal_svc_hinge2} since in the first one the bias term $b$ does not contribute to the \emph{regularization term}, so the SVM formulation is based on an unregularized bias term $b$, as highlighted by the \emph{statistical learning theory}. But, in machine learning sense, numerical experiments in \cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
 
-\subsection{Dual Formulations}
-
-\subsubsection{Wolfe Dual}
+\subsubsection{Wolfe Dual formulation}
 
 To reformulate the \ref{eq:quad_svc_obj} as a \emph{Wolfe dual}, we need to allocate the Lagrange multipliers $\alpha_i\geq 0, \mu_i \geq 0 \ \forall_i$:
 
@@ -242,7 +220,7 @@ From \ref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T
     \end{aligned}
 \end{equation}
 
-\subsubsection{Lagrangian Dual}
+\subsubsection{Lagrangian Dual formulation}
 
 In order to relax the constraints in the \emph{Wolfe dual} formulation \ref{eq:svc_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrangian multipliers $\mu \geq 0, \lambda_+ \geq 0$, $\lambda_- \geq 0$:
 
@@ -293,7 +271,6 @@ If the Hessian matrix Q is indefinite, i.e., the Lagrangian function is not stri
 Since we are dealing with a symmetric but indefinite linear system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, which computes the vector $\alpha$ that minimizes $\Vert Q \alpha - b \Vert$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
 
 \bigskip
-\bigskip
 
 From \ref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of \ref{eq:svc_lagrangian_dual} is reduced of 1/3 by removing the multipliers $\mu$ which was allocated to control the equality constraint $y^T \alpha=0$, so we will end up solving exactly the problem \ref{eq:svc_min_bcqp_wolf_dual}.
 
@@ -327,3 +304,22 @@ the gradient wrt $\lambda_+$ and $\lambda_-$ are:
 \begin{equation} \label{eq:svc_bcqp_lagrangian_der_lm}
     \frac{\partial \mathcal{L}}{\partial \lambda_-}=-\alpha
 \end{equation}
+
+\subsection{Squared Hinge loss}
+
+\subsubsection{Primal formulation}
+
+Since smoothed versions of objective functions may be preferred for optimization, we can reformulate \ref{eq:svc_hinge} as:
+
+\begin{equation} \label{eq:svc_sq_hinge}
+    \min_{w,b} \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))^2
+\end{equation}
+
+where we make use of the \emph{squared hinge} loss that quadratically penalized slacks $\xi$ and is called $\mathcal{L}_2$-SVC.
+
+\begin{figure}[h!]
+	\centering
+  	\includegraphics[scale=0.5]{img/svc_squared_hinge_loss.png}
+  	\caption{SVC Squared Hinge loss with optimization steps}
+  	\label{fig:svc_squared_hinge_loss}
+\end{figure}
