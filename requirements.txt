@@ -6,3 +6,4 @@ numpy
 qpsolvers
 scikit-learn
 scipy
+wurlitzer

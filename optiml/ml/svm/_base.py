@@ -1,5 +1,7 @@
+import re
 import warnings
 from abc import ABC
+from io import StringIO
 
 import numpy as np
 from qpsolvers import solve_qp
@@ -8,13 +10,14 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model._base import LinearClassifierMixin, SparseCoefMixin, LinearModel
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
+from wurlitzer import pipes, STDOUT
 
 from .kernels import gaussian, Kernel, LinearKernel
 from .losses import squared_hinge, SVMLoss, squared_epsilon_insensitive
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
-from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic, ActiveSet
+from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
 from ...opti.constrained._base import LagrangianConstrainedQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
@@ -552,28 +555,35 @@ class DualSVC(ClassifierMixin, DualSVM):
 
             if self.fit_intercept:
 
-                alphas = solve_qp(P=Q,
-                                  q=q,
-                                  A=y.astype(float),
-                                  b=np.zeros(1),
-                                  lb=lb,
-                                  ub=ub,
-                                  solver=self.optimizer,
-                                  verbose=self.verbose)
+                out = StringIO()
+                with pipes(stdout=out, stderr=STDOUT):
+                    alphas = solve_qp(P=Q,
+                                      q=q,
+                                      A=y.astype(float),
+                                      b=np.zeros(1),
+                                      lb=lb,
+                                      ub=ub,
+                                      solver=self.optimizer,
+                                      verbose=True)
 
             else:
 
                 Q += np.outer(y, y)
 
-                alphas = solve_qp(P=Q,
-                                  q=q,
-                                  lb=lb,
-                                  ub=ub,
-                                  solver=self.optimizer,
-                                  verbose=self.verbose)
+                out = StringIO()
+                with pipes(stdout=out, stderr=STDOUT):
+                    alphas = solve_qp(P=Q,
+                                      q=q,
+                                      lb=lb,
+                                      ub=ub,
+                                      solver=self.optimizer,
+                                      verbose=True)
 
-            if self.verbose:
-                print()
+            stdout = out.getvalue()
+            if stdout:
+                self.iter = int(max(re.findall(r'(\d+):', stdout)))
+                if self.verbose:
+                    print(stdout)
 
         else:
 
@@ -931,29 +941,35 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 if self.fit_intercept:
 
-                    alphas = solve_qp(P=Q,
-                                      q=q,
-                                      A=e,
-                                      b=np.zeros(1),
-                                      lb=lb,
-                                      ub=ub,
-                                      solver=self.optimizer,
-                                      verbose=self.verbose)
+                    out = StringIO()
+                    with pipes(stdout=out, stderr=STDOUT):
+                        alphas = solve_qp(P=Q,
+                                          q=q,
+                                          A=e,
+                                          b=np.zeros(1),
+                                          lb=lb,
+                                          ub=ub,
+                                          solver=self.optimizer,
+                                          verbose=True)
 
                 else:
 
                     Q += np.outer(e, e)
-                    self.obj = Quadratic(Q, q)
 
-                    alphas = solve_qp(P=Q,
-                                      q=q,
-                                      lb=lb,
-                                      ub=ub,
-                                      solver=self.optimizer,
-                                      verbose=self.verbose)
+                    out = StringIO()
+                    with pipes(stdout=out, stderr=STDOUT):
+                        alphas = solve_qp(P=Q,
+                                          q=q,
+                                          lb=lb,
+                                          ub=ub,
+                                          solver=self.optimizer,
+                                          verbose=True)
 
-                if self.verbose:
-                    print()
+                stdout = out.getvalue()
+                if stdout:
+                    self.iter = int(max(re.findall(r'(\d+):', stdout)))
+                    if self.verbose:
+                        print(stdout)
 
             else:
 
