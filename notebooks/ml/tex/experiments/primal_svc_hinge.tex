@@ -1,12 +1,18 @@
+\begin{table}[h!]
+\centering
+\caption{SVC Primal formulation results with Hinge loss}
+\label{primal_svc_hinge_cv_results}
 \begin{tabular}{llrrrrrr}
 \toprule
-   solver &   C &  fit\_time &  train\_accuracy &  val\_accuracy &  n\_iter &  train\_n\_sv &  val\_n\_sv \\
+          &     &  fit\_time &  train\_accuracy &  val\_accuracy &  n\_iter &  train\_n\_sv &  val\_n\_sv \\
+solver & C &           &                 &               &         &             &           \\
 \midrule
-  adagrad &   1 &  0.026011 &        0.972525 &      0.975049 &      40 &          11 &         7 \\
-liblinear &   1 &  0.000872 &        0.995006 &      0.989974 &      67 &           9 &         5 \\
-  adagrad &  10 &  0.098169 &        0.977537 &      0.975049 &     168 &           7 &         5 \\
-liblinear &  10 &  0.000956 &        0.995006 &      0.984924 &     744 &           5 &         3 \\
-  adagrad & 100 &  0.178753 &        0.977537 &      0.975049 &     422 &           7 &         4 \\
-liblinear & 100 &  0.001128 &        0.995006 &      0.995025 &     693 &           3 &         2 \\
+adagrad & 1   &  0.045228 &        0.967475 &      0.969848 &      66 &          20 &        10 \\
+          & 10  &  0.247653 &        0.972468 &      0.974898 &     398 &          12 &         7 \\
+          & 100 &  0.301816 &        0.972468 &      0.974898 &     593 &          10 &         7 \\
+liblinear & 1   &  0.001328 &        0.982494 &      0.980024 &     153 &          12 &         5 \\
+          & 10  &  0.001203 &        0.987487 &      0.989974 &     633 &           7 &         4 \\
+          & 100 &  0.001864 &        0.985000 &      0.984999 &     831 &           7 &         3 \\
 \bottomrule
 \end{tabular}
+\end{table}

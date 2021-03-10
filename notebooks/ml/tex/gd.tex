@@ -8,6 +8,46 @@
 
 \subsubsection{Standard}
 
-
+\begin{algorithm}[h!]
+	\caption{Standard Momentum Accelerated Gradient Descent. The learning rate $\eta$, the $\alpha$ term and the maximum number of iterations are given.}
+	\label{alg:sgd}
+	\begin{algorithmic}[1]
+		\Require{Learning rate $\eta$ and momentum parameter $\alpha$}
+		\Require{Maximum number of iteration and error threshold}
+		\Procedure{Momentum Descent}{}
+			\State Initialize \textbf{w} and \textbf{v}
+			\State $k \gets 0$
+			\While {$k < max\_iterations$ \&\& $error\_th<e$}
+				\If {Nesterov Momentum}
+					\State $\tilde{\textbf{W}} \gets \textbf{w} + \alpha \textbf{v}$
+				\EndIf
+				\State Compute gradient estimate: $\textbf{g} \gets \frac {1}{n} \nabla \sum_i\textit{L}(\tilde{\textbf{W}})$
+				\State Compute velocity update: $\textbf{v} \gets \alpha \textbf{v} - \eta \textbf{g}$
+				\State Apply update: $\textbf{w} \gets \textbf{w} + \textbf{v}$
+			\EndWhile
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
 
 \subsubsection{Nesterov}
+
+\begin{algorithm}[h!]
+	\caption{Nesterov Momentum Accelerated Gradient Descent. The learning rate $\eta$, the $\alpha$ term and the maximum number of iterations are given.}
+	\label{alg:ngd}
+	\begin{algorithmic}[1]
+		\Require{Learning rate $\eta$ and momentum parameter $\alpha$}
+		\Require{Maximum number of iteration and error threshold}
+		\Procedure{Momentum Descent}{}
+			\State Initialize \textbf{w} and \textbf{v}
+			\State $k \gets 0$
+			\While {$k < max\_iterations$ \&\& $error\_th<e$}
+				\If {Nesterov Momentum}
+					\State $\tilde{\textbf{W}} \gets \textbf{w} + \alpha \textbf{v}$
+				\EndIf
+				\State Compute gradient estimate: $\textbf{g} \gets \frac {1}{n} \nabla \sum_i\textit{L}(\tilde{\textbf{W}})$
+				\State Compute velocity update: $\textbf{v} \gets \alpha \textbf{v} - \eta \textbf{g}$
+				\State Apply update: $\textbf{w} \gets \textbf{w} + \textbf{v}$
+			\EndWhile
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}

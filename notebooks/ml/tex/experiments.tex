@@ -1,97 +1,43 @@
 \section{Experiments}
 
+The following experiments refer to 3-fold cross-validation over \emph{linearly} and \emph{nonlinearly} separable generated datasets of size 100, so the reported results are to considered as a mean over the 3 folds.
 
 \subsection{Support Vector Classifier}
 
+Below experiments are about the SVC for which I tested different values for the $C$ complexity hyperparameter, i.e., from \emph{soft} to \emph{hard margin}, and in case of nonlinearly separable data also different \emph{kernel functions} mentioned above.
 
 \subsubsection{Hinge loss}
 
-\paragraph{Primal formulation}
-
-etc
-
 \input{experiments/primal_svc_hinge}
-
-\paragraph{Dual formulations}
-
-\subparagraph{Linear Wolfe}
-
-etc
 
 \input{experiments/linear_dual_svc}
 
-\subparagraph{Linear Lagrangian}
-
-etc
-
 \input{experiments/linear_lagrangian_dual_svc}
-
-\subparagraph{Nonlinear Wolfe}
-
-etc
 
 \input{experiments/nonlinear_dual_svc}
 
-\subparagraph{Nonlinear Lagrangian}
-
-etc
-
 \input{experiments/nonlinear_lagrangian_dual_svc}
 
-
 \subsubsection{Squared Hinge loss}
-
-\paragraph{Primal formulation}
-
-etc
 
 \input{experiments/primal_svc_squared_hinge}
 
 
-
 \subsection{Support Vector Regression}
-
 
 \subsubsection{Epsilon-insensitive loss}
 
-\paragraph{Primal formulation}
-
-etc
-
 \input{experiments/primal_svr_eps}
-
-\paragraph{Dual formulations}
-
-\subparagraph{Linear Wolfe}
-
-etc
 
 \input{experiments/linear_dual_svr}
 
-\subparagraph{Linear Lagrangian}
-
-etc
-
 \input{experiments/linear_lagrangian_dual_svr}
-
-\subparagraph{Nonlinear Wolfe}
-
-etc
 
 \input{experiments/nonlinear_dual_svr}
 
-\subparagraph{Nonlinear Lagrangian}
-
-etc
-
 \input{experiments/nonlinear_lagrangian_dual_svr}
 
-
 \subsubsection{Squared Epsilon-insensitive loss}
-
-\paragraph{Primal formulation}
-
-etc
 
 \input{experiments/primal_svr_squared_eps}
 
