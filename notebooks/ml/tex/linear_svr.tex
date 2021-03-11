@@ -276,7 +276,7 @@ The \emph{squared epsilon-insensitive} loss is defined as:
 	\mathcal{L}_\epsilon^2 = 
 	\begin{cases}
 		0 & \text{if } |y - (w^T x + b)| \leq \epsilon \\
-		|y - (w^T x + b)|^2 - \epsilon & \text{otherwise} \\
+		(|y - (w^T x + b)| - \epsilon)^2 & \text{otherwise} \\
 	\end{cases}
 \end{equation}
 
