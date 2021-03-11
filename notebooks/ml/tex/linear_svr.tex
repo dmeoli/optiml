@@ -34,17 +34,7 @@ The objective function for SVR can then be written as:
 
 \subsection{Epsilon-insensitive loss}
 
-\subsubsection{Primal formulation}
-
-The general primal unconstrained formulation takes the same form of \ref{eq:primal_svc}.
-
-The quadratic optimization problem \ref{eq:quad_svr_obj} can be equivalently formulated as: 
-
-\begin{equation} \label{eq:svr_eps}
-	\min_{w,b} \frac{1}{2} \Vert w\Vert^{2} + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)
-\end{equation}
-
-where we make use of the \emph{epsilon-insensitive} loss defined as:
+The \emph{epsilon-insensitive} loss is defined as:
 
 \begin{equation} \label{eq:eps_loss1}
 	\mathcal{L}_\epsilon = 
@@ -60,9 +50,7 @@ or, equivalently:
 	\mathcal{L}_\epsilon = \max(0, |y - (w^T x + b)| - \epsilon)
 \end{equation}
 
-The above formulation penalizes slacks $\xi$ linearly and is called $\mathcal{L}_1$-SVR.
-
-As the \emph{hinge} loss, also the \emph{epsilon insensitive} loss is a convex function and it is nondifferentiable due to its nonsmoothness in $\pm\epsilon$, but has a subgradient wrt $w$ that is given by:
+As the \emph{hinge} loss, also the \emph{epsilon-insensitive} loss is a nondifferentiable convex function due to its nonsmoothness in $\pm\epsilon$, but has a subgradient wrt $w$ that is given by:
 
 \begin{equation} \label{eq:eps_loss_der}
 	\frac{\partial \mathcal{L_\epsilon}}{\partial w}=
@@ -71,6 +59,20 @@ As the \emph{hinge} loss, also the \emph{epsilon insensitive} loss is a convex f
             0 & \text{otherwise} \\ 
         \end{cases}
 \end{equation}
+
+\subsubsection{Primal formulation}
+
+The general primal unconstrained formulation takes the same form of \ref{eq:primal_svc}.
+
+The quadratic optimization problem \ref{eq:quad_svr_obj} can be equivalently formulated as: 
+
+\begin{equation} \label{eq:svr_eps}
+	\min_{w,b} \frac{1}{2} \Vert w\Vert^{2} + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)
+\end{equation}
+
+where we make use of the \emph{epsilon-insensitive} loss \ref{eq:eps_loss1} or \ref{eq:eps_loss2}.
+
+The above formulation penalizes slacks $\xi$ linearly and is called $\mathcal{L}_1$-SVR.
 
 \begin{figure}[h!]
 	\centering
@@ -268,11 +270,37 @@ the gradient wrt $\lambda_+$ and $\lambda_-$ are:
 
 \subsection{Squared Epsilon-insensitive loss}
 
+The \emph{squared epsilon-insensitive} loss is defined as:
+
+\begin{equation} \label{eq:squared_eps_loss1}
+	\mathcal{L}_\epsilon^2 = 
+	\begin{cases}
+		0 & \text{if } |y - (w^T x + b)| \leq \epsilon \\
+		|y - (w^T x + b)|^2 - \epsilon & \text{otherwise} \\
+	\end{cases}
+\end{equation}
+
+or, equivalently:
+
+\begin{equation} \label{eq:squared_eps_loss2}
+	\mathcal{L}_\epsilon^2 = \max(0, |y - (w^T x + b)| - \epsilon)^2
+\end{equation}
+
+As the \emph{squared hinge} loss, also the \emph{squared epsilon-insensitive} loss is a convex function and it has a gradient wrt $w$ that is given by:
+
+\begin{equation} \label{eq:squared_eps_loss_der}
+	\frac{\partial \mathcal{L}_\epsilon^2}{\partial w}=
+		\begin{cases}
+            2 ((y - (w^T x + b)) x) & \text{if } |y - (w^T x + b)| > \epsilon \\
+            0 & \text{otherwise} \\ 
+        \end{cases}
+\end{equation}
+
 \subsubsection{Primal formulation}
 
 To provide a continuously differentiable function the optimization problem \ref{eq:svr_eps} can be formulated as: 
 
-\begin{equation} \label{eq:svr_sq_eps}
+\begin{equation} \label{eq:svr_squared_eps}
     \min_{w,b} \frac{1}{2} \Vert w\Vert^{2} + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)^2
 \end{equation}
 

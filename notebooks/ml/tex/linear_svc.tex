@@ -60,6 +60,32 @@ where the parameter $C$ controls the trade-off between the slack variable penalt
 
 \subsection{Hinge loss}
 
+The \emph{hinge} loss is defined as:
+
+\begin{equation} \label{eq:hinge_loss1}
+	\mathcal{L}_1 = 
+	\begin{cases}
+		0 & \text{if } y (w^T x + b) \geq 1 \\
+		1 - y (w^T x + b) & \text{otherwise} \\
+	\end{cases}
+\end{equation}
+
+or, equivalently:
+
+\begin{equation} \label{eq:hinge_loss2}
+	\mathcal{L}_1 = \max(0, 1 - y (w^T x + b))
+\end{equation}
+
+and it is a nondifferentiable convex function due to its nonsmoothness in 1, but has a subgradient wrt $w$ that is given by:
+
+\begin{equation} \label{eq:hinge_loss_der}
+    \frac{\partial \mathcal{L}_1}{\partial w}=
+        \begin{cases}
+            -y x & \text{if } y (w^T x + b) < 1 \\
+            0 & \text{otherwise} \\ 
+        \end{cases}
+\end{equation}
+
 \subsubsection{Primal formulation}
 
 The general primal unconstrained formulation takes the form:
@@ -76,33 +102,9 @@ The quadratic optimization problem \ref{eq:quad_svc_obj} can be equivalently for
     \min_{w,b} \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))
 \end{equation}
 
-where we make use of the \emph{hinge} loss defined as:
-
-\begin{equation} \label{eq:hinge_loss1}
-	\mathcal{L}_1 = 
-	\begin{cases}
-		0 & \text{if } y (w^T x + b) \geq 1 \\
-		1 - y (w^T x + b) & \text{otherwise} \\
-	\end{cases}
-\end{equation}
-
-or, equivalently:
-
-\begin{equation} \label{eq:hinge_loss2}
-	\mathcal{L}_1 = \max(0, 1 - y (w^T x + b))
-\end{equation}
+where we make use of the \emph{hinge} loss \ref{eq:hinge_loss1} or \ref{eq:hinge_loss2}.
 
 The above formulation penalizes slacks $\xi$ linearly and is called $\mathcal{L}_1$-SVC.
-
-The \emph{hinge} loss is a convex function and it is nondifferentiable due to its nonsmoothness in 1, but has a subgradient wrt $w$ that is given by:
-
-\begin{equation} \label{eq:hinge_loss_der}
-    \frac{\partial \mathcal{L}_1}{\partial w}=
-        \begin{cases}
-            -y x & \text{if } y (w^T x + b) < 1 \\
-            0 & \text{otherwise} \\ 
-        \end{cases}
-\end{equation}
 
 \begin{figure}[h!]
 	\centering
@@ -111,7 +113,7 @@ The \emph{hinge} loss is a convex function and it is nondifferentiable due to it
   	\label{fig:svc_hinge_loss}
 \end{figure}
 
-To simplify the notation and so also the design of the algorithms, the simplest approach to learn the bias term $b$ is that of including that into the \emph{regularization term}; so we can rewrite \ref{eq:svc_hinge} and \ref{eq:svc_sq_hinge} as follows:
+To simplify the notation and so also the design of the algorithms, the simplest approach to learn the bias term $b$ is that of including that into the \emph{regularization term}; so we can rewrite \ref{eq:svc_hinge} and \ref{eq:svc_squared_hinge} as follows:
 
 \begin{equation} \label{eq:primal_svc_hinge1}
     \min_{w,b} \frac{1}{2} (\Vert w \Vert^2 + b^2) + C \sum_{i=1}^n \mathcal{L}(w;x_i,y_i)
@@ -128,7 +130,7 @@ or, equivalently, by augmenting the weight vector $w$ with the bias term $b$ and
 
 with the advantages of having convex properties of the objective function useful for convergence analysis and the possibility to directly apply algorithms designed for models without the bias term.
 
-Notice that in terms of numerical optimization the formulations \ref{eq:svc_hinge} and \ref{eq:svc_sq_hinge} are not equivalent to \ref{eq:primal_svc_hinge1} or \ref{eq:primal_svc_hinge2} since in the first one the bias term $b$ does not contribute to the \emph{regularization term}, so the SVM formulation is based on an unregularized bias term $b$, as highlighted by the \emph{statistical learning theory}. But, in machine learning sense, numerical experiments in \cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
+Notice that in terms of numerical optimization the formulations \ref{eq:svc_hinge} and \ref{eq:svc_squared_hinge} are not equivalent to \ref{eq:primal_svc_hinge1} or \ref{eq:primal_svc_hinge2} since in the first one the bias term $b$ does not contribute to the \emph{regularization term}, so the SVM formulation is based on an unregularized bias term $b$, as highlighted by the \emph{statistical learning theory}. But, in machine learning sense, numerical experiments in \cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
 
 \subsubsection{Wolfe Dual formulation}
 
@@ -191,7 +193,7 @@ where $s$ denotes the set of indices of the support vectors and is determined by
 
 Multiplying through by $y_s$ and then using $y_s^2=1$ from \ref{eq:svc_consts}:
 
-\begin{equation} \label{eq:svc_sv_sq_const2}
+\begin{equation} \label{eq:svc_sv_squared_const2}
 	y_s^2\big(\sum_{m\in S}\alpha_m y_m \langle x_m, x_s \rangle +b\big)=y_s
 \end{equation}
 
@@ -307,11 +309,37 @@ the gradient wrt $\lambda_+$ and $\lambda_-$ are:
 
 \subsection{Squared Hinge loss}
 
+The \emph{squared hinge} loss is defined as:
+
+\begin{equation} \label{eq:squared_hinge_loss1}
+	\mathcal{L}_2 = 
+	\begin{cases}
+		0 & \text{if } y (w^T x + b) \geq 1 \\
+		(1 - y (w^T x + b))^2 & \text{otherwise} \\
+	\end{cases}
+\end{equation}
+
+or, equivalently:
+
+\begin{equation} \label{eq:squared_hinge_loss2}
+	\mathcal{L}_2 = \max(0, 1 - y (w^T x + b))^2
+\end{equation}
+
+It is a convex function and its gradient wrt $w$ is given by:
+
+\begin{equation} \label{eq:squared_hinge_loss_der}
+    \frac{\partial \mathcal{L}_2}{\partial w}=
+        \begin{cases}
+            - 2 y x & \text{if } y (w^T x + b) < 1 \\
+            0 & \text{otherwise} \\ 
+        \end{cases}
+\end{equation}
+
 \subsubsection{Primal formulation}
 
 Since smoothed versions of objective functions may be preferred for optimization, we can reformulate \ref{eq:svc_hinge} as:
 
-\begin{equation} \label{eq:svc_sq_hinge}
+\begin{equation} \label{eq:svc_squared_hinge}
     \min_{w,b} \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))^2
 \end{equation}
 
