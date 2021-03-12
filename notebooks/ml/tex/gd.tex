@@ -3,12 +3,12 @@
 \begin{algorithm}[h!]
 	\caption{Gradient Descent}
 	\label{alg:gd}
-	\begin{algorithmic}[1]
+	\begin{algorithmic}
 		\Require{Learning rate or step size $\eta > 0$}
 		\Procedure{Gradient Descent}{}
 			\State Initialize weight vector $\textbf{w}_0$
 			\State $k \gets 0$
-			\While {$not\_convergence$}
+			\While{$not\_convergence$}
 				\State $\textbf{w}_{k+1} \gets \textbf{w}_k - \eta \nabla \mathcal{L}(\textbf{w}_k)$
 				\State $k \gets k + 1$
 			\EndWhile
@@ -23,15 +23,15 @@
 \subsubsection{Standard}
 
 \begin{algorithm}[h!]
-	\caption{Standard Momentum Accelerated Gradient Descent}
+	\caption{Momentum Accelerated Gradient Descent}
 	\label{alg:sgd}
-	\begin{algorithmic}[1]
+	\begin{algorithmic}
 		\Require{Learning rate or step size $\eta > 0$}
-		\Require{Momentum $\beta \in [0,1]$}
+		\Require{Momentum $\beta \in (0,1)$}
 		\Procedure{Accelerated Gradient Descent}{}
 			\State Initialize weight vector $\textbf{w}_1 = \textbf{w}_0$
 			\State $k \gets 1$
-			\While {$not\_convergence$}
+			\While{$not\_convergence$}
 				\State $\textbf{v}_{k} \gets \beta (\textbf{w}_k - \textbf{w}_{k-1}) - \eta \nabla \mathcal{L}(\textbf{w}_k)$
 				\State $\textbf{w}_{k+1} \gets \textbf{w}_k + \textbf{v}_{k}$
 				\State $k \gets k + 1$
@@ -45,13 +45,13 @@
 \begin{algorithm}[h!]
 	\caption{Nesterov Momentum Accelerated Gradient Descent}
 	\label{alg:ngd}
-	\begin{algorithmic}[1]
+	\begin{algorithmic}
 		\Require{Learning rate $\eta > 0$}
-		\Require{Momentum $\beta \in [0,1]$}
+		\Require{Momentum $\beta \in (0,1)$}
 		\Procedure{Nesterov Accelerated Gradient Descent}{}
 			\State Initialize weight vector $\textbf{w}_1 = \textbf{w}_0$ and velocity vector $\textbf{v}_0 = 0$
 			\State $k \gets 1$
-			\While {$not\_convergence$}
+			\While{$not\_convergence$}
 				\State $\textbf{v}_{k+1} \gets  \textbf{w}_k - \eta \nabla \mathcal{L}(\textbf{w}_k)$
 				\State $\textbf{w}_{k+1} \gets \textbf{v}_{k+1} + \beta (\textbf{v}_{k+1} - \textbf{v}_k)$
 				\State $k \gets k + 1$
