@@ -7,10 +7,10 @@
 		\Require{Learning rate or step size $\eta > 0$}
 		\Procedure{Gradient Descent}{}
 			\State Initialize weight vector $\textbf{w}_0$
-			\State $k \gets 0$
+			\State $t \gets 0$
 			\While{$not\_convergence$}
-				\State $\textbf{w}_{k+1} \gets \textbf{w}_k - \eta \nabla \mathcal{L}(\textbf{w}_k)$
-				\State $k \gets k + 1$
+				\State $\textbf{w}_{t+1} \gets \textbf{w}_t - \eta \nabla \mathcal{L}(\textbf{w}_t)$
+				\State $t \gets t + 1$
 			\EndWhile
 		\EndProcedure
 	\end{algorithmic}
@@ -29,12 +29,12 @@
 		\Require{Learning rate or step size $\eta > 0$}
 		\Require{Momentum $\beta \in (0,1)$}
 		\Procedure{Accelerated Gradient Descent}{}
-			\State Initialize weight vector $\textbf{w}_1 = \textbf{w}_0$
-			\State $k \gets 1$
+			\State Initialize weight vector $\textbf{w}_1 = \textbf{w}_0$ and velocity vector $\textbf{v}_0 = 0$
+			\State $t \gets 1$
 			\While{$not\_convergence$}
-				\State $\textbf{v}_{k} \gets \beta (\textbf{w}_k - \textbf{w}_{k-1}) - \eta \nabla \mathcal{L}(\textbf{w}_k)$
-				\State $\textbf{w}_{k+1} \gets \textbf{w}_k + \textbf{v}_{k}$
-				\State $k \gets k + 1$
+				\State $\textbf{v}_t \gets \beta \textbf{v}_{t-1} + \eta \nabla \mathcal{L}(\textbf{w}_t)$
+				\State $\textbf{w}_{t+1} \gets \textbf{w}_t - \textbf{v}_t$
+				\State $t \gets t + 1$
 			\EndWhile
 		\EndProcedure
 	\end{algorithmic}
@@ -50,11 +50,12 @@
 		\Require{Momentum $\beta \in (0,1)$}
 		\Procedure{Nesterov Accelerated Gradient Descent}{}
 			\State Initialize weight vector $\textbf{w}_1 = \textbf{w}_0$ and velocity vector $\textbf{v}_0 = 0$
-			\State $k \gets 1$
+			\State $t \gets 1$
 			\While{$not\_convergence$}
-				\State $\textbf{v}_{k+1} \gets  \textbf{w}_k - \eta \nabla \mathcal{L}(\textbf{w}_k)$
-				\State $\textbf{w}_{k+1} \gets \textbf{v}_{k+1} + \beta (\textbf{v}_{k+1} - \textbf{v}_k)$
-				\State $k \gets k + 1$
+				\State $\hat{\textbf{w}}_t \gets \textbf{w}_t - \beta \textbf{v}_{t-1}$
+				\State $\textbf{v}_t \gets \beta \textbf{v}_{t-1} + \eta \nabla \mathcal{L}(\hat{\textbf{w}}_t)$
+				\State $\textbf{w}_{t+1} \gets \textbf{w}_t - \textbf{v}_t$
+				\State $t \gets t + 1$
 			\EndWhile
 		\EndProcedure
 	\end{algorithmic}
