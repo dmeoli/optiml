@@ -133,7 +133,7 @@ class StochasticMomentumOptimizer(StochasticOptimizer, ABC):
         if momentum_type not in ('standard', 'nesterov', 'none'):
             raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type
-        if not 0 < momentum > 1:
+        if not 0 < momentum < 1:
             raise ValueError('momentum must be must be between 0 and 1')
         self.momentum = momentum
         if (self.is_lagrangian_dual() and
