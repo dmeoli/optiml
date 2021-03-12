@@ -57,8 +57,8 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
 
             if self.momentum_type == 'nesterov':
                 step_m1 = self.step
-                big_jump = self.momentum * step_m1
-                self.x += big_jump
+                jump = self.momentum * step_m1
+                self.x += jump
 
             self.g_x = self.f.jacobian(self.x, *batch)
 
@@ -90,7 +90,7 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
 
                 correction = self.step_size * d
                 self.x += correction
-                self.step = big_jump + correction
+                self.step = jump + correction
 
             elif self.momentum_type == 'none':
 
