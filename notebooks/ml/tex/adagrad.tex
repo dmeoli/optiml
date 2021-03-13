@@ -7,18 +7,20 @@ Due to the nondifferentiability of the \emph{hinge} loss, we might end up in a s
 \begin{algorithm}[h!]
 	\caption{AdaGrad}
 	\label{alg:adagrad}
-	\begin{algorithmic}
+	\begin{algorithmic}[1]
+		\Require{Function $\mathcal{L}$ to minimize}
 		\Require{Learning rate or step size $\eta > 0$}
 		\Require{Offset $\epsilon > 0$ to ensures not divide by 0}
-		\Procedure{AdaGrad}{}
-			\State Initialize weight vector $\textbf{w}_0$
-			\State $k \gets 0$
+		\Function{AdaGrad}{$\mathcal{L},\eta,\epsilon$}
+			\State Initialize weight vector $\textbf{w}_0$ and the squared accumulated gradients vector $s_t = 0$
+			\State $t \gets 1$
 			\While {$not\_convergence$}
-				\State $\textbf{g}_k \gets \nabla \mathcal{L}(\textbf{w}_k)$
-				\State $\textbf{s}_k \gets \textbf{s}_{k-1} + \textbf{g}_k^2$
-				\State $\textbf{w}_{k+1} \gets \textbf{w}_k - \displaystyle \frac{\eta}{\sqrt{\textbf{s}_k + \epsilon}} \cdot \textbf{g}_k$
-				\State $k \gets k + 1$
+				\State $\textbf{g}_t \gets \nabla \mathcal{L}(\textbf{w}_t)$
+				\State $\textbf{s}_t \gets \textbf{s}_{t-1} + \textbf{g}_t^2$
+				\State $\textbf{w}_{t+1} \gets \textbf{w}_t - \displaystyle \frac{\eta}{\sqrt{\textbf{s}_t + \epsilon}} \cdot \textbf{g}_t$
+				\State $t \gets t + 1$
 			\EndWhile
-		\EndProcedure
+			\State \Return $w_t$
+		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
