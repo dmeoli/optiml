@@ -87,7 +87,7 @@ $$
 			\State Initialize weight vector $\textbf{w}_0$
 			\State $k \gets 0$
 			\While{$not\_convergence$}
-				\State $\textbf{w}_{t+1} \gets \textbf{w}_k - \eta \nabla \mathcal{L}(\textbf{w}_k)$
+				\State $\textbf{w}_{k+1} \gets \textbf{w}_k - \eta \nabla \mathcal{L}(\textbf{w}_k)$
 				\State $k \gets k + 1$
 			\EndWhile
 			\State \Return $w_k$
@@ -112,8 +112,8 @@ $$
 			\State Initialize weight vector $\textbf{w}_1 = \textbf{w}_0$ and velocity vector $\textbf{v}_0 = 0$
 			\State $k \gets 1$
 			\While{$not\_convergence$}
-				\State $\textbf{v}_k \gets \beta \textbf{v}_{t-1} + \eta \nabla \mathcal{L}(\textbf{w}_k)$
-				\State $\textbf{w}_{t+1} \gets \textbf{w}_k - \textbf{v}_k$
+				\State $\textbf{v}_k \gets \beta \textbf{v}_{k-1} + \eta \nabla \mathcal{L}(\textbf{w}_k)$
+				\State $\textbf{w}_{k+1} \gets \textbf{w}_k - \textbf{v}_k$
 				\State $k \gets k + 1$
 			\EndWhile
 			\State \Return $w_k$
@@ -134,9 +134,9 @@ $$
 			\State Initialize weight vector $\textbf{w}_1 = \textbf{w}_0$ and velocity vector $\textbf{v}_0 = 0$
 			\State $k \gets 1$
 			\While{$not\_convergence$}
-				\State $\hat{\textbf{w}}_k \gets \textbf{w}_k + \beta \textbf{v}_{t-1}$
-				\State $\textbf{v}_k \gets \beta \textbf{v}_{t-1} + \eta \nabla \mathcal{L}(\hat{\textbf{w}}_k)$
-				\State $\textbf{w}_{t+1} \gets \textbf{w}_k - \textbf{v}_k$
+				\State $\hat{\textbf{w}}_k \gets \textbf{w}_k + \beta \textbf{v}_{k-1}$
+				\State $\textbf{v}_k \gets \beta \textbf{v}_{k-1} + \eta \nabla \mathcal{L}(\hat{\textbf{w}}_k)$
+				\State $\textbf{w}_{k+1} \gets \textbf{w}_k - \textbf{v}_k$
 				\State $k \gets k + 1$
 			\EndWhile
 			\State \Return $w_k$
@@ -162,8 +162,8 @@ Due to the nondifferentiability of the \emph{hinge} loss, we might end up in a s
 			\State $k \gets 1$
 			\While {$not\_convergence$}
 				\State $\textbf{g}_k \gets \nabla \mathcal{L}(\textbf{w}_k)$
-				\State $\textbf{s}_k \gets \textbf{s}_{t-1} + \textbf{g}_k^2$
-				\State $\textbf{w}_{t+1} \gets \textbf{w}_k - \displaystyle \frac{\eta}{\sqrt{\textbf{s}_k + \epsilon}} \cdot \textbf{g}_k$
+				\State $\textbf{s}_k \gets \textbf{s}_{k-1} + \textbf{g}_k^2$
+				\State $\textbf{w}_{k+1} \gets \textbf{w}_k - \displaystyle \frac{\eta}{\sqrt{\textbf{s}_k + \epsilon}} \cdot \textbf{g}_k$
 				\State $k \gets k + 1$
 			\EndWhile
 			\State \Return $w_k$
