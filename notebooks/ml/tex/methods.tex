@@ -35,7 +35,7 @@ $$
 $$
 is convex. The latter, in terms of Jacobian, is equivalent to:
 $$
-\mathcal{L}(x) \geq \mathcal{L}(y) + \langle \mathcal{L}(y), x - y \rangle + \frac{\mu}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^{n}
+\mathcal{L}(x) \geq \mathcal{L}(y) + \langle \nabla \mathcal{L}(y), x - y \rangle + \frac{\mu}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^{n}
 $$
 and, in terms of Hessian, is equivalent to:
 $$
@@ -43,7 +43,7 @@ $$
 $$
 which is:
 $$
-\nabla^2 \mathcal{L}(x) \succeq 0 \ \forall \ x
+\nabla^2 \mathcal{L}(x) \succeq \mu \ \forall \ x
 $$
 \end{definition}
 
