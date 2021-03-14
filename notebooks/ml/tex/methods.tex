@@ -14,26 +14,37 @@ $$
 \begin{definition}[Convexity - Jacobian]
 We say that a differentiable function $\mathcal{L}: \Re^{n} \rightarrow \Re$ is convex iff: 
 $$
-\mathcal{L}(x) \geq \mathcal{L}(y) + \langle \nabla \mathcal{L}(y), x - y \rangle \ \forall \ x, y \in \Re^{n}, \lambda \in [0,1] 
+\mathcal{L}(x) \geq \mathcal{L}(y) + \langle \nabla \mathcal{L}(y), x - y \rangle \ \forall \ x, y \in \Re^{n}
 $$
 \end{definition}
 
 \begin{definition}[Convexity - Hessian]
 We say that a twice differentiable function, i.e., the Hessian matrix is \emph{symmetric}, $\mathcal{L}: \Re^{n} \rightarrow \Re$ is convex iff: 
 $$
-\nabla^2 \mathcal{L}(x) \succeq \ \forall \ x
+\nabla^2 \mathcal{L}(x) \succeq 0 \ \forall \ x
 $$
 i.e., the Hessian matix is \emph{positive semidefinite}.
 \end{definition}
 
-Then the definitions of \emph{strong convexity} and \emph{L-smoothness} below will be useful.
+The definitions of \emph{strong convexity} and \emph{L-smoothness} below will be useful.
 
 \begin{definition}[Strong Convexity]
 We say that a function $\mathcal{L}: \Re^{n} \rightarrow \Re$ is $\mu$-strongly convex if:
 $$
-x \rightarrow \mathcal{L} - \frac{\mu}{2} \| x \|^2
+\mathcal{G}(x) = \mathcal{L}(x) - \frac{\mu}{2} \| x \|^2
 $$
-is convex.
+is convex. The latter, in terms of Jacobian, is equivalent to:
+$$
+\mathcal{L}(x) \geq \mathcal{L}(y) + \langle \mathcal{L}(y), x - y \rangle + \frac{\mu}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^{n}
+$$
+and, in terms of Hessian, is equivalent to:
+$$
+\nabla^2 \mathcal{G}(x) \succ 0 \ \forall \ x
+$$
+which is:
+$$
+\nabla^2 \mathcal{L}(x) \succeq 0 \ \forall \ x
+$$
 \end{definition}
 
 \begin{definition}[L-smoothness]
@@ -45,13 +56,7 @@ $$
 
 \subsection{Gradient Descent}
 
-The Gradient Descent algorithm is the simplest first-order optimization method which uses the iterate:
-
-
-
-follow the descent lemma defines as:
-
-
+The Gradient Descent algorithm is the simplest \emph{first-order optimization} method.
 
 \begin{theorem}[Gradient Descent convergence for convex functions]
 Let $\mathcal{L}: \Re^{n} \rightarrow \Re$ be a L-smooth convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^{n}$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
