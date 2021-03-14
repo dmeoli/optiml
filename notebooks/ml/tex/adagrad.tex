@@ -12,7 +12,7 @@ Due to the nondifferentiability of the \emph{hinge} loss, we might end up in a s
 		\Require{Learning rate or step size $\eta > 0$}
 		\Require{Offset $\epsilon > 0$ to ensures not divide by 0}
 		\Function{AdaGrad}{$\mathcal{L},\eta,\epsilon$}
-			\State Initialize weight vector $\textbf{w}_0$ and the squared accumulated gradients vector $s_t = 0$
+			\State Initialize weight vector $\textbf{w}_0$ and the squared accumulated gradients vector $\textbf{s}_t = 0$
 			\State $t \gets 1$
 			\While {$not\_convergence$}
 				\State $\textbf{g}_t \gets \nabla \mathcal{L}(\textbf{w}_t)$
