@@ -1,0 +1,245 @@
+\section{Optimization}
+
+In order to explain the \emph{convergence} and \emph{efficiency} properties of the following numerical and optimization methods, we need to introduce some preliminary definitions about \emph{convexity} and the \emph{L-smoothness} of a function.
+
+First of all, we give three different but equivalent definitions of convexity in terms of the function itself, the Jacobian and the Hessian.
+
+\begin{definition}[Convexity]
+We say that a function $\mathcal{L}: \Re^{n} \rightarrow \Re$ is convex if: 
+$$ 
+\mathcal{L}(\lambda x + (1 - \lambda) y ) \leq \lambda \mathcal{L}(x) + (1 - \lambda) \mathcal{L}(y) \ \forall \ x, y \in \Re^{n}, \lambda \in [0,1] 
+$$
+\end{definition}
+
+\begin{definition}[Convexity - Jacobian]
+We say that a differentiable function $\mathcal{L}: \Re^{n} \rightarrow \Re$ is convex iff: 
+$$
+\mathcal{L}(x) \geq \mathcal{L}(y) + \langle \nabla \mathcal{L}(y), x - y \rangle \ \forall \ x, y \in \Re^{n}, \lambda \in [0,1] 
+$$
+\end{definition}
+
+\begin{definition}[Convexity - Hessian]
+We say that a twice differentiable function, i.e., the Hessian matrix is \emph{symmetric}, $\mathcal{L}: \Re^{n} \rightarrow \Re$ is convex iff: 
+$$
+\nabla^2 \mathcal{L}(x) \succeq \ \forall \ x
+$$
+i.e., the Hessian matix is \emph{positive semidefinite}.
+\end{definition}
+
+Then the definitions of \emph{strong convexity} and \emph{L-smoothness} below will be useful.
+
+\begin{definition}[Strong Convexity]
+We say that a function $\mathcal{L}: \Re^{n} \rightarrow \Re$ is $\mu$-strongly convex if:
+$$
+x \rightarrow \mathcal{L} - \frac{\mu}{2} \| x \|^2
+$$
+is convex.
+\end{definition}
+
+\begin{definition}[L-smoothness]
+We say that a function $\mathcal{L}: \Re^{n} \rightarrow \Re$ is L-smooth, i.e., Lipschitz smooth, if it is differentiable and if:
+$$
+\| \nabla \mathcal{L}(x) - \nabla \mathcal{L}(y) \| \leq L \| x - y \| \ \forall \ x, y \in \Re^{n}
+$$
+\end{definition}
+
+\subsection{Gradient Descent}
+
+The Gradient Descent algorithm is the simplest first-order optimization method which uses the iterate:
+
+
+
+follow the descent lemma defines as:
+
+
+
+\begin{theorem}[Gradient Descent convergence for convex functions]
+Let $\mathcal{L}: \Re^{n} \rightarrow \Re$ be a L-smooth convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^{n}$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
+$$
+\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq \frac{\| w_0 - w_* \|^2}{2 \eta k}
+$$
+In particular, for $\eta = 1/L$:
+$$
+\frac{L \| w_0 - w_* \|^2}{2 k}
+$$
+\end{theorem}
+
+
+
+\begin{theorem}[Gradient Descent convergence for strictly convex functions]
+Let $\mathcal{L}: \Re^{n} \rightarrow \Re$ be a L-smooth, $\mu$ strictly convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^{n}$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
+$$
+\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq (1 - \eta \mu)^k \| w_0 - w_* \|^2
+$$
+In particular, for $\eta = 1/L$:
+$$
+(1 - \frac{\mu}{L})^k \| w_0 - w_* \|^2
+$$
+\end{theorem}
+
+\begin{algorithm}[H]
+	\caption{Gradient Descent}
+	\label{alg:gd}
+	\begin{algorithmic}
+		\Require{Function $\mathcal{L}$ to minimize}
+		\Require{Learning rate or step size $\eta > 0$}
+		\Function{Gradient Descent}{$\mathcal{L},\eta$}
+			\State Initialize weight vector $\textbf{w}_0$
+			\State $k \gets 0$
+			\While{$not\_convergence$}
+				\State $\textbf{w}_{t+1} \gets \textbf{w}_k - \eta \nabla \mathcal{L}(\textbf{w}_k)$
+				\State $k \gets k + 1$
+			\EndWhile
+			\State \Return $w_k$
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Momentum}
+
+
+
+\paragraph{Polyak} etc.
+
+\begin{algorithm}[H]
+	\caption{Polyak Momentum Accelerated Gradient Descent or Heavy-Ball Method}
+	\label{alg:sgd}
+	\begin{algorithmic}
+		\Require{Function $\mathcal{L}$ to minimize}
+		\Require{Learning rate or step size $\eta > 0$}
+		\Require{Momentum $\beta \in (0,1)$}
+		\Function{Accelerated Gradient Descent}{$\mathcal{L},\eta,	\beta$}
+			\State Initialize weight vector $\textbf{w}_1 = \textbf{w}_0$ and velocity vector $\textbf{v}_0 = 0$
+			\State $k \gets 1$
+			\While{$not\_convergence$}
+				\State $\textbf{v}_k \gets \beta \textbf{v}_{t-1} + \eta \nabla \mathcal{L}(\textbf{w}_k)$
+				\State $\textbf{w}_{t+1} \gets \textbf{w}_k - \textbf{v}_k$
+				\State $k \gets k + 1$
+			\EndWhile
+			\State \Return $w_k$
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Nesterov} etc.
+
+\begin{algorithm}[H]
+	\caption{Nesterov Momentum Accelerated Gradient Descent}
+	\label{alg:ngd}
+	\begin{algorithmic}
+		\Require{Function $\mathcal{L}$ to minimize}
+		\Require{Learning rate $\eta > 0$}
+		\Require{Momentum $\beta \in (0,1)$}
+		\Function{Nesterov Accelerated Gradient Descent}{$\mathcal{L},\eta,\beta$}
+			\State Initialize weight vector $\textbf{w}_1 = \textbf{w}_0$ and velocity vector $\textbf{v}_0 = 0$
+			\State $k \gets 1$
+			\While{$not\_convergence$}
+				\State $\hat{\textbf{w}}_k \gets \textbf{w}_k + \beta \textbf{v}_{t-1}$
+				\State $\textbf{v}_k \gets \beta \textbf{v}_{t-1} + \eta \nabla \mathcal{L}(\hat{\textbf{w}}_k)$
+				\State $\textbf{w}_{t+1} \gets \textbf{w}_k - \textbf{v}_k$
+				\State $k \gets k + 1$
+			\EndWhile
+			\State \Return $w_k$
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+\subsection{AdaGrad}
+
+Due to the nondifferentiability of the \emph{hinge} loss, we might end up in a situation where some components of the gradient are very small and others large. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
+
+\emph{AdaGrad} \cite{duchi2011adaptive} addresses this problem by introducing the aggregate of the squares of previously observed gradients to adjust the learning rate. This has two benefits: first, we no longer need to decide just when a gradient is large enough. Second, it scales automatically with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment.
+
+\begin{algorithm}[H]
+	\caption{AdaGrad}
+	\label{alg:adagrad}
+	\begin{algorithmic}
+		\Require{Function $\mathcal{L}$ to minimize}
+		\Require{Learning rate or step size $\eta > 0$}
+		\Require{Offset $\epsilon > 0$ to ensures not divide by 0}
+		\Function{AdaGrad}{$\mathcal{L},\eta,\epsilon$}
+			\State Initialize weight vector $\textbf{w}_0$ and the squared accumulated gradients vector $\textbf{s}_k = 0$
+			\State $k \gets 1$
+			\While {$not\_convergence$}
+				\State $\textbf{g}_k \gets \nabla \mathcal{L}(\textbf{w}_k)$
+				\State $\textbf{s}_k \gets \textbf{s}_{t-1} + \textbf{g}_k^2$
+				\State $\textbf{w}_{t+1} \gets \textbf{w}_k - \displaystyle \frac{\eta}{\sqrt{\textbf{s}_k + \epsilon}} \cdot \textbf{g}_k$
+				\State $k \gets k + 1$
+			\EndWhile
+			\State \Return $w_k$
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+\subsection{Sequential Minimal Optimization}
+
+The \emph{Sequential Minimal Optimization (SMO)} \cite{platt1998sequential} method is the most popular approach for solving the SVM QP problem without any extra $Q$ matrix storage required by common QP methods. The advantage of SMO lies in the fact that it performs a series of two-point optimizations since we deal with just one equality constraint, i.e., $y^T \alpha=0$, so the Lagrange multipliers can be solved analitically.
+
+At each iteration, SMO chooses two $\alpha_i$ to jointly optimize, let $\alpha_1$ and $\alpha_2$, finds the optimal values for these multipliers and update the SVM to reflect these new values. In order to solve for two Lagrange multipliers, SMO first computes the constraints over these and then solves for the constrained minimum. Since there are only two multipliers, the bound constraints cause the Lagrange multipliers to lie within a box, while the linear equality constraint causes the Lagrange multipliers to lie on a diagonal line inside the box. So, the constrained minimum must lie there.
+
+\subsubsection{Classification}
+
+The ends of the diagonal line segment in terms of $\alpha_2$ can be espressed as follow if the target $y_1 \ne y_2$:
+
+\begin{equation} \label{eq:bounds_update1}
+	\begin{aligned}
+		& L = max(0, \alpha_2 - \alpha_1) \\
+		& H = min(C, C + \alpha_2 - \alpha_1)
+	\end{aligned}
+\end{equation}
+
+or, alternatively, if the target $y_1 = y_2$:
+
+\begin{equation} \label{eq:bounds_update2}
+	\begin{aligned}
+		& L = max(0, \alpha_2 + \alpha_1 - C) \\
+		& H = min(C, \alpha_2 + \alpha_1)
+	\end{aligned}
+\end{equation}
+
+The second derivative of the objective quadratic function along the diagonl line can be expressed as:
+
+\begin{equation} \label{eq:smo_eta}
+\eta = K(x_1, x_1) + K(x_2, x_2) - 2K(x_1, x_2)
+\end{equation}
+
+that will be grather than zero if the kernel matrix will be positive definite, so there will be a minimum along the linear equality constraints that will be:
+
+\begin{equation} \label{eq:smo_a_2_new}
+	\alpha_2^{new} = \alpha_2 + \frac{y_2(E_1 - E_2)}{\eta}
+\end{equation}
+
+where $E_i = u_i - y_i$ is the error on the $i$-th training example and $u_i$ is the output of the SVM for the same.
+
+Then, the box-constrained minimum is found by clipping the unconstrained minimum to the ends of the line segment:
+
+\begin{equation} \label{eq:smo_a_2_new_clipped}
+    \alpha_2^{new,clipped} =
+        \begin{cases}
+            H & \text{if } \alpha_2^{new} \geq H \\
+            \alpha_2^{new} & \text{if } L < \alpha_2^{new} < H \\
+            L & \text{if } \alpha_2^{new} \leq L \\
+        \end{cases}
+\end{equation}
+
+Finally, the value of $\alpha_1$ is computed from the new clipped $\alpha_2$ as:
+
+\begin{equation} \label{eq:smo_a_1_new}
+	\alpha_1^{new} = \alpha_1 + s (\alpha_2 - \alpha_2^{new,clipped})
+\end{equation}
+
+where $s = y_1 y_2$.
+
+Since the \emph{Karush-Kuhn-Tucker} conditions are necessary and sufficient conditions for optimality of a positive definite QP problem and the KKT conditions for the problem \ref{eq:svc_min_wolfe_dual} are:
+
+\begin{equation} \label{eq:smo_kkt}
+	\begin{aligned}
+		& \alpha_i = 0 \Leftrightarrow y_i u_i \geq 1 \\
+		& 0 < \alpha_i < C \Leftrightarrow y_i u_i = 1 \\
+		& \alpha_i = C \Leftrightarrow y_i u_i \leq 1
+	\end{aligned}
+\end{equation}
+
+the steps described above will be iterate as long as there will be an example that violates these KKT conditions.
+
+\subsubsection{Regression}

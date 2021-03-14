@@ -5,6 +5,13 @@
 % includes references in the table of contents
 \usepackage[nottoc]{tocbibind}
 
+\usepackage{amsthm}
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{booktabs}
@@ -22,7 +29,7 @@
              {1cm}  % head sep
              {1.5cm}  % foot height
              {1cm}  % foot sep
-             
+   
 \title{Support Vector Machines}
 \author{Donato Meoli}
 \date{March, 2021}
@@ -93,15 +100,7 @@
 
 \pagebreak
 
-\input{sgd}
-
-\pagebreak
-
-\input{adagrad}
-
-\pagebreak
-
-\input{smo}
+\input{methods}
 
 \pagebreak
 
