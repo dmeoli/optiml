@@ -36,7 +36,7 @@ The margin is equal to $\displaystyle \frac{1}{\| w \|}$ and maximizing it subje
 \begin{equation} \label{eq:svc_obj}
     \begin{aligned}
         \min_{w,b,\xi} \quad & \| w \| + C \sum_{i=1}^n \xi_i \\
-            \textrm{subject to} \quad & y_i (w^T x_i + b) \geq 1 - \xi_i \ \forall_i \\ & \xi_i \geq 0 \ \forall_i
+            \text{subject to} \quad & y_i (w^T x_i + b) \geq 1 - \xi_i \ \forall_i \\ & \xi_i \geq 0 \ \forall_i
     \end{aligned}
 \end{equation}
 
@@ -45,7 +45,7 @@ Minimizing $\| w \|$ is equivalent to minimizing $\displaystyle \frac{1}{2} \| w
 \begin{equation} \label{eq:quad_svc_obj}
     \begin{aligned}
         \min_{w,b,\xi} \quad & \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \xi_i \\
-            \textrm{subject to} \quad & y_i (w^T x_i + b) \geq 1 - \xi_i \ \forall_i \\ & \xi_i \geq 0 \ \forall_i
+            \text{subject to} \quad & y_i (w^T x_i + b) \geq 1 - \xi_i \ \forall_i \\ & \xi_i \geq 0 \ \forall_i
     \end{aligned}
 \end{equation}
 
@@ -124,7 +124,7 @@ or, equivalently, by augmenting the weight vector $w$ with the bias term $b$ and
 \begin{equation} \label{eq:primal_svc_hinge2}
     \begin{aligned}
         \min_{w} \quad & \frac{1}{2} \| \bar{w} \|^2 + C \sum_{i=1}^n \mathcal{L}(w;\bar{x}_i,y_i) \\
-            \textrm{where} \quad & \bar{w}^T = [w^T, b] \\ & \bar{x}_i^T = [x_i^T, 1]
+            \text{where} \quad & \bar{w}^T = [w^T, b] \\ & \bar{x}_i^T = [x_i^T, 1]
     \end{aligned}
 \end{equation}
 
@@ -169,7 +169,7 @@ or, equivalently:
 \begin{equation} \label{eq:svc_min_wolfe_dual}
     \begin{aligned}
         \min_{\alpha} \quad & \frac{1}{2}\alpha^T Q\alpha+q^T\alpha \\
-            \textrm{subject to} \quad & 0\leq\alpha_i\leq C \ \forall_i \\ & y^T\alpha=0
+            \text{subject to} \quad & 0\leq\alpha_i\leq C \ \forall_i \\ & y^T\alpha=0
     \end{aligned}
 \end{equation}
 
@@ -218,7 +218,7 @@ From \ref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T
 \begin{equation} \label{eq:svc_min_bcqp_wolf_dual}
     \begin{aligned}
         \min_{\alpha} \quad & \frac{1}{2} \alpha^T (Q + yy^T)\alpha+q^T\alpha \\
-            \textrm{subject to} \quad & 0\leq\alpha_i\leq C \ \forall_i
+            \text{subject to} \quad & 0\leq\alpha_i\leq C \ \forall_i
     \end{aligned}
 \end{equation}
 
@@ -266,7 +266,7 @@ If the Hessian matrix Q is indefinite, i.e., the Lagrangian function is not stri
 \begin{equation} \label{eq:svc_lagrangian_krylov_sol}
 	\begin{aligned}
 			\min_{\alpha \in K_n(Q, b)} \quad & \| Q \alpha - b \| \\ 
-			\textrm{where} \quad & b = - (q - \mu y + \lambda_+ - \lambda_-)
+			\text{where} \quad & b = - (q - \mu y + \lambda_+ - \lambda_-)
 	\end{aligned}
 \end{equation}
 

@@ -21,7 +21,7 @@ The objective function for SVR can then be written as:
 \begin{equation} \label{eq:quad_svr_obj}
     \begin{aligned}
         \min_{w,b,\xi^+,\xi^-} \quad & \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n (\xi_i^+ + \xi_i^-) \\
-            \textrm{subject to} \quad & y_i - w^T x_i - b \leq \epsilon + \xi_i^+ \ \forall_i \\ & w^T x_i + b - y_i \leq \epsilon + \xi_i^- \ \forall_i \\ & \xi_i^+, \xi_i^- \geq 0 \ \forall_i
+            \text{subject to} \quad & y_i - w^T x_i - b \leq \epsilon + \xi_i^+ \ \forall_i \\ & w^T x_i + b - y_i \leq \epsilon + \xi_i^- \ \forall_i \\ & \xi_i^+, \xi_i^- \geq 0 \ \forall_i
     \end{aligned}
 \end{equation}
 
@@ -120,7 +120,7 @@ Using $\mu_i^+ \geq 0$ and $\mu_i^- \geq 0$ together with \ref{eq:svr_wolfe_der_
 \begin{equation} \label{eq:svr_min_wolfe_dual}
     \begin{aligned}
         \min_{\alpha^+,\alpha^-} \quad & \frac{1}{2}(\alpha^+ - \alpha^-)^TK(\alpha^+ - \alpha^-)+\epsilon q^T(\alpha^+ + \alpha^-)-y^T(\alpha^+ - \alpha^-) \\
-            \textrm{subject to} \quad & 0\leq\alpha_i^+,\alpha_i^- \leq C \ \forall_i \\ & q^T(\alpha^+ - \alpha^-)=0
+            \text{subject to} \quad & 0\leq\alpha_i^+,\alpha_i^- \leq C \ \forall_i \\ & q^T(\alpha^+ - \alpha^-)=0
     \end{aligned}
 \end{equation}
 
@@ -131,7 +131,7 @@ We can write the \ref{eq:svr_min_wolfe_dual} in a standard quadratic form as:
 \begin{equation}
     \begin{aligned} \label{eq:svr_min_qp_wolfe_dual}
         \min_{\alpha} \quad & \frac{1}{2}\alpha^T Q\alpha-q^T\alpha \\
-            \textrm{subject to} \quad & 0\leq\alpha_i\leq C \ \forall_i \\ & e^T\alpha=0
+            \text{subject to} \quad & 0\leq\alpha_i\leq C \ \forall_i \\ & e^T\alpha=0
     \end{aligned}
 \end{equation}
 
@@ -179,7 +179,7 @@ From \ref{eq:svr_min_qp_wolfe_dual} we can notice that the equality constraint $
 \begin{equation} \label{eq:svr_min_bcqp_wolf_dual}
     \begin{aligned}
         \min_{\alpha} \quad & \frac{1}{2} \alpha^T (Q + ee^T)\alpha+q^T\alpha \\
-            \textrm{subject to} \quad & 0\leq\alpha_i\leq C \ \forall_i
+            \text{subject to} \quad & 0\leq\alpha_i\leq C \ \forall_i
     \end{aligned}
 \end{equation}
 
@@ -227,7 +227,7 @@ If the Hessian matrix Q is indefinite, i.e., the Lagrangian function is not stri
 \begin{equation} \label{eq:svr_lagrangian_krylov_sol}
 	\begin{aligned}
 		\min_{\alpha \in K_n(Q, b)} \quad & \| Q \alpha - b \| \\ 
-		\textrm{where} \quad & b = - (q - \mu e + \lambda_+ - \lambda_-)
+		\text{where} \quad & b = - (q - \mu e + \lambda_+ - \lambda_-)
 	\end{aligned}
 \end{equation}
 

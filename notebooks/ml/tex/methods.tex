@@ -172,7 +172,7 @@ Due to the sparsity of the \emph{Lagrangian dual}, we might end up in a situatio
 			\While {$not\_convergence$}
 				\State $g_k \gets \nabla \mathcal{L}(w_k)$
 				\State $s_k \gets s_{k-1} + g_k^2$
-				\State $w_{k+1} \gets w_k - \displaystyle \frac{\alpha}{\sqrt{s_k + \epsilon}} \cdot g_k$
+				\State $w_{k+1} \gets w_k - \displaystyle \frac{\alpha}{\sqrt{s_k + \epsilon}} g_k = w_k - \alpha S_k^{-1/2} g_k \ \text{where} \ S_k = diag(s_k + \epsilon)$
 				\State $k \gets k + 1$
 			\EndWhile
 			\State \Return $w_k$
