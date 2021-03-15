@@ -33,11 +33,11 @@ We say that a function $\mathcal{L}: \Re^{n} \rightarrow \Re$ is $\mu$-strongly 
 $$
 \mathcal{G}(x) = \mathcal{L}(x) - \frac{\mu}{2} \| x \|^2
 $$
-is convex. The latter, in terms of Jacobian, is equivalent to:
+is convex. The latter, in terms of the Jacobian, is equivalent to:
 $$
 \mathcal{L}(x) \geq \mathcal{L}(y) + \langle \nabla \mathcal{L}(y), x - y \rangle + \frac{\mu}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^{n}
 $$
-and, in terms of Hessian, is equivalent to:
+and, in terms of the Hessian, is equivalent to:
 $$
 \nabla^2 \mathcal{G}(x) \succ 0 \ \forall \ x
 $$
@@ -56,31 +56,7 @@ $$
 
 \subsection{Gradient Descent}
 
-The Gradient Descent algorithm is the simplest \emph{first-order optimization} method.
-
-\begin{theorem}[Gradient Descent convergence for convex functions]
-Let $\mathcal{L}: \Re^{n} \rightarrow \Re$ be a L-smooth convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^{n}$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
-$$
-\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq \frac{\| w_0 - w_* \|^2}{2 \eta k}
-$$
-In particular, for $\eta = 1/L$:
-$$
-\frac{L \| w_0 - w_* \|^2}{2 k}
-$$
-\end{theorem}
-
-
-
-\begin{theorem}[Gradient Descent convergence for strictly convex functions]
-Let $\mathcal{L}: \Re^{n} \rightarrow \Re$ be a L-smooth, $\mu$ strictly convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^{n}$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
-$$
-\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq (1 - \eta \mu)^k \| w_0 - w_* \|^2
-$$
-In particular, for $\eta = 1/L$:
-$$
-(1 - \frac{\mu}{L})^k \| w_0 - w_* \|^2
-$$
-\end{theorem}
+The Gradient Descent algorithm is the simplest \emph{first-order optimization} method that exploits the orthogonality of the gradient wrt the level sets to take a descent direction. In particular, it performs the following iterations:
 
 \begin{algorithm}[H]
 	\caption{Gradient Descent}
@@ -99,6 +75,30 @@ $$
 		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
+
+\begin{theorem}[Gradient Descent convergence for convex functions]
+Let $\mathcal{L}: \Re^{n} \rightarrow \Re$ be a L-smooth convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^{n}$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
+$$
+\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq \frac{\| w_0 - w_* \|^2}{2 \eta k}
+$$
+In particular, for $\eta = 1/L$:
+$$
+\frac{L \| w_0 - w_* \|^2}{2 k}
+$$
+\end{theorem}
+
+\begin{theorem}[Gradient Descent convergence for strictly convex functions]
+Let $\mathcal{L}: \Re^{n} \rightarrow \Re$ be a L-smooth, $\mu$ strictly convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^{n}$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
+$$
+\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq (1 - \eta \mu)^k \| w_0 - w_* \|^2
+$$
+In particular, for $\eta = 1/L$:
+$$
+(1 - \frac{\mu}{L})^k \| w_0 - w_* \|^2
+$$
+\end{theorem}
+
+
 
 \subsubsection{Momentum}
 
