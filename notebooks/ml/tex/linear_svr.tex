@@ -39,7 +39,7 @@ The \emph{epsilon-insensitive} loss is defined as:
 \begin{equation} \label{eq:eps_loss1}
 	\mathcal{L}_\epsilon = 
 	\begin{cases}
-		0 & \text{if } |y - (w^T x + b)| \leq \epsilon \\
+		0 & \text{if} \ |y - (w^T x + b)| \leq \epsilon \\
 		|y - (w^T x + b)| - \epsilon & \text{otherwise} \\
 	\end{cases}
 \end{equation}
@@ -55,7 +55,7 @@ As the \emph{hinge} loss, also the \emph{epsilon-insensitive} loss is a nondiffe
 \begin{equation} \label{eq:eps_loss_der}
 	\frac{\partial \mathcal{L_\epsilon}}{\partial w}=
 		\begin{cases}
-            (y - (w^T x + b)) x & \text{if } |y - (w^T x + b)| > \epsilon \\
+            (y - (w^T x + b)) x & \text{if} \ |y - (w^T x + b)| > \epsilon \\
             0 & \text{otherwise} \\ 
         \end{cases}
 \end{equation}
@@ -275,7 +275,7 @@ The \emph{squared epsilon-insensitive} loss is defined as:
 \begin{equation} \label{eq:squared_eps_loss1}
 	\mathcal{L}_\epsilon^2 = 
 	\begin{cases}
-		0 & \text{if } |y - (w^T x + b)| \leq \epsilon \\
+		0 & \text{if} \ |y - (w^T x + b)| \leq \epsilon \\
 		(|y - (w^T x + b)| - \epsilon)^2 & \text{otherwise} \\
 	\end{cases}
 \end{equation}
@@ -291,7 +291,7 @@ As the \emph{squared hinge} loss, also the \emph{squared epsilon-insensitive} lo
 \begin{equation} \label{eq:squared_eps_loss_der}
 	\frac{\partial \mathcal{L}_\epsilon^2}{\partial w}=
 		\begin{cases}
-            2 ((y - (w^T x + b)) x) & \text{if } |y - (w^T x + b)| > \epsilon \\
+            2 ((y - (w^T x + b)) x) & \text{if} \ |y - (w^T x + b)| > \epsilon \\
             0 & \text{otherwise} \\ 
         \end{cases}
 \end{equation}

@@ -65,7 +65,7 @@ The \emph{hinge} loss is defined as:
 \begin{equation} \label{eq:hinge_loss1}
 	\mathcal{L}_1 = 
 	\begin{cases}
-		0 & \text{if } y (w^T x + b) \geq 1 \\
+		0 & \text{if} \ y (w^T x + b) \geq 1 \\
 		1 - y (w^T x + b) & \text{otherwise} \\
 	\end{cases}
 \end{equation}
@@ -81,7 +81,7 @@ and it is a nondifferentiable convex function due to its nonsmoothness in 1, but
 \begin{equation} \label{eq:hinge_loss_der}
     \frac{\partial \mathcal{L}_1}{\partial w}=
         \begin{cases}
-            -y x & \text{if } y (w^T x + b) < 1 \\
+            -y x & \text{if} \ y (w^T x + b) < 1 \\
             0 & \text{otherwise} \\ 
         \end{cases}
 \end{equation}
@@ -314,7 +314,7 @@ The \emph{squared hinge} loss is defined as:
 \begin{equation} \label{eq:squared_hinge_loss1}
 	\mathcal{L}_2 = 
 	\begin{cases}
-		0 & \text{if } y (w^T x + b) \geq 1 \\
+		0 & \text{if} \ y (w^T x + b) \geq 1 \\
 		(1 - y (w^T x + b))^2 & \text{otherwise} \\
 	\end{cases}
 \end{equation}
@@ -330,7 +330,7 @@ It is a strictly convex function and its gradient wrt $w$ is given by:
 \begin{equation} \label{eq:squared_hinge_loss_der}
     \frac{\partial \mathcal{L}_2}{\partial w}=
         \begin{cases}
-            - 2 y x & \text{if } y (w^T x + b) < 1 \\
+            - 2 y x & \text{if} \ y (w^T x + b) < 1 \\
             0 & \text{otherwise} \\ 
         \end{cases}
 \end{equation}
