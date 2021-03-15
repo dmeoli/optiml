@@ -116,7 +116,7 @@ which depends on the whole dataset.
 	\begin{algorithmic}
 		\Require{Function $\mathcal{L}$ to minimize}
 		\Require{Learning rate or step size $\eta > 0$}
-		\Require{Momentum $\beta \in (0,1)$}
+		\Require{Momentum $\beta \in [0,1]$}
 		\Function{Accelerated Gradient Descent}{$\mathcal{L},\eta,	\beta$}
 			\State Initialize weight vector $w_1 = w_0$ and velocity vector $v_0 = 0$
 			\State $k \gets 1$
@@ -138,7 +138,7 @@ which depends on the whole dataset.
 	\begin{algorithmic}
 		\Require{Function $\mathcal{L}$ to minimize}
 		\Require{Learning rate $\eta > 0$}
-		\Require{Momentum $\beta \in (0,1)$}
+		\Require{Momentum $\beta \in [0,1]$}
 		\Function{Nesterov Accelerated Gradient Descent}{$\mathcal{L},\eta,\beta$}
 			\State Initialize weight vector $w_1 = w_0$ and velocity vector $v_0 = 0$
 			\State $k \gets 1$
