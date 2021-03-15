@@ -66,10 +66,10 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 		\Require{Learning rate or step size $\alpha > 0$}
 		\Function{Gradient Descent}{$\mathcal{L},\alpha$}
 			\State Initialize weight vector $w_0$
-			\State $k \gets 0$
+			\State $k = 0$
 			\While{$not\_convergence$}
-				\State $w_{k+1} \gets w_k - \alpha \nabla \mathcal{L}(w_k)$
-				\State $k \gets k + 1$
+				\State $w_{k+1} = w_k - \alpha \nabla \mathcal{L}(w_k)$
+				\State $k = k + 1$
 			\EndWhile
 			\State \Return $w_k$
 		\EndFunction
@@ -119,11 +119,11 @@ which depends on the whole dataset.
 		\Require{Momentum $\beta \in [0,1]$}
 		\Function{Accelerated Gradient Descent}{$\mathcal{L},\alpha,\beta$}
 			\State Initialize weight vector $w_1 = w_0$ and velocity vector $v_0 = 0$
-			\State $k \gets 1$
+			\State $k = 1$
 			\While{$not\_convergence$}
-				\State $v_k \gets \beta v_{k-1} + \alpha \nabla \mathcal{L}(w_k)$
-				\State $w_{k+1} \gets w_k - v_k$
-				\State $k \gets k + 1$
+				\State $v_k = \beta v_{k-1} + \alpha \nabla \mathcal{L}(w_k)$
+				\State $w_{k+1} = w_k - v_k$
+				\State $k = k + 1$
 			\EndWhile
 			\State \Return $w_k$
 		\EndFunction
@@ -141,12 +141,12 @@ which depends on the whole dataset.
 		\Require{Momentum $\beta \in [0,1]$}
 		\Function{Nesterov Accelerated Gradient Descent}{$\mathcal{L},\alpha,\beta$}
 			\State Initialize weight vector $w_1 = w_0$ and velocity vector $v_0 = 0$
-			\State $k \gets 1$
+			\State $k = 1$
 			\While{$not\_convergence$}
-				\State $\hat{w}_k \gets w_k + \beta v_{k-1}$
-				\State $v_k \gets \beta v_{k-1} + \alpha \nabla \mathcal{L}(\hat{w}_k)$
-				\State $w_{k+1} \gets w_k - v_k$
-				\State $k \gets k + 1$
+				\State $\hat{w}_k = w_k + \beta v_{k-1}$
+				\State $v_k = \beta v_{k-1} + \alpha \nabla \mathcal{L}(\hat{w}_k)$
+				\State $w_{k+1} = w_k - v_k$
+				\State $k = k + 1$
 			\EndWhile
 			\State \Return $w_k$
 		\EndFunction
@@ -168,12 +168,12 @@ Due to the sparsity of the \emph{Lagrangian dual}, we might end up in a situatio
 		\Require{Offset $\epsilon > 0$ to ensures not divide by 0}
 		\Function{AdaGrad}{$\mathcal{L},\alpha,\epsilon$}
 			\State Initialize weight vector $w_0$ and the squared accumulated gradients vector $s_k = 0$
-			\State $k \gets 1$
+			\State $k = 1$
 			\While {$not\_convergence$}
-				\State $g_k \gets \nabla \mathcal{L}(w_k)$
-				\State $s_k \gets s_{k-1} + g_k^2$
-				\State $w_{k+1} \gets w_k - \displaystyle \frac{\alpha}{\sqrt{s_k + \epsilon}} g_k = w_k - \alpha S_k^{-1} g_k \ \text{where} \ S_k = diag(s_k + \epsilon)^{1/2}$
-				\State $k \gets k + 1$
+				\State $g_k = \nabla \mathcal{L}(w_k)$
+				\State $s_k = s_{k-1} + g_k^2$
+				\State $w_{k+1} = w_k - \displaystyle \frac{\alpha}{\sqrt{s_k + \epsilon}} g_k = w_k - \alpha S_k^{-1} g_k \ \text{where} \ S_k = diag(s_k + \epsilon)^{1/2}$
+				\State $k = k + 1$
 			\EndWhile
 			\State \Return $w_k$
 		\EndFunction
