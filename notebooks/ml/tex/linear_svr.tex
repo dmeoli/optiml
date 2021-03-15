@@ -3,7 +3,7 @@
 In the case of regression the goal is to predict a real-valued output for $y'$ so that our training data is of the form:
 
 \begin{equation}
-	\{(x_i,y_i), x\in\Re^{m}, y_i\in\Re, i=1, \dots, n\} \label{eq:svr_data}
+	\{(x_i,y_i), x\in\Re^m, y_i\in\Re, i=1, \dots, n\} \label{eq:svr_data}
 \end{equation}
 
 The regression SVM use a loss function that not allocating a penalty if the predicted value $y'_i$ is less than a distance $\epsilon$ away from the actual value $y_i$, i.e., if $|y_i-y'_i| \leq \epsilon$, where $y'_i = w^T x_i + b$. The region bound by $y'_i\pm\epsilon \ \forall_i$ is called an $\epsilon$-insensitive tube. The output variables which are outside the tube are given one of two slack variable penalties depending on whether they lie above, $\xi^+$, or below, $\xi^-$, the tube, provided $\xi^+ \geq 0$ and $\xi^- \geq 0 \ \forall_i$:
@@ -20,7 +20,7 @@ The objective function for SVR can then be written as:
 
 \begin{equation} \label{eq:quad_svr_obj}
     \begin{aligned}
-        \min_{w,b,\xi^+,\xi^-} \quad & \frac{1}{2}\Vert w\Vert^{2} + C \sum_{i=1}^{n}(\xi_i^+ + \xi_i^-) \\
+        \min_{w,b,\xi^+,\xi^-} \quad & \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n (\xi_i^+ + \xi_i^-) \\
             \textrm{subject to} \quad & y_i - w^T x_i - b \leq \epsilon + \xi_i^+ \ \forall_i \\ & w^T x_i + b - y_i \leq \epsilon + \xi_i^- \ \forall_i \\ & \xi_i^+, \xi_i^- \geq 0 \ \forall_i
     \end{aligned}
 \end{equation}
@@ -67,7 +67,7 @@ The general primal unconstrained formulation takes the same form of \ref{eq:prim
 The quadratic optimization problem \ref{eq:quad_svr_obj} can be equivalently formulated as: 
 
 \begin{equation} \label{eq:svr_eps}
-	\min_{w,b} \frac{1}{2} \Vert w\Vert^{2} + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)
+	\min_{w,b} \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)
 \end{equation}
 
 where we make use of the \emph{epsilon-insensitive} loss \ref{eq:eps_loss1} or \ref{eq:eps_loss2}.
@@ -87,18 +87,18 @@ To reformulate the \ref{eq:quad_svr_obj} as a \emph{Wolfe dual}, we introduce th
 
 \begin{equation} \label{eq:svr_wolfe_dual}
 	\begin{aligned}
-    	\max_{\alpha^+,\alpha^-,\mu^+,\mu^-} \min_{w,b,\xi^+,\xi^-} \mathcal{W}(w,b,\xi^+,\xi^-,\alpha^+,\alpha^-,\mu^+,\mu^-) = \frac{1}{2}\Vert w\Vert^{2}+C \sum_{i=1}^n(\xi_i^+ + \xi_i^-)-\sum_{i=1}^n(\mu_i^+ \xi_i^+ + \mu_i^- \xi_i^-) \\ -\sum_{i=1}^n\alpha_i^+(\epsilon+\xi_i^+ + y'_i-y_i)-\sum_{i=1}^n\alpha_i^-(\epsilon+\xi_i^- - y'_i+y_i)
+    	\max_{\alpha^+,\alpha^-,\mu^+,\mu^-} \min_{w,b,\xi^+,\xi^-} \mathcal{W}(w,b,\xi^+,\xi^-,\alpha^+,\alpha^-,\mu^+,\mu^-) = \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n (\xi_i^+ + \xi_i^-)-\sum_{i=1}^n (\mu_i^+ \xi_i^+ + \mu_i^- \xi_i^-) \\ -\sum_{i=1}^n \alpha_i^+(\epsilon+\xi_i^+ + y'_i-y_i)-\sum_{i=1}^n \alpha_i^-(\epsilon+\xi_i^- - y'_i+y_i)
 	\end{aligned}
 \end{equation}
 
 Substituting for $y_i$, differentiating wrt $w, b, \xi^+$, $\xi^-$ and setting the derivatives to $0$ gives:
 
 \begin{equation} \label{eq:svr_wolfe_der_w}
-	\frac{\partial \mathcal{W}}{\partial w}=w-\sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-) x_i \Rightarrow w=\sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-) x_i
+	\frac{\partial \mathcal{W}}{\partial w}=w-\sum_{i=1}^n (\alpha_i^+ - \alpha_i^-) x_i \Rightarrow w=\sum_{i=1}^n (\alpha_i^+ - \alpha_i^-) x_i
 \end{equation}
 
 \begin{equation} \label{eq:svr_wolfe_der_b}
-	\frac{\partial \mathcal{W}}{\partial b}=-\sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-)\Rightarrow \sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-)=0
+	\frac{\partial \mathcal{W}}{\partial b}=-\sum_{i=1}^n (\alpha_i^+ - \alpha_i^-)\Rightarrow \sum_{i=1}^n (\alpha_i^+ - \alpha_i^-)=0
 \end{equation}
 
 \begin{equation}\label{eq:svr_wolfe_der_xip}
@@ -112,7 +112,7 @@ Substituting for $y_i$, differentiating wrt $w, b, \xi^+$, $\xi^-$ and setting t
 Substituting \ref{eq:svr_wolfe_der_w} and \ref{eq:svr_wolfe_der_b} in, we now need to maximize $\mathcal{W}$ wrt $\alpha_i^+$ and $\alpha_i^-$, where $\alpha_i^+ \geq 0,\ \alpha_i^- \geq 0 \ \forall_i$:
 
 \begin{equation} \label{eq:svr_max_wolfe_dual}
-    \max_{\alpha^+,\alpha^-} \mathcal{W}(\alpha^+,\alpha^-) = \sum_{i=1}^{n}y_i(\alpha_i^+ - \alpha_i^-)-\epsilon\sum_{i=1}^{n}(\alpha_i^+ + \alpha_i^-)-\frac{1}{2}\sum_{i,j}(\alpha_i^+ - \alpha_i^-)\langle x_i, x_j \rangle(\alpha_j ^+ - \alpha_j ^-)
+    \max_{\alpha^+,\alpha^-} \mathcal{W}(\alpha^+,\alpha^-) = \sum_{i=1}^n y_i(\alpha_i^+ - \alpha_i^-)-\epsilon\sum_{i=1}^n (\alpha_i^+ + \alpha_i^-)-\frac{1}{2}\sum_{i,j}(\alpha_i^+ - \alpha_i^-)\langle x_i, x_j \rangle(\alpha_j ^+ - \alpha_j ^-)
 \end{equation}
 
 Using $\mu_i^+ \geq 0$ and $\mu_i^- \geq 0$ together with \ref{eq:svr_wolfe_der_w} and \ref{eq:svr_wolfe_der_b} means that $\alpha_i^+ \leq C$ and $\alpha_i^- \leq C$. We therefore need to find:
@@ -157,7 +157,7 @@ $
 Each new predictions $y'$ can be found using:
 
 \begin{equation} \label{eq:svr_pred}
-    y'= \sum_{i=1}^{n}(\alpha_i^+ - \alpha_i^-)\langle x_i, x' \rangle+b
+    y'= \sum_{i=1}^n (\alpha_i^+ - \alpha_i^-)\langle x_i, x' \rangle+b
 \end{equation}
 
 A set $S$ of support vectors $x_s$ can be created by finding the indices $i$ where $0\leq\alpha\leq C$ and $\xi_i^+=0$ or $\xi_i^-=0$.
@@ -226,12 +226,12 @@ If the Hessian matrix Q is indefinite, i.e., the Lagrangian function is not stri
 
 \begin{equation} \label{eq:svr_lagrangian_krylov_sol}
 	\begin{aligned}
-		\min_{\alpha \in K_n(Q, b)} \quad & \Vert Q \alpha - b \Vert \\ 
+		\min_{\alpha \in K_n(Q, b)} \quad & \| Q \alpha - b \| \\ 
 		\textrm{where} \quad & b = - (q - \mu e + \lambda_+ - \lambda_-)
 	\end{aligned}
 \end{equation}
 
-Since we are dealing with a symmetric but indefinite linear system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, which computes the vector $\alpha$ that minimizes $\Vert Q \alpha - b \Vert$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
+Since we are dealing with a symmetric but indefinite linear system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, which computes the vector $\alpha$ that minimizes $\| Q \alpha - b \|$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
 
 \bigskip
 
@@ -301,7 +301,7 @@ As the \emph{squared hinge} loss, also the \emph{squared epsilon-insensitive} lo
 To provide a continuously differentiable function the optimization problem \ref{eq:svr_eps} can be formulated as: 
 
 \begin{equation} \label{eq:svr_squared_eps}
-    \min_{w,b} \frac{1}{2} \Vert w\Vert^{2} + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)^2
+    \min_{w,b} \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)^2
 \end{equation}
 
 where we make use of the \emph{squared epsilon-insensitive} loss that quadratically penalized slacks $\xi$ and is called $\mathcal{L}_2$-SVR.

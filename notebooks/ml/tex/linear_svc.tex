@@ -3,7 +3,7 @@
 Given $n$ training points, where each input $x_i$ has $m$ attributes, i.e., is of dimensionality $m$, and is in one of two classes $y_i=\pm1$, i.e., our training data is of the form:
 
 \begin{equation}
-	\{(x_i,y_i), x_i\in\Re^{m}, y_i=\pm1, i=1, \dots, n\} \label{eq:svc_data}
+	\{(x_i,y_i), x_i\in\Re^m, y_i=\pm1, i=1, \dots, n\} \label{eq:svc_data}
 \end{equation}
 
 For simplicity we first assume that data are (not fully) linearly separable in the input space $x$, meaning that we can draw a line separating the two classes when $m=2$, a plane for $m=3$ and, more in general, a hyperplane for an arbitrary $m$.
@@ -31,20 +31,20 @@ These two equations can be combined into:
     \end{aligned}
 \end{equation}
 
-The margin is equal to $\displaystyle \frac{1}{\Vert w\Vert}$ and maximizing it subject to the constraint in \ref{eq:svc_const} while as we are trying to reduce the number of misclassifications is equivalent to finding:
+The margin is equal to $\displaystyle \frac{1}{\| w \|}$ and maximizing it subject to the constraint in \ref{eq:svc_const} while as we are trying to reduce the number of misclassifications is equivalent to finding:
 
 \begin{equation} \label{eq:svc_obj}
     \begin{aligned}
-        \min_{w,b,\xi} \quad & \Vert w \Vert + C \sum_{i=1}^{n} \xi_i \\
+        \min_{w,b,\xi} \quad & \| w \| + C \sum_{i=1}^n \xi_i \\
             \textrm{subject to} \quad & y_i (w^T x_i + b) \geq 1 - \xi_i \ \forall_i \\ & \xi_i \geq 0 \ \forall_i
     \end{aligned}
 \end{equation}
 
-Minimizing $\Vert w\Vert$ is equivalent to minimizing $\displaystyle \frac{1}{2}\Vert w\Vert^{2}$, but in this form we will deal with a convex optimization problem that has more desirable convergence properties. So we need to find:
+Minimizing $\| w \|$ is equivalent to minimizing $\displaystyle \frac{1}{2} \| w \|^2$, but in this form we will deal with a convex optimization problem that has more desirable convergence properties. So we need to find:
 
 \begin{equation} \label{eq:quad_svc_obj}
     \begin{aligned}
-        \min_{w,b,\xi} \quad & \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^{n} \xi_i \\
+        \min_{w,b,\xi} \quad & \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \xi_i \\
             \textrm{subject to} \quad & y_i (w^T x_i + b) \geq 1 - \xi_i \ \forall_i \\ & \xi_i \geq 0 \ \forall_i
     \end{aligned}
 \end{equation}
@@ -99,7 +99,7 @@ where $\mathcal{R}(w, b)$ is the \emph{regularization term} and $\mathcal{L}(w,b
 The quadratic optimization problem \ref{eq:quad_svc_obj} can be equivalently formulated as: 
 
 \begin{equation} \label{eq:svc_hinge}
-    \min_{w,b} \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))
+    \min_{w,b} \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))
 \end{equation}
 
 where we make use of the \emph{hinge} loss \ref{eq:hinge_loss1} or \ref{eq:hinge_loss2}.
@@ -116,14 +116,14 @@ The above formulation penalizes slacks $\xi$ linearly and is called $\mathcal{L}
 To simplify the notation and so also the design of the algorithms, the simplest approach to learn the bias term $b$ is that of including that into the \emph{regularization term}; so we can rewrite \ref{eq:svc_hinge} and \ref{eq:svc_squared_hinge} as follows:
 
 \begin{equation} \label{eq:primal_svc_hinge1}
-    \min_{w,b} \frac{1}{2} (\Vert w \Vert^2 + b^2) + C \sum_{i=1}^n \mathcal{L}(w;x_i,y_i)
+    \min_{w,b} \frac{1}{2} (\| w \|^2 + b^2) + C \sum_{i=1}^n \mathcal{L}(w;x_i,y_i)
 \end{equation}
 
 or, equivalently, by augmenting the weight vector $w$ with the bias term $b$ and each instance $x_i$ with an additional dimension, i.e., with constant value equal to 1:
 
 \begin{equation} \label{eq:primal_svc_hinge2}
     \begin{aligned}
-        \min_{w} \quad & \frac{1}{2} \Vert \bar{w} \Vert^2 + C \sum_{i=1}^n \mathcal{L}(w;\bar{x}_i,y_i) \\
+        \min_{w} \quad & \frac{1}{2} \| \bar{w} \|^2 + C \sum_{i=1}^n \mathcal{L}(w;\bar{x}_i,y_i) \\
             \textrm{where} \quad & \bar{w}^T = [w^T, b] \\ & \bar{x}_i^T = [x_i^T, 1]
     \end{aligned}
 \end{equation}
@@ -137,17 +137,17 @@ Notice that in terms of numerical optimization the formulations \ref{eq:svc_hing
 To reformulate the \ref{eq:quad_svc_obj} as a \emph{Wolfe dual}, we need to allocate the Lagrange multipliers $\alpha_i\geq 0, \mu_i \geq 0 \ \forall_i$:
 
 \begin{equation} \label{eq:svc_wolfe_dual}
-    \max_{\alpha,\mu} \min_{w,b,\xi} \mathcal{W}(w,b,\xi,\alpha,\mu) = \frac{1}{2}\Vert w\Vert^{2}+C\sum_{i=1}^n\xi_i-\sum_{i=1}^n\alpha_i(y_i(w^T x_i + b)-1+\xi_i)-\sum_{i=1}^n\mu_i\xi_i
+    \max_{\alpha,\mu} \min_{w,b,\xi} \mathcal{W}(w,b,\xi,\alpha,\mu) = \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \xi_i-\sum_{i=1}^n \alpha_i(y_i(w^T x_i + b)-1+\xi_i)-\sum_{i=1}^n\mu_i\xi_i
 \end{equation}
 
 We wish to find the $w$, $b$ and $\xi_i$ which minimizes, and the $\alpha$ and $\mu$ which maximizes $\mathcal{W}$, provided $\alpha_i\geq 0, \mu_i \geq 0 \ \forall_i$. We can do this by differentiating $\mathcal{W}$ wrt $w$ and $b$ and setting the derivatives to 0:
 
 \begin{equation} \label{eq:svc_wolfe_der_w}
-	\frac{\partial \mathcal{W}}{\partial w}=w-\sum_{i=1}^{n}\alpha_i y_i x_i \Rightarrow w=\sum_{i=1}^{n}\alpha_i y_i x_i
+	\frac{\partial \mathcal{W}}{\partial w}=w-\sum_{i=1}^n \alpha_i y_i x_i \Rightarrow w=\sum_{i=1}^n \alpha_i y_i x_i
 \end{equation}
 
 \begin{equation} \label{eq:svc_wolfe_der_b}
-	\frac{\partial \mathcal{W}}{\partial b}=-\sum_{i=1}^{n}\alpha_i y_i\Rightarrow\sum_{i=1}^{n}\alpha_i y_i=0
+	\frac{\partial \mathcal{W}}{\partial b}=-\sum_{i=1}^n \alpha_i y_i\Rightarrow\sum_{i=1}^n \alpha_i y_i=0
 \end{equation}
 
 \begin{equation} \label{eq:svc_wolfe_der_xi}
@@ -158,9 +158,9 @@ Substituting \ref{eq:svc_wolfe_der_w} and \ref{eq:svc_wolfe_der_b} into \ref{eq:
 
 \begin{equation} \label{eq:svc_max_wolfe_dual}
 	\begin{aligned}
-    	\max_{\alpha} \mathcal{W}(\alpha) &= \sum_{i=1}^{n}\alpha_i - \frac{1}{2}\sum_{i,j}\alpha_i\alpha_j y_i y_j \langle x_i, x_j \rangle \\
-    	&= \sum_{i=1}^{n}\alpha_i - \frac{1}{2}\sum_{i,j}\alpha_i Q_{ij}\alpha_j \ \text{where} \ Q_{ij} = y_i y_j \langle x_i, x_j \rangle \\
-    	&= \sum_{i=1}^{n}\alpha_i - \frac{1}{2}\alpha^T Q\alpha \ \text{subject to} \ 0\leq\alpha_i\leq C \ \forall_i, \sum_{i=1}^{n}\alpha_i y_i=0 
+    	\max_{\alpha} \mathcal{W}(\alpha) &= \sum_{i=1}^n \alpha_i - \frac{1}{2}\sum_{i,j}\alpha_i\alpha_j y_i y_j \langle x_i, x_j \rangle \\
+    	&= \sum_{i=1}^n \alpha_i - \frac{1}{2}\sum_{i,j}\alpha_i Q_{ij}\alpha_j \ \text{where} \ Q_{ij} = y_i y_j \langle x_i, x_j \rangle \\
+    	&= \sum_{i=1}^n \alpha_i - \frac{1}{2}\alpha^T Q\alpha \ \text{subject to} \ 0\leq\alpha_i\leq C \ \forall_i, \sum_{i=1}^n \alpha_i y_i=0 
 	\end{aligned}
 \end{equation}
 
@@ -210,7 +210,7 @@ Instead of using an arbitrary support vector $x_s$, it is better to take an aver
 We now have the variables $w$ and $b$ that define our separating hyperplane's optimal orientation and hence our support vector machine. Each new point $x'$ is classified by evaluating:
 
 \begin{equation} \label{eq:svc_pred}
-    y'=\operatorname{sgn}\big(\sum_{i=1}^{n}\alpha_i y_i\langle x_i, x' \rangle+b\big)
+    y'=\operatorname{sgn}\big(\sum_{i=1}^n\alpha_i y_i\langle x_i, x' \rangle+b\big)
 \end{equation}
 
 From \ref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. We report below the box-constrained dual formulation \cite{hsu2002simple} that arises from the primal \ref{eq:primal_svc_hinge1} or \ref{eq:primal_svc_hinge2} where the bias term $b$ is embedded into the weight vector $w$:
@@ -265,12 +265,12 @@ If the Hessian matrix Q is indefinite, i.e., the Lagrangian function is not stri
 
 \begin{equation} \label{eq:svc_lagrangian_krylov_sol}
 	\begin{aligned}
-			\min_{\alpha \in K_n(Q, b)} \quad & \Vert Q \alpha - b \Vert \\ 
+			\min_{\alpha \in K_n(Q, b)} \quad & \| Q \alpha - b \| \\ 
 			\textrm{where} \quad & b = - (q - \mu y + \lambda_+ - \lambda_-)
 	\end{aligned}
 \end{equation}
 
-Since we are dealing with a symmetric but indefinite linear system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, which computes the vector $\alpha$ that minimizes $\Vert Q \alpha - b \Vert$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
+Since we are dealing with a symmetric but indefinite linear system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, which computes the vector $\alpha$ that minimizes $\| Q \alpha - b \|$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
 
 \bigskip
 
@@ -340,7 +340,7 @@ It is a strictly convex function and its gradient wrt $w$ is given by:
 Since smoothed versions of objective functions may be preferred for optimization, we can reformulate \ref{eq:svc_hinge} as:
 
 \begin{equation} \label{eq:svc_squared_hinge}
-    \min_{w,b} \frac{1}{2} \Vert w \Vert^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))^2
+    \min_{w,b} \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))^2
 \end{equation}
 
 where we make use of the \emph{squared hinge} loss that quadratically penalized slacks $\xi$ and is called $\mathcal{L}_2$-SVC.

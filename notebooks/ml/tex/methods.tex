@@ -5,21 +5,21 @@ In order to explain the \emph{convergence} and \emph{efficiency} properties of t
 First of all, we give three different but equivalent definitions of convexity in terms of the function itself, the Jacobian and the Hessian.
 
 \begin{definition}[Convexity]
-We say that a function $\mathcal{L}: \Re^{n} \rightarrow \Re$ is convex if: 
+We say that a function $\mathcal{L}: \Re^m \rightarrow \Re$ is convex if: 
 $$ 
-\mathcal{L}(\lambda x + (1 - \lambda) y ) \leq \lambda \mathcal{L}(x) + (1 - \lambda) \mathcal{L}(y) \ \forall \ x, y \in \Re^{n}, \lambda \in [0,1] 
+\mathcal{L}(\lambda x + (1 - \lambda) y ) \leq \lambda \mathcal{L}(x) + (1 - \lambda) \mathcal{L}(y) \ \forall \ x, y \in \Re^m, \lambda \in [0,1] 
 $$
 \end{definition}
 
 \begin{definition}[Convexity - Jacobian]
-We say that a differentiable function $\mathcal{L}: \Re^{n} \rightarrow \Re$ is convex iff: 
+We say that a differentiable function $\mathcal{L}: \Re^m \rightarrow \Re$ is convex iff: 
 $$
-\mathcal{L}(x) \geq \mathcal{L}(y) + \langle \nabla \mathcal{L}(y), x - y \rangle \ \forall \ x, y \in \Re^{n}
+\mathcal{L}(x) \geq \mathcal{L}(y) + \langle \nabla \mathcal{L}(y), x - y \rangle \ \forall \ x, y \in \Re^m
 $$
 \end{definition}
 
 \begin{definition}[Convexity - Hessian]
-We say that a twice differentiable function, i.e., the Hessian matrix is \emph{symmetric}, $\mathcal{L}: \Re^{n} \rightarrow \Re$ is convex iff: 
+We say that a twice differentiable function, i.e., the Hessian matrix is \emph{symmetric}, $\mathcal{L}: \Re^m \rightarrow \Re$ is convex iff: 
 $$
 \nabla^2 \mathcal{L}(x) \succeq 0 \ \forall \ x
 $$
@@ -29,13 +29,13 @@ i.e., the Hessian matix is \emph{positive semidefinite}.
 The definitions of \emph{strong convexity} and \emph{L-smoothness} below will be useful.
 
 \begin{definition}[Strong Convexity]
-We say that a function $\mathcal{L}: \Re^{n} \rightarrow \Re$ is $\mu$-strongly convex if:
+We say that a function $\mathcal{L}: \Re^m \rightarrow \Re$ is $\mu$-strongly convex if:
 $$
 \mathcal{G}(x) = \mathcal{L}(x) - \frac{\mu}{2} \| x \|^2
 $$
 is convex. The latter, in terms of the Jacobian, is equivalent to:
 $$
-\mathcal{L}(x) \geq \mathcal{L}(y) + \langle \nabla \mathcal{L}(y), x - y \rangle + \frac{\mu}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^{n}
+\mathcal{L}(x) \geq \mathcal{L}(y) + \langle \nabla \mathcal{L}(y), x - y \rangle + \frac{\mu}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^m
 $$
 and, in terms of the Hessian, is equivalent to:
 $$
@@ -48,9 +48,9 @@ $$
 \end{definition}
 
 \begin{definition}[L-smoothness]
-We say that a function $\mathcal{L}: \Re^{n} \rightarrow \Re$ is L-smooth, i.e., Lipschitz smooth, if it is differentiable and if:
+We say that a function $\mathcal{L}: \Re^m \rightarrow \Re$ is L-smooth, i.e., L-Lipschitz smooth, if it is differentiable and if:
 $$
-\| \nabla \mathcal{L}(x) - \nabla \mathcal{L}(y) \| \leq L \| x - y \| \ \forall \ x, y \in \Re^{n}
+\| \nabla \mathcal{L}(x) - \nabla \mathcal{L}(y) \| \leq L \| x - y \| \ \forall \ x, y \in \Re^m
 $$
 \end{definition}
 
@@ -65,10 +65,10 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 		\Require{Function $\mathcal{L}$ to minimize}
 		\Require{Learning rate or step size $\eta > 0$}
 		\Function{Gradient Descent}{$\mathcal{L},\eta$}
-			\State Initialize weight vector $\textbf{w}_0$
+			\State Initialize weight vector $w_0$
 			\State $k \gets 0$
 			\While{$not\_convergence$}
-				\State $\textbf{w}_{k+1} \gets \textbf{w}_k - \eta \nabla \mathcal{L}(\textbf{w}_k)$
+				\State $w_{k+1} \gets w_k - \eta \nabla \mathcal{L}(w_k)$
 				\State $k \gets k + 1$
 			\EndWhile
 			\State \Return $w_k$
@@ -77,7 +77,7 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 \end{algorithm}
 
 \begin{theorem}[Gradient Descent convergence for convex functions]
-Let $\mathcal{L}: \Re^{n} \rightarrow \Re$ be a L-smooth convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^{n}$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
+Let $\mathcal{L}: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^m$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
 $$
 \mathcal{L}(w_k) - \mathcal{L}(w_*) \leq \frac{\| w_0 - w_* \|^2}{2 \eta k}
 $$
@@ -88,7 +88,7 @@ $$
 \end{theorem}
 
 \begin{theorem}[Gradient Descent convergence for strictly convex functions]
-Let $\mathcal{L}: \Re^{n} \rightarrow \Re$ be a L-smooth, $\mu$ strictly convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^{n}$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
+Let $\mathcal{L}: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strictly convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^m$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
 $$
 \mathcal{L}(w_k) - \mathcal{L}(w_*) \leq (1 - \eta \mu)^k \| w_0 - w_* \|^2
 $$
@@ -98,7 +98,11 @@ $$
 $$
 \end{theorem}
 
-
+We say that this method is based on full gradient, since at each iteration we need to compute:
+$$
+\nabla \mathcal{L}(w) = \frac{1}{n} \sum_{i=1}{n} \nabla \mathcal{L}_i(w)
+$$
+which depends on the whole dataset.
 
 \subsubsection{Momentum}
 
@@ -114,11 +118,11 @@ $$
 		\Require{Learning rate or step size $\eta > 0$}
 		\Require{Momentum $\beta \in (0,1)$}
 		\Function{Accelerated Gradient Descent}{$\mathcal{L},\eta,	\beta$}
-			\State Initialize weight vector $\textbf{w}_1 = \textbf{w}_0$ and velocity vector $\textbf{v}_0 = 0$
+			\State Initialize weight vector $w_1 = w_0$ and velocity vector $v_0 = 0$
 			\State $k \gets 1$
 			\While{$not\_convergence$}
-				\State $\textbf{v}_k \gets \beta \textbf{v}_{k-1} + \eta \nabla \mathcal{L}(\textbf{w}_k)$
-				\State $\textbf{w}_{k+1} \gets \textbf{w}_k - \textbf{v}_k$
+				\State $v_k \gets \beta v_{k-1} + \eta \nabla \mathcal{L}(w_k)$
+				\State $w_{k+1} \gets w_k - v_k$
 				\State $k \gets k + 1$
 			\EndWhile
 			\State \Return $w_k$
@@ -136,12 +140,12 @@ $$
 		\Require{Learning rate $\eta > 0$}
 		\Require{Momentum $\beta \in (0,1)$}
 		\Function{Nesterov Accelerated Gradient Descent}{$\mathcal{L},\eta,\beta$}
-			\State Initialize weight vector $\textbf{w}_1 = \textbf{w}_0$ and velocity vector $\textbf{v}_0 = 0$
+			\State Initialize weight vector $w_1 = w_0$ and velocity vector $v_0 = 0$
 			\State $k \gets 1$
 			\While{$not\_convergence$}
-				\State $\hat{\textbf{w}}_k \gets \textbf{w}_k + \beta \textbf{v}_{k-1}$
-				\State $\textbf{v}_k \gets \beta \textbf{v}_{k-1} + \eta \nabla \mathcal{L}(\hat{\textbf{w}}_k)$
-				\State $\textbf{w}_{k+1} \gets \textbf{w}_k - \textbf{v}_k$
+				\State $\hat{w}_k \gets w_k + \beta v_{k-1}$
+				\State $v_k \gets \beta v_{k-1} + \eta \nabla \mathcal{L}(\hat{w}_k)$
+				\State $w_{k+1} \gets w_k - v_k$
 				\State $k \gets k + 1$
 			\EndWhile
 			\State \Return $w_k$
@@ -163,12 +167,12 @@ Due to the nondifferentiability of the \emph{hinge} loss, we might end up in a s
 		\Require{Learning rate or step size $\eta > 0$}
 		\Require{Offset $\epsilon > 0$ to ensures not divide by 0}
 		\Function{AdaGrad}{$\mathcal{L},\eta,\epsilon$}
-			\State Initialize weight vector $\textbf{w}_0$ and the squared accumulated gradients vector $\textbf{s}_k = 0$
+			\State Initialize weight vector $w_0$ and the squared accumulated gradients vector $s_k = 0$
 			\State $k \gets 1$
 			\While {$not\_convergence$}
-				\State $\textbf{g}_k \gets \nabla \mathcal{L}(\textbf{w}_k)$
-				\State $\textbf{s}_k \gets \textbf{s}_{k-1} + \textbf{g}_k^2$
-				\State $\textbf{w}_{k+1} \gets \textbf{w}_k - \displaystyle \frac{\eta}{\sqrt{\textbf{s}_k + \epsilon}} \cdot \textbf{g}_k$
+				\State $g_k \gets \nabla \mathcal{L}(w_k)$
+				\State $s_k \gets s_{k-1} + g_k^2$
+				\State $w_{k+1} \gets w_k - \displaystyle \frac{\eta}{\sqrt{s_k + \epsilon}} \cdot g_k$
 				\State $k \gets k + 1$
 			\EndWhile
 			\State \Return $w_k$
