@@ -21,7 +21,7 @@ $$
 \begin{definition}[Convexity - Hessian]
 We say that a twice differentiable function, i.e., the Hessian matrix is \emph{symmetric}, $\mathcal{L}: \Re^m \rightarrow \Re$ is convex iff: 
 $$
-\nabla^2 \mathcal{L}(x) \succeq 0 \ \forall \ x
+\nabla^2 \mathcal{L}(x) \succeq 0 \ \forall \ x \in \Re^m
 $$
 i.e., the Hessian matix is \emph{positive semidefinite}.
 \end{definition}
@@ -39,16 +39,16 @@ $$
 $$
 and, in terms of the Hessian, is equivalent to:
 $$
-\nabla^2 \mathcal{G}(x) \succ 0 \ \forall \ x
+\nabla^2 \mathcal{G}(x) \succ 0 \ \forall \ x \in \Re^m
 $$
 which is:
 $$
-\nabla^2 \mathcal{L}(x) \succeq \mu \ \forall \ x
+\nabla^2 \mathcal{L}(x) \succeq \mu \ \forall \ x \in \Re^m
 $$
 \end{definition}
 
 \begin{definition}[L-smoothness]
-We say that a function $\mathcal{L}: \Re^m \rightarrow \Re$ is L-smooth, i.e., L-Lipschitz smooth, if it is differentiable and if:
+We say that a function $\mathcal{L}: \Re^m \rightarrow \Re$ is L-smooth, i.e., L-Lipschitz continuous, if it is differentiable and if:
 $$
 \| \nabla \mathcal{L}(x) - \nabla \mathcal{L}(y) \| \leq L \| x - y \| \ \forall \ x, y \in \Re^m
 $$
@@ -111,7 +111,7 @@ which depends on the whole dataset.
 \paragraph{Polyak} etc.
 
 \begin{algorithm}[H]
-	\caption{Polyak Momentum Accelerated Gradient Descent or Heavy-Ball Method}
+	\caption{Polyak or Heavy-Ball Momentum Accelerated Gradient Descent}
 	\label{alg:sgd}
 	\begin{algorithmic}
 		\Require{Function $\mathcal{L}$ to minimize}
@@ -155,7 +155,7 @@ which depends on the whole dataset.
 
 \subsection{AdaGrad}
 
-Due to the nondifferentiability of the \emph{hinge} loss, we might end up in a situation where some components of the gradient are very small and others large. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
+Due to the sparsity of the \emph{Lagrangian dual}, we might end up in a situation where some components of the gradient are very small and others large. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
 
 \emph{AdaGrad} \cite{duchi2011adaptive} addresses this problem by introducing the aggregate of the squares of previously observed gradients to adjust the learning rate. This has two benefits: first, we no longer need to decide just when a gradient is large enough. Second, it scales automatically with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment.
 
