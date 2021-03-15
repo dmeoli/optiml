@@ -63,12 +63,12 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 	\label{alg:gd}
 	\begin{algorithmic}
 		\Require{Function $\mathcal{L}$ to minimize}
-		\Require{Learning rate or step size $\eta > 0$}
-		\Function{Gradient Descent}{$\mathcal{L},\eta$}
+		\Require{Learning rate or step size $\alpha > 0$}
+		\Function{Gradient Descent}{$\mathcal{L},\alpha$}
 			\State Initialize weight vector $w_0$
 			\State $k \gets 0$
 			\While{$not\_convergence$}
-				\State $w_{k+1} \gets w_k - \eta \nabla \mathcal{L}(w_k)$
+				\State $w_{k+1} \gets w_k - \alpha \nabla \mathcal{L}(w_k)$
 				\State $k \gets k + 1$
 			\EndWhile
 			\State \Return $w_k$
@@ -77,22 +77,22 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 \end{algorithm}
 
 \begin{theorem}[Gradient Descent convergence for convex functions]
-Let $\mathcal{L}: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^m$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
+Let $\mathcal{L}: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
 $$
-\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq \frac{\| w_0 - w_* \|^2}{2 \eta k}
+\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq \frac{\| w_0 - w_* \|^2}{2 \alpha k}
 $$
-In particular, for $\eta = 1/L$:
+In particular, for $\alpha = 1/L$:
 $$
 \frac{L \| w_0 - w_* \|^2}{2 k}
 $$
 \end{theorem}
 
 \begin{theorem}[Gradient Descent convergence for strictly convex functions]
-Let $\mathcal{L}: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strictly convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^m$. Then the Gradient Descent with step size $\eta \leq 1/L$ satisfies:
+Let $\mathcal{L}: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strictly convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
 $$
-\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq (1 - \eta \mu)^k \| w_0 - w_* \|^2
+\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq (1 - \alpha \mu)^k \| w_0 - w_* \|^2
 $$
-In particular, for $\eta = 1/L$:
+In particular, for $\alpha = 1/L$:
 $$
 (1 - \frac{\mu}{L})^k \| w_0 - w_* \|^2
 $$
@@ -115,13 +115,13 @@ which depends on the whole dataset.
 	\label{alg:sgd}
 	\begin{algorithmic}
 		\Require{Function $\mathcal{L}$ to minimize}
-		\Require{Learning rate or step size $\eta > 0$}
+		\Require{Learning rate or step size $\alpha > 0$}
 		\Require{Momentum $\beta \in [0,1]$}
-		\Function{Accelerated Gradient Descent}{$\mathcal{L},\eta,	\beta$}
+		\Function{Accelerated Gradient Descent}{$\mathcal{L},\alpha,\beta$}
 			\State Initialize weight vector $w_1 = w_0$ and velocity vector $v_0 = 0$
 			\State $k \gets 1$
 			\While{$not\_convergence$}
-				\State $v_k \gets \beta v_{k-1} + \eta \nabla \mathcal{L}(w_k)$
+				\State $v_k \gets \beta v_{k-1} + \alpha \nabla \mathcal{L}(w_k)$
 				\State $w_{k+1} \gets w_k - v_k$
 				\State $k \gets k + 1$
 			\EndWhile
@@ -137,14 +137,14 @@ which depends on the whole dataset.
 	\label{alg:ngd}
 	\begin{algorithmic}
 		\Require{Function $\mathcal{L}$ to minimize}
-		\Require{Learning rate $\eta > 0$}
+		\Require{Learning rate $\alpha > 0$}
 		\Require{Momentum $\beta \in [0,1]$}
-		\Function{Nesterov Accelerated Gradient Descent}{$\mathcal{L},\eta,\beta$}
+		\Function{Nesterov Accelerated Gradient Descent}{$\mathcal{L},\alpha,\beta$}
 			\State Initialize weight vector $w_1 = w_0$ and velocity vector $v_0 = 0$
 			\State $k \gets 1$
 			\While{$not\_convergence$}
 				\State $\hat{w}_k \gets w_k + \beta v_{k-1}$
-				\State $v_k \gets \beta v_{k-1} + \eta \nabla \mathcal{L}(\hat{w}_k)$
+				\State $v_k \gets \beta v_{k-1} + \alpha \nabla \mathcal{L}(\hat{w}_k)$
 				\State $w_{k+1} \gets w_k - v_k$
 				\State $k \gets k + 1$
 			\EndWhile
@@ -164,15 +164,15 @@ Due to the sparsity of the \emph{Lagrangian dual}, we might end up in a situatio
 	\label{alg:adagrad}
 	\begin{algorithmic}
 		\Require{Function $\mathcal{L}$ to minimize}
-		\Require{Learning rate or step size $\eta > 0$}
+		\Require{Learning rate or step size $\alpha > 0$}
 		\Require{Offset $\epsilon > 0$ to ensures not divide by 0}
-		\Function{AdaGrad}{$\mathcal{L},\eta,\epsilon$}
+		\Function{AdaGrad}{$\mathcal{L},\alpha,\epsilon$}
 			\State Initialize weight vector $w_0$ and the squared accumulated gradients vector $s_k = 0$
 			\State $k \gets 1$
 			\While {$not\_convergence$}
 				\State $g_k \gets \nabla \mathcal{L}(w_k)$
 				\State $s_k \gets s_{k-1} + g_k^2$
-				\State $w_{k+1} \gets w_k - \displaystyle \frac{\eta}{\sqrt{s_k + \epsilon}} \cdot g_k$
+				\State $w_{k+1} \gets w_k - \displaystyle \frac{\alpha}{\sqrt{s_k + \epsilon}} \cdot g_k$
 				\State $k \gets k + 1$
 			\EndWhile
 			\State \Return $w_k$
