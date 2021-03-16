@@ -106,13 +106,15 @@ which depends on the whole dataset.
 
 \subsubsection{Momentum}
 
+To mitigate the pathological zig-zagging of the Stochastic Gradient Descent method 
+
 
 
 \paragraph{Polyak} etc.
 
 \begin{algorithm}[H]
-	\caption{Polyak or Heavy-Ball Momentum Accelerated Gradient Descent}
-	\label{alg:sgd}
+	\caption{Polyak or Heavy-Ball Accelerated Gradient Descent}
+	\label{alg:hbg}
 	\begin{algorithmic}
 		\Require{Function $\mathcal{L}$ to minimize}
 		\Require{Learning rate or step size $\alpha > 0$}
@@ -133,8 +135,8 @@ which depends on the whole dataset.
 \paragraph{Nesterov} etc.
 
 \begin{algorithm}[H]
-	\caption{Nesterov Momentum Accelerated Gradient Descent}
-	\label{alg:ngd}
+	\caption{Nesterov Accelerated Gradient Descent}
+	\label{alg:nag}
 	\begin{algorithmic}
 		\Require{Function $\mathcal{L}$ to minimize}
 		\Require{Learning rate $\alpha > 0$}
@@ -152,6 +154,30 @@ which depends on the whole dataset.
 		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
+
+\begin{theorem}[Nesterov Accelerated Gradient Descent convergence for convex functions] \label{thm:cvx_nag_convergence}
+Let $\mathcal{L}: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_{k+1} = k / (k+3)$ satisfies:
+$$
+\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq \frac{2 \| w_0 - w_* \|^2}{\alpha (k+1)^2}
+$$
+In particular, for $\alpha = 1/L$:
+$$
+\frac{2L \| w_0 - w_* \|^2}{(k+1)^2}
+$$
+\end{theorem}
+
+\begin{theorem}[Nesterov Accelerated Gradient Descent convergence for strictly convex functions] \label{thm:strong_cvx_nag_convergence}
+Let $\mathcal{L}: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strictly convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_k = \displaystyle \frac{1 - \sqrt{\mu / L}}{1 + \sqrt{\mu / L}}$ satisfies:
+$$
+\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq \frac{\| w_0 - w_* \|^2}{\alpha} (1 - \sqrt{\frac{\mu}{L}})^k
+$$
+In particular, for $\alpha = 1/L$:
+$$
+\mathcal{L}(w_k) - \mathcal{L}(w_*) \leq L \| w_0 - w_* \|^2 (1 - \sqrt{\frac{\mu}{L}})^k
+$$
+\end{theorem}
+
+\pagebreak
 
 \subsection{AdaGrad}
 
@@ -197,6 +223,8 @@ The \emph{AdaGrad} \cite{duchi2011adaptive} algorithm is just a variant of preco
 \end{algorithm}
 
 In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment.
+
+\pagebreak
 
 \subsection{Sequential Minimal Optimization}
 
@@ -271,5 +299,6 @@ the steps described above will be iterate as long as there will be an example th
 
 \subsubsection{Regression}
 
+\pagebreak
 
 \subsection{MINRES}
