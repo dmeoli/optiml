@@ -1,4 +1,4 @@
-\section{Optimization}
+\section{Numerical \& Optimization Methods}
 
 In order to explain the \emph{convergence} and \emph{efficiency} properties of the following numerical and optimization methods, we need to introduce some preliminary definitions about \emph{convexity} and the \emph{L-smoothness} of a function.
 
@@ -155,7 +155,7 @@ which depends on the whole dataset.
 
 \subsection{AdaGrad}
 
-Due to the sparsity of the weight vector of the \emph{Lagrangian dual}, i.e., the Lagrange multipliers, we might end up in a situation where some components of the gradient are very small and others large. This, in terms of \emph{conditioning number}, i.e, $\kappa = L/\mu >> 1$, means that the level sets of $\mathcal{L}$ are ellipsoid, i.e., we are dealing with an ill-conditioned problem. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
+Due to the sparsity of the weight vector of the \emph{Lagrangian dual}, i.e., the Lagrange multipliers, we might end up in a situation where some components of the gradient are very small and others large. This, in terms of \emph{conditioning number}, i.e., $\kappa = L/\mu >> 1$, means that the level sets of $\mathcal{L}$ are ellipsoid, i.e., we are dealing with an ill-conditioned problem. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
 
 Another method, that is usually deprecated in ML applications due to its increased computational complexity, is Newton’s method. Newton’s method favors a much faster convergence rate, i.e., number of iterations, at the cost of being more expensive per iteration. For convex problems, the recursion is similar to the gradient descent algorithm:
 
@@ -270,3 +270,6 @@ Since the \emph{Karush-Kuhn-Tucker} conditions are necessary and sufficient cond
 the steps described above will be iterate as long as there will be an example that violates these KKT conditions.
 
 \subsubsection{Regression}
+
+
+\subsection{MINRES}
