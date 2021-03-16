@@ -4,21 +4,21 @@ In order to explain the \emph{convergence} and \emph{efficiency} properties of t
 
 First of all, we give three different but equivalent definitions of convexity in terms of the function itself, the Jacobian and the Hessian.
 
-\begin{definition}[Convexity]
+\begin{definition}[Convexity] \label{def:convexity}
 We say that a function $\mathcal{L}: \Re^m \rightarrow \Re$ is convex if: 
 $$ 
 \mathcal{L}(\lambda x + (1 - \lambda) y ) \leq \lambda \mathcal{L}(x) + (1 - \lambda) \mathcal{L}(y) \ \forall \ x, y \in \Re^m, \lambda \in [0,1] 
 $$
 \end{definition}
 
-\begin{definition}[Convexity - Jacobian]
+\begin{definition}[Convexity - Jacobian] \label{def:convexity_jac}
 We say that a differentiable function $\mathcal{L}: \Re^m \rightarrow \Re$ is convex iff: 
 $$
 \mathcal{L}(x) \geq \mathcal{L}(y) + \langle \nabla \mathcal{L}(y), x - y \rangle \ \forall \ x, y \in \Re^m
 $$
 \end{definition}
 
-\begin{definition}[Convexity - Hessian]
+\begin{definition}[Convexity - Hessian] \label{def:convexity_hess}
 We say that a twice differentiable function, i.e., the Hessian matrix is \emph{symmetric}, $\mathcal{L}: \Re^m \rightarrow \Re$ is convex iff: 
 $$
 \nabla^2 \mathcal{L}(x) \succeq 0 \ \forall \ x \in \Re^m
@@ -28,7 +28,7 @@ i.e., the Hessian matix is \emph{positive semidefinite}.
 
 The definitions of \emph{strong convexity} and \emph{L-smoothness} below will be useful.
 
-\begin{definition}[Strong Convexity]
+\begin{definition}[Strong Convexity] \label{def:strong_convexity}
 We say that a function $\mathcal{L}: \Re^m \rightarrow \Re$ is $\mu$-strongly convex if:
 $$
 \mathcal{G}(x) = \mathcal{L}(x) - \frac{\mu}{2} \| x \|^2
@@ -47,7 +47,7 @@ $$
 $$
 \end{definition}
 
-\begin{definition}[L-smoothness]
+\begin{definition}[L-smoothness] \label{def:l_smoothness}
 We say that a function $\mathcal{L}: \Re^m \rightarrow \Re$ is L-smooth, i.e., L-Lipschitz continuous, if it is differentiable and if:
 $$
 \| \nabla \mathcal{L}(x) - \nabla \mathcal{L}(y) \| \leq L \| x - y \| \ \forall \ x, y \in \Re^m
@@ -76,7 +76,7 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 	\end{algorithmic}
 \end{algorithm}
 
-\begin{theorem}[Gradient Descent convergence for convex functions]
+\begin{theorem}[Gradient Descent convergence for convex functions] \label{thm:cvx_gd_convergence}
 Let $\mathcal{L}: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
 $$
 \mathcal{L}(w_k) - \mathcal{L}(w_*) \leq \frac{\| w_0 - w_* \|^2}{2 \alpha k}
@@ -87,7 +87,7 @@ $$
 $$
 \end{theorem}
 
-\begin{theorem}[Gradient Descent convergence for strictly convex functions]
+\begin{theorem}[Gradient Descent convergence for strictly convex functions] \label{thm:str_cvx_convergence}
 Let $\mathcal{L}: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strictly convex function. Let $w_*$ be the minimum of $\mathcal{L}$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
 $$
 \mathcal{L}(w_k) - \mathcal{L}(w_*) \leq (1 - \alpha \mu)^k \| w_0 - w_* \|^2
@@ -155,9 +155,25 @@ which depends on the whole dataset.
 
 \subsection{AdaGrad}
 
-Due to the sparsity of the \emph{Lagrangian dual}, we might end up in a situation where some components of the gradient are very small and others large. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
+Due to the sparsity of the weight vector of the \emph{Lagrangian dual}, i.e., the Lagrange multipliers, we might end up in a situation where some components of the gradient are very small and others large. This, in terms of \emph{conditioning number}, i.e, $\kappa = L/\mu >> 1$, means that the level sets of $\mathcal{L}$ are ellipsoid, i.e., we are dealing with an ill-conditioned problem. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
 
-\emph{AdaGrad} \cite{duchi2011adaptive} addresses this problem by introducing the aggregate of the squares of previously observed gradients to adjust the learning rate. This has two benefits: first, we no longer need to decide just when a gradient is large enough. Second, it scales automatically with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment.
+Another method, that is usually deprecated in ML applications due to its increased computational complexity, is Newton’s method. Newton’s method favors a much faster convergence rate, i.e., number of iterations, at the cost of being more expensive per iteration. For convex problems, the recursion is similar to the gradient descent algorithm:
+
+$$
+w_{k+1} = w_k - \alpha H^{-1} \nabla \mathcal{L}(w_k)
+$$
+
+where $\alpha$ is often close to one (damped-Newton) or one, and $H^{-1}$ denotes the Hessian of $\mathcal{L}$ at the current point.
+
+The above suggest a general rule in optimization: find any preconditioner, in convex optimization it has to be positive semidefinite, that improves the performance of gradient descent in terms of iterations, but without wasting too much time to compute that precoditioner. The above result into:
+
+$$
+w_{k+1} = w_k - \alpha P^{-1} \nabla \mathcal{L}(w_k)
+$$
+
+where $P$ is the preconditioner. This idea is the basis of the BFGS quasi-Newton method.
+
+The \emph{AdaGrad} \cite{duchi2011adaptive} algorithm is just a variant of preconditioned gradient descent, where $P$ is selected to be a diagonal preconditioner matrix and is updated using the gradient information, in particular it is the diagonal approximation of the inverse of the square roots of gradient outer products, until the $k$-th iteration. The above lead to the algorithm:
 
 \begin{algorithm}[H]
 	\caption{AdaGrad}
@@ -172,13 +188,15 @@ Due to the sparsity of the \emph{Lagrangian dual}, we might end up in a situatio
 			\While {$not\_convergence$}
 				\State $g_k = \nabla \mathcal{L}(w_k)$
 				\State $s_k = s_{k-1} + g_k^2$
-				\State $w_{k+1} = w_k - \displaystyle \frac{\alpha}{\sqrt{s_k + \epsilon}} g_k = w_k - \alpha S_k^{-1} g_k \ \text{where} \ S_k = diag(s_k + \epsilon)^{1/2}$
+				\State $w_{k+1} = w_k - \alpha P_k^{-1} g_k = w_k - \displaystyle \frac{\alpha}{\sqrt{s_k + \epsilon}} g_k \ \text{where} \ P_k = diag(s_k + \epsilon)^{1/2}$
 				\State $k = k + 1$
 			\EndWhile
 			\State \Return $w_k$
 		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
+
+In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment.
 
 \subsection{Sequential Minimal Optimization}
 
