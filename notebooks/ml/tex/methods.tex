@@ -1,6 +1,6 @@
 \section{Numerical \& Optimization Methods}
 
-In order to explain the \emph{convergence} and \emph{efficiency} properties of the following numerical and optimization methods, we need to introduce some preliminary definitions about \emph{convexity} and the \emph{L-smoothness} of a function.
+In order to explain the \emph{convergence} and \emph{efficiency} properties of the following numerical and optimization methods, we need to introduce some preliminary definitions about \emph{convexity} and the \emph{L-smoothness} of a function \cite{boyd2004convex}.
 
 First of all, we give three different but equivalent definitions of convexity in terms of the function itself, the Jacobian and the Hessian.
 
@@ -110,7 +110,7 @@ To mitigate the pathological zig-zagging of the Stochastic Gradient Descent meth
 
 
 
-\paragraph{Polyak} etc.
+\paragraph{Polyak} \cite{polyak1964some} etc.
 
 \begin{algorithm}[H]
 	\caption{Polyak or Heavy-Ball Accelerated Gradient Descent}
@@ -132,7 +132,7 @@ To mitigate the pathological zig-zagging of the Stochastic Gradient Descent meth
 	\end{algorithmic}
 \end{algorithm}
 
-\paragraph{Nesterov} etc.
+\paragraph{Nesterov} \cite{nesterov1998introductory} etc.
 
 \begin{algorithm}[H]
 	\caption{Nesterov Accelerated Gradient Descent}
