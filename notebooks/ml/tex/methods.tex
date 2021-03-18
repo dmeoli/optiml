@@ -109,7 +109,7 @@ SGD’s convergence rate for L-smooth convex functions is $\displaystyle \mathca
 
 \subsubsection{Momentum} 
 
-To mitigate the pathological zig-zagging of the Stochastic Gradient Descent method  \cite{polyak1964some}
+To mitigate the pathological zig-zagging of the Stochastic Gradient Descent method \cite{polyak1964some}
 
 \begin{algorithm}[H]
 	\caption{Polyak or Heavy-Ball Accelerated Gradient Descent}
@@ -276,32 +276,9 @@ Since the \emph{Karush-Kuhn-Tucker} conditions are necessary and sufficient cond
 
 the steps described above will be iterate as long as there will be an example that violates these KKT conditions.
 
-After optimizing $\alpha_1$ and $\alpha_2$, we select the threshold $b$ such that the KKT conditions are satisfied for $x_1$ and $x_2$. If, after optimization, $\alpha_1$ is not at the bounds, i.e., $0 < \alpha_1 < C$, then the following threshold $b_1$ is valid, since it forces the SVC to output $y_1$ when the input is $x_1$:
-
-\begin{equation} \label{eq:smo_svc_b1}
-	b_1 = E_1 + y_1 (\alpha_1^{new} - \alpha_1) K(x_1,x_1) + y_2 (\alpha_2^{new,clipped} - \alpha_2) K(x_1,x_2) + b
-\end{equation}
-
-similarly, the following threshold $b_2$ is valid if $0 < \alpha_2 < C$:
-
-\begin{equation} \label{eq:smo_svc_b2}
-	b_2 = E_2 + y_1 (\alpha_1^{new} - \alpha_1) K(x_1,x_2) + y_2 (\alpha_2^{new,clipped} - \alpha_2) K(x_2,x_2) + b
-\end{equation}
-
-If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both these thresholds are valid, and they will be equal; else, if both $\alpha_1$ and $\alpha_2$ are at the bounds, i.e., $\alpha_1 = 0$ or $\alpha_1 = C$ and $\alpha_2 = 0$ or $\alpha_2 = C$, then all the thresholds between $b_1$ and $b_2$ satisfy the KKT conditions, so we choose the threshold to be halfway in between $b_1$ and $b_2$. This gives the complete equation for $b$:
-
-\begin{equation} \label{eq:smo_svc_b}
-	b =
-        \begin{cases}
-            b_1 & \text{if} \ 0 < \alpha_1 < C \\
-            b_2 & \text{if} \ 0 < \alpha_2 < C \\
-            \displaystyle \frac{b_1+b_2}{2} & \text{otherwise} \\
-        \end{cases}
-\end{equation}
-
 \subsubsection{Regression}
 
-In case of regression the lower and upper bounds, the new multipliers $\alpha_1$ and $\alpha_2$ can be espressed as follow if $\alpha_1^+ > 0$ and $\alpha_2^+ > 0$:
+In case of regression the lower and upper bounds, the new multipliers $\alpha_1$ and $\alpha_2$ can be espressed as follow if $\alpha_1^+ > 0$ or ($\alpha_1^- = 0$ and $ E_1 - E_2 > 0$) and $\alpha_2^+ > 0$ or ($\alpha_2^- = 0$ and $ E_1 - E_2 < 0$):
 
 \begin{equation} \label{eq:smo_svr_bounds_update1}
 	\begin{aligned}
@@ -318,7 +295,7 @@ In case of regression the lower and upper bounds, the new multipliers $\alpha_1$
 	\alpha_1^{+,new} = \alpha_1^+ - (\alpha_2^{+,new,clipped} - \alpha_2^+)
 \end{equation}
 
-or, if $\alpha_1^+ > 0$ and $\alpha_2^- > 0$:
+or, if $\alpha_1^+ > 0$ or ($\alpha_1^- = 0$ and $ E_1 - E_2 > 2 \epsilon$) and $\alpha_2^+ > 0$ or ($\alpha_1^+ = 0$ and $ E_1 - E_2 > 2 \epsilon$):
 
 \begin{equation} \label{eq:smo_svr_bounds_update2}
 	\begin{aligned}
@@ -335,7 +312,7 @@ or, if $\alpha_1^+ > 0$ and $\alpha_2^- > 0$:
 	\alpha_1^{+,new} = \alpha_1^+ + (\alpha_2^{-,new,clipped} - \alpha_2^-)
 \end{equation}
 
-or, if $\alpha_1^- > 0$ and $\alpha_2^+ > 0$:
+or, if $\alpha_1^- > 0$ or ($\alpha_1^+ = 0$ and $ E_1 - E_2 < - 2 \epsilon$) and $\alpha_2^+ > 0$ or ($\alpha_2^- = 0$ and $ E_1 - E_2 < - 2 \epsilon$):
 
 \begin{equation} \label{eq:smo_svr_bounds_update3}
 	\begin{aligned}
@@ -352,7 +329,7 @@ or, if $\alpha_1^- > 0$ and $\alpha_2^+ > 0$:
 	\alpha_1^{-,new} = \alpha_1^- + (\alpha_2^{+,new,clipped} - \alpha_2^+)
 \end{equation}
 
-or, finally, if $\alpha_1^- > 0$ and $\alpha_2^- > 0$:
+or, finally, if $\alpha_1^- > 0$ or ($\alpha_1^+ = 0$ and $ E_1 - E_2 < 0$) and $\alpha_2^- > 0$ or ($\alpha_2^+ = 0$ and $ E_1 - E_2 > 0$):
 
 \begin{equation} \label{eq:smo_svr_bounds_update4}
 	\begin{aligned}
@@ -382,16 +359,6 @@ The KKT conditions for the regression problem \ref{eq:svr_min_wolfe_dual} are:
 \end{equation}
 
 so, the steps described above will be iterate as long as there will be an example that violates these KKT conditions.
-
-In case of regression we select the threshold $b$ as follows:
-
-\begin{equation} \label{eq:smo_svr_b1}
-	b_1 = E_1 + (\alpha_1^{new} - \alpha_1) K(x_1,x_1) + (\alpha_2^{new,clipped} - \alpha_2) K(x_1,x_2) + b
-\end{equation}
-
-\begin{equation} \label{eq:smo_svr_b2}
-	b_2 = E_2 + (\alpha_1^{new} - \alpha_1) K(x_1,x_2) + (\alpha_2^{new,clipped} - \alpha_2) K(x_2,x_2) + b
-\end{equation}
 
 \bigskip
 \bigskip
