@@ -5,12 +5,12 @@ from abc import ABC
 import numpy as np
 from sklearn.exceptions import PositiveSpectrumWarning
 
-from .kernels import gaussian, LinearKernel
+from .kernels import LinearKernel
 
 
 class SMO(ABC):
 
-    def __init__(self, quad, X, y, K, kernel=gaussian, C=1., tol=1e-3, verbose=False):
+    def __init__(self, quad, X, y, K, kernel, C, tol=1e-3, verbose=False):
         self.quad = quad
         self.X = X
         self.y = y
@@ -56,7 +56,7 @@ class SMOClassifier(SMO):
     Algorithm for SVM Classifier Design. Technical Report CD-99-14.
     """
 
-    def __init__(self, quad, X, y, K, kernel=gaussian, C=1., tol=1e-3, verbose=False):
+    def __init__(self, quad, X, y, K, kernel, C, tol=1e-3, verbose=False):
         self.alphas = np.zeros(len(X))
         super().__init__(quad, X, y, K, kernel, C, tol, verbose)
 
@@ -342,7 +342,7 @@ class SMORegression(SMO):
     Algorithm for SVM Regression. Technical Report CD-99-16.
     """
 
-    def __init__(self, quad, X, y, K, kernel=gaussian, C=1., epsilon=0.1, tol=1e-3, verbose=False):
+    def __init__(self, quad, X, y, K, kernel, C, epsilon, tol=1e-3, verbose=False):
         self.alphas_p = np.zeros(len(X))
         self.alphas_n = np.zeros(len(X))
         super().__init__(quad, X, y, K, kernel, C, tol, verbose)

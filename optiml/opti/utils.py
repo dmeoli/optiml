@@ -118,23 +118,21 @@ def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_
 
 # plot functions
 
-def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max):
+def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
     X, Y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
     Z = np.array([f.function(np.array([x, y]))
                   for x, y in zip(X.ravel(), Y.ravel())]).reshape(X.shape)
 
-    fig = plt.figure(figsize=(16, 8))
+    surface_contour = plt.figure(figsize=(16, 8))
 
     # 3D surface plot
-    ax = fig.add_subplot(1, 2, 1, projection='3d', elev=50, azim=-50)
+    ax = surface_contour.add_subplot(1, 2, 1, projection='3d', elev=50, azim=-50)
     ax.plot_surface(X, Y, Z, norm=SymLogNorm(linthresh=abs(Z.min()), base=np.e), cmap='jet', alpha=0.5)
     ax.plot(f.x_star()[0], f.x_star()[1], f.f_star(), marker='*', color='r', linestyle='None', markersize=10)
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
     ax.set_zlabel(f'${type(f).__name__}$')
-
-    ub = opt.ub if hasattr(opt, 'ub') else opt.f.ub if hasattr(opt.f, 'ub') else None
 
     if ub is not None:
         # 3D box-constraints plot
@@ -156,7 +154,7 @@ def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max):
                                              edgecolors='k', alpha=0.1))
 
     # 2D contour plot
-    ax = fig.add_subplot(1, 2, 2)
+    ax = surface_contour.add_subplot(1, 2, 2)
     ax.contour(X, Y, Z, 70, cmap='jet', alpha=0.5)
     ax.plot(*f.x_star(), marker='*', color='r', linestyle='None', markersize=10)
     ax.set_xlabel('$x_1$')
@@ -170,23 +168,23 @@ def plot_surface_contour(f, opt, x_min, x_max, y_min, y_max):
                         [0, 0],
                         [ub[1], ub[1]], color='0.8')
 
-    return fig
+    return surface_contour
 
 
-def plot_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max):
-    fig = plot_surface_contour(f, opt, x_min, x_max, y_min, y_max)
+def plot_trajectory_optimization(surface_contour, opt, color='k'):
     # 3D trajectory optimization plot
-    fig.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history, marker='.', color='k')
+    surface_contour.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history, marker='.', color='k')
     angles_x = np.array(opt.x0_history)[1:] - np.array(opt.x0_history)[:-1]
     angles_y = np.array(opt.x1_history)[1:] - np.array(opt.x1_history)[:-1]
     # 2D trajectory optimization plot
-    fig.axes[1].quiver(opt.x0_history[:-1], opt.x1_history[:-1], angles_x, angles_y,
-                       scale_units='xy', angles='xy', scale=1, color='k')
+    surface_contour.axes[1].quiver(opt.x0_history[:-1], opt.x1_history[:-1], angles_x, angles_y,
+                                   scale_units='xy', angles='xy', scale=1, color=color)
     if isinstance(opt, ProximalBundle):  # plot ns steps
         # 3D trajectory optimization plot
-        fig.axes[0].plot(opt.x0_history_ns, opt.x1_history_ns, opt.f_x_history_ns, marker='.', color='b')
+        surface_contour.axes[0].plot(opt.x0_history_ns, opt.x1_history_ns, opt.f_x_history_ns, marker='.', color='b')
         angles_x = np.array(opt.x0_history_ns)[1:] - np.array(opt.x0_history_ns)[:-1]
         angles_y = np.array(opt.x1_history_ns)[1:] - np.array(opt.x1_history_ns)[:-1]
         # 2D trajectory optimization plot
-        fig.axes[1].quiver(opt.x0_history_ns[:-1], opt.x1_history_ns[:-1], angles_x, angles_y,
-                           scale_units='xy', angles='xy', scale=1, color='b')
+        surface_contour.axes[1].quiver(opt.x0_history_ns[:-1], opt.x1_history_ns[:-1], angles_x, angles_y,
+                                       scale_units='xy', angles='xy', scale=1, color='b')
+    return surface_contour
