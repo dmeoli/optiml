@@ -295,7 +295,7 @@ In case of regression the lower and upper bounds, the new multipliers $\alpha_1$
 	\alpha_1^{+,new} = \alpha_1^+ - (\alpha_2^{+,new,clipped} - \alpha_2^+)
 \end{equation}
 
-or, if $\alpha_1^+ > 0$ or ($\alpha_1^- = 0$ and $ E_1 - E_2 > 2 \epsilon$) and $\alpha_2^+ > 0$ or ($\alpha_1^+ = 0$ and $ E_1 - E_2 > 2 \epsilon$):
+or, if $\alpha_1^+ > 0$ or ($\alpha_1^- = 0$ and $ E_1 - E_2 > 2 \epsilon$) and $\alpha_2^- > 0$ or ($\alpha_2^+ = 0$ and $ E_1 - E_2 > 2 \epsilon$):
 
 \begin{equation} \label{eq:smo_svr_bounds_update2}
 	\begin{aligned}
