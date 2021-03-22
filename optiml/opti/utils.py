@@ -171,9 +171,9 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
     return surface_contour
 
 
-def plot_trajectory_optimization(surface_contour, opt, color='k'):
+def plot_trajectory_optimization(surface_contour, opt, color='k', label=None):
     # 3D trajectory optimization plot
-    surface_contour.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history, marker='.', color='k')
+    surface_contour.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history, marker='.', color=color, label=label)
     angles_x = np.array(opt.x0_history)[1:] - np.array(opt.x0_history)[:-1]
     angles_y = np.array(opt.x1_history)[1:] - np.array(opt.x1_history)[:-1]
     # 2D trajectory optimization plot
@@ -187,4 +187,5 @@ def plot_trajectory_optimization(surface_contour, opt, color='k'):
         # 2D trajectory optimization plot
         surface_contour.axes[1].quiver(opt.x0_history_ns[:-1], opt.x1_history_ns[:-1], angles_x, angles_y,
                                        scale_units='xy', angles='xy', scale=1, color='b')
+    surface_contour.axes[0].legend()
     return surface_contour

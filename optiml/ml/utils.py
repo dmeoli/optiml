@@ -174,8 +174,6 @@ def plot_svm_hyperplane(svm, X, y):
 
 
 def plot_validation_curve(estimator, X, y, param_name, param_range, scorer, cv=5):
-    plt.style.use('ggplot')
-
     train_scores, test_scores = validation_curve(estimator, X, y, param_name=param_name, param_range=param_range,
                                                  cv=cv, scoring=scorer, n_jobs=-1)
 
@@ -200,8 +198,6 @@ def plot_validation_curve(estimator, X, y, param_name, param_range, scorer, cv=5
 
 def plot_learning_curve(estimator, X, y, scorer, cv=5, train_sizes=np.linspace(.1, 1.0, 5),
                         shuffle=False, random_state=None):
-    plt.style.use('ggplot')
-
     train_sizes, train_scores, test_scores = learning_curve(estimator, X, y, train_sizes=train_sizes, cv=cv,
                                                             scoring=scorer, n_jobs=-1, shuffle=shuffle,
                                                             random_state=random_state)
@@ -226,8 +222,6 @@ def plot_learning_curve(estimator, X, y, scorer, cv=5, train_sizes=np.linspace(.
 
 
 def plot_model_loss(train_loss_history, val_loss_history=None):
-    plt.style.use('ggplot')
-
     if val_loss_history is None:
         val_loss_history = []
 
@@ -241,8 +235,6 @@ def plot_model_loss(train_loss_history, val_loss_history=None):
 
 
 def plot_model_accuracy(train_score_history, val_score_history=None):
-    plt.style.use('ggplot')
-
     if val_score_history is None:
         val_score_history = []
 

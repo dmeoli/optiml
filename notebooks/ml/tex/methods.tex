@@ -201,7 +201,7 @@ The \emph{AdaGrad} \cite{duchi2011adaptive} algorithm is just a variant of preco
 	\end{algorithmic}
 \end{algorithm}
 
-In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. AdaGrad's convergence rate for L-smooth convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{k}}\Big)$.
+In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s convergence rate for L-smooth convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{k}}\Big)$.
 
 \pagebreak
 
@@ -209,9 +209,16 @@ In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal b
 
 The \emph{Sequential Minimal Optimization (SMO)} \cite{platt1998sequential} method is the most popular approach for solving the SVM QP problem without any extra $Q$ matrix storage required by common QP methods. The advantage of SMO lies in the fact that it performs a series of two-point optimizations since we deal with just one equality constraint, so the Lagrange multipliers can be solved analitically.
 
-At each iteration, SMO chooses two $\alpha_i$ to jointly optimize, let $\alpha_1$ and $\alpha_2$, finds the optimal values for these multipliers and update the SVM to reflect these new values. In order to solve for two Lagrange multipliers, SMO first computes the constraints over these and then solves for the constrained minimum. Since there are only two multipliers, the bound constraints cause the Lagrange multipliers to lie within a box, while the linear equality constraint causes the Lagrange multipliers to lie on a diagonal line inside the box. So, the constrained minimum must lie there.
-
 \subsubsection{Classification}
+
+At each iteration, SMO chooses two $\alpha_i$ to jointly optimize, let $\alpha_1$ and $\alpha_2$, finds the optimal values for these multipliers and update the SVM to reflect these new values. In order to solve for two Lagrange multipliers, SMO first computes the constraints over these and then solves for the constrained minimum. Since there are only two multipliers, the box-constraints cause the Lagrange multipliers to lie within a box, while the linear equality constraint causes the Lagrange multipliers to lie on a diagonal line inside the box. So, the constrained minimum must lie there as shown in \ref{fig:smo_lagrange_multipliers}.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.6]{img/smo_multipliers.png}
+	\caption{SMO for two Lagrange multipliers}
+	\label{fig:smo_lagrange_multipliers}
+\end{figure}
 
 In case of classification the ends of the diagonal line segment, i.e., the lower and upper bounds, can be espressed as follow if the target $y_1 \ne y_2$:
 
@@ -301,7 +308,7 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 
 \subsubsection{Regression}
 
-In case of regression the lower and upper bounds, the new multipliers $\alpha_1$ and $\alpha_2$ can be espressed as follow if $\alpha_1^+ > 0$ or ($\alpha_1^- = 0$ and $ E_1 - E_2 > 0$) and $\alpha_2^+ > 0$ or ($\alpha_2^- = 0$ and $ E_1 - E_2 < 0$):
+In case of regression the bounds and the new multipliers $\alpha_1^{+,new}$ and $\alpha_2^{+,new}$ can be espressed as follow if ($\alpha_1^+ > 0$ or ($\alpha_1^- = 0$ and $ E_1 - E_2 > 0$)) and ($\alpha_2^+ > 0$ or ($\alpha_2^- = 0$ and $ E_1 - E_2 < 0$)):
 
 \begin{equation} \label{eq:smo_svr_bounds_update1}
 	\begin{aligned}
@@ -318,7 +325,7 @@ In case of regression the lower and upper bounds, the new multipliers $\alpha_1$
 	\alpha_1^{+,new} = \alpha_1^+ - (\alpha_2^{+,new,clipped} - \alpha_2^+)
 \end{equation}
 
-or, if $\alpha_1^+ > 0$ or ($\alpha_1^- = 0$ and $ E_1 - E_2 > 2 \epsilon$) and $\alpha_2^- > 0$ or ($\alpha_2^+ = 0$ and $ E_1 - E_2 > 2 \epsilon$):
+or, if ($\alpha_1^+ > 0$ or ($\alpha_1^- = 0$ and $ E_1 - E_2 > 2 \epsilon$)) and ($\alpha_2^- > 0$ or ($\alpha_2^+ = 0$ and $ E_1 - E_2 > 2 \epsilon$)):
 
 \begin{equation} \label{eq:smo_svr_bounds_update2}
 	\begin{aligned}
@@ -335,7 +342,7 @@ or, if $\alpha_1^+ > 0$ or ($\alpha_1^- = 0$ and $ E_1 - E_2 > 2 \epsilon$) and 
 	\alpha_1^{+,new} = \alpha_1^+ + (\alpha_2^{-,new,clipped} - \alpha_2^-)
 \end{equation}
 
-or, if $\alpha_1^- > 0$ or ($\alpha_1^+ = 0$ and $ E_1 - E_2 < - 2 \epsilon$) and $\alpha_2^+ > 0$ or ($\alpha_2^- = 0$ and $ E_1 - E_2 < - 2 \epsilon$):
+or, if ($\alpha_1^- > 0$ or ($\alpha_1^+ = 0$ and $ E_1 - E_2 < - 2 \epsilon$)) and ($\alpha_2^+ > 0$ or ($\alpha_2^- = 0$ and $ E_1 - E_2 < - 2 \epsilon$)):
 
 \begin{equation} \label{eq:smo_svr_bounds_update3}
 	\begin{aligned}
@@ -352,7 +359,7 @@ or, if $\alpha_1^- > 0$ or ($\alpha_1^+ = 0$ and $ E_1 - E_2 < - 2 \epsilon$) an
 	\alpha_1^{-,new} = \alpha_1^- + (\alpha_2^{+,new,clipped} - \alpha_2^+)
 \end{equation}
 
-or, finally, if $\alpha_1^- > 0$ or ($\alpha_1^+ = 0$ and $ E_1 - E_2 < 0$) and $\alpha_2^- > 0$ or ($\alpha_2^+ = 0$ and $ E_1 - E_2 > 0$):
+or, finally, if ($\alpha_1^- > 0$ or ($\alpha_1^+ = 0$ and $ E_1 - E_2 < 0$)) and ($\alpha_2^- > 0$ or ($\alpha_2^+ = 0$ and $ E_1 - E_2 > 0$)):
 
 \begin{equation} \label{eq:smo_svr_bounds_update4}
 	\begin{aligned}
