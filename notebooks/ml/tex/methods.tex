@@ -111,6 +111,13 @@ SGD’s convergence rate for L-smooth convex functions is $\displaystyle \mathca
 
 To mitigate the pathological zig-zagging of the Stochastic Gradient Descent method \cite{polyak1964some}
 
+\begin{figure}[h!]
+	\centering
+  	\includegraphics[scale=0.5]{img/momentum.png}
+  	\caption{Polyak's and Nesterov's Momentum}
+  	\label{fig:momentum}
+\end{figure}
+
 \begin{algorithm}[H]
 	\caption{Polyak or Heavy-Ball Accelerated Gradient Descent}
 	\label{alg:hbg}
@@ -215,7 +222,7 @@ At each iteration, SMO chooses two $\alpha_i$ to jointly optimize, let $\alpha_1
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[scale=0.6]{img/smo_multipliers.png}
+	\includegraphics[scale=0.5]{img/smo_multipliers.png}
 	\caption{SMO for two Lagrange multipliers}
 	\label{fig:smo_lagrange_multipliers}
 \end{figure}

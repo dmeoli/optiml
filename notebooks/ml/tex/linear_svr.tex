@@ -222,16 +222,16 @@ the gradient wrt $\mu$, $\lambda_+$ and $\lambda_-$ are:
     \frac{\partial \mathcal{L}}{\partial \lambda_-}=-\alpha
 \end{equation}
 
-If the Hessian matrix Q is indefinite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues, the Lagrangian dual relaxation will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute the gradient, we will choose $\alpha$ in such a way as the one that minimizes the residue, i.e. the least-squares solution:
+If the Hessian matrix Q is not positive definite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues and so it will be unbounded below, the Lagrangian dual relaxation will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute an approximation of the gradient, we will choose $\alpha$ in such a way as the one that minimizes the norm of the residual:
 
 \begin{equation} \label{eq:svr_lagrangian_krylov_sol}
 	\begin{aligned}
-		\min_{\alpha \in K_n(Q, b)} \quad & \| Q \alpha - b \| \\ 
+		\min_{\alpha_n \in K_n(Q, b)} \quad & \| Q \alpha_n - b \| \\ 
 		\text{where} \quad & b = - (q - \mu e + \lambda_+ - \lambda_-)
 	\end{aligned}
 \end{equation}
 
-Since we are dealing with a symmetric but indefinite linear system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, which computes the vector $\alpha$ that minimizes $\| Q \alpha - b \|$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
+Since we are dealing with a symmetric but indefinite linear system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, to compute the vector $\alpha_n \in K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$ that minimizes the norm of the residual $r_n = Q \alpha_n - b$.
 
 \bigskip
 

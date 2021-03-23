@@ -1,6 +1,8 @@
 \section{Conclusions}
 
-For what about the SVM formulations, it is known, in general, that the \emph{primal formulation}, is suitable for large linear training since the complexity of the model grows with the number of features or, more in general, when the number of examples $n$ is much larger than the number of features $m$, $n >> m$; meanwhile the \emph{dual formulation}, is more suitable in case the number of examples $n$ is less than the number of features m, $n < m$, since the complexity of the model is dominated by the number of examples.
+For what about the SVM formulations, it is known, in general, that the \emph{primal formulation}, is suitable for large linear training since the complexity of the model grows with the number of features or, more in general, when the number of examples $n$ is much larger than the number of features $m$, i.e., $n >> m$; meanwhile the \emph{dual formulation}, is more suitable in case the number of examples $n$ is less than the number of features m, i.e., $n < m$, since the complexity of the model is dominated by the number of examples.
+
+\bigskip
 
 From all these experiments we can see as, for what about the \emph{primal} formulations, the results provided from the \emph{custom} implementations are strongly similar to those of \emph{sklearn} implementations, i.e., \emph{liblinear} \cite{fan2008liblinear} implementations, with a slight exception about the time gap obviously due to the different core implementation languages, Python and C respectively.
 
