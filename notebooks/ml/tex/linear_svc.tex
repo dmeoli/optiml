@@ -270,7 +270,7 @@ If the Hessian matrix Q is not positive definite, i.e., the Lagrangian function 
 	\end{aligned}
 \end{equation}
 
-Since we are dealing with a symmetric but indefinite linear system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, to compute the vector $\alpha_n \in K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$ that minimizes the norm of the residual $r_n = Q \alpha_n - b$.
+Since we are dealing with a symmetric but indefinite linear system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, to compute the vector $\alpha_n$ that minimizes the norm of the residual $r_n = Q \alpha_n - b$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
 
 \bigskip
 
