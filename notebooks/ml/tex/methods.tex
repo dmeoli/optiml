@@ -89,13 +89,14 @@ Since \emph{Gradient Descent} becomes impractical when dealing with large datase
 	\label{alg:sgd}
 	\begin{algorithmic}
 		\Require{Function $f$ to minimize}
-		\Require{Learning rate or step size $\alpha > 0$ and batch size $k$}
+		\Require{Learning rate or step size $\alpha > 0$}
+		\Require{Batch size $k$}
 		\Function{Stochastic Gradient Descent}{$f,\alpha,k$}
 			\State Initialize weight vector $x_0$
 			\State $t = 0$
 			\While{$not\_convergence$}
-				\State Sample $(i_1, \dots, i_k) \sim \mathcal{U}^k(1, \dots, n)$ 
-				\State $\displaystyle x_{t+1} = x_t - \alpha \frac{1}{k} \sum_{j=1}^k \nabla f_j(x_t)$
+				\State Sample $(i_1,\dots,i_k) \sim \mathcal{U}^k(1,\dots,n)$ 
+				\State $\displaystyle x_{t+1} = x_t - \alpha \frac{1}{k} \sum_{j=1}^k \nabla f_{i_j}(x_t)$
 				\State $t = t + 1$
 			\EndWhile
 			\State \Return $x_t$
@@ -103,7 +104,7 @@ Since \emph{Gradient Descent} becomes impractical when dealing with large datase
 	\end{algorithmic}
 \end{algorithm}
 
-Note that in expectation, we converge like GD, since $\mathbb{E}[\nabla f_i(x_t)] = \nabla f(x_t)$, therefore, the expected iterate of SGD converges to the optimum.
+Note that in expectation, we converge like GD, since $\displaystyle \mathbb{E}_{i \sim \mathcal{U}(1,\dots,n)}[\nabla f_i(x_t)] = \nabla f(x_t)$, therefore, the expected iterate of SGD converges to the optimum.
 
 SGD’s convergence rate for L-smooth convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ and $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ for strongly convex. More iterations are needed to reach the same accuracy as GD, but the iterations are far cheaper.
 
