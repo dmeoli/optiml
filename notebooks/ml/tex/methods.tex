@@ -33,7 +33,7 @@ We say that a function $f: \Re^m \rightarrow \Re$ is $\mu$-strongly convex if th
 $$
 g(x) = f(x) - \frac{\mu}{2} \| x \|^2
 $$
-is convex. The latter, in terms of the Jacobian, is equivalent to:
+is convex for some $\mu > 0$. The latter, in terms of the Jacobian, is equivalent to:
 $$
 f(x) \geq f(y) + \langle \nabla f(y), x - y \rangle + \frac{\mu}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^m
 $$
@@ -168,7 +168,9 @@ Comparing the algorithm \ref{alg:hbg} with the algorithm \ref{alg:nag}, we can s
 
 Nesterov momentum brings the rate of convergence from $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ to $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$ and in the case of smooth and strongly convex functions gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great, because we get the guarantee for a more general class of functions.
 
-We can write the iteration complexity of these methods for a L-smooth and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Big(\kappa \log \frac{1}{\epsilon}\Big)$ for the standard GD method, $\displaystyle \mathcal{O}\Big(\sqrt{\kappa}\log \frac{1}{\epsilon}\Big)$ for the Polyak’s method and, finally, $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{\epsilon}}\Big)$ for the NAG method where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the smallest and the largest eigenvalues $\lambda_{min}$ and $\lambda_{max}$ respectively.
+\bigskip
+
+We can write the iteration complexity of these methods, i.e., the smallest $t$ such that we’re within $\epsilon$, for a L-smooth and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Big(\kappa \log \frac{1}{\epsilon}\Big)$ for the standard GD method, $\displaystyle \mathcal{O}\Big(\sqrt{\kappa}\log \frac{1}{\epsilon}\Big)$ for the Polyak’s method and, finally, $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{\epsilon}}\Big)$ for the NAG method to get $\epsilon$-close to global optimum and where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the smallest and the largest eigenvalues $\lambda_{min}$ and $\lambda_{max}$ respectively.
 
 \pagebreak
 
