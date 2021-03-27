@@ -606,6 +606,7 @@ class SMORegression(SMO):
         else:
             E2 = self.y[i2] - (self.alphas_p - self.alphas_n).dot(self.K[i2])
             self.errors[i2] = E2
+            # update (b_low, b_low_idx) or (b_up, b_up_idx) using (E2, i2)
             if i2 in self.I1:
                 if E2 + self.epsilon < self.b_up:
                     self.b_up = E2 + self.epsilon
@@ -629,33 +630,39 @@ class SMORegression(SMO):
                 if self.b_low - (E2 - self.epsilon) > 2 * self.tol:
                     optimal = False
                     i1 = self.b_low_idx
+                    # for i2 in I0 choose the better i1
                     if (E2 - self.epsilon) - self.b_up > self.b_low - (E2 - self.epsilon):
                         i1 = self.b_up_idx
                 elif (E2 - self.epsilon) - self.b_up > 2 * self.tol:
                     optimal = False
                     i1 = self.b_up_idx
+                    # for i2 in I0 choose the better i1
                     if self.b_low - (E2 - self.epsilon) > (E2 - self.epsilon) - self.b_up:
                         i1 = self.b_low_idx
             elif 0 < alpha2_n < self.C:
                 if self.b_low - (E2 + self.epsilon) > 2 * self.tol:
                     optimal = False
                     i1 = self.b_low_idx
+                    # for i2 in I0 choose the better i1
                     if (E2 + self.epsilon) - self.b_up > self.b_low - (E2 + self.epsilon):
                         i1 = self.b_up_idx
                 elif (E2 + self.epsilon) - self.b_up > 2 * self.tol:
                     optimal = False
                     i1 = self.b_up_idx
+                    # for i2 in I0 choose the better i1
                     if self.b_low - (E2 + self.epsilon) > (E2 + self.epsilon) - self.b_up:
                         i1 = self.b_low_idx
         elif i2 in self.I1:
             if self.b_low - (E2 + self.epsilon) > 2 * self.tol:
                 optimal = False
                 i1 = self.b_low_idx
+                # for i2 in I1 choose the better i1
                 if (E2 + self.epsilon) - self.b_up > self.b_low - (E2 + self.epsilon):
                     i1 = self.b_up_idx
             elif (E2 - self.epsilon) - self.b_up > 2 * self.tol:
                 optimal = False
                 i1 = self.b_up_idx
+                # for i2 in I1 choose the better i1
                 if self.b_low - (E2 - self.epsilon) > (E2 - self.epsilon) - self.b_up:
                     i1 = self.b_low_idx
         elif i2 in self.I2:

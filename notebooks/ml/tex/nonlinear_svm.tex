@@ -1,12 +1,12 @@
 \section{Nonlinear Support Vector Machines}
 
-When applying our SVC to \emph{linearly separable} data in \ref{eq:svc_max_wolfe_dual}, we have started by creating a matrix $Q$ from the dot product of our input variables:
+When applying our SVC to \emph{linearly separable} data in \eqref{eq:svc_max_wolfe_dual}, we have started by creating a matrix $Q$ from the dot product of our input variables:
 
 \begin{equation} \label{eq:svc_hessian}
 	Q_{ij} = y_i y_j k(x_i,x_j)
 \end{equation}
 
-or, a matrix $K$ from the dot product of our input variables in the SVR case \ref{eq:svr_min_wolfe_dual}:
+or, a matrix $K$ from the dot product of our input variables in the SVR case \eqref{eq:svr_min_wolfe_dual}:
 
 \begin{equation} \label{eq:svr_hessian}
 	K_{ij} = k(x_i,x_j)

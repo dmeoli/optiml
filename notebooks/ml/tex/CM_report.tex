@@ -14,6 +14,35 @@
 
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+
+% Algorithmic modifications
+\makeatletter
+\newcommand{\algorithmicbreak}{\textbf{break}}
+\newcommand{\Break}{\State \algorithmicbreak}
+
+\algnewcommand\AND{\textbf{and }}
+\algnewcommand\OR{\textbf{or }}
+
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+   \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+       {\raggedright\textbf{\fname@algorithm~\thealgorithm} ##2\par}%
+       \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+       \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+       \fi
+       \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+   \end{center}
+  }
+\makeatother
+
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{amsmath}
@@ -81,6 +110,11 @@
 \pagebreak
 
 \listoftables
+
+\pagebreak
+
+\listofalgorithms
+\addcontentsline{toc}{section}{List of Algorithms}
 
 \pagebreak
 

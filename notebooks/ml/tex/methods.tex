@@ -64,7 +64,7 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 	\begin{algorithmic}
 		\Require{Function $f$ to minimize}
 		\Require{Learning rate or step size $\alpha > 0$}
-		\Function{Gradient Descent}{$f,\alpha$}
+		\Function{GradientDescent}{$f,\alpha$}
 			\State Initialize weight vector $x_0$
 			\State $t = 0$
 			\While{$not\_convergence$}
@@ -91,13 +91,13 @@ Since \emph{Gradient Descent} becomes impractical when dealing with large datase
 		\Require{Function $f$ to minimize}
 		\Require{Learning rate or step size $\alpha > 0$}
 		\Require{Batch size $k$}
-		\Function{Stochastic Gradient Descent}{$f,\alpha,k$}
+		\Function{StochasticGradientDescent}{$f,\alpha,k$}
 			\State Initialize weight vector $x_0$
-			\State $t = 0$
+			\State $t \gets 0$
 			\While{$not\_convergence$}
 				\State Sample $(i_1,\dots,i_k) \sim \mathcal{U}^k(1,\dots,n)$ 
-				\State $\displaystyle x_{t+1} = x_t - \alpha \frac{1}{k} \sum_{j=1}^k \nabla f_{i_j}(x_t)$
-				\State $t = t + 1$
+				\State $\displaystyle x_{t+1} \gets x_t - \alpha \frac{1}{k} \sum_{j=1}^k \nabla f_{i_j}(x_t)$
+				\State $t \gets t + 1$
 			\EndWhile
 			\State \Return $x_t$
 		\EndFunction
@@ -128,13 +128,13 @@ In the Polyak's method \cite{polyak1964some} the velocity vector $v_t$ is calcul
 		\Require{Function $f$ to minimize}
 		\Require{Learning rate or step size $\alpha > 0$}
 		\Require{Momentum $\beta \in [0,1)$}
-		\Function{Polyak Accelerated Gradient Descent}{$f,\alpha,\beta$}
-			\State Initialize weight vector $x_1 = x_0$ and velocity vector $v_0 = 0$
-			\State $t = 1$
+		\Function{PolyakAcceleratedGradientDescent}{$f,\alpha,\beta$}
+			\State Initialize weight vector $x_1 \gets x_0$ and velocity vector $v_0 \gets 0$
+			\State $t \gets 1$
 			\While{$not\_convergence$}
 				\State $v_t = \beta v_{t-1} + \alpha \nabla f(x_t)$
 				\State $x_{t+1} = x_t - v_t$
-				\State $t = t + 1$
+				\State $t \gets t + 1$
 			\EndWhile
 			\State \Return $x_t$
 		\EndFunction
@@ -150,14 +150,14 @@ Leveraging the idea of momentum introduced by Polyak, Nesterov introduced a slig
 		\Require{Function $f$ to minimize}
 		\Require{Learning rate $\alpha > 0$}
 		\Require{Momentum $\beta \in [0,1)$}
-		\Function{Nesterov Accelerated Gradient Descent}{$f,\alpha,\beta$}
-			\State Initialize weight vector $x_1 = x_0$ and velocity vector $v_0 = 0$
-			\State $t = 1$
+		\Function{NesterovAcceleratedGradientDescent}{$f,\alpha,\beta$}
+			\State Initialize weight vector $x_1 \gets x_0$ and velocity vector $v_0 \gets 0$
+			\State $t \gets 1$
 			\While{$not\_convergence$}
-				\State $\hat{x}_t = x_t + \beta v_{t-1}$
-				\State $v_t = \beta v_{t-1} + \alpha \nabla f(\hat{x}_t)$
-				\State $x_{t+1} = x_t - v_t$
-				\State $t = t + 1$
+				\State $\hat{x}_t \gets x_t + \beta v_{t-1}$
+				\State $v_t \gets \beta v_{t-1} + \alpha \nabla f(\hat{x}_t)$
+				\State $x_{t+1} \gets x_t - v_t$
+				\State $t \gets t + 1$
 			\EndWhile
 			\State \Return $x_t$
 		\EndFunction
@@ -176,7 +176,7 @@ We can write the iteration complexity of these methods, i.e., the smallest $t$ s
 
 \subsection{AdaGrad}
 
-Due to the sparsity of the weight vector of the \emph{Lagrangian dual}, i.e., the Lagrange multipliers, we might end up in a situation where some components of the gradient are very small and others large. This, in terms of \emph{conditioning number}, i.e., $\kappa = L/\mu >> 1$, means that the level sets of $f$ are ellipsoid, i.e., we are dealing with an ill-conditioned problem. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
+Due to the sparsity of the weight vector of the \emph{Lagrangian dual}, i.e., the Lagrange multipliers, we might end up in a situation where some components of the gradient are very small and others large. This, in terms of \emph{conditioning number}, i.e., $\kappa = L/\mu \gg 1$, means that the level sets of $f$ are ellipsoid, i.e., we are dealing with an ill-conditioned problem. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
 
 Another method, that is usually deprecated in ML applications due to its increased computational complexity, is Newton’s method. Newton’s method favors a much faster convergence rate, i.e., number of iterations, at the cost of being more expensive per iteration. For convex problems, the recursion is similar to the gradient descent algorithm:
 
@@ -204,13 +204,13 @@ The \emph{AdaGrad} \cite{duchi2011adaptive} algorithm is just a variant of preco
 		\Require{Learning rate or step size $\alpha > 0$}
 		\Require{Offset $\epsilon > 0$ to ensures not divide by 0}
 		\Function{AdaGrad}{$f,\alpha,\epsilon$}
-			\State Initialize weight vector $x_0$ and the squared accumulated gradients vector $s_t = 0$
+			\State Initialize weight vector $x_0$ and the squared accumulated gradients vector $s_t \gets 0$
 			\State $t = 1$
 			\While {$not\_convergence$}
-				\State $g_t = \nabla f(x_t)$
-				\State $s_t = s_{t-1} + g_t^2$
-				\State $x_{t+1} = x_t - \alpha P_t^{-1} g_t = x_t - \displaystyle \frac{\alpha}{\sqrt{s_t + \epsilon}} g_t \ \text{where} \ P_t = diag(s_t + \epsilon)^{1/2}$
-				\State $t = t + 1$
+				\State $g_t \gets \nabla f(x_t)$
+				\State $s_t \gets s_{t-1} + g_t^2$
+				\State $x_{t+1} \gets x_t - \alpha P^{-1} g_t = x_t - \displaystyle \frac{\alpha}{\sqrt{s_t + \epsilon}} \odot g_t \ \text{where} \ P \gets diag(s_t + \epsilon)^{1/2}$
+				\State $t \gets t + 1$
 			\EndWhile
 			\State \Return $x_t$
 		\EndFunction
@@ -287,7 +287,7 @@ Finally, the value of $\alpha_1$ is computed from the new clipped $\alpha_2$ as:
 
 where $s = y_1 y_2$.
 
-Since the \emph{Karush-Kuhn-Tucker} conditions are necessary and sufficient conditions for optimality of a positive definite QP problem and the KKT conditions for the classification problem \ref{eq:svc_min_wolfe_dual} are:
+Since the \emph{Karush-Kuhn-Tucker} conditions are necessary and sufficient conditions for optimality of a positive definite QP problem and the KKT conditions for the classification problem \eqref{eq:svc_min_wolfe_dual} are:
 
 \begin{equation} \label{eq:svc_smo_kkt}
 	\begin{aligned}
@@ -299,28 +299,117 @@ Since the \emph{Karush-Kuhn-Tucker} conditions are necessary and sufficient cond
 
 the steps described above will be iterate as long as there will be an example that violates them.
 
-After optimizing $\alpha_1$ and $\alpha_2$, we select the threshold $b$ such that the KKT conditions are satisfied for $x_1$ and $x_2$. If, after optimization, $\alpha_1$ is not at the bounds, i.e., $0 < \alpha_1 < C$, then the following threshold $b_1$ is valid, since it forces the SVC to output $y_1$ when the input is $x_1$:
+After optimizing $\alpha_1$ and $\alpha_2$, we select the threshold $b$ such that the KKT conditions are satisfied for $x_1$ and $x_2$. If, after optimization, $\alpha_1$ is not at the bounds, i.e., $0 < \alpha_1 < C$, then the following threshold $b_{up}$ is valid, since it forces the SVC to output $y_1$ when the input is $x_1$:
 
 \begin{equation} \label{eq:smo_svc_b1}
-	b_1 = E_1 + y_1 (\alpha_1^{new} - \alpha_1) K(x_1,x_1) + y_2 (\alpha_2^{new,clipped} - \alpha_2) K(x_1,x_2) + b
+	b_{up} = E_1 + y_1 (\alpha_1^{new} - \alpha_1) K(x_1,x_1) + y_2 (\alpha_2^{new,clipped} - \alpha_2) K(x_1,x_2) + b
 \end{equation}
 
-similarly, the following threshold $b_2$ is valid if $0 < \alpha_2 < C$:
+similarly, the following threshold $b_{low}$ is valid if $0 < \alpha_2 < C$:
 
 \begin{equation} \label{eq:smo_svc_b2}
-	b_2 = E_2 + y_1 (\alpha_1^{new} - \alpha_1) K(x_1,x_2) + y_2 (\alpha_2^{new,clipped} - \alpha_2) K(x_2,x_2) + b
+	b_{low} = E_2 + y_1 (\alpha_1^{new} - \alpha_1) K(x_1,x_2) + y_2 (\alpha_2^{new,clipped} - \alpha_2) K(x_2,x_2) + b
 \end{equation}
 
-If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both these thresholds are valid, and they will be equal; else, if both $\alpha_1$ and $\alpha_2$ are at the bounds, i.e., $\alpha_1 = 0$ or $\alpha_1 = C$ and $\alpha_2 = 0$ or $\alpha_2 = C$, then all the thresholds between $b_1$ and $b_2$ satisfy the KKT conditions, so we choose the threshold to be halfway in between $b_1$ and $b_2$. This gives the complete equation for $b$:
+If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both these thresholds are valid, and they will be equal; else, if both $\alpha_1$ and $\alpha_2$ are at the bounds, i.e., $\alpha_1 = 0$ or $\alpha_1 = C$ and $\alpha_2 = 0$ or $\alpha_2 = C$, then all the thresholds between $b_{up}$ and $b_{low}$ satisfy the KKT conditions, so we choose the threshold to be halfway in between $b_{up}$ and $b_{low}$. This gives the complete equation for $b$:
 
 \begin{equation} \label{eq:smo_svc_b}
 	b =
         \begin{cases}
-            b_1 & \text{if} \ 0 < \alpha_1 < C \\
-            b_2 & \text{if} \ 0 < \alpha_2 < C \\
-            \displaystyle \frac{b_1+b_2}{2} & \text{otherwise} \\
+            b_{up} & \text{if} \ 0 < \alpha_1 < C \\
+            b_{low} & \text{if} \ 0 < \alpha_2 < C \\
+            \displaystyle \frac{b_{up}+b_{low}}{2} & \text{otherwise} \\
         \end{cases}
 \end{equation}
+
+\begin{breakablealgorithm}
+	\caption{Sequential Minimal Optimization for Classification}
+	\label{alg:smo_classifier}
+	\begin{algorithmic}
+		\Require{Training examples matrix $X \in \Re^{n \times m}$}
+		\Require{Training target vector $y \in \pm1^n$}
+		\Require{Kernel matrix $K \in \Re^{n \times n}$}
+		\Require{Regularization parameter $C > 0$}
+		\Require{Tolerance value $tol$ for stopping criterion}
+		\Function{SMOClassifier}{$X,y,K,C,tol$}
+			\State Initialize the Lagrange multipliers vector $\alpha \in \Re^n, \alpha \gets 0$
+			\State Initialize the empty set $I0 \gets \{i : 0 < \alpha_i < C\}$
+			\State Initialize the set $I1 \gets \{i : y_i = +1, \alpha_i = 0\}$ to contain all training examples
+			\State Initialize the empty set $I2 \gets \{i : y_i = -1,	 \alpha_i = C\}$
+			\State Initialize the empty set $I3 \gets \{i :  y_i = +1,	 \alpha_i = C\}$
+			\State Initialize the empty set $I4 \gets \{i : y_i = -1, \alpha_i = 0\}$
+			\State Initialize $b_{up} \gets -1$
+			\State Initialize $b_{low} \gets +1$
+			\State Initialize the error cache vector $errors \in \Re^n, errors \gets 0$
+			\While {$num\_changed > 0$ \OR $examine\_all = True$}
+				\State $num\_changed \gets 0$
+				\State $examine\_all \gets True$
+				\If {$examine\_all = True$}
+					\For {$i \gets 0$ to $n$} \Comment loop over all training examples
+						\State $num\_changed \gets num\_changed + \Call{ExamineExample}{i}$
+					\EndFor
+				\Else
+					\For {$i$ in $I0$} \Comment loop over examples where $\alpha$ are not already at their bounds
+						\State $num\_changed \gets num\_changed + \Call{ExamineExample}{i}$
+						\If {$b_{up} > b_{low} - 2 tol$} \Comment check if optimality on $I0$ is attained
+							\State {$num\_changed \gets 0$}
+							\Break
+						\EndIf
+					\EndFor
+				\EndIf
+				\If {$examine\_all = True$}
+					\State $examine\_all \gets False$
+				\ElsIf {$num\_changed = 0$}
+					\State $examine\_all \gets True$
+				\EndIf
+			\EndWhile
+			\State Compute $b$ by \eqref{eq:smo_svc_b}
+			\State \Return $\alpha,b$
+		\EndFunction
+	\end{algorithmic}
+	
+	\begin{algorithmic}
+		\Require{Training example $i$}
+		\Function{ExamineExample}{$i$}
+			\State TODO
+		\EndFunction
+	\end{algorithmic}
+	
+	\begin{algorithmic}
+		\Require{First Lagrange multiplier $i1$}
+		\Require{Second Lagrange multiplier $i2$}
+		\Function{TakeStep}{$i1,i2$}
+			\If {$i1 = i2$}
+				\State \Return False
+			\EndIf
+			\State Compute $L$ and $H$ using \eqref{eq:smo_svc_bounds_update1} or \eqref{eq:smo_svc_bounds_update2}
+			\State Compute $\alpha_2^{new}$ by \eqref{eq:smo_svc_a2_new}
+			\State Compute $\alpha_2^{new,clipped}$ by \eqref{eq:smo_svc_a2_new_clipped}
+			\State Compute $\alpha_1^{new}$ by \eqref{eq:smo_svc_a1_new}
+			\If {$L = H$}
+				\State \Return False
+			\EndIf
+			\State Compute $\eta$ by \eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
+			\If {changes in $\alpha_2^{new,clipped}$ and $\alpha_1^{new}$ are larger than some eps}
+				\State update $\alpha_2^{new,clipped}$ and $\alpha_1^{new}$
+			\EndIf
+			\If {changes in $\alpha_2^{new,clipped}$ and $\alpha_1^{new}$ are larger than some eps}
+				\For {$i$ in $I0$}
+					\State Update $errors_i$ using new Lagrange multipliers
+					\State Update $\alpha$ using the new Lagrange multipliers
+					\State Update $I0, I1, I2, I3$ and $I4$
+					\State Update $errors_i1$ and $errors_i2$
+					\For {$i$ in $I0 \cup \{i1,i2\}$}
+						\State Compute $(i_{low}, b_{low})$ and $(i_{up}, b_{up})$ using $b_{low} = max{errors_i : i \in I0 \cup I3 \cup I4}$ and $b_{up} = min{errors_i : i \in I0 \cup I1 \cup I2}$ respectively
+					\EndFor
+				\EndFor
+				\State \Return True
+			\Else
+				\State \Return False
+			\EndIf
+		\EndFunction
+	\end{algorithmic}
+\end{breakablealgorithm}
 
 \subsubsection{Regression}
 
@@ -392,9 +481,9 @@ or, finally, if ($\alpha_1^- > 0$ or ($\alpha_1^+ = 0$ and $ E_1 - E_2 < 0$)) an
 	\alpha_1^{-,new} = \alpha_1^- - (\alpha_2^{-,new,clipped} - \alpha_2^-)
 \end{equation}
 
-where $\gamma = \alpha_1^+ - \alpha_1^- + \alpha_2^+ - \alpha_2^-$. Notice that $\eta$ and $\alpha_2^{+,new,clipped}$ or $\alpha_2^{-,new,clipped}$ are identical to \ref{eq:smo_eta} and \ref{eq:smo_svc_a2_new_clipped} respectively.
+where $\gamma = \alpha_1^+ - \alpha_1^- + \alpha_2^+ - \alpha_2^-$. Notice that $\eta$ and $\alpha_2^{+,new,clipped}$ or $\alpha_2^{-,new,clipped}$ are identical to \eqref{eq:smo_eta} and \eqref{eq:smo_svc_a2_new_clipped} respectively.
 
-The KKT conditions for the regression problem \ref{eq:svr_min_wolfe_dual} are:
+The KKT conditions for the regression problem \eqref{eq:svr_min_wolfe_dual} are:
 
 \begin{equation} \label{eq:svr_smo_kkt}
 	\begin{aligned}
@@ -409,14 +498,130 @@ so, the steps described above will be iterate as long as there will be an exampl
 In case of regression we select the threshold $b$ as follows:
 
 \begin{equation} \label{eq:smo_svr_b1}
-	b_1 = E_1 + ((\alpha_1^+ - \alpha_1^-) - (\alpha_1^{+,new} - \alpha_1^{-,new})) K(x_1,x_1) + ((\alpha_2^+ - \alpha_2^-) - (\alpha_2^{+,new,clipped} - \alpha_2^{-,new,clipped})) K(x_1,x_2) + b
+	b_{up} = E_1 + ((\alpha_1^+ - \alpha_1^-) - (\alpha_1^{+,new} - \alpha_1^{-,new})) K(x_1,x_1) + ((\alpha_2^+ - \alpha_2^-) - (\alpha_2^{+,new,clipped} - \alpha_2^{-,new,clipped})) K(x_1,x_2) + b
 \end{equation}
 
 \begin{equation} \label{eq:smo_svr_b2}
-	b_2 = E_2 + ((\alpha_1^+ - \alpha_1^-) - (\alpha_1^{+,new} - \alpha_1^{-,new})) K(x_1,x_2) + ((\alpha_2^+ - \alpha_2^-) - (\alpha_2^{+,new,clipped} - \alpha_2^{-,new,clipped})) K(x_2,x_2) + b
+	b_{low} = E_2 + ((\alpha_1^+ - \alpha_1^-) - (\alpha_1^{+,new} - \alpha_1^{-,new})) K(x_1,x_2) + ((\alpha_2^+ - \alpha_2^-) - (\alpha_2^{+,new,clipped} - \alpha_2^{-,new,clipped})) K(x_2,x_2) + b
+\end{equation}
+
+\begin{equation} \label{eq:smo_svr_b}
+	b =
+        \begin{cases}
+            b_{up} & \text{if} \ 0 < \alpha_1^+, \alpha_1^- < C \\
+            b_{low} & \text{if} \ 0 < \alpha_2^+, \alpha_2^- < C \\
+            \displaystyle \frac{b_{up}+b_{low}}{2} & \text{otherwise} \\
+        \end{cases}
 \end{equation}
 
 \bigskip
 \bigskip
 
 The improvements described in \cite{keerthi2001improvements, shevade1999improvements} for classification and regression respectively are about the definition of subsets of multipliers to efficiently update them at each iteration by separating the multipliers at the bounds from those who can be further minimized.
+
+\begin{breakablealgorithm}
+	\caption{Sequential Minimal Optimization for Regression}
+	\label{alg:smo_regression}
+	\begin{algorithmic}
+		\Require{Training examples matrix $X \in \Re^{n \times m}$}
+		\Require{Training target vector $y \in \Re^n$}
+		\Require{Kernel matrix $K \in \Re^{n \times n}$}
+		\Require{Regularization parameter $C > 0$}
+		\Require{Epsilon-tube value $\epsilon \geq 0$ within which no penalty is associated in the epsilon-insensitive loss function}
+		\Require{Tolerance value $tol$ for stopping criterion}
+		\Function{SMORegression}{$X,y,K,C,\epsilon,tol$}
+			\State Initialize the Lagrange multipliers vector $\alpha^+ \in \Re^n, \alpha^+ \gets 0$
+			\State Initialize the Lagrange multipliers vector $\alpha^- \in \Re^n, \alpha^- \gets 0$
+			\State Initialize the empty set $I0 \gets \{i : 0 < \alpha^+_i, \alpha^-_i < C\}$
+			\State Initialize the set $I1 \gets \{i : \alpha^+_i = 0, \alpha^-_i = 0\}$ to contain all training examples
+			\State Initialize the empty set $I2 \gets \{i : \alpha^+_i = 0, \alpha^-_i = C\}$
+			\State Initialize the empty set $I3 \gets \{i : \alpha^+_i = C, \alpha^-_i = 0\}$
+			\State Initialize $i_{up} \gets 0$ \Comment or any other target index $i_{up}$ from the training examples
+			\State Initialize $i_{low} \gets 0$ \Comment or any other target index $i_{low}$ from the training examples
+			\State Initialize $b_{up} \gets y_{i_{up}} + \epsilon$
+			\State Initialize $b_{low} \gets y_{i_{low}} - \epsilon$
+			\State Initialize the error cache vector $errors \in \Re^n, errors \gets 0$
+			\While {$num\_changed > 0$ \OR $examine\_all = True$}
+				\State $num\_changed \gets 0$
+				\State $examine\_all \gets True$
+				\If {$examine\_all = True$}
+					\For {$i \gets 0$ to $n$} \Comment loop over all training examples
+						\State $num\_changed \gets num\_changed + \Call{ExamineExample}{i}$
+					\EndFor
+				\Else
+					\For {$i$ in $I0$} \Comment loop over examples where $\alpha^+$ and $\alpha^-$ are not already at their bounds
+						\State $num\_changed \gets num\_changed + \Call{ExamineExample}{i}$
+						\If {$b_{up} > b_{low} - 2 tol$} \Comment check if optimality on $I0$ is attained
+							\State {$num\_changed \gets 0$}
+							\Break
+						\EndIf
+					\EndFor
+				\EndIf
+				\If {$examine\_all = True$}
+					\State $examine\_all \gets False$
+				\ElsIf {$num\_changed = 0$}
+					\State $examine\_all \gets True$
+				\EndIf
+			\EndWhile
+			\State Compute $b$ by \eqref{eq:smo_svr_b}
+			\State \Return $\alpha^+,\alpha^-,b$
+		\EndFunction
+	\end{algorithmic}
+	
+	\begin{algorithmic}
+		\Require{Training example $i2$}
+		\Function{ExamineExample}{$i2$}
+			\If {$i2 \in I0$}
+				\State $E_2 \gets errors_{i2}$
+			\Else 
+				\State $E_2 \gets y_{i2} - (\alpha^+ - \alpha^-) \odot K_{i2}$
+				\State $errors_{i2} \gets E_2$
+				\State Update $(b_{low}, i_{low})$ or $(b_{up}, i_{up})$ using $(E_2, i2)$
+			\EndIf
+			\If {optimality is attained using current $b_{low}$ and $b_{up}$}
+				\State \Return 0
+			\Else
+				\State Find an index $i1$ to do joint optimization with $i2$
+				\If {$\Call{TakeStep}{i1,i2}$ = True}
+					\State \Return 1
+				\Else
+					\State \Return 0
+				\EndIf
+			\EndIf
+		\EndFunction
+	\end{algorithmic}
+	
+	\begin{algorithmic}
+		\Require{First Lagrange multiplier $i1$}
+		\Require{Second Lagrange multiplier $i2$}
+		\Function{TakeStep}{$i1,i2$}
+			\If {$i1 = i2$}
+				\State \Return False
+			\EndIf
+			\State Compute $\eta$ by \eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
+			\State Compute $L$ and $H$ using \eqref{eq:smo_svr_bounds_update1}, \eqref{eq:smo_svr_bounds_update2}, \eqref{eq:smo_svr_bounds_update3} or \eqref{eq:smo_svr_bounds_update4}
+			\If {$L < H$}
+				\State Compute $\alpha_2^{+,new}$ and $\alpha_2^{-,new}$ using \eqref{eq:smo_svr_a2_new1}, \eqref{eq:smo_svr_a2_new3} or \eqref{eq:smo_svr_a2_new2}, \eqref{eq:smo_svr_a2_new1} respectively
+				\State Compute $\alpha_2^{+,new,clipped}$ and $\alpha_2^{-,new,clipped}$ by \eqref{eq:smo_svc_a2_new_clipped}
+				\State Compute $\alpha_1^{+,new}$ and $\alpha_1^{-,new}$ using \eqref{eq:smo_svr_a1_new1}, \eqref{eq:smo_svr_a1_new2} or \eqref{eq:smo_svr_a1_new3}, \eqref{eq:smo_svr_a1_new4} respectively
+				\If {changes in $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ and $\alpha_1^{-,new}$ are larger than some eps}
+					\State update $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ and $\alpha_1^{-,new}$
+				\EndIf
+			\EndIf
+			\If {changes in $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ and $\alpha_1^{-,new}$ are larger than some eps}
+				\For {$i$ in $I0$}
+					\State Update $errors_i$ using new Lagrange multipliers
+					\State Update $\alpha^+$ and $\alpha^-$ using the new Lagrange multipliers
+					\State Update $I0, I1, I2$ and $I3$
+					\State Update $errors_i1$ and $errors_i2$
+					\For {$i$ in $I0 \cup \{i1,i2\}$}
+						\State Compute $(i_{low}, b_{low})$ and $(i_{up}, b_{up})$
+					\EndFor
+				\EndFor
+				\State \Return True
+			\Else
+				\State \Return False
+			\EndIf
+		\EndFunction
+	\end{algorithmic}
+\end{breakablealgorithm}
