@@ -322,6 +322,8 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
         \end{cases}
 \end{equation}
 
+\newpage
+
 \begin{breakablealgorithm}
 	\caption{Sequential Minimal Optimization for Classification}
 	\label{alg:smo_classifier}
@@ -368,10 +370,28 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 		\EndFunction
 	\end{algorithmic}
 	
+	\newpage	
+	
 	\begin{algorithmic}
-		\Require{Training example $i$}
-		\Function{ExamineExample}{$i$}
-			\State TODO
+		\Require{Training example $i2$}
+		\Function{ExamineExample}{$i2$}
+			\If {$i2 \in I0$}
+				\State $E_2 \gets errors_{i2}$
+			\Else 
+				\State Compute $E_2$
+				\State $errors_{i2} \gets E_2$
+				\State Update $(b_{low}, i_{low})$ or $(b_{up}, i_{up})$ using $(E_2, i2)$
+			\EndIf
+			\If {optimality is attained using current $b_{low}$ and $b_{up}$}
+				\State \Return 0
+			\Else
+				\State Find an index $i1$ to do joint optimization with $i2$
+				\If {$\Call{TakeStep}{i1,i2}$ = True}
+					\State \Return 1
+				\Else
+					\State \Return 0
+				\EndIf
+			\EndIf
 		\EndFunction
 	\end{algorithmic}
 	
@@ -383,17 +403,15 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 				\State \Return False
 			\EndIf
 			\State Compute $L$ and $H$ using \eqref{eq:smo_svc_bounds_update1} or \eqref{eq:smo_svc_bounds_update2}
-			\State Compute $\alpha_2^{new}$ by \eqref{eq:smo_svc_a2_new}
-			\State Compute $\alpha_2^{new,clipped}$ by \eqref{eq:smo_svc_a2_new_clipped}
-			\State Compute $\alpha_1^{new}$ by \eqref{eq:smo_svc_a1_new}
 			\If {$L = H$}
 				\State \Return False
 			\EndIf
 			\State Compute $\eta$ by \eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
+			\State Compute $\alpha_2^{new}$ by \eqref{eq:smo_svc_a2_new}
+			\State Compute $\alpha_2^{new,clipped}$ by \eqref{eq:smo_svc_a2_new_clipped}
+			\State Compute $\alpha_1^{new}$ by \eqref{eq:smo_svc_a1_new}
 			\If {changes in $\alpha_2^{new,clipped}$ and $\alpha_1^{new}$ are larger than some eps}
 				\State update $\alpha_2^{new,clipped}$ and $\alpha_1^{new}$
-			\EndIf
-			\If {changes in $\alpha_2^{new,clipped}$ and $\alpha_1^{new}$ are larger than some eps}
 				\For {$i$ in $I0$}
 					\State Update $errors_i$ using new Lagrange multipliers
 					\State Update $\alpha$ using the new Lagrange multipliers
@@ -520,6 +538,8 @@ In case of regression we select the threshold $b$ as follows:
 
 The improvements described in \cite{keerthi2001improvements, shevade1999improvements} for classification and regression respectively are about the definition of subsets of multipliers to efficiently update them at each iteration by separating the multipliers at the bounds from those who can be further minimized.
 
+\newpage
+
 \begin{breakablealgorithm}
 	\caption{Sequential Minimal Optimization for Regression}
 	\label{alg:smo_regression}
@@ -569,13 +589,15 @@ The improvements described in \cite{keerthi2001improvements, shevade1999improvem
 		\EndFunction
 	\end{algorithmic}
 	
+	\newpage	
+	
 	\begin{algorithmic}
 		\Require{Training example $i2$}
 		\Function{ExamineExample}{$i2$}
 			\If {$i2 \in I0$}
 				\State $E_2 \gets errors_{i2}$
 			\Else 
-				\State $E_2 \gets y_{i2} - (\alpha^+ - \alpha^-) \odot K_{i2}$
+				\State Compute $E_2$
 				\State $errors_{i2} \gets E_2$
 				\State Update $(b_{low}, i_{low})$ or $(b_{up}, i_{up})$ using $(E_2, i2)$
 			\EndIf
@@ -599,9 +621,9 @@ The improvements described in \cite{keerthi2001improvements, shevade1999improvem
 			\If {$i1 = i2$}
 				\State \Return False
 			\EndIf
-			\State Compute $\eta$ by \eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
 			\State Compute $L$ and $H$ using \eqref{eq:smo_svr_bounds_update1}, \eqref{eq:smo_svr_bounds_update2}, \eqref{eq:smo_svr_bounds_update3} or \eqref{eq:smo_svr_bounds_update4}
 			\If {$L < H$}
+				\State Compute $\eta$ by \eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
 				\State Compute $\alpha_2^{+,new}$ and $\alpha_2^{-,new}$ using \eqref{eq:smo_svr_a2_new1}, \eqref{eq:smo_svr_a2_new3} or \eqref{eq:smo_svr_a2_new2}, \eqref{eq:smo_svr_a2_new1} respectively
 				\State Compute $\alpha_2^{+,new,clipped}$ and $\alpha_2^{-,new,clipped}$ by \eqref{eq:smo_svc_a2_new_clipped}
 				\State Compute $\alpha_1^{+,new}$ and $\alpha_1^{-,new}$ using \eqref{eq:smo_svr_a1_new1}, \eqref{eq:smo_svr_a1_new2} or \eqref{eq:smo_svr_a1_new3}, \eqref{eq:smo_svr_a1_new4} respectively
