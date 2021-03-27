@@ -398,9 +398,10 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 					\State Update $errors_i$ using new Lagrange multipliers
 					\State Update $\alpha$ using the new Lagrange multipliers
 					\State Update $I0, I1, I2, I3$ and $I4$
-					\State Update $errors_i1$ and $errors_i2$
+					\State Update $errors_{i1}$ and $errors_{i2}$
 					\For {$i$ in $I0 \cup \{i1,i2\}$}
-						\State Compute $(i_{low}, b_{low})$ and $(i_{up}, b_{up})$ using $b_{low} = max{errors_i : i \in I0 \cup I3 \cup I4}$ and $b_{up} = min{errors_i : i \in I0 \cup I1 \cup I2}$ respectively
+						\State Compute $(i_{low}, b_{low})$ by $b_{low} = \max\{errors_i : i \in I0 \cup I3 \cup I4\}$
+						\State Compute $(i_{up}, b_{up})$ by $b_{up} = \min\{errors_i : i \in I0 \cup I1 \cup I2\}$
 					\EndFor
 				\EndFor
 				\State \Return True
@@ -613,7 +614,7 @@ The improvements described in \cite{keerthi2001improvements, shevade1999improvem
 					\State Update $errors_i$ using new Lagrange multipliers
 					\State Update $\alpha^+$ and $\alpha^-$ using the new Lagrange multipliers
 					\State Update $I0, I1, I2$ and $I3$
-					\State Update $errors_i1$ and $errors_i2$
+					\State Update $errors_{i1}$ and $errors_{i2}$
 					\For {$i$ in $I0 \cup \{i1,i2\}$}
 						\State Compute $(i_{low}, b_{low})$ and $(i_{up}, b_{up})$
 					\EndFor
