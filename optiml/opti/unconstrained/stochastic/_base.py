@@ -34,14 +34,20 @@ class StochasticOptimizer(Optimizer, ABC):
                         if True, nothing otherwise.
         """
 
-        super().__init__(f, x, eps, epochs, callback, callback_args, verbose)
+        super().__init__(f=f,
+                         x=x,
+                         eps=eps,
+                         max_iter=epochs,
+                         callback=callback,
+                         callback_args=callback_args,
+                         random_state=random_state,
+                         verbose=verbose)
         if not step_size > 0:
             raise ValueError('step_size must be > 0')
         self.step_size = step_size
         self.epochs = epochs
         self.epoch = 0
         self.shuffle = shuffle
-        self.random_state = random_state
         self.step = 0
 
         if batch_size is None:
@@ -128,8 +134,17 @@ class StochasticMomentumOptimizer(StochasticOptimizer, ABC):
                  shuffle=True,
                  random_state=None,
                  verbose=False):
-        super().__init__(f, x, step_size, batch_size, eps, epochs, callback,
-                         callback_args, shuffle, random_state, verbose)
+        super().__init__(f=f,
+                         x=x,
+                         step_size=step_size,
+                         batch_size=batch_size,
+                         eps=eps,
+                         epochs=epochs,
+                         callback=callback,
+                         callback_args=callback_args,
+                         shuffle=shuffle,
+                         random_state=random_state,
+                         verbose=verbose)
         if momentum_type not in ('standard', 'nesterov', 'none'):
             raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type

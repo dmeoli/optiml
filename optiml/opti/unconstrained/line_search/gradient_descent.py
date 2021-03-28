@@ -82,6 +82,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
                  min_a=1e-16,
                  callback=None,
                  callback_args=(),
+                 random_state=None,
                  verbose=False):
         """
 
@@ -157,6 +158,7 @@ class SteepestGradientDescent(LineSearchOptimizer):
                          min_a=min_a,
                          callback=callback,
                          callback_args=callback_args,
+                         random_state=random_state,
                          verbose=verbose)
 
     def minimize(self):

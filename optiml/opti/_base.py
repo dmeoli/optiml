@@ -13,6 +13,7 @@ class Optimizer(ABC):
                  max_iter=1000,
                  callback=None,
                  callback_args=(),
+                 random_state=None,
                  verbose=False):
         """
 
@@ -32,7 +33,10 @@ class Optimizer(ABC):
             if self.is_lagrangian_dual():
                 x = np.zeros
             else:
-                x = np.random.uniform
+                if random_state is None:
+                    x = np.random.uniform
+                else:
+                    x = np.random.RandomState(random_state).uniform
         if callable(x):
             try:
                 self.x = x(size=f.ndim)
@@ -66,6 +70,7 @@ class Optimizer(ABC):
         if self.is_lagrangian_dual():
             lagrangian_solver_verbose = self.f.lagrangian_solver_verbose  # save value to avoid circular call
             self.f.lagrangian_solver_verbose = lambda: lagrangian_solver_verbose if self.is_verbose() else False
+        self.random_state = random_state
         self.verbose = verbose
 
     def is_lagrangian_dual(self):

@@ -132,6 +132,7 @@ class ConjugateGradient(LineSearchOptimizer):
                  min_a=1e-16,
                  callback=None,
                  callback_args=(),
+                 random_state=None,
                  verbose=False):
         super().__init__(f=f,
                          x=x,
@@ -147,6 +148,7 @@ class ConjugateGradient(LineSearchOptimizer):
                          min_a=min_a,
                          callback=callback,
                          callback_args=callback_args,
+                         random_state=random_state,
                          verbose=verbose)
         if wf not in ('fr', 'pr', 'hs', 'dy'):
             raise ValueError(f'unknown NCG formula {wf}, choose '

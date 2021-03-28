@@ -124,6 +124,7 @@ class BFGS(LineSearchOptimizer):
                  min_a=1e-16,
                  callback=None,
                  callback_args=(),
+                 random_state=None,
                  verbose=False):
         super().__init__(f=f,
                          x=x, eps=eps,
@@ -138,6 +139,7 @@ class BFGS(LineSearchOptimizer):
                          min_a=min_a,
                          callback=callback,
                          callback_args=callback_args,
+                         random_state=random_state,
                          verbose=verbose)
         if not delta > 0:
             raise ValueError('delta must be > 0')

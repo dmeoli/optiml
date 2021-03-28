@@ -23,6 +23,7 @@ class LineSearchOptimizer(Optimizer, ABC):
                  min_a=1e-16,
                  callback=None,
                  callback_args=(),
+                 random_state=None,
                  verbose=False):
         """
 
@@ -72,6 +73,7 @@ class LineSearchOptimizer(Optimizer, ABC):
                          max_iter=max_iter,
                          callback=callback,
                          callback_args=callback_args,
+                         random_state=random_state,
                          verbose=verbose)
         self.ng = 0
         self.m_inf = m_inf

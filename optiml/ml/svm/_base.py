@@ -390,9 +390,9 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=np.random.RandomState(self.random_state).uniform,
                                             max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval,
+                                            random_state=self.random_state,
                                             verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'stopped':
@@ -412,11 +412,11 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=np.random.RandomState(self.random_state).uniform,
                                             mu=self.mu,
                                             max_iter=self.max_iter,
                                             master_solver=self.master_solver,
                                             master_verbose=self.master_verbose,
+                                            random_state=self.random_state,
                                             verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'error':
@@ -450,7 +450,6 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
             if issubclass(self.optimizer, StochasticMomentumOptimizer):
 
                 self.optimizer = self.optimizer(f=self.loss,
-                                                x=np.random.RandomState(self.random_state).uniform,
                                                 epochs=self.max_iter,
                                                 step_size=self.learning_rate,
                                                 momentum_type=self.momentum_type,
@@ -464,7 +463,6 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
             else:
 
                 self.optimizer = self.optimizer(f=self.loss,
-                                                x=np.random.RandomState(self.random_state).uniform,
                                                 epochs=self.max_iter,
                                                 step_size=self.learning_rate,
                                                 batch_size=self.batch_size,
@@ -777,9 +775,9 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y, self.epsilon)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=np.random.RandomState(self.random_state).uniform,
                                             max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval,
+                                            random_state=self.random_state,
                                             verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'stopped':
@@ -799,11 +797,11 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
             self.loss = self.loss(self, X_biased, y, self.epsilon)
             self.optimizer = self.optimizer(f=self.loss,
-                                            x=np.random.RandomState(self.random_state).uniform,
                                             mu=self.mu,
                                             max_iter=self.max_iter,
                                             master_solver=self.master_solver,
                                             master_verbose=self.master_verbose,
+                                            random_state=self.random_state,
                                             verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'error':
@@ -837,7 +835,6 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
             if issubclass(self.optimizer, StochasticMomentumOptimizer):
 
                 self.optimizer = self.optimizer(f=self.loss,
-                                                x=np.random.RandomState(self.random_state).uniform,
                                                 epochs=self.max_iter,
                                                 step_size=self.learning_rate,
                                                 momentum_type=self.momentum_type,
@@ -852,7 +849,6 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
             else:
 
                 self.optimizer = self.optimizer(f=self.loss,
-                                                x=np.random.RandomState(self.random_state).uniform,
                                                 epochs=self.max_iter,
                                                 step_size=self.learning_rate,
                                                 batch_size=self.batch_size,
