@@ -336,10 +336,10 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 		\Function{SMOClassifier}{$X,y,K,C,tol$}
 			\State Initialize the Lagrange multipliers vector $\alpha \in \Re^n, \alpha \gets 0$
 			\State Initialize the empty set $I0 \gets \{i : 0 < \alpha_i < C\}$
-			\State Initialize the set $I1 \gets \{i : y_i = +1, \alpha_i = 0\}$ to contain all training examples
+			\State Initialize the set $I1 \gets \{i : y_i = +1, \alpha_i = 0\}$ to contain all the indices of the training examples of class $+1$
 			\State Initialize the empty set $I2 \gets \{i : y_i = -1,	 \alpha_i = C\}$
 			\State Initialize the empty set $I3 \gets \{i :  y_i = +1,	 \alpha_i = C\}$
-			\State Initialize the empty set $I4 \gets \{i : y_i = -1, \alpha_i = 0\}$
+			\State Initialize the set $I4 \gets \{i : y_i = -1, \alpha_i = 0\}$ to contain all the indices of the training examples of class $-1$
 			\State Initialize $b_{up} \gets -1$
 			\State Initialize $b_{low} \gets +1$
 			\State Initialize the error cache vector $errors \in \Re^n, errors \gets 0$
@@ -351,7 +351,7 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 						\State $num\_changed \gets num\_changed + \Call{ExamineExample}{i}$
 					\EndFor
 				\Else
-					\For {$i$ in $I0$} \Comment loop over examples where $\alpha$ are not already at their bounds
+					\For {$i$ in $I0$} \Comment loop over examples where $\alpha_i$ are not already at their bounds
 						\State $num\_changed \gets num\_changed + \Call{ExamineExample}{i}$
 						\If {$b_{up} > b_{low} - 2 tol$} \Comment check if optimality on $I0$ is attained
 							\State {$num\_changed \gets 0$}
@@ -370,12 +370,12 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 		\EndFunction
 	\end{algorithmic}
 	
-	\newpage	
+	\newpage
 	
 	\begin{algorithmic}
-		\Require{Training example $i2$}
+		\Require{$i2$-th Lagrange multiplier}
 		\Function{ExamineExample}{$i2$}
-			\If {$i2 \in I0$}
+			\If {$i2$ in $I0$}
 				\State $E_2 \gets errors_{i2}$
 			\Else 
 				\State Compute $E_2$
@@ -395,9 +395,11 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 		\EndFunction
 	\end{algorithmic}
 	
+	\newpage
+	
 	\begin{algorithmic}
-		\Require{First Lagrange multiplier $i1$}
-		\Require{Second Lagrange multiplier $i2$}
+		\Require{$i1$-th Lagrange multiplier}
+		\Require{$i2$-th Lagrange multiplier}
 		\Function{TakeStep}{$i1,i2$}
 			\If {$i1 = i2$}
 				\State \Return False
@@ -407,20 +409,24 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 				\State \Return False
 			\EndIf
 			\State Compute $\eta$ by \eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
-			\State Compute $\alpha_2^{new}$ by \eqref{eq:smo_svc_a2_new}
-			\State Compute $\alpha_2^{new,clipped}$ by \eqref{eq:smo_svc_a2_new_clipped}
-			\State Compute $\alpha_1^{new}$ by \eqref{eq:smo_svc_a1_new}
-			\If {changes in $\alpha_2^{new,clipped}$ and $\alpha_1^{new}$ are larger than some eps}
+			\If {$\eta < 0$}
+				\State Choose $\alpha_2^{new,clipped}$ between $L$ and $H$ according to the largest value of the objective function at these points
+			\Else
+				\State Compute $\alpha_2^{new}$ by \eqref{eq:smo_svc_a2_new}
+				\State Compute $\alpha_2^{new,clipped}$ by \eqref{eq:smo_svc_a2_new_clipped}
+			\EndIf
+			\If {changes in $\alpha_2^{new,clipped}$ are larger than some eps}
+				\State Compute $\alpha_1^{new}$ by \eqref{eq:smo_svc_a1_new}
 				\State update $\alpha_2^{new,clipped}$ and $\alpha_1^{new}$
 				\For {$i$ in $I0$}
 					\State Update $errors_i$ using new Lagrange multipliers
-					\State Update $\alpha$ using the new Lagrange multipliers
-					\State Update $I0, I1, I2, I3$ and $I4$
-					\State Update $errors_{i1}$ and $errors_{i2}$
-					\For {$i$ in $I0 \cup \{i1,i2\}$}
-						\State Compute $(i_{low}, b_{low})$ by $b_{low} = \max\{errors_i : i \in I0 \cup I3 \cup I4\}$
-						\State Compute $(i_{up}, b_{up})$ by $b_{up} = \min\{errors_i : i \in I0 \cup I1 \cup I2\}$
-					\EndFor
+				\EndFor
+				\State Update $\alpha$ using the new Lagrange multipliers
+				\State Update $I0, I1, I2, I3$ and $I4$
+				\State Update $errors_{i1}$ and $errors_{i2}$
+				\For {$i$ in $I0 \cup \{i1,i2\}$}
+					\State Compute $(i_{low}, b_{low})$ by $b_{low} = \max\{errors_i : i \in I0 \cup I3 \cup I4\}$
+					\State Compute $(i_{up}, b_{up})$ by $b_{up} = \min\{errors_i : i \in I0 \cup I1 \cup I2\}$
 				\EndFor
 				\State \Return True
 			\Else
@@ -429,6 +435,8 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 		\EndFunction
 	\end{algorithmic}
 \end{breakablealgorithm}
+
+\newpage
 
 \subsubsection{Regression}
 
@@ -554,7 +562,7 @@ The improvements described in \cite{keerthi2001improvements, shevade1999improvem
 			\State Initialize the Lagrange multipliers vector $\alpha^+ \in \Re^n, \alpha^+ \gets 0$
 			\State Initialize the Lagrange multipliers vector $\alpha^- \in \Re^n, \alpha^- \gets 0$
 			\State Initialize the empty set $I0 \gets \{i : 0 < \alpha^+_i, \alpha^-_i < C\}$
-			\State Initialize the set $I1 \gets \{i : \alpha^+_i = 0, \alpha^-_i = 0\}$ to contain all training examples
+			\State Initialize the set $I1 \gets \{i : \alpha^+_i = 0, \alpha^-_i = 0\}$ to contain all the indices of the training examples
 			\State Initialize the empty set $I2 \gets \{i : \alpha^+_i = 0, \alpha^-_i = C\}$
 			\State Initialize the empty set $I3 \gets \{i : \alpha^+_i = C, \alpha^-_i = 0\}$
 			\State Initialize $i_{up} \gets 0$ \Comment or any other target index $i_{up}$ from the training examples
@@ -570,7 +578,7 @@ The improvements described in \cite{keerthi2001improvements, shevade1999improvem
 						\State $num\_changed \gets num\_changed + \Call{ExamineExample}{i}$
 					\EndFor
 				\Else
-					\For {$i$ in $I0$} \Comment loop over examples where $\alpha^+$ and $\alpha^-$ are not already at their bounds
+					\For {$i$ in $I0$} \Comment loop over examples where $\alpha^+_i$ and $\alpha^-_i$ are not already at their bounds
 						\State $num\_changed \gets num\_changed + \Call{ExamineExample}{i}$
 						\If {$b_{up} > b_{low} - 2 tol$} \Comment check if optimality on $I0$ is attained
 							\State {$num\_changed \gets 0$}
@@ -589,56 +597,43 @@ The improvements described in \cite{keerthi2001improvements, shevade1999improvem
 		\EndFunction
 	\end{algorithmic}
 	
-	\newpage	
+	\newpage
 	
 	\begin{algorithmic}
-		\Require{Training example $i2$}
-		\Function{ExamineExample}{$i2$}
-			\If {$i2 \in I0$}
-				\State $E_2 \gets errors_{i2}$
-			\Else 
-				\State Compute $E_2$
-				\State $errors_{i2} \gets E_2$
-				\State Update $(b_{low}, i_{low})$ or $(b_{up}, i_{up})$ using $(E_2, i2)$
-			\EndIf
-			\If {optimality is attained using current $b_{low}$ and $b_{up}$}
-				\State \Return 0
-			\Else
-				\State Find an index $i1$ to do joint optimization with $i2$
-				\If {$\Call{TakeStep}{i1,i2}$ = True}
-					\State \Return 1
-				\Else
-					\State \Return 0
-				\EndIf
-			\EndIf
-		\EndFunction
-	\end{algorithmic}
-	
-	\begin{algorithmic}
-		\Require{First Lagrange multiplier $i1$}
-		\Require{Second Lagrange multiplier $i2$}
+		\Require{$i1$-th Lagrange multiplier}
+		\Require{$i2$-th Lagrange multiplier}
 		\Function{TakeStep}{$i1,i2$}
 			\If {$i1 = i2$}
 				\State \Return False
 			\EndIf
 			\State Compute $L$ and $H$ using \eqref{eq:smo_svr_bounds_update1}, \eqref{eq:smo_svr_bounds_update2}, \eqref{eq:smo_svr_bounds_update3} or \eqref{eq:smo_svr_bounds_update4}
-			\If {$L < H$}
-				\State Compute $\eta$ by \eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
-				\State Compute $\alpha_2^{+,new}$ and $\alpha_2^{-,new}$ using \eqref{eq:smo_svr_a2_new1}, \eqref{eq:smo_svr_a2_new3} or \eqref{eq:smo_svr_a2_new2}, \eqref{eq:smo_svr_a2_new1} respectively
-				\State Compute $\alpha_2^{+,new,clipped}$ and $\alpha_2^{-,new,clipped}$ by \eqref{eq:smo_svc_a2_new_clipped}
-				\State Compute $\alpha_1^{+,new}$ and $\alpha_1^{-,new}$ using \eqref{eq:smo_svr_a1_new1}, \eqref{eq:smo_svr_a1_new2} or \eqref{eq:smo_svr_a1_new3}, \eqref{eq:smo_svr_a1_new4} respectively
-				\If {changes in $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ and $\alpha_1^{-,new}$ are larger than some eps}
-					\State update $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ and $\alpha_1^{-,new}$
+			\State $finished = False$
+			\While {\NOT $finished$}
+				\If {$L < H$}
+					\State Compute $\eta$ by \eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
+					\If {$\eta < 0$}
+						\State Choose $\alpha_2^{+,new,clipped}$ or $\alpha_2^{-,new,clipped}$ between $L$ and $H$ according to the largest value of the objective function at these points
+					\Else
+						\State Compute $\alpha_2^{+,new}$ or $\alpha_2^{-,new}$ using \eqref{eq:smo_svr_a2_new1}, \eqref{eq:smo_svr_a2_new3} or \eqref{eq:smo_svr_a2_new2}, \eqref{eq:smo_svr_a2_new4} respectively
+						\State Compute $\alpha_2^{+,new,clipped}$ or $\alpha_2^{-,new,clipped}$ by \eqref{eq:smo_svc_a2_new_clipped}
+					\EndIf
+					\State Compute $\alpha_1^{+,new}$ or $\alpha_1^{-,new}$ using \eqref{eq:smo_svr_a1_new1}, \eqref{eq:smo_svr_a1_new2} or \eqref{eq:smo_svr_a1_new3}, \eqref{eq:smo_svr_a1_new4} respectively
+					\If {changes in $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ or $\alpha_1^{-,new}$ are larger than some eps}
+						\State update $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ or $\alpha_1^{-,new}$
+					\EndIf
+				\Else
+					\State $finished = True$
 				\EndIf
-			\EndIf
-			\If {changes in $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ and $\alpha_1^{-,new}$ are larger than some eps}
+			\EndWhile
+			\If {changes in $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ or $\alpha_1^{-,new}$ are larger than some eps}
 				\For {$i$ in $I0$}
 					\State Update $errors_i$ using new Lagrange multipliers
 					\State Update $\alpha^+$ and $\alpha^-$ using the new Lagrange multipliers
 					\State Update $I0, I1, I2$ and $I3$
 					\State Update $errors_{i1}$ and $errors_{i2}$
 					\For {$i$ in $I0 \cup \{i1,i2\}$}
-						\State Compute $(i_{low}, b_{low})$ and $(i_{up}, b_{up})$
+						\State Compute $(i_{low}, b_{low})$ by $b_{low} = \max\{errors_i : i \in I0 \cup I1 \cup I2\}$
+						\State Compute and $(i_{up}, b_{up})$ by $b_{up} = \min\{errors_i : i \in I0 \cup I1 \cup I3\}$
 					\EndFor
 				\EndFor
 				\State \Return True
