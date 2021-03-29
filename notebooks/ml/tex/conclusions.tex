@@ -4,7 +4,7 @@ For what about the SVM formulations, it is known, in general, that the \emph{pri
 
 \bigskip
 
-From all these experiments we can see as, for what about the \emph{primal} formulations, the results provided from the \emph{custom} implementations are strongly similar to those of \emph{sklearn} implementations, i.e., \emph{liblinear} \cite{fan2008liblinear} implementations, with a slight exception about the time gap obviously due to the different core implementation languages, Python and C respectively.
+From all these experiments we can see as, for what about the \emph{primal} formulations, the results provided from the \emph{custom} implementations are strongly similar to those of \emph{sklearn} implementations, i.e., \emph{liblinear} \cite{fan2008liblinear} implementations, with a slight exception about the time gap obviously due to the different core implementation languages, i.e., Python and C respectively, and the due to the \emph{Coordinate Gradient Descent} algorithm used by \emph{liblinear} which minimize one coordinate at a time.
 
 Meanwhile, for what about the \emph{dual} formulations we can notice as \emph{cvxopt} \cite{vandenberghe2010cvxopt} underperforms the \emph{sklearn} implementations, i.e., \emph{libsvm} \cite{chang2011libsvm} implementations, in terms of time since it is a general-purpose QP solver and it does not exploit the structure of the problem, as SMO does.
 Despite this, the \emph{custom} implementations does not overperform the \emph{cvxopt} \cite{vandenberghe2010cvxopt} probably due to the gap generated from the different core implementation languages, again Python and C respectively.

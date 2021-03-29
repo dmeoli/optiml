@@ -417,11 +417,11 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 			\EndIf
 			\If {changes in $\alpha_2^{new,clipped}$ are larger than some eps}
 				\State Compute $\alpha_1^{new}$ by \eqref{eq:smo_svc_a1_new}
-				\State update $\alpha_2^{new,clipped}$ and $\alpha_1^{new}$
+				\State Update $\alpha_2^{new,clipped}$ and $\alpha_1^{new}$
 				\For {$i$ in $I0$}
 					\State Update $errors_i$ using new Lagrange multipliers
 				\EndFor
-				\State Update $\alpha$ using the new Lagrange multipliers
+				\State Update $\alpha$ using new Lagrange multipliers
 				\State Update $I0, I1, I2, I3$ and $I4$
 				\State Update $errors_{i1}$ and $errors_{i2}$
 				\For {$i$ in $I0 \cup \{i1,i2\}$}
@@ -608,7 +608,7 @@ The improvements described in \cite{keerthi2001improvements, shevade1999improvem
 			\EndIf
 			\State Compute $L$ and $H$ using \eqref{eq:smo_svr_bounds_update1}, \eqref{eq:smo_svr_bounds_update2}, \eqref{eq:smo_svr_bounds_update3} or \eqref{eq:smo_svr_bounds_update4}
 			\State $finished = False$
-			\While {\NOT $finished$}
+			\While {\NOT $finished$} \Comment this loop is passed at most three times
 				\If {$L < H$}
 					\State Compute $\eta$ by \eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
 					\If {$\eta < 0$}
@@ -619,7 +619,7 @@ The improvements described in \cite{keerthi2001improvements, shevade1999improvem
 					\EndIf
 					\State Compute $\alpha_1^{+,new}$ or $\alpha_1^{-,new}$ using \eqref{eq:smo_svr_a1_new1}, \eqref{eq:smo_svr_a1_new2} or \eqref{eq:smo_svr_a1_new3}, \eqref{eq:smo_svr_a1_new4} respectively
 					\If {changes in $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ or $\alpha_1^{-,new}$ are larger than some eps}
-						\State update $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ or $\alpha_1^{-,new}$
+						\State Update $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ or $\alpha_1^{-,new}$
 					\EndIf
 				\Else
 					\State $finished = True$
@@ -628,13 +628,13 @@ The improvements described in \cite{keerthi2001improvements, shevade1999improvem
 			\If {changes in $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ or $\alpha_1^{-,new}$ are larger than some eps}
 				\For {$i$ in $I0$}
 					\State Update $errors_i$ using new Lagrange multipliers
-					\State Update $\alpha^+$ and $\alpha^-$ using the new Lagrange multipliers
-					\State Update $I0, I1, I2$ and $I3$
-					\State Update $errors_{i1}$ and $errors_{i2}$
-					\For {$i$ in $I0 \cup \{i1,i2\}$}
-						\State Compute $(i_{low}, b_{low})$ by $b_{low} = \max\{errors_i : i \in I0 \cup I1 \cup I2\}$
-						\State Compute and $(i_{up}, b_{up})$ by $b_{up} = \min\{errors_i : i \in I0 \cup I1 \cup I3\}$
-					\EndFor
+				\EndFor
+				\State Update $\alpha^+$ and $\alpha^-$ using new Lagrange multipliers
+				\State Update $I0, I1, I2$ and $I3$
+				\State Update $errors_{i1}$ and $errors_{i2}$
+				\For {$i$ in $I0 \cup \{i1,i2\}$}
+					\State Compute $(i_{low}, b_{low})$ by $b_{low} = \max\{errors_i : i \in I0 \cup I1 \cup I2\}$
+					\State Compute and $(i_{up}, b_{up})$ by $b_{up} = \min\{errors_i : i \in I0 \cup I1 \cup I3\}$
 				\EndFor
 				\State \Return True
 			\Else
