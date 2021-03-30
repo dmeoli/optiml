@@ -14,13 +14,23 @@ The experiments results shown in \ref{primal_svc_hinge_cv_results} referred to \
 
 \input{experiments/primal_svc_hinge}
 
+The results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear} \cite{fan2008liblinear} implementation, in terms of \emph{accuracy} score. More training data points are selected as \emph{support vectors} from the SGD solver but it always requires lower iterations, i.e., epochs, to achieve the same \emph{numerical precision}. \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
+
+\pagebreak
+
 \paragraph{Linear Dual formulations}
 
-The experiments results shown in \ref{linear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.5 for the \emph{AdaGrad} algorithm.
+The experiments results shown in \ref{linear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.5 for the \emph{AdaGrad} algorithm. Notice that the \emph{qp} dual refers to the formulation \eqref{eq:svc_lagrangian_dual}, while the \emph{bcqp} dual refers to the formulation \eqref{eq:svc_bcqp_lagrangian_dual}.
 
 \input{experiments/linear_dual_svc}
 
+For what about the linear \emph{Wolfe dual} formulation we can immediately notice as the \emph{regularization hyperparameter} $C$ makes the model harder, so the \emph{custom} implementation of the SMO algorithm and also the \emph{sklearn} implementation, i.e., \emph{libsvm} \cite{chang2011libsvm} implementation, needs to perform more iterations to achieve the same \emph{numerical precision}; meanwhile the \emph{cvxopt} \cite{vandenberghe2010cvxopt} seems to be insensitive to the increasing complexity of the model. The results in terms of \emph{accuracy} and number of \emph{support vectors} are strongly similar to each others.
+
 \input{experiments/linear_lagrangian_dual_svc}
+
+For what about the linear \emph{Lagrangian dual} formulation we can see as it seems to be insensitive to the increasing complexity of the model in terms of number of \emph{iterations} but it tends to select many training data points as \emph{support vectors}.
+
+\pagebreak
 
 \paragraph{Nonlinear Dual formulations}
 
@@ -30,6 +40,7 @@ The experiments results shown in \ref{nonlinear_dual_svc_cv_results} and \ref{no
 
 \input{experiments/nonlinear_lagrangian_dual_svc}
 
+The same considerations made for the previous linear \emph{Wolfe dual} and \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting the complexity of the model coming with higher $C$ regularization values seems to be not paying a tradeoff in terms of the number of \emph{iterations} of the algorithm and, moreover, the \emph{bcqp Lagrangian dual} formulation seems to perform better wrt the \emph{qp} formulation, both tends to select even more training data points as \emph{support vectors}.
 
 \subsubsection{Squared Hinge loss}
 
@@ -38,6 +49,8 @@ The experiments results shown in \ref{nonlinear_dual_svc_cv_results} and \ref{no
 The experiments results shown in \ref{primal_svc_squared_hinge_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. The batch size is setted to 20. Training is stopped if after 5 iterations the training loss is not lower than the best found so far.
 
 \input{experiments/primal_svc_squared_hinge}
+
+Again, the results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear} \cite{fan2008liblinear} implementation, in terms of \emph{accuracy} score. More training data points are selected as \emph{support vectors} from the SGD solver but it always requires even lower iterations, i.e., epochs, to achieve the same \emph{numerical precision}. \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
 
 \pagebreak
 
@@ -55,7 +68,7 @@ The experiments results shown in \ref{primal_svr_eps_cv_results} referred to \em
 
 \paragraph{Linear Dual formulations}
 
-The experiments results shown in \ref{linear_lagrangian_dual_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.5 for the \emph{AdaGrad} algorithm.
+The experiments results shown in \ref{linear_lagrangian_dual_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.5 for the \emph{AdaGrad} algorithm. Notice that the \emph{qp} dual refers to the formulation \eqref{eq:svr_lagrangian_dual}, while the \emph{bcqp} dual refers to the formulation \eqref{eq:svr_bcqp_lagrangian_dual}.
 
 \input{experiments/linear_dual_svr}
 
