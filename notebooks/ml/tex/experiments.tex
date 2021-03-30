@@ -24,7 +24,7 @@ The experiments results shown in \ref{linear_lagrangian_dual_svc_cv_results} are
 
 \input{experiments/linear_dual_svc}
 
-For what about the linear \emph{Wolfe dual} formulation we can immediately notice as the \emph{regularization hyperparameter} $C$ makes the model harder, so the \emph{custom} implementation of the SMO algorithm and also the \emph{sklearn} implementation, i.e., \emph{libsvm} \cite{chang2011libsvm} implementation, needs to perform more iterations to achieve the same \emph{numerical precision}; meanwhile the \emph{cvxopt} \cite{vandenberghe2010cvxopt} seems to be insensitive to the increasing complexity of the model. The results in terms of \emph{accuracy} and number of \emph{support vectors} are strongly similar to each others.
+For what about the linear \emph{Wolfe dual} formulation we can immediately notice as higher \emph{regularization hyperparameter} $C$ makes the model harder, so the \emph{custom} implementation of the SMO algorithm and also the \emph{sklearn} implementation, i.e., \emph{libsvm} \cite{chang2011libsvm} implementation, needs to perform more iterations to achieve the same \emph{numerical precision}; meanwhile the \emph{cvxopt} \cite{vandenberghe2010cvxopt} seems to be insensitive to the increasing complexity of the model. The results in terms of \emph{accuracy} and number of \emph{support vectors} are strongly similar to each others.
 
 \input{experiments/linear_lagrangian_dual_svc}
 
@@ -66,7 +66,7 @@ The experiments results shown in \ref{primal_svr_eps_cv_results} referred to \em
 
 \input{experiments/primal_svr_eps}
 
-
+The results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear} \cite{fan2008liblinear} implementation, in terms of \emph{r2} score, except in case of $C$ regularization hyperparameter equals to 1 for which those of SGD are lower. Moreover, the SGD solver always requires lower iterations, i.e., epochs, for higher $C$ regularization values, i.e., for $C$ equals to 10 or 100, to achieve the same \emph{numerical precision}. Again, \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate. The results in terms of \emph{support vectors} are strongly similar to each others.
 
 \paragraph{Linear Dual formulations}
 
@@ -74,7 +74,11 @@ The experiments results shown in \ref{linear_lagrangian_dual_svr_cv_results} are
 
 \input{experiments/linear_dual_svr}
 
+For what about the linear \emph{Wolfe dual} formulation we can immediately notice as higher \emph{regularization hyperparameter} $C$ and lower $\epsilon$ values makes the model harder, so the \emph{custom} implementation of the SMO algorithm and also the \emph{sklearn} implementation, i.e., \emph{libsvm} \cite{chang2011libsvm} implementation, needs to perform more iterations to achieve the same \emph{numerical precision}; meanwhile, again, the \emph{cvxopt} \cite{vandenberghe2010cvxopt} seems to be insensitive to the increasing complexity of the model. The results in terms of \emph{r2} and number of \emph{support vectors} are strongly similar to each others.
+
 \input{experiments/linear_lagrangian_dual_svr}
+
+For what about the linear \emph{Lagrangian dual} formulation we can see as it seems to be insensitive to the increasing complexity of the model in terms of number of \emph{iterations} and require many \emph{iterations} wrt the \emph{Wolfe dual} formulation.
 
 \paragraph{Nonlinear Dual formulations}
 
@@ -84,7 +88,7 @@ The experiments results shown in \ref{nonlinear_dual_svr_cv_results} and \ref{no
 
 \input{experiments/nonlinear_lagrangian_dual_svr}
 
-\newpage
+The same considerations made for the previous linear \emph{Wolfe dual} and \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting, the complexity of the model coming with higher $C$ regularization hyperparameters and lower $\epsilon$ values pays a larger tradeoff in terms of the number of \emph{iterations} of the algorithm.
 
 \subsubsection{Squared Epsilon-insensitive loss}
 
@@ -93,3 +97,5 @@ The experiments results shown in \ref{nonlinear_dual_svr_cv_results} and \ref{no
 The experiments results shown in \ref{primal_svr_squared_eps_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. The batch size is setted to 20. Training is stopped if after 5 iterations the training loss is not lower than the best found so far.
 
 \input{experiments/primal_svr_squared_eps}
+
+Again, the results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear} \cite{fan2008liblinear} implementation, in terms of \emph{r2} score. SGD solver always requires even lower iterations, i.e., epochs, for higher $C$ regularization values, i.e., for $C$ equals to 10 or 100, to achieve the same \emph{numerical precision}. \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
