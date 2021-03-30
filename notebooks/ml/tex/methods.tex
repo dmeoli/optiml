@@ -606,9 +606,9 @@ The improvements described in \cite{keerthi2001improvements, shevade1999improvem
 			\If {$i1 = i2$}
 				\State \Return False
 			\EndIf
-			\State Compute $L$ and $H$ using \eqref{eq:smo_svr_bounds_update1}, \eqref{eq:smo_svr_bounds_update2}, \eqref{eq:smo_svr_bounds_update3} or \eqref{eq:smo_svr_bounds_update4}
 			\State $finished = False$
-			\While {\NOT $finished$} \Comment this loop is passed at most three times
+			\While {\NOT $finished$}
+				\State Compute $L$ and $H$ using \eqref{eq:smo_svr_bounds_update1}, \eqref{eq:smo_svr_bounds_update2}, \eqref{eq:smo_svr_bounds_update3} or \eqref{eq:smo_svr_bounds_update4}
 				\If {$L < H$}
 					\State Compute $\eta$ by \eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
 					\If {$\eta < 0$}
