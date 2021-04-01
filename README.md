@@ -75,30 +75,30 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
             - Lagrangian Dual
         - [x] Support Vector Classifier
             - Losses
-                - [x] Hinge (L1 Loss) ![svc_hinge_loss](notebooks/ml/tex/img/svc_hinge_loss.png)
-                - [x] Squared Hinge (L2 Loss) ![svc_squared_hinge_loss](notebooks/ml/tex/img/svc_squared_hinge_loss.png)
+                - [x] Hinge (L1 Loss) ![svc_hinge_loss](notebooks/optimization/tex/img/svc_hinge_loss.png)
+                - [x] Squared Hinge (L2 Loss) ![svc_squared_hinge_loss](notebooks/optimization/tex/img/svc_squared_hinge_loss.png)
         - [x] Support Vector Regression
             - Losses
-                - [x] Epsilon-insensitive (L1 Loss) ![svr_eps_loss](notebooks/ml/tex/img/svr_eps_loss.png)
-                - [x] Squared Epsilon-insensitive (L2 Loss) ![svr_squared_eps_loss](notebooks/ml/tex/img/svr_squared_eps_loss.png)
+                - [x] Epsilon-insensitive (L1 Loss) ![svr_eps_loss](notebooks/optimization/tex/img/svr_eps_loss.png)
+                - [x] Squared Epsilon-insensitive (L2 Loss) ![svr_squared_eps_loss](notebooks/optimization/tex/img/svr_squared_eps_loss.png)
         - Kernels
             - [x] Linear
                 
                 | SVC          | SVR          |
                 |    :----:    |    :----:    |
-                | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/linear_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/linear_dual_svr_hyperplane.png) |
+                | ![linear_dual_svc_hyperplane](notebooks/optimization/tex/img/linear_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/optimization/tex/img/linear_dual_svr_hyperplane.png) |
                 
             - [x] Polynomial
                  
                 | SVC          | SVR          |
                 |    :----:    |    :----:    |
-                | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/poly_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/poly_dual_svr_hyperplane.png) |              
+                | ![linear_dual_svc_hyperplane](notebooks/optimization/tex/img/poly_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/optimization/tex/img/poly_dual_svr_hyperplane.png) |              
                 
             - [x] Gaussian
                 
                 | SVC          | SVR          |
                 |    :----:    |    :----:    |
-                | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/gaussian_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/ml/tex/img/gaussian_dual_svr_hyperplane.png) |
+                | ![linear_dual_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_svr_hyperplane.png) |
                 
             - [x] Sigmoid
         - Optimizers (ad hoc)
