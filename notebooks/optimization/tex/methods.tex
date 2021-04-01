@@ -78,6 +78,28 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 	\end{algorithmic}
 \end{algorithm}
 
+\begin{theorem}[Gradient Descent convergence for convex functions] \label{thm:cvx_gd_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $x_*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
+$$
+f(x_t) - f(x_*) \leq \frac{\| x_0 - x_* \|^2}{2 \alpha k}
+$$
+In particular, for $\alpha = 1/L$:
+$$
+\frac{L \| x_0 - x_* \|^2}{2 k}
+$$
+\end{theorem}
+
+\begin{theorem}[Gradient Descent convergence for strictly convex functions] \label{thm:str_cvx_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strictly convex function. Let $x_*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
+$$
+f(x_t) - f(x_*) \leq (1 - \alpha \mu)^t \| x_0 - x_* \|^2
+$$
+In particular, for $\alpha = 1/L$:
+$$
+(1 - \frac{\mu}{L})^t \| x_0 - x_* \|^2
+$$
+\end{theorem}
+
 Gradient Descent is based on full gradients, since at each iteration we compute the average gradient on the whole dataset:
 $$
 \nabla f(x) = \frac{1}{n} \sum_{i=1}^n \nabla f_i(x)
@@ -167,6 +189,28 @@ Leveraging the idea of momentum introduced by Polyak, Nesterov introduced a slig
 \end{algorithm}
 
 Comparing the algorithm \ref{alg:hbg} with the algorithm \ref{alg:nag}, we can see that Polyak’s method evaluates the gradient before adding momentum, whereas Nesterov’s algorithm evaluates it after applying momentum, which intuitively brings us closer to the minimum $x^*$, as showb in figure \ref{fig:momentum}.
+
+\begin{theorem}[Nesterov Accelerated Gradient Descent convergence for convex functions] \label{thm:cvx_nag_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $x_*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_{k+1} = k / (k+3)$ satisfies:
+$$
+f(x_t) - f(x_*) \leq \frac{2 \| x_0 - x_* \|^2}{\alpha (k+1)^2}
+$$
+In particular, for $\alpha = 1/L$:
+$$
+\frac{2L \| x_0 - x_* \|^2}{(k+1)^2}
+$$
+\end{theorem}
+
+\begin{theorem}[Nesterov Accelerated Gradient Descent convergence for strictly convex functions] \label{thm:str_cvx_nag_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strictly convex function. Let $x_*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_t = \displaystyle \frac{1 - \sqrt{\mu / L}}{1 + \sqrt{\mu / L}}$ satisfies:
+$$
+f(x_t) - f(x_*) \leq \frac{\| x_0 - x_* \|^2}{\alpha} (1 - \sqrt{\frac{\mu}{L}})^t
+$$
+In particular, for $\alpha = 1/L$:
+$$
+f(x_t) - f(x_*) \leq L \| x_0 - x_* \|^2 (1 - \sqrt{\frac{\mu}{L}})^t
+$$
+\end{theorem}
 
 Nesterov momentum brings the rate of convergence from $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ to $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$ and in the case of smooth and strongly convex functions gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great, because we get the guarantee for a more general class of functions.
 
