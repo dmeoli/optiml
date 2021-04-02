@@ -2,22 +2,22 @@
 
 In order to explain the \emph{convergence} and \emph{efficiency} properties of the following optimization methods, we need to introduce some preliminary definitions about \emph{convexity} and the \emph{L-smoothness} of a function \cite{boyd2004convex}.
 
-First of all, we give three different but equivalent definitions of \emph{convexity} and \emph{strong convexity} in terms of the function itself, the Jacobian and the Hessian, then we provide a definition for \emph{L-smoothness} functions.
-
 \begin{definition}[Convexity] \label{def:convexity}
-We say that a function $f: \Re^m \rightarrow \Re$ is convex if:
-$$ 
-f(\lambda x + (1 - \lambda) y ) \leq \lambda f(x) + (1 - \lambda) f(y) \ \forall \ x, y \in \Re^m, \lambda \in [0,1]
-$$
-if $f$ is differentiable, i.e., $f \in C^1$, then:
-$$
-f(x) \geq f(y) + \langle \nabla f(y), x - y \rangle \ \forall \ x, y \in \Re^m
-$$
-and if $f$ is a twice differentiable function, i.e., $f \in C^2$ and the Hessian matrix is \emph{symmetric}, then:
-$$
-\nabla^2 f(x) \succeq 0 \ \forall \ x \in \Re^m
-$$
-i.e., the Hessian matix is \emph{positive semidefinite}.
+	\hfill
+	\begin{enumerate}[i]
+		\item We say that a function $f: \Re^m \rightarrow \Re$ is convex if: 
+		$$ 
+			(\lambda x + (1 - \lambda) y ) \leq \lambda f(x) + (1 - \lambda) f(y) \ \forall \ x, y \in \Re^m, \lambda \in [0,1] 
+		$$
+		\item We say that a differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^1$, is convex if: 
+		$$ 
+			f(x) \geq f(y) + \langle \nabla f(y), x - y \rangle \ \forall \ x, y \in \Re^m 
+		$$
+		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^2$ and the Hessian matrix is \emph{symmetric}, is convex iff: 
+		$$ 
+			\nabla^2 f(x) \succeq 0 \ \forall \ x \in \Re^m 
+		$$ i.e., the Hessian matix is \emph{positive semidefinite}.
+	\end{enumerate}
 \end{definition}
 
 \begin{definition}[Strong Convexity] \label{def:strong_convexity}
@@ -25,15 +25,16 @@ We say that a function $f: \Re^m \rightarrow \Re$ is $\mu$-strongly convex if th
 $$
 g(x) = f(x) - \frac{\mu}{2} \| x \|^2
 $$
-is convex for some $\mu > 0$. The latter, in terms of the Jacobian, is equivalent to:
+is convex for any $\mu > 0$. 
+If $f$ is differentiable, i.e., $f \in C^1$, this is also equivalent to:
 $$
-f(x) \geq f(y) + \langle \nabla f(y), x - y \rangle + \frac{\mu}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^m
+f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle + \frac{\mu}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
 $$
-and, in terms of the Hessian, is equivalent to:
+and, if $f$ is a twice differentiable function, i.e., $f \in C^2$ and the Hessian matrix is \emph{symmetric}, then $f$ is $\mu$-strongly convex iff:
 $$
 \nabla^2 g(x) \succ 0 \ \forall \ x \in \Re^m
 $$
-which is:
+i.e., the Hessian matix is \emph{positive definite}, which is:
 $$
 \nabla^2 f(x) \succeq \mu \ \forall \ x \in \Re^m
 $$
@@ -198,7 +199,7 @@ $$
 \end{theorem}
 
 \begin{theorem}[Nesterov Accelerated Gradient Descent convergence for strongly convex functions] \label{thm:str_cvx_nag_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strongly convex function. Let $x_*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_t = \displaystyle \frac{1 - \sqrt{\mu / L}}{1 + \sqrt{\mu / L}}$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strongly convex function. Let $x_*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_t = \displaystyle \frac{1 - \sqrt{\mu / L}}{1 + \sqrt{\mu / L}} = \frac{1-1/\sqrt{\kappa}}{1+1/\sqrt{\kappa}}$ satisfies:
 $$
 \begin{aligned}
 	f(x_t) - f(x_*) \leq & \frac{\| x_0 - x_* \|^2}{\alpha} \Bigg(1 - \sqrt{\frac{\mu}{L}}\Bigg)^t \\ 
