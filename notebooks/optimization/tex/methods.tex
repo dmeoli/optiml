@@ -259,7 +259,7 @@ The \emph{AdaGrad} \cite{duchi2011adaptive} algorithm is just a variant of preco
 			\While {$not\_convergence$}
 				\State $g_t \gets \nabla f(x_t)$
 				\State $s_t \gets s_{t-1} + g_t^2$
-				\State $x_{t+1} \gets x_t - \alpha P^{-1} g_t = x_t - \displaystyle \frac{\alpha}{\sqrt{s_t + \epsilon}} \odot g_t \ \text{where} \ P \gets diag(s_t + \epsilon)^{1/2}$
+				\State $x_{t+1} \gets x_t - \alpha P_t^{-1} g_t = x_t - \displaystyle \frac{\alpha}{\sqrt{s_t + \epsilon}} \odot g_t \ \text{where} \ P_t \gets diag(s_t + \epsilon)^{1/2}$
 				\State $t \gets t + 1$
 			\EndWhile
 			\State \Return $x_t$

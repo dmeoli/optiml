@@ -2,17 +2,17 @@
 \centering
 \caption{Linear SVC Lagrangian Dual formulation results with Hinge loss}
 \label{linear_lagrangian_dual_svc_cv_results}
-\begin{tabular}{llrrrrrr}
+\begin{tabular}{llrrrr}
 \toprule
-     &     &  fit\_time &  n\_iter &  train\_accuracy &  val\_accuracy &  train\_n\_sv &  val\_n\_sv \\
-dual & C &           &         &                 &               &             &           \\
+     &     &  fit\_time &  accuracy &  n\_iter &  n\_sv \\
+dual & C &           &           &         &       \\
 \midrule
-qp & 1   &  0.006492 &       1 &        0.985019 &      0.989974 &         131 &       131 \\
-     & 10  &  0.006105 &       1 &        0.985019 &      0.989974 &         131 &       131 \\
-     & 100 &  0.005686 &       1 &        0.985019 &      0.989974 &         131 &       131 \\
-bcqp & 1   &  0.006973 &       1 &        0.985019 &      0.989974 &         130 &       130 \\
-     & 10  &  0.006043 &       1 &        0.985019 &      0.989974 &         130 &       130 \\
-     & 100 &  0.005027 &       1 &        0.985019 &      0.989974 &         130 &       130 \\
+qp & 1   &  0.028132 &      0.97 &       1 &   194 \\
+     & 10  &  0.027381 &      0.97 &       1 &   194 \\
+     & 100 &  0.034051 &      0.97 &       1 &   194 \\
+bcqp & 1   &  0.031179 &      0.97 &       1 &   193 \\
+     & 10  &  0.023645 &      0.97 &       1 &   193 \\
+     & 100 &  0.028539 &      0.97 &       1 &   193 \\
 \bottomrule
 \end{tabular}
 \end{table}

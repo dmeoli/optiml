@@ -20,7 +20,7 @@ The results provided from the \emph{custom} implementation, i.e., the SGD with d
 
 \paragraph{Linear Dual formulations}
 
-The experiments results shown in \ref{linear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.5 for the \emph{AdaGrad} algorithm. Notice that the \emph{qp} dual refers to the formulation \eqref{eq:svc_lagrangian_dual}, while the \emph{bcqp} dual refers to the formulation \eqref{eq:svc_bcqp_lagrangian_dual}.
+The experiments results shown in \ref{linear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm. Notice that the \emph{qp} dual refers to the formulation \eqref{eq:svc_lagrangian_dual}, while the \emph{bcqp} dual refers to the formulation \eqref{eq:svc_bcqp_lagrangian_dual}.
 
 \input{experiments/linear_dual_svc}
 
@@ -34,7 +34,7 @@ For what about the linear \emph{Lagrangian dual} formulation we can see as it se
 
 \paragraph{Nonlinear Dual formulations}
 
-The experiments results shown in \ref{nonlinear_dual_svc_cv_results} and \ref{nonlinear_lagrangian_dual_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in \ref{nonlinear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.5 for the \emph{AdaGrad} algorithm.
+The experiments results shown in \ref{nonlinear_dual_svc_cv_results} and \ref{nonlinear_lagrangian_dual_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in \ref{nonlinear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm.
 
 \input{experiments/nonlinear_dual_svc}
 
@@ -70,7 +70,7 @@ The results provided from the \emph{custom} implementation, i.e., the SGD with d
 
 \paragraph{Linear Dual formulations}
 
-The experiments results shown in \ref{linear_lagrangian_dual_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.5 for the \emph{AdaGrad} algorithm. Notice that the \emph{qp} dual refers to the formulation \eqref{eq:svr_lagrangian_dual}, while the \emph{bcqp} dual refers to the formulation \eqref{eq:svr_bcqp_lagrangian_dual}.
+The experiments results shown in \ref{linear_lagrangian_dual_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm. Notice that the \emph{qp} dual refers to the formulation \eqref{eq:svr_lagrangian_dual}, while the \emph{bcqp} dual refers to the formulation \eqref{eq:svr_bcqp_lagrangian_dual}.
 
 \input{experiments/linear_dual_svr}
 
@@ -82,7 +82,7 @@ For what about the linear \emph{Lagrangian dual} formulation we can see as it se
 
 \paragraph{Nonlinear Dual formulations}
 
-The experiments results shown in \ref{nonlinear_dual_svr_cv_results} and \ref{nonlinear_lagrangian_dual_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in \ref{nonlinear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.5 for the \emph{AdaGrad} algorithm.
+The experiments results shown in \ref{nonlinear_dual_svr_cv_results} and \ref{nonlinear_lagrangian_dual_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in \ref{nonlinear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm.
 
 \input{experiments/nonlinear_dual_svr}
 
