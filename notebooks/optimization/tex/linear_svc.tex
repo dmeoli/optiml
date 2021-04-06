@@ -20,7 +20,7 @@ This hyperplane is represented by the equation $w^T x + b=0$. So, we need to fin
 	\end{aligned}
 \end{equation}
 
-where the positive slack variables $\xi_i$ are introduced to allow missclassified points. In this way data points on the incorrect side of the margin boundary will have a penalty that increases with the distance from it.
+where the positive slack variables $\xi_i$ are introduced to allow misclassified points. In this way data points on the incorrect side of the margin boundary will have a penalty that increases with the distance from it.
 
 These two equations can be combined into:
 
@@ -31,7 +31,7 @@ These two equations can be combined into:
     \end{aligned}
 \end{equation}
 
-The margin is equal to $\displaystyle \frac{1}{\| w \|}$ and maximizing it subject to the constraint in \eqref{eq:svc_const} while as we are trying to reduce the number of misclassifications is equivalent to finding:
+The margin is equal to $\displaystyle \frac{1}{\| w \|}$ and maximizing it subject to the constraint in~\eqref{eq:svc_const} while as we are trying to reduce the number of misclassifications is equivalent to finding:
 
 \begin{equation} \label{eq:svc_obj}
     \begin{aligned}
@@ -53,7 +53,7 @@ where the parameter $C$ controls the trade-off between the slack variable penalt
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[scale=0.6]{img/linear_dual_svc_hyperplane.png}
+	\includegraphics[scale=0.6]{img/linear_dual_svc_hyperplane}
 	\caption{Linear SVC hyperplane}
 	\label{fig:linear_dual_svc_hyperplane}
 \end{figure}
@@ -94,26 +94,26 @@ The general primal unconstrained formulation takes the form:
     \min_{w,b} \mathcal{R}(w,b) + C \sum_{i=1}^n \mathcal{L}(w,b;x_i,y_i)
 \end{equation}
 
-where $\mathcal{R}(w, b)$ is the \emph{regularization term} and $\mathcal{L}(w,b;x_i,y_i)$ is the \emph{loss function} associated with the observation $(x_i,y_i)$ \cite{piccialli2018nonlinear}.
+where $\mathcal{R}(w, b)$ is the \emph{regularization term} and $\mathcal{L}(w,b;x_i,y_i)$ is the \emph{loss function} associated with the observation $(x_i,y_i)$~\cite{piccialli2018nonlinear}.
 
-The quadratic optimization problem \eqref{eq:quad_svc_obj} can be equivalently formulated as:
+The quadratic optimization problem~\eqref{eq:quad_svc_obj} can be equivalently formulated as:
 
 \begin{equation} \label{eq:svc_hinge}
     \min_{w,b} \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))
 \end{equation}
 
-where we make use of the \emph{hinge} loss \eqref{eq:hinge_loss1} or \eqref{eq:hinge_loss2}.
+where we make use of the \emph{hinge} loss~\eqref{eq:hinge_loss1} or~\eqref{eq:hinge_loss2}.
 
 The above formulation penalizes slacks $\xi$ linearly and is called $\mathcal{L}_1$-SVC.
 
 \begin{figure}[h!]
 	\centering
-  	\includegraphics[scale=0.4]{img/svc_hinge_loss.png}
+  	\includegraphics[scale=0.4]{img/svc_hinge_loss}
   	\caption{SVC Hinge loss with different optimization steps}
   	\label{fig:svc_hinge_loss}
 \end{figure}
 
-To simplify the notation and so also the design of the algorithms, the simplest approach to learn the bias term $b$ is that of including that into the \emph{regularization term}; so we can rewrite \eqref{eq:svc_hinge} and \eqref{eq:svc_squared_hinge} as follows:
+To simplify the notation and so also the design of the algorithms, the simplest approach to learn the bias term $b$ is that of including that into the \emph{regularization term}; so we can rewrite~\eqref{eq:svc_hinge} and~\eqref{eq:svc_squared_hinge} as follows:
 
 \begin{equation} \label{eq:primal_svc_hinge1}
     \min_{w,b} \frac{1}{2} (\| w \|^2 + b^2) + C \sum_{i=1}^n \mathcal{L}(w;x_i,y_i)
@@ -130,11 +130,11 @@ or, equivalently, by augmenting the weight vector $w$ with the bias term $b$ and
 
 with the advantages of having convex properties of the objective function useful for convergence analysis and the possibility to directly apply algorithms designed for models without the bias term.
 
-Notice that in terms of numerical optimization the formulations \eqref{eq:svc_hinge} and \eqref{eq:svc_squared_hinge} are not equivalent to \eqref{eq:primal_svc_hinge1} or \eqref{eq:primal_svc_hinge2} since in the first one the bias term $b$ does not contribute to the \emph{regularization term}, so the SVM formulation is based on an unregularized bias term $b$, as highlighted by the \emph{statistical learning theory}. But, in machine learning sense, numerical experiments in \cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
+Notice that in terms of numerical optimization the formulations~\eqref{eq:svc_hinge} and~\eqref{eq:svc_squared_hinge} are not equivalent to~\eqref{eq:primal_svc_hinge1} or~\eqref{eq:primal_svc_hinge2} since in the first one the bias term $b$ does not contribute to the \emph{regularization term}, so the SVM formulation is based on an unregularized bias term $b$, as highlighted by the \emph{statistical learning theory}. But, in machine learning sense, numerical experiments in~\cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
 
 \subsubsection{Wolfe Dual formulation}
 
-To reformulate the \eqref{eq:quad_svc_obj} as a \emph{Wolfe dual}, we need to allocate the Lagrange multipliers $\alpha_i\geq 0, \mu_i \geq 0 \ \forall_i$:
+To reformulate the~\eqref{eq:quad_svc_obj} as a \emph{Wolfe dual}, we need to allocate the Lagrange multipliers $\alpha_i\geq 0, \mu_i \geq 0 \ \forall_i$:
 
 \begin{equation} \label{eq:svc_wolfe_dual}
     \max_{\alpha,\mu} \min_{w,b,\xi} \mathcal{W}(w,b,\xi,\alpha,\mu) = \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \xi_i-\sum_{i=1}^n \alpha_i(y_i(w^T x_i + b)-1+\xi_i)-\sum_{i=1}^n\mu_i\xi_i
@@ -154,7 +154,7 @@ We wish to find the $w$, $b$ and $\xi_i$ which minimizes, and the $\alpha$ and $
 	\frac{\partial \mathcal{W}}{\partial\xi_i}=0\Rightarrow C=\alpha_i+\mu_i
 \end{equation}
 
-Substituting \eqref{eq:svc_wolfe_der_w} and \eqref{eq:svc_wolfe_der_b} into \eqref{eq:svc_wolfe_dual} together with $\mu_i\geq 0 \ \forall_i$, which implies that $\alpha\leq C$, gives a new formulation being dependent on $\alpha$. We therefore need to find:
+Substituting~\eqref{eq:svc_wolfe_der_w} and~\eqref{eq:svc_wolfe_der_b} into~\eqref{eq:svc_wolfe_dual} together with $\mu_i\geq 0 \ \forall_i$, which implies that $\alpha\leq C$, gives a new formulation being dependent on $\alpha$. We therefore need to find:
 
 \begin{equation} \label{eq:svc_max_wolfe_dual}
 	\begin{aligned}
@@ -175,15 +175,15 @@ or, equivalently:
 
 where $q^T = [1, \dots, 1]$.
 
-By solving \eqref{eq:svc_min_wolfe_dual} we will know $\alpha$ and, from \eqref{eq:svc_wolfe_der_w}, we will get $w$, so we need to calculate $b.$
+By solving~\eqref{eq:svc_min_wolfe_dual} we will know $\alpha$ and, from~\eqref{eq:svc_wolfe_der_w}, we will get $w$, so we need to calculate $b.$
 
-We know that any data point satisfying \eqref{eq:svc_wolfe_der_b} which is a support vector $x_s$ will have the form:
+We know that any data point satisfying~\eqref{eq:svc_wolfe_der_b} which is a support vector $x_s$ will have the form:
 
 \begin{equation} \label{eq:svc_sv_const1}
 	y_s(w^T x_s + b)=1
 \end{equation}
 
-and, by substituting in \eqref{eq:svc_wolfe_der_w}, we get:
+and, by substituting in~\eqref{eq:svc_wolfe_der_w}, we get:
 
 \begin{equation} \label{eq:svc_sv_const2}
 	y_s\big(\sum_{m\in S}\alpha_m y_m \langle x_m, x_s \rangle +b\big)=1
@@ -191,7 +191,7 @@ and, by substituting in \eqref{eq:svc_wolfe_der_w}, we get:
 
 where $s$ denotes the set of indices of the support vectors and is determined by finding the indices $i$ where $\alpha_i>0$, i.e., nonzero Lagrange multipliers.
 
-Multiplying through by $y_s$ and then using $y_s^2=1$ from \eqref{eq:svc_consts}:
+Multiplying through by $y_s$ and then using $y_s^2=1$ from~\eqref{eq:svc_consts}:
 
 \begin{equation} \label{eq:svc_sv_squared_const2}
 	y_s^2\big(\sum_{m\in S}\alpha_m y_m \langle x_m, x_s \rangle +b\big)=y_s
@@ -213,7 +213,7 @@ We now have the variables $w$ and $b$ that define our separating hyperplane's op
     y'=\operatorname{sgn}\big(\sum_{i=1}^n\alpha_i y_i\langle x_i, x' \rangle+b\big)
 \end{equation}
 
-From \eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. We report below the box-constrained dual formulation \cite{hsu2002simple} that arises from the primal \eqref{eq:primal_svc_hinge1} or \eqref{eq:primal_svc_hinge2} where the bias term $b$ is embedded into the weight vector $w$:
+From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. We report below the box-constrained dual formulation~\cite{hsu2002simple} that arises from the primal~\eqref{eq:primal_svc_hinge1} or~\eqref{eq:primal_svc_hinge2} where the bias term $b$ is embedded into the weight vector $w$:
 
 \begin{equation} \label{eq:svc_min_bcqp_wolf_dual}
     \begin{aligned}
@@ -224,7 +224,7 @@ From \eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y
 
 \subsubsection{Lagrangian Dual formulation}
 
-In order to relax the constraints in the \emph{Wolfe dual} formulation \eqref{eq:svc_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrangian multipliers $\mu \geq 0, \lambda_+ \geq 0$, $\lambda_- \geq 0$:
+In order to relax the constraints in the \emph{Wolfe dual} formulation~\eqref{eq:svc_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrangian multipliers $\mu \geq 0, \lambda_+ \geq 0$, $\lambda_- \geq 0$:
 
 \begin{equation} \label{eq:svc_lagrangian_dual}
 	\begin{aligned}
@@ -274,7 +274,7 @@ Since we are dealing with a symmetric but indefinite linear system we will choos
 
 \bigskip
 
-From \eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of \eqref{eq:svc_lagrangian_dual} is reduced of 1/3 by removing the multipliers $\mu$ which was allocated to control the equality constraint $y^T \alpha=0$, so we will end up solving exactly the problem \eqref{eq:svc_min_bcqp_wolf_dual}.
+From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of~\eqref{eq:svc_lagrangian_dual} is reduced of 1/3 by removing the multipliers $\mu$ which was allocated to control the equality constraint $y^T \alpha=0$, so we will end up solving exactly the problem~\eqref{eq:svc_min_bcqp_wolf_dual}.
 
 \begin{equation} \label{eq:svc_bcqp_lagrangian_dual}
 	\begin{aligned}
@@ -337,7 +337,7 @@ It is a strictly convex function and its gradient wrt $w$ is given by:
 
 \subsubsection{Primal formulation}
 
-Since smoothed versions of objective functions may be preferred for optimization, we can reformulate \eqref{eq:svc_hinge} as:
+Since smoothed versions of objective functions may be preferred for optimization, we can reformulate~\eqref{eq:svc_hinge} as:
 
 \begin{equation} \label{eq:svc_squared_hinge}
     \min_{w,b} \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))^2
@@ -347,7 +347,7 @@ where we make use of the \emph{squared hinge} loss that quadratically penalized 
 
 \begin{figure}[h!]
 	\centering
-  	\includegraphics[scale=0.4]{img/svc_squared_hinge_loss.png}
+  	\includegraphics[scale=0.4]{img/svc_squared_hinge_loss}
   	\caption{SVC Squared Hinge loss with different optimization steps}
   	\label{fig:svc_squared_hinge_loss}
 \end{figure}

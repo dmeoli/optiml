@@ -1,6 +1,6 @@
 \section{Optimization Methods}
 
-In order to explain the \emph{convergence} and \emph{efficiency} properties of the following optimization methods, we need to introduce some preliminary definitions about \emph{convexity} and the \emph{L-smoothness} of a function \cite{boyd2004convex}.
+In order to explain the \emph{convergence} and \emph{efficiency} properties of the following optimization methods, we need to introduce some preliminary definitions about \emph{convexity} and the \emph{L-smoothness} of a function~\cite{boyd2004convex}.
 
 \begin{definition}[Convexity] \label{def:convexity}
 	\hfill
@@ -131,13 +131,13 @@ SGD’s convergence rate for L-smooth convex functions is $\displaystyle \mathca
 
 \subsubsection{Momentum} 
 
-To mitigate the pathological zig-zagging of the SGD method we introduce two acellerated methods \cite{polyak1964some} and \cite{nesterov1998introductory} that exploits information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield smoother trajectory.
+To mitigate the pathological zig-zagging of the SGD method we introduce two accelerated methods~\cite{polyak1964some} and~\cite{nesterov1998introductory} that exploits information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield smoother trajectory.
 
-In the Polyak's method \cite{polyak1964some} the velocity vector $v_t$ is calculated by applying the $\beta$ momentum to the previous $v_{t-1}$ displacement, and subtracting the gradient step to $x_t$.
+In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calculated by applying the $\beta$ momentum to the previous $v_{t-1}$ displacement, and subtracting the gradient step to $x_t$.
 
 \begin{figure}[h!]
 	\centering
-  	\includegraphics[scale=0.5]{img/momentum.png}
+  	\includegraphics[scale=0.5]{img/momentum}
   	\caption{Polyak's and Nesterov's Momentum}
   	\label{fig:momentum}
 \end{figure}
@@ -162,7 +162,7 @@ In the Polyak's method \cite{polyak1964some} the velocity vector $v_t$ is calcul
 	\end{algorithmic}
 \end{algorithm}
 
-Leveraging the idea of momentum introduced by Polyak, Nesterov introduced a slightly altered update rule that has been shown to converge not only for quadratic functions, but for general convex functions. In the Nesterov's method \cite{nesterov1998introductory}, instead, the velocity vector $v_t$ is calculated by applying the $\beta$ momentum to the previous $v_{t-1}$ displacement, and subtracting the gradient step to $x_t + \beta v_{t-1}$, which is the point where the momentum term leads from $x_t$.
+Leveraging the idea of momentum introduced by Polyak, Nesterov introduced a slightly altered update rule that has been shown to converge not only for quadratic functions, but for general convex functions. In the Nesterov's method~\cite{nesterov1998introductory}, instead, the velocity vector $v_t$ is calculated by applying the $\beta$ momentum to the previous $v_{t-1}$ displacement, and subtracting the gradient step to $x_t + \beta v_{t-1}$, which is the point where the momentum term leads from $x_t$.
 
 \begin{algorithm}[H]
 	\caption{Nesterov Accelerated Gradient Descent}
@@ -244,7 +244,7 @@ $$
 
 where $P$ is the preconditioner. This idea is the basis of the BFGS quasi-Newton method.
 
-The \emph{AdaGrad} \cite{duchi2011adaptive} algorithm is just a variant of preconditioned gradient descent, where $P$ is selected to be a diagonal preconditioner matrix and is updated using the gradient information, in particular it is the diagonal approximation of the inverse of the square roots of gradient outer products, until the $k$-th iteration. The above lead to the algorithm:
+The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preconditioned gradient descent, where $P$ is selected to be a diagonal preconditioner matrix and is updated using the gradient information, in particular it is the diagonal approximation of the inverse of the square roots of gradient outer products, until the $k$-th iteration. The above lead to the algorithm:
 
 \begin{algorithm}[H]
 	\caption{AdaGrad}
@@ -273,7 +273,7 @@ In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal b
 
 \subsection{Sequential Minimal Optimization}
 
-The \emph{Sequential Minimal Optimization (SMO)} \cite{platt1998sequential} method is the most popular approach for solving the SVM QP problem without any extra $Q$ matrix storage required by common QP methods. The advantage of SMO lies in the fact that it performs a series of two-point optimizations since we deal with just one equality constraint, so the Lagrange multipliers can be solved analitically.
+The \emph{Sequential Minimal Optimization (SMO)}~\cite{platt1998sequential} method is the most popular approach for solving the SVM QP problem without any extra $Q$ matrix storage required by common QP methods. The advantage of SMO lies in the fact that it performs a series of two-point optimizations since we deal with just one equality constraint, so the Lagrange multipliers can be solved analitically.
 
 \subsubsection{Classification}
 
@@ -281,7 +281,7 @@ At each iteration, SMO chooses two $\alpha_i$ to jointly optimize, let $\alpha_1
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[scale=0.5]{img/smo_multipliers.png}
+	\includegraphics[scale=0.5]{img/smo_multipliers}
 	\caption{SMO for two Lagrange multipliers}
 	\label{fig:smo_lagrange_multipliers}
 \end{figure}
@@ -337,7 +337,7 @@ Finally, the value of $\alpha_1$ is computed from the new clipped $\alpha_2$ as:
 
 where $s = y_1 y_2$.
 
-Since the \emph{Karush-Kuhn-Tucker} conditions are necessary and sufficient conditions for optimality of a positive definite QP problem and the KKT conditions for the classification problem \eqref{eq:svc_min_wolfe_dual} are:
+Since the \emph{Karush-Kuhn-Tucker} conditions are necessary and sufficient conditions for optimality of a positive definite QP problem and the KKT conditions for the classification problem~\eqref{eq:svc_min_wolfe_dual} are:
 
 \begin{equation} \label{eq:svc_smo_kkt}
 	\begin{aligned}
@@ -415,7 +415,7 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 					\State $examine\_all \gets True$
 				\EndIf
 			\EndWhile
-			\State Compute $b$ by \eqref{eq:smo_svc_b}
+			\State Compute $b$ by~\eqref{eq:smo_svc_b}
 			\State \Return $\alpha,b$
 		\EndFunction
 	\end{algorithmic}
@@ -454,19 +454,19 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 			\If {$i1 = i2$}
 				\State \Return False
 			\EndIf
-			\State Compute $L$ and $H$ using \eqref{eq:smo_svc_bounds_update1} or \eqref{eq:smo_svc_bounds_update2}
+			\State Compute $L$ and $H$ using~\eqref{eq:smo_svc_bounds_update1} or~\eqref{eq:smo_svc_bounds_update2}
 			\If {$L = H$}
 				\State \Return False
 			\EndIf
-			\State Compute $\eta$ by \eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
+			\State Compute $\eta$ by~\eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
 			\If {$\eta < 0$}
 				\State Choose $\alpha_2^{new,clipped}$ between $L$ and $H$ according to the largest value of the objective function at these points
 			\Else
-				\State Compute $\alpha_2^{new}$ by \eqref{eq:smo_svc_a2_new}
-				\State Compute $\alpha_2^{new,clipped}$ by \eqref{eq:smo_svc_a2_new_clipped}
+				\State Compute $\alpha_2^{new}$ by~\eqref{eq:smo_svc_a2_new}
+				\State Compute $\alpha_2^{new,clipped}$ by~\eqref{eq:smo_svc_a2_new_clipped}
 			\EndIf
 			\If {changes in $\alpha_2^{new,clipped}$ are larger than some eps}
-				\State Compute $\alpha_1^{new}$ by \eqref{eq:smo_svc_a1_new}
+				\State Compute $\alpha_1^{new}$ by~\eqref{eq:smo_svc_a1_new}
 				\State Update $\alpha_2^{new,clipped}$ and $\alpha_1^{new}$
 				\For {$i$ in $I0$}
 					\State Update $errors_i$ using new Lagrange multipliers
@@ -490,7 +490,7 @@ If, after optimization, both $0 < \alpha_1 < C$ and $0 < \alpha_2 < C$ then both
 
 \subsubsection{Regression}
 
-In case of regression the bounds and the new multipliers $\alpha_1^{+,new}$ and $\alpha_2^{+,new}$ can be espressed as follow if ($\alpha_1^+ > 0$ or ($\alpha_1^- = 0$ and $ E_1 - E_2 > 0$)) and ($\alpha_2^+ > 0$ or ($\alpha_2^- = 0$ and $ E_1 - E_2 < 0$)):
+In case of regression the bounds and the new multipliers $\alpha_1^{+,new}$ and $\alpha_2^{+,new}$ can be expressed as follows if ($\alpha_1^+ > 0$ or ($\alpha_1^- = 0$ and $ E_1 - E_2 > 0$)) and ($\alpha_2^+ > 0$ or ($\alpha_2^- = 0$ and $ E_1 - E_2 < 0$)):
 
 \begin{equation} \label{eq:smo_svr_bounds_update1}
 	\begin{aligned}
@@ -558,9 +558,9 @@ or, finally, if ($\alpha_1^- > 0$ or ($\alpha_1^+ = 0$ and $ E_1 - E_2 < 0$)) an
 	\alpha_1^{-,new} = \alpha_1^- - (\alpha_2^{-,new,clipped} - \alpha_2^-)
 \end{equation}
 
-where $\gamma = \alpha_1^+ - \alpha_1^- + \alpha_2^+ - \alpha_2^-$. Notice that $\eta$ and $\alpha_2^{+,new,clipped}$ or $\alpha_2^{-,new,clipped}$ are identical to \eqref{eq:smo_eta} and \eqref{eq:smo_svc_a2_new_clipped} respectively.
+where $\gamma = \alpha_1^+ - \alpha_1^- + \alpha_2^+ - \alpha_2^-$. Notice that $\eta$ and $\alpha_2^{+,new,clipped}$ or $\alpha_2^{-,new,clipped}$ are identical to~\eqref{eq:smo_eta} and~\eqref{eq:smo_svc_a2_new_clipped} respectively.
 
-The KKT conditions for the regression problem \eqref{eq:svr_min_wolfe_dual} are:
+The KKT conditions for the regression problem~\eqref{eq:svr_min_wolfe_dual} are:
 
 \begin{equation} \label{eq:svr_smo_kkt}
 	\begin{aligned}
@@ -594,7 +594,7 @@ In case of regression we select the threshold $b$ as follows:
 \bigskip
 \bigskip
 
-The improvements described in \cite{keerthi2001improvements, shevade1999improvements} for classification and regression respectively are about the definition of subsets of multipliers to efficiently update them at each iteration by separating the multipliers at the bounds from those who can be further minimized.
+The improvements described in~\cite{keerthi2001improvements, shevade1999improvements} for classification and regression respectively are about the definition of subsets of multipliers to efficiently update them at each iteration by separating the multipliers at the bounds from those who can be further minimized.
 
 \newpage
 
@@ -642,7 +642,7 @@ The improvements described in \cite{keerthi2001improvements, shevade1999improvem
 					\State $examine\_all \gets True$
 				\EndIf
 			\EndWhile
-			\State Compute $b$ by \eqref{eq:smo_svr_b}
+			\State Compute $b$ by~\eqref{eq:smo_svr_b}
 			\State \Return $\alpha^+,\alpha^-,b$
 		\EndFunction
 	\end{algorithmic}
@@ -658,16 +658,16 @@ The improvements described in \cite{keerthi2001improvements, shevade1999improvem
 			\EndIf
 			\State $finished = False$
 			\While {\NOT $finished$}
-				\State Compute $L$ and $H$ using \eqref{eq:smo_svr_bounds_update1}, \eqref{eq:smo_svr_bounds_update2}, \eqref{eq:smo_svr_bounds_update3} or \eqref{eq:smo_svr_bounds_update4}
+				\State Compute $L$ and $H$ using~\eqref{eq:smo_svr_bounds_update1},~\eqref{eq:smo_svr_bounds_update2},~\eqref{eq:smo_svr_bounds_update3} or~\eqref{eq:smo_svr_bounds_update4}
 				\If {$L < H$}
-					\State Compute $\eta$ by \eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
+					\State Compute $\eta$ by~\eqref{eq:smo_eta} \Comment we assume that $\eta > 0$, i.e., the kernel matrix $K$ is positive definite
 					\If {$\eta < 0$}
 						\State Choose $\alpha_2^{+,new,clipped}$ or $\alpha_2^{-,new,clipped}$ between $L$ and $H$ according to the largest value of the objective function at these points
 					\Else
-						\State Compute $\alpha_2^{+,new}$ or $\alpha_2^{-,new}$ using \eqref{eq:smo_svr_a2_new1}, \eqref{eq:smo_svr_a2_new3} or \eqref{eq:smo_svr_a2_new2}, \eqref{eq:smo_svr_a2_new4} respectively
-						\State Compute $\alpha_2^{+,new,clipped}$ or $\alpha_2^{-,new,clipped}$ by \eqref{eq:smo_svc_a2_new_clipped}
+						\State Compute $\alpha_2^{+,new}$ or $\alpha_2^{-,new}$ using~\eqref{eq:smo_svr_a2_new1},~\eqref{eq:smo_svr_a2_new3} or~\eqref{eq:smo_svr_a2_new2},~\eqref{eq:smo_svr_a2_new4} respectively
+						\State Compute $\alpha_2^{+,new,clipped}$ or $\alpha_2^{-,new,clipped}$ by~\eqref{eq:smo_svc_a2_new_clipped}
 					\EndIf
-					\State Compute $\alpha_1^{+,new}$ or $\alpha_1^{-,new}$ using \eqref{eq:smo_svr_a1_new1}, \eqref{eq:smo_svr_a1_new2} or \eqref{eq:smo_svr_a1_new3}, \eqref{eq:smo_svr_a1_new4} respectively
+					\State Compute $\alpha_1^{+,new}$ or $\alpha_1^{-,new}$ using~\eqref{eq:smo_svr_a1_new1},~\eqref{eq:smo_svr_a1_new2} or~\eqref{eq:smo_svr_a1_new3},~\eqref{eq:smo_svr_a1_new4} respectively
 					\If {changes in $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ or $\alpha_1^{-,new}$ are larger than some eps}
 						\State Update $\alpha_2^{+,new,clipped}, \alpha_2^{-,new,clipped}, \alpha_1^{+,new}$ or $\alpha_1^{-,new}$
 					\EndIf

@@ -1,9 +1,9 @@
 \section{Abstract}
 
-A \emph{Support Vector Machine} is a learning model used both for \emph{classification} and \emph{regression} tasks whose goal is to constructs a \emph{maximum margin separator}, i.e., a decision boundary with the largest distance from the nearest training data points.
+A \emph{Support Vector Machine} is a learning model used both for \emph{classification} and \emph{regression} tasks whose goal is to construct a \emph{maximum margin separator}, i.e., a decision boundary with the largest distance from the nearest training data points.
 
-The aim of this report is to compare the \emph{primal}, the \emph{Wolfe dual} \cite{fletcher2009support} and the \emph{Lagrangian dual} formulations of this model in terms of \emph{numerical precision}, \emph{accuracy} and \emph{complexity}.
+The aim of this report is to compare the \emph{primal}, the \emph{Wolfe dual}~\cite{fletcher2009support} and the \emph{Lagrangian dual} formulations of this model in terms of \emph{numerical precision}, \emph{accuracy} and \emph{complexity}.
 
 Firstly, I will provide a detailed mathematical derivation of the model for all these formulations, then I will propose two algorithms to solve the optimization problem in case of \emph{constrained} or \emph{unconstrained} formulation of the problem, explaining their theoretical properties, i.e., \emph{convergence} and \emph{complexity}.
 
-Finally, I will show some experiments for \emph{linearly} and \emph{nonlinearly} separable generated datasets to compare the performace of different \emph{kernels}, also by comparing the \emph{custom} results with \emph{sklearn} SVM implementations, i.e., \emph{liblinear} \cite{fan2008liblinear} and \emph{libsvm} \cite{chang2011libsvm} implementations, and \emph{cvxopt} \cite{vandenberghe2010cvxopt} QP solver.
+Finally, I will show some experiments for \emph{linearly} and \emph{nonlinearly} separable generated datasets to compare the performance of different \emph{kernels}, also by comparing the \emph{custom} results with \emph{sklearn} SVM implementations, i.e., \emph{liblinear}~\cite{fan2008liblinear} and \emph{libsvm}~\cite{chang2011libsvm} implementations, and \emph{cvxopt}~\cite{vandenberghe2010cvxopt} QP solver.
