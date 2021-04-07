@@ -72,26 +72,26 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 \end{algorithm}
 
 \begin{theorem}[Gradient Descent convergence for convex functions] \label{thm:cvx_gd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $x_*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $x^*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
 $$
-f(x_t) - f(x_*) \leq \frac{\| x_0 - x_* \|^2}{2 \alpha t}
+f(x_t) - f(x^*) \leq \frac{\| x_0 - x^* \|^2}{2 \alpha t}
 $$
 In particular, for $\alpha = 1/L$:
 $$
-f(x_t) - f(x_*) \leq \frac{L \| x_0 - x_* \|^2}{2 t}
+f(x_t) - f(x^*) \leq \frac{L \| x_0 - x^* \|^2}{2 t}
 $$
 \end{theorem}
 
 \begin{theorem}[Gradient Descent convergence for strongly convex functions] \label{thm:str_cvx_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strongly convex function. Let $x_*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strongly convex function. Let $x^*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
 $$
-f(x_t) - f(x_*) \leq (1 - \alpha \mu)^t \| x_0 - x_* \|^2
+f(x_t) - f(x^*) \leq (1 - \alpha \mu)^t \| x_0 - x^* \|^2
 $$
 In particular, for $\alpha = 1/L$:
 $$
 \begin{aligned}
-	f(x_t) - f(x_*) \leq & \bigg(1 - \frac{\mu}{L}\bigg)^t \| x_0 - x_* \|^2 \\ 
-						= & \bigg(1 - \frac{1}{\kappa}\bigg)^t \| x_0 - x_* \|^2
+	f(x_t) - f(x^*) \leq & \bigg(1 - \frac{\mu}{L}\bigg)^t \| x_0 - x^* \|^2 \\
+						= & \bigg(1 - \frac{1}{\kappa}\bigg)^t \| x_0 - x^* \|^2
 \end{aligned}
 $$
 where $\kappa = L/\mu$.
@@ -185,32 +185,32 @@ Leveraging the idea of momentum introduced by Polyak, Nesterov introduced a slig
 	\end{algorithmic}
 \end{algorithm}
 
-Comparing the algorithm \ref{alg:hbg} with the algorithm \ref{alg:nag}, we can see that Polyak’s method evaluates the gradient before adding momentum, whereas Nesterov’s algorithm evaluates it after applying momentum, which intuitively brings us closer to the minimum $x^*$, as showb in figure \ref{fig:momentum}.
+Comparing the algorithm~\ref{alg:hbg} with the algorithm~\ref{alg:nag}, we can see that Polyak’s method evaluates the gradient before adding momentum, whereas Nesterov’s algorithm evaluates it after applying momentum, which intuitively brings us closer to the minimum $x^*$, as showb in figure~\ref{fig:momentum}.
 
 \begin{theorem}[Nesterov Accelerated Gradient Descent convergence for convex functions] \label{thm:cvx_nag_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $x_*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_{t+1} = t / (t+3)$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $x^*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_{t+1} = t / (t+3)$ satisfies:
 $$
-f(x_t) - f(x_*) \leq \frac{2 \| x_0 - x_* \|^2}{\alpha (t+1)^2}
+f(x_t) - f(x^*) \leq \frac{2 \| x_0 - x^* \|^2}{\alpha (t+1)^2}
 $$
 In particular, for $\alpha = 1/L$:
 $$
-f(x_t) - f(x_*) \leq \frac{2L \| x_0 - x_* \|^2}{(t+1)^2}
+f(x_t) - f(x^*) \leq \frac{2L \| x_0 - x^* \|^2}{(t+1)^2}
 $$
 \end{theorem}
 
 \begin{theorem}[Nesterov Accelerated Gradient Descent convergence for strongly convex functions] \label{thm:str_cvx_nag_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strongly convex function. Let $x_*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_t = \displaystyle \frac{1 - \sqrt{\mu / L}}{1 + \sqrt{\mu / L}} = \frac{1-1/\sqrt{\kappa}}{1+1/\sqrt{\kappa}}$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strongly convex function. Let $x^*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_t = \displaystyle \frac{1 - \sqrt{\mu / L}}{1 + \sqrt{\mu / L}} = \frac{1-1/\sqrt{\kappa}}{1+1/\sqrt{\kappa}}$ satisfies:
 $$
 \begin{aligned}
-	f(x_t) - f(x_*) \leq & \frac{\| x_0 - x_* \|^2}{\alpha} \Bigg(1 - \sqrt{\frac{\mu}{L}}\Bigg)^t \\ 
-						= & \frac{\| x_0 - x_* \|^2}{\alpha} \Bigg(1 - \frac{1}{\sqrt{\kappa}}\Bigg)^t
+	f(x_t) - f(x^*) \leq & \frac{\| x_0 - x^* \|^2}{\alpha} \Bigg(1 - \sqrt{\frac{\mu}{L}}\Bigg)^t \\
+						= & \frac{\| x_0 - x^* \|^2}{\alpha} \Bigg(1 - \frac{1}{\sqrt{\kappa}}\Bigg)^t
 \end{aligned}
 $$
 In particular, for $\alpha = 1/L$:
 $$
 \begin{aligned}
-	f(x_t) - f(x_*) \leq & L \| x_0 - x_* \|^2 \Bigg(1 - \sqrt{\frac{\mu}{L}}\Bigg)^t \\
-						= & L \| x_0 - x_* \|^2 \Bigg(1 - \frac{1}{\sqrt{\kappa}}\Bigg)^t
+	f(x_t) - f(x^*) \leq & L \| x_0 - x^* \|^2 \Bigg(1 - \sqrt{\frac{\mu}{L}}\Bigg)^t \\
+						= & L \| x_0 - x^* \|^2 \Bigg(1 - \frac{1}{\sqrt{\kappa}}\Bigg)^t
 \end{aligned}
 $$
 where $\kappa = L/\mu$.
@@ -277,7 +277,7 @@ The \emph{Sequential Minimal Optimization (SMO)}~\cite{platt1998sequential} meth
 
 \subsubsection{Classification}
 
-At each iteration, SMO chooses two $\alpha_i$ to jointly optimize, let $\alpha_1$ and $\alpha_2$, finds the optimal values for these multipliers and update the SVM to reflect these new values. In order to solve for two Lagrange multipliers, SMO first computes the constraints over these and then solves for the constrained minimum. Since there are only two multipliers, the box-constraints cause the Lagrange multipliers to lie within a box, while the linear equality constraint causes the Lagrange multipliers to lie on a diagonal line inside the box. So, the constrained minimum must lie there as shown in \ref{fig:smo_lagrange_multipliers}.
+At each iteration, SMO chooses two $\alpha_i$ to jointly optimize, let $\alpha_1$ and $\alpha_2$, finds the optimal values for these multipliers and update the SVM to reflect these new values. In order to solve for two Lagrange multipliers, SMO first computes the constraints over these and then solves for the constrained minimum. Since there are only two multipliers, the box-constraints cause the Lagrange multipliers to lie within a box, while the linear equality constraint causes the Lagrange multipliers to lie on a diagonal line inside the box. So, the constrained minimum must lie there as shown in~\ref{fig:smo_lagrange_multipliers}.
 
 \begin{figure}[h!]
 	\centering
