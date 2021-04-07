@@ -36,8 +36,9 @@ $$
 $$
 i.e., the Hessian matix is \emph{positive definite}, which is:
 $$
-\nabla^2 f(x) \succeq \mu \ \forall \ x \in \Re^m
+\nabla^2 f(x) \succeq \mu I \ \forall \ x \in \Re^m
 $$
+where $I$ is the identity matrix.
 \end{definition}
 
 \begin{definition}[L-smoothness] \label{def:l_smoothness}
@@ -143,8 +144,8 @@ In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calcul
 \end{figure}
 
 \begin{algorithm}[H]
-	\caption{Polyak Accelerated Gradient Descent or or Heavy-Ball method}
-	\label{alg:hbg}
+	\caption{Polyak Accelerated Gradient Descent or Polyak Heavy-Ball method}
+	\label{alg:pag}
 	\begin{algorithmic}
 		\Require{Function $f$ to minimize}
 		\Require{Learning rate or step size $\alpha > 0$}
@@ -165,7 +166,7 @@ In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calcul
 Leveraging the idea of momentum introduced by Polyak, Nesterov introduced a slightly altered update rule that has been shown to converge not only for quadratic functions, but for general convex functions. In the Nesterov's method~\cite{nesterov1998introductory}, instead, the velocity vector $v_t$ is calculated by applying the $\beta$ momentum to the previous $v_{t-1}$ displacement, and subtracting the gradient step to $x_t + \beta v_{t-1}$, which is the point where the momentum term leads from $x_t$.
 
 \begin{algorithm}[H]
-	\caption{Nesterov Accelerated Gradient Descent}
+	\caption{Nesterov Accelerated Gradient Descent or Nesterov Heavy-Ball method}
 	\label{alg:nag}
 	\begin{algorithmic}
 		\Require{Function $f$ to minimize}
@@ -185,7 +186,7 @@ Leveraging the idea of momentum introduced by Polyak, Nesterov introduced a slig
 	\end{algorithmic}
 \end{algorithm}
 
-Comparing the algorithm~\ref{alg:hbg} with the algorithm~\ref{alg:nag}, we can see that Polyak’s method evaluates the gradient before adding momentum, whereas Nesterov’s algorithm evaluates it after applying momentum, which intuitively brings us closer to the minimum $x^*$, as showb in figure~\ref{fig:momentum}.
+Comparing the algorithm~\ref{alg:pag} with the algorithm~\ref{alg:nag}, we can see that Polyak’s method evaluates the gradient before adding momentum, whereas Nesterov’s algorithm evaluates it after applying momentum, which intuitively brings us closer to the minimum $x^*$, as showb in figure~\ref{fig:momentum}.
 
 \begin{theorem}[Nesterov Accelerated Gradient Descent convergence for convex functions] \label{thm:cvx_nag_convergence}
 Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $x^*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_{t+1} = t / (t+3)$ satisfies:
