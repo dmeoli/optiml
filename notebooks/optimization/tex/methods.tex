@@ -11,7 +11,7 @@ In order to explain the \emph{convergence} and \emph{efficiency} properties of t
 		$$
 		\item We say that a differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^1$, is convex if: 
 		$$ 
-			f(x) \geq f(y) + \langle \nabla f(y), x - y \rangle \ \forall \ x, y \in \Re^m 
+			f(x) - f(y) \geq \langle \nabla f(y), x - y \rangle \ \forall \ x, y \in \Re^m 
 		$$
 		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^2$ and the Hessian matrix is \emph{symmetric}, is convex iff: 
 		$$ 
@@ -28,7 +28,7 @@ $$
 is convex for any $\mu > 0$. 
 If $f$ is differentiable, i.e., $f \in C^1$, this is also equivalent to:
 $$
-f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle + \frac{\mu}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
+f(x) - f(y) \geq \langle \nabla f(y), x - y \rangle + \frac{\mu}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^m
 $$
 and, if $f$ is a twice differentiable function, i.e., $f \in C^2$ and the Hessian matrix is \emph{symmetric}, then $f$ is $\mu$-strongly convex iff:
 $$
@@ -46,6 +46,15 @@ We say that a function $f: \Re^m \rightarrow \Re$ is L-smooth, i.e., L-Lipschitz
 $$
 \| \nabla f(x) - \nabla f(y) \| \leq L \| x - y \| \ \forall \ x, y \in \Re^m
 $$
+or, equivalently:
+$$
+f(x) - f(y) \leq \langle \nabla f(y), x - y \rangle + \frac{L}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^m
+$$
+and, if $f$ is a $\mu$-strongly convex function, we give the following Hessian bounds:
+$$
+\mu I \preceq \nabla^2 f(x) \preceq L I \ \forall \ x \in \Re^m
+$$
+where $I$ is the identity matrix.
 \end{definition}
 
 \pagebreak
