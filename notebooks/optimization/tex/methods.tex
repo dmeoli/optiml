@@ -149,11 +149,35 @@ Since \emph{Gradient Descent} becomes impractical when dealing with large datase
 
 Note that in expectation, we converge like GD, since $\displaystyle \mathbb{E}_{i \sim \mathcal{U}(1,\dots,n)}[\nabla f_i(x_t)] = \nabla f(x_t)$, therefore, the expected iterate of SGD converges to the optimum.
 
+Consider the SGD algorithm introduced previously but where each iteration is projected into the ball $\mathcal{B}(0, R)$ with radius $R > 0$ fixed.
+
+\begin{theorem}[Stochastic Gradient Descent convergence for convex functions] \label{thm:cvx_sgd_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function and assume that exists $b > 0$ satisfying:
+$$
+\| f_i(x) \| \leq b \ \forall \ x \in \mathcal{B}(0, R)
+$$
+Besides, assume that all minima of $f$ belong to $\mathcal{B}(0, R)$. Then the Stochastic Gradient Descent with step size $\alpha = 2R/(b\sqrt{k})$ satisfies:
+$$
+\mathbb{E}\Bigg[f\Bigg(\frac{1}{k} \sum_{t=1}^k x_t\Bigg)\Bigg] - f(x^*) \leq \frac{3Rb}{\sqrt{k}}
+$$
+\end{theorem}
+
+\begin{theorem}[Stochastic Gradient Descent convergence for strongly convex functions] \label{thm:str_cvx_sgd_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$-strongly convex function and assume that exists $b > 0$ satisfying:
+$$
+\| f_i(x) \| \leq b \ \forall \ x \in \mathcal{B}(0, R)
+$$
+Besides, assume that all minima of $f$ belong to $\mathcal{B}(0, R)$. Then the Stochastic Gradient Descent with step size $\alpha = 2R/(b\sqrt{k})$ satisfies:
+$$
+\mathbb{E}\Bigg[f\Bigg(\frac{2}{k(k+1)} \sum_{t=1}^k t x_{t-1}\Bigg)\Bigg] - f(x^*) \leq \frac{2b^2}{\mu(k+1)}
+$$
+\end{theorem}
+
 SGD’s convergence rate for L-smooth convex functions is $\displaystyle \mathcal{O}\bigg(\frac{1}{\sqrt{t}}\bigg)$ and $\displaystyle \mathcal{O}\bigg(\frac{1}{t}\bigg)$ for strongly convex. More iterations are needed to reach the same accuracy as GD, but the iterations are far cheaper.
 
 \subsubsection{Momentum}
 
-To mitigate the pathological zig-zagging of the SGD method we introduce two accelerated methods~\cite{polyak1964some} and~\cite{nesterov1998introductory} that exploits information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield smoother trajectory.
+To mitigate the pathological zig-zagging by speeding up the convergence rate of the SGD method, we introduce two accelerated methods~\cite{polyak1964some} and~\cite{nesterov1998introductory} that exploits information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield smoother trajectory.
 
 In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calculated by applying the $\beta$ momentum to the previous $v_{t-1}$ displacement, and subtracting the gradient step to $x_t$.
 
