@@ -46,7 +46,7 @@ We say that a function $f: \Re^m \rightarrow \Re$ is L-smooth, i.e., L-Lipschitz
 $$
 \| \nabla f(x) - \nabla f(y) \| \leq L \| x - y \| \ \forall \ x, y \in \Re^m
 $$
-or, equivalently:
+then:
 $$
 f(x) - f(y) \leq \langle \nabla f(y), x - y \rangle + \frac{L}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^m
 $$
@@ -56,6 +56,8 @@ $$
 $$
 where $I$ is the identity matrix.
 \end{definition}
+
+In the models described above, we are dealing with four different convex loss functions, two for the \emph{classification} and two for the regression tasks. In particular, two of them are nonsmooth and not strongly convex functions, i.e., the \emph{hinge} and the \emph{espilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, meanwhile their other two squared versions are smooth and strongly convex. Notice that although the \emph{hinge} and the \emph{epsilon-insensitive} losses are not strongly convex, adding a strongly convex regularizer~\eqref{eq:primal_svc} makes the overall objective function strongly convex.
 
 \pagebreak
 
@@ -139,7 +141,7 @@ Note that in expectation, we converge like GD, since $\displaystyle \mathbb{E}_{
 
 SGD’s convergence rate for L-smooth convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ and $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ for strongly convex. More iterations are needed to reach the same accuracy as GD, but the iterations are far cheaper.
 
-\subsubsection{Momentum} 
+\subsubsection{Momentum}
 
 To mitigate the pathological zig-zagging of the SGD method we introduce two accelerated methods~\cite{polyak1964some} and~\cite{nesterov1998introductory} that exploits information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield smoother trajectory.
 
@@ -230,7 +232,7 @@ Nesterov momentum brings the rate of convergence from $\displaystyle \mathcal{O}
 
 \bigskip
 
-We can write the iteration complexity of these methods, i.e., the smallest $t$ such that we’re within $\epsilon$, for a L-smooth and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Big(\kappa \log \frac{1}{\epsilon}\Big)$ for the standard GD method, $\displaystyle \mathcal{O}\Big(\sqrt{\kappa}\log \frac{1}{\epsilon}\Big)$ for the Polyak’s method and, finally, $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{\epsilon}}\Big)$ for the NAG method to get $\epsilon$-close to global optimum and where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the smallest and the largest eigenvalues $\lambda_{min}$ and $\lambda_{max}$ respectively.
+We can write the \emph{iteration complexity} of these methods, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, for a L-smooth and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Big(\kappa \log \frac{1}{\epsilon}\Big)$ for the standard GD method, $\displaystyle \mathcal{O}\Big(\sqrt{\kappa}\log \frac{1}{\epsilon}\Big)$ for the accelerated methods where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the smallest and the largest eigenvalues $\lambda_{min}$ and $\lambda_{max}$ respectively. Finally, NAG's \emph{iteration complexity} for L-smooth convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{\epsilon}}\Big)$.
 
 \pagebreak
 
@@ -277,7 +279,7 @@ The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preco
 	\end{algorithmic}
 \end{algorithm}
 
-In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s convergence rate for L-smooth convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$.
+In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s convergence rate for L-smooth convex functions is the same of the SGD method described above, i.e., $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$.
 
 \pagebreak
 
