@@ -52,7 +52,7 @@ f(x) - f(y) \leq \langle \nabla f(y), x - y \rangle + \frac{L}{2} \| x - y \|^2 
 $$
 and, if $f$ is a $\mu$-strongly convex function, we give the following Hessian bounds:
 $$
-\mu I \preceq \nabla^2 f(x) \preceq L I \ \forall \ x \in \Re^m
+0 \prec \mu I \preceq \nabla^2 f(x) \preceq L I \ \forall \ x \in \Re^m
 $$
 where $I$ is the identity matrix.
 \end{definition}
@@ -84,7 +84,7 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 \end{algorithm}
 
 \begin{theorem}[Gradient Descent convergence for convex functions] \label{thm:cvx_gd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $x^*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
 $$
 f(x_t) - f(x^*) \leq \frac{\| x_0 - x^* \|^2}{2 \alpha t}
 $$
@@ -94,8 +94,8 @@ f(x_t) - f(x^*) \leq \frac{L \| x_0 - x^* \|^2}{2 t}
 $$
 \end{theorem}
 
-\begin{theorem}[Gradient Descent convergence for strongly convex functions] \label{thm:str_cvx_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strongly convex function. Let $x^*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
+\begin{theorem}[Gradient Descent convergence for strongly convex functions] \label{thm:str_cvx_gd_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$-strongly convex function. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
 $$
 f(x_t) - f(x^*) \leq (1 - \alpha \mu)^t \| x_0 - x^* \|^2
 $$
@@ -104,6 +104,16 @@ $$
 \begin{aligned}
 	f(x_t) - f(x^*) \leq & \bigg(1 - \frac{\mu}{L}\bigg)^t \| x_0 - x^* \|^2 \\
 						= & \bigg(1 - \frac{1}{\kappa}\bigg)^t \| x_0 - x^* \|^2
+\end{aligned}
+$$
+where $\kappa = L/\mu$.
+\end{theorem}
+
+\begin{theorem}[Gradient Descent convergence for quadratic functions] \label{thm:quad_gd_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$-strongly convex quadratic function. Then the Gradient Descent with step size $\alpha = \displaystyle \frac{2}{(L + \mu)^2}$ and momentum $\beta = \displaystyle \frac{\kappa-1}{\kappa+1}$ satisfies:
+$$
+\begin{aligned}
+	\| x_t - x^* \| = \bigg(\frac{\kappa-1}{\kappa+1}\bigg)^t \| x_0 - x^* \|
 \end{aligned}
 $$
 where $\kappa = L/\mu$.
@@ -139,7 +149,7 @@ Since \emph{Gradient Descent} becomes impractical when dealing with large datase
 
 Note that in expectation, we converge like GD, since $\displaystyle \mathbb{E}_{i \sim \mathcal{U}(1,\dots,n)}[\nabla f_i(x_t)] = \nabla f(x_t)$, therefore, the expected iterate of SGD converges to the optimum.
 
-SGD’s convergence rate for L-smooth convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ and $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ for strongly convex. More iterations are needed to reach the same accuracy as GD, but the iterations are far cheaper.
+SGD’s convergence rate for L-smooth convex functions is $\displaystyle \mathcal{O}\bigg(\frac{1}{\sqrt{t}}\bigg)$ and $\displaystyle \mathcal{O}\bigg(\frac{1}{t}\bigg)$ for strongly convex. More iterations are needed to reach the same accuracy as GD, but the iterations are far cheaper.
 
 \subsubsection{Momentum}
 
@@ -174,6 +184,16 @@ In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calcul
 	\end{algorithmic}
 \end{algorithm}
 
+\begin{theorem}[Polyak Accelerated Gradient Descent convergence for quadratic functions] \label{thm:quad_pag_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$-strongly convex quadratic function. Then the Polyak Accelerated Gradient Descent with step size $\alpha = \displaystyle \frac{4}{(\sqrt{L} + \sqrt{\mu})^2}$ and momentum $\beta = \displaystyle \frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1}$ satisfies:
+$$
+\begin{aligned}
+	\| x_t - x^* \| = \bigg(\frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1}\bigg)^t \| x_0 - x^* \|
+\end{aligned}
+$$
+where $\kappa = L/\mu$.
+\end{theorem}
+
 Leveraging the idea of momentum introduced by Polyak, Nesterov introduced a slightly altered update rule that has been shown to converge not only for quadratic functions, but for general convex functions. In the Nesterov's method~\cite{nesterov1998introductory}, instead, the velocity vector $v_t$ is calculated by applying the $\beta$ momentum to the previous $v_{t-1}$ displacement, and subtracting the gradient step to $x_t + \beta v_{t-1}$, which is the point where the momentum term leads from $x_t$.
 
 \begin{algorithm}[H]
@@ -200,7 +220,7 @@ Leveraging the idea of momentum introduced by Polyak, Nesterov introduced a slig
 Comparing the algorithm~\ref{alg:pag} with the algorithm~\ref{alg:nag}, we can see that Polyak’s method evaluates the gradient before adding momentum, whereas Nesterov’s algorithm evaluates it after applying momentum, which intuitively brings us closer to the minimum $x^*$, as showb in figure~\ref{fig:momentum}.
 
 \begin{theorem}[Nesterov Accelerated Gradient Descent convergence for convex functions] \label{thm:cvx_nag_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Let $x^*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_{t+1} = t / (t+3)$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Then the Nesterov Accelerated Gradient Descent with step size $\alpha \leq 1/L$ and momentum $\beta_{t+1} = t / (t+3)$ satisfies:
 $$
 f(x_t) - f(x^*) \leq \frac{2 \| x_0 - x^* \|^2}{\alpha (t+1)^2}
 $$
@@ -211,7 +231,7 @@ $$
 \end{theorem}
 
 \begin{theorem}[Nesterov Accelerated Gradient Descent convergence for strongly convex functions] \label{thm:str_cvx_nag_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$ strongly convex function. Let $x^*$ be the minimum of $f$ on $\Re^m$. Then the Gradient Descent with step size $\alpha \leq 1/L$ and $\beta_t = \displaystyle \frac{1 - \sqrt{\mu / L}}{1 + \sqrt{\mu / L}} = \frac{1-1/\sqrt{\kappa}}{1+1/\sqrt{\kappa}}$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$-strongly convex function. Then the Nesterov Accelerated Gradient Descent with step size $\alpha \leq 1/L$ and momentum $\beta_t = \displaystyle \frac{1 - \sqrt{\mu / L}}{1 + \sqrt{\mu / L}} = \frac{1-1/\sqrt{\kappa}}{1+1/\sqrt{\kappa}}$ satisfies:
 $$
 \begin{aligned}
 	f(x_t) - f(x^*) \leq & \frac{\| x_0 - x^* \|^2}{\alpha} \Bigg(1 - \sqrt{\frac{\mu}{L}}\Bigg)^t \\
