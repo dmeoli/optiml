@@ -1,1 +1,3 @@
-notebooks linguist-documentation
+*.ipynb linguist-documentation
+*.tex documentation
+*.bib documentation
