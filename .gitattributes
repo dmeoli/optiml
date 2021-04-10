@@ -1,1 +1,2 @@
-*.tex *.ipynb linguist-documentation
+*.ipynb linguist-documentation
+*.tex linguist-documentation
