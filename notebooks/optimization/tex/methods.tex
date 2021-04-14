@@ -57,8 +57,6 @@ $$
 where $I$ is the identity matrix.
 \end{definition}
 
-In the models described above, we are dealing with four different convex loss functions, two for the \emph{classification} and two for the regression tasks. In particular, two of them are nonsmooth and not strongly convex functions, i.e., the \emph{hinge} and the \emph{espilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, meanwhile their other two squared versions are smooth and strongly convex. Notice that although the \emph{hinge} and the \emph{epsilon-insensitive} losses are not strongly convex, adding a strongly convex regularizer~\eqref{eq:primal_svc} makes the overall objective function strongly convex.
-
 \pagebreak
 
 \subsection{Gradient Descent}
@@ -167,17 +165,17 @@ Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$-strongly convex function and
 $$
 \| f_i(x) \| \leq b \ \forall \ x \in \mathcal{B}(0, R)
 $$
-Besides, assume that all minima of $f$ belong to $\mathcal{B}(0, R)$. Then the Stochastic Gradient Descent with step size $\alpha = 2R/(b\sqrt{k})$ satisfies:
+Besides, assume that all minima of $f$ belong to $\mathcal{B}(0, R)$. Then the Stochastic Gradient Descent with step size $\alpha = 2/(\mu(k+1))$ satisfies:
 $$
 \mathbb{E}\Bigg[f\Bigg(\frac{2}{k(k+1)} \sum_{t=1}^k t x_{t-1}\Bigg)\Bigg] - f(x^*) \leq \frac{2b^2}{\mu(k+1)}
 $$
 \end{theorem}
 
-SGD’s convergence rate for L-smooth convex functions is $\displaystyle \mathcal{O}\bigg(\frac{1}{\sqrt{t}}\bigg)$ and $\displaystyle \mathcal{O}\bigg(\frac{1}{t}\bigg)$ for strongly convex. More iterations are needed to reach the same accuracy as GD, but the iterations are far cheaper.
+SGD’s \emph{convergence rate} for L-smooth convex functions is $\displaystyle \mathcal{O}\bigg(\frac{1}{\sqrt{t}}\bigg)$ and $\displaystyle \mathcal{O}\bigg(\frac{1}{t}\bigg)$ for strongly convex. More iterations are needed to reach the same accuracy as GD, but the iterations are far cheaper.
 
 \subsubsection{Momentum}
 
-To mitigate the pathological zig-zagging by speeding up the convergence rate of the SGD method, we introduce two accelerated methods~\cite{polyak1964some} and~\cite{nesterov1998introductory, nesterov1983method} that exploits information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield smoother trajectory.
+To mitigate the pathological zig-zagging by speeding up the \emph{convergence rate} of the SGD method, we introduce two accelerated methods~\cite{polyak1964some} and~\cite{nesterov1998introductory, nesterov1983method} that exploits information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield smoother trajectory.
 
 In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calculated by applying the $\beta$ momentum to the previous $v_{t-1}$ displacement, and subtracting the gradient step to $x_t$.
 
@@ -278,13 +276,20 @@ Nesterov's momentum brings the \emph{rate of convergence} from $\displaystyle \m
 
 We can write the \emph{iteration complexity} of these methods, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, for a L-smooth and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Big(\kappa \log \frac{1}{\epsilon}\Big)$ for the standard GD method, $\displaystyle \mathcal{O}\Big(\sqrt{\kappa}\log \frac{1}{\epsilon}\Big)$ for the accelerated methods where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the largest $\lambda_{max}$ and the smallest $\lambda_{min}$ eigenvalues respectively. Finally, NAG's \emph{iteration complexity} for L-smooth convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{\epsilon}}\Big)$.
 
+\bigskip
+\bigskip
+
+In the models described above, we are dealing with four different convex loss functions, two for the \emph{classification} and two for the \emph{regression} tasks. In particular, two of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, meanwhile, their two squared versions are smooth. This suggests us, as described in the methodological part, that we can achieve a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ for the nonsmooth objectives, meanwhile we can do better for the smooth ones using acceleration up to a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$.
+
+Also notice that all these loss functions are not strongly convex when they using the bias term $b$ explicitly, because for $| b |$ or $\| w \|$ sufficiently large, they are locally linear, i.e., $\nabla^2 \mathcal{L} = 0$. Therefore, the objectives in form~\eqref{eq:primal_svc} are not strongly convex wrt $b$. They are $\mu$-strongly convex only wrt $w$, solely due to the regularization term, i.e., $\displaystyle \frac{1}{2} \| w \|^2$. So, using the formulations~\eqref{eq:primal_svc_hinge1} or~\eqref{eq:primal_svc_hinge2} we obtain globally strongly convex objectives.
+
 \pagebreak
 
 \subsection{AdaGrad}
 
 Due to the sparsity of the weight vector of the \emph{Lagrangian dual}, i.e., the Lagrange multipliers, we might end up in a situation where some components of the gradient are very small and others large. This, in terms of \emph{conditioning number}, i.e., $\kappa = L/\mu \gg 1$, means that the level sets of $f$ are ellipsoid, i.e., we are dealing with an ill-conditioned problem. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
 
-Another method, that is usually deprecated in ML applications due to its increased computational complexity, is Newton’s method. Newton’s method favors a much faster convergence rate, i.e., number of iterations, at the cost of being more expensive per iteration. For convex problems, the recursion is similar to the gradient descent algorithm:
+Another method, that is usually deprecated in ML applications due to its increased computational complexity, is Newton’s method. Newton’s method favors a much faster \emph{convergence rate}, i.e., number of iterations, at the cost of being more expensive per iteration. For convex problems, the recursion is similar to the gradient descent algorithm:
 
 $$
 x_{t+1} = x_t - \alpha H^{-1} \nabla f(x_t)
@@ -323,7 +328,7 @@ The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preco
 	\end{algorithmic}
 \end{algorithm}
 
-In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s convergence rate for L-smooth convex functions is the same of the SGD method described above, i.e., $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$.
+In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s \emph{convergence rate} for L-smooth convex functions is the same of the SGD method described above, i.e., $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$.
 
 \pagebreak
 

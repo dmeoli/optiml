@@ -37,7 +37,7 @@ The objective function for SVR can then be written as:
 The \emph{epsilon-insensitive} loss is defined as:
 
 \begin{equation} \label{eq:eps_loss1}
-	\mathcal{L}_\epsilon = 
+	\mathcal{L}_\epsilon^1 = 
 	\begin{cases}
 		0 & \text{if} \ |y - (w^T x + b)| \leq \epsilon \\
 		|y - (w^T x + b)| - \epsilon & \text{otherwise} \\
@@ -47,13 +47,13 @@ The \emph{epsilon-insensitive} loss is defined as:
 or, equivalently:
 
 \begin{equation} \label{eq:eps_loss2}
-	\mathcal{L}_\epsilon = \max(0, |y - (w^T x + b)| - \epsilon)
+	\mathcal{L}_\epsilon^1 = \max(0, |y - (w^T x + b)| - \epsilon)
 \end{equation}
 
 As the \emph{hinge} loss, also the \emph{epsilon-insensitive} loss is a nondifferentiable convex function due to its nonsmoothness in $\pm\epsilon$, but has a subgradient wrt $w$ that is given by:
 
 \begin{equation} \label{eq:eps_loss_der}
-	\frac{\partial \mathcal{L_\epsilon}}{\partial w}=
+	\frac{\partial \mathcal{L_\epsilon^1}}{\partial w}=
 		\begin{cases}
             (y - (w^T x + b)) x & \text{if} \ |y - (w^T x + b)| > \epsilon \\
             0 & \text{otherwise} \\ 

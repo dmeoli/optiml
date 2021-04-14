@@ -91,10 +91,10 @@ and it is a nondifferentiable convex function due to its nonsmoothness in 1, but
 The general primal unconstrained formulation takes the form:
 
 \begin{equation} \label{eq:primal_svc}
-    \min_{w,b} \mathcal{R}(w,b) + C \sum_{i=1}^n \mathcal{L}(w,b;x_i,y_i)
+    \min_{w,b} \mathcal{R}(w) + C \sum_{i=1}^n \mathcal{L}(w,b;x_i,y_i)
 \end{equation}
 
-where $\mathcal{R}(w, b)$ is the \emph{regularization term} and $\mathcal{L}(w,b;x_i,y_i)$ is the \emph{loss function} associated with the observation $(x_i,y_i)$~\cite{piccialli2018nonlinear}.
+where $\mathcal{R}(w)$ is the \emph{regularization term} and $\mathcal{L}(w,b;x_i,y_i)$ is the \emph{loss function} associated with the observation $(x_i,y_i)$~\cite{piccialli2018nonlinear}.
 
 The quadratic optimization problem~\eqref{eq:quad_svc_obj} can be equivalently formulated as:
 
@@ -116,21 +116,21 @@ The above formulation penalizes slacks $\xi$ linearly and is called $\mathcal{L}
 To simplify the notation and so also the design of the algorithms, the simplest approach to learn the bias term $b$ is that of including that into the \emph{regularization term}; so we can rewrite~\eqref{eq:svc_hinge} and~\eqref{eq:svc_squared_hinge} as follows:
 
 \begin{equation} \label{eq:primal_svc_hinge1}
-    \min_{w,b} \frac{1}{2} (\| w \|^2 + b^2) + C \sum_{i=1}^n \mathcal{L}(w;x_i,y_i)
+    \min_{w,b} \frac{1}{2} (\| w \|^2 + b^2) + C \sum_{i=1}^n \mathcal{L}(w,b;x_i,y_i)
 \end{equation}
 
 or, equivalently, by augmenting the weight vector $w$ with the bias term $b$ and each instance $x_i$ with an additional dimension, i.e., with constant value equal to 1:
 
 \begin{equation} \label{eq:primal_svc_hinge2}
     \begin{aligned}
-        \min_{w} \quad & \frac{1}{2} \| \bar{w} \|^2 + C \sum_{i=1}^n \mathcal{L}(w;\bar{x}_i,y_i) \\
+        \min_{w} \quad & \frac{1}{2} \| \bar{w} \|^2 + C \sum_{i=1}^n \mathcal{L}(\bar{w};\bar{x}_i,y_i) \\
             \text{where} \quad & \bar{w}^T = [w^T, b] \\ & \bar{x}_i^T = [x_i^T, 1]
     \end{aligned}
 \end{equation}
 
 with the advantages of having convex properties of the objective function useful for convergence analysis and the possibility to directly apply algorithms designed for models without the bias term.
 
-Notice that in terms of numerical optimization the formulations~\eqref{eq:svc_hinge} and~\eqref{eq:svc_squared_hinge} are not equivalent to~\eqref{eq:primal_svc_hinge1} or~\eqref{eq:primal_svc_hinge2} since in the first one the bias term $b$ does not contribute to the \emph{regularization term}, so the SVM formulation is based on an unregularized bias term $b$, as highlighted by the \emph{statistical learning theory}. But, in machine learning sense, numerical experiments in~\cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
+Notice that in terms of numerical optimization the formulation~\eqref{eq:svc_hinge} is not equivalent to~\eqref{eq:primal_svc_hinge1} or~\eqref{eq:primal_svc_hinge2} since in the first one the bias term $b$ does not contribute to the \emph{regularization term}, so the SVM formulation is based on an unregularized bias term $b$, as highlighted by the \emph{statistical learning theory}. But, in machine learning sense, numerical experiments in~\cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
 
 \subsubsection{Wolfe Dual formulation}
 
