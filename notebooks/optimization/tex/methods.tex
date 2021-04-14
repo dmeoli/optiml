@@ -177,7 +177,7 @@ SGD’s convergence rate for L-smooth convex functions is $\displaystyle \mathca
 
 \subsubsection{Momentum}
 
-To mitigate the pathological zig-zagging by speeding up the convergence rate of the SGD method, we introduce two accelerated methods~\cite{polyak1964some} and~\cite{nesterov1998introductory} that exploits information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield smoother trajectory.
+To mitigate the pathological zig-zagging by speeding up the convergence rate of the SGD method, we introduce two accelerated methods~\cite{polyak1964some} and~\cite{nesterov1998introductory, nesterov1983method} that exploits information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield smoother trajectory.
 
 In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calculated by applying the $\beta$ momentum to the previous $v_{t-1}$ displacement, and subtracting the gradient step to $x_t$.
 
@@ -272,7 +272,7 @@ $$
 where $\kappa = L/\mu$.
 \end{theorem}
 
-Nesterov's momentum brings the \emph{rate of convergence} from $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ to $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$ and in the case of smooth and strongly convex functions gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great because we get the guarantee for a more general class of functions but this rate of convergence cannot be further improved.
+Nesterov's momentum brings the \emph{rate of convergence} from $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ to $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$ and in the case of smooth and strongly convex functions gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great because we get the guarantee for a more general class of functions but this rate of convergence cannot be further improved only using first-order information.
 
 \bigskip
 
