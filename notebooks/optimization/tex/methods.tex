@@ -59,7 +59,7 @@ where $I$ is the identity matrix.
 
 \pagebreak
 
-\subsection{Gradient Descent}
+\subsection{Gradient Descent for Primal formulations}
 
 The Gradient Descent algorithm is the simplest \emph{first-order optimization} method that exploits the orthogonality of the gradient wrt the level sets to take a descent direction. In particular, it performs the following iterations:
 
@@ -276,63 +276,15 @@ Nesterov's momentum brings the \emph{rate of convergence} from $\displaystyle \m
 
 We can write the \emph{iteration complexity} of these methods, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, for a L-smooth and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Big(\kappa \log \frac{1}{\epsilon}\Big)$ for the standard GD method, $\displaystyle \mathcal{O}\Big(\sqrt{\kappa}\log \frac{1}{\epsilon}\Big)$ for the accelerated methods where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the largest $\lambda_{max}$ and the smallest $\lambda_{min}$ eigenvalues respectively. Finally, NAG's \emph{iteration complexity} for L-smooth convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{\epsilon}}\Big)$.
 
-\bigskip
-\bigskip
+\subsubsection{SVM's losses properties}
 
-In the models described above, we are dealing with four different convex loss functions, two for the \emph{classification} and two for the \emph{regression} tasks. In particular, two of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, meanwhile, their two squared versions are smooth. This suggests us, as described in the methodological part, that we can achieve a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ for the nonsmooth objectives, meanwhile we can do better for the smooth ones using acceleration up to a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$.
+Several losses and objectives have been presented in section~\ref{section:svc} and~\ref{section:svr}. In our experiments, we will consider four different convex loss functions, two for the \emph{classification} and two for the \emph{regression} tasks. In particular, two of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, meanwhile, their two squared versions are smooth. This suggests us, as described in the methodological part, that we can achieve a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ for the nonsmooth objectives, meanwhile we can do better for the smooth ones using acceleration up to a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$.
 
-Also notice that all these loss functions are not strongly convex when they using the bias term $b$ explicitly, because for $| b |$ or $\| w \|$ sufficiently large, they are locally linear, i.e., $\nabla^2 \mathcal{L} = 0$. Therefore, the objectives in form~\eqref{eq:primal_svc} are not strongly convex wrt $b$. They are $\mu$-strongly convex only wrt $w$, solely due to the regularization term, i.e., $\displaystyle \frac{1}{2} \| w \|^2$. So, using the formulations~\eqref{eq:primal_svc_hinge1} or~\eqref{eq:primal_svc_hinge2} we obtain globally strongly convex objectives.
-
-\pagebreak
-
-\subsection{AdaGrad}
-
-Due to the sparsity of the weight vector of the \emph{Lagrangian dual}, i.e., the Lagrange multipliers, we might end up in a situation where some components of the gradient are very small and others large. This, in terms of \emph{conditioning number}, i.e., $\kappa = L/\mu \gg 1$, means that the level sets of $f$ are ellipsoid, i.e., we are dealing with an ill-conditioned problem. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
-
-Another method, that is usually deprecated in ML applications due to its increased computational complexity, is Newton’s method. Newton’s method favors a much faster \emph{convergence rate}, i.e., number of iterations, at the cost of being more expensive per iteration. For convex problems, the recursion is similar to the gradient descent algorithm:
-
-$$
-x_{t+1} = x_t - \alpha H^{-1} \nabla f(x_t)
-$$
-
-where $\alpha$ is often close to one (damped-Newton) or one, and $H^{-1}$ denotes the Hessian of $f$ at the current point, i.e., $\nabla^2 f(x_t)$.
-
-The above suggest a general rule in optimization: find any preconditioner, in convex optimization it has to be positive semidefinite, that improves the performance of gradient descent in terms of iterations, but without wasting too much time to compute that precoditioner. The above result into:
-
-$$
-x_{t+1} = x_t - \alpha P^{-1} \nabla f(x_t)
-$$
-
-where $P$ is the preconditioner. This idea is the basis of the BFGS quasi-Newton method.
-
-The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preconditioned gradient descent, where $P$ is selected to be a diagonal preconditioner matrix and is updated using the gradient information, in particular it is the diagonal approximation of the inverse of the square roots of gradient outer products, until the $k$-th iteration. The above lead to the algorithm:
-
-\begin{algorithm}[H]
-	\caption{AdaGrad}
-	\label{alg:adagrad}
-	\begin{algorithmic}
-		\Require{Function $f$ to minimize}
-		\Require{Learning rate or step size $\alpha > 0$}
-		\Require{Offset $\epsilon > 0$ to ensures not divide by 0}
-		\Function{AdaGrad}{$f,\alpha,\epsilon$}
-			\State Initialize weight vector $x_0$ and the squared accumulated gradients vector $s_t \gets 0$
-			\State $t = 1$
-			\While {$not\_convergence$}
-				\State $g_t \gets \nabla f(x_t)$
-				\State $s_t \gets s_{t-1} + g_t^2$
-				\State $x_{t+1} \gets x_t - \alpha P_t^{-1} g_t = x_t - \displaystyle \frac{\alpha}{\sqrt{s_t + \epsilon}} \odot g_t \ \text{where} \ P_t \gets diag(s_t + \epsilon)^{1/2}$
-				\State $t \gets t + 1$
-			\EndWhile
-			\State \Return $x_t$
-		\EndFunction
-	\end{algorithmic}
-\end{algorithm}
-
-In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s \emph{convergence rate} for L-smooth convex functions is the same of the SGD method described above, i.e., $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$.
+Also, notice that all these losses are not strongly convex when they consider the bias term $b$ explicitly, because for $| b |$ or $\| w \|$ sufficiently large, they are locally linear, i.e., $\nabla^2 \mathcal{L} = 0$. Therefore, the objectives in form~\eqref{eq:primal_svc} are not strongly convex wrt $b$. They are $\mu$-strongly convex only wrt $w$, solely due to the regularization term, i.e., $\displaystyle \frac{1}{2} \| w \|^2$. So, using the formulations~\eqref{eq:primal_svc_hinge1} or~\eqref{eq:primal_svc_hinge2} where the bias term $b$ is included into the regularization term, we obtain globally strongly convex objectives.
 
 \pagebreak
 
-\subsection{Sequential Minimal Optimization}
+\subsection{Sequential Minimal Optimization for Wolfe Dual formulations}
 
 The \emph{Sequential Minimal Optimization (SMO)}~\cite{platt1998sequential} method is the most popular approach for solving the SVM QP problem without any extra $Q$ matrix storage required by common QP methods. The advantage of SMO lies in the fact that it performs a series of two-point optimizations since we deal with just one equality constraint, so the Lagrange multipliers can be solved analitically.
 
@@ -754,3 +706,50 @@ The improvements described in~\cite{keerthi2001improvements, shevade1999improvem
 		\EndFunction
 	\end{algorithmic}
 \end{breakablealgorithm}
+
+\pagebreak
+
+\subsection{AdaGrad for Lagrangian Dual formulations}
+
+Due to the sparsity of the weight vector of the \emph{Lagrangian dual}, i.e., the Lagrange multipliers, we might end up in a situation where some components of the gradient are very small and others large. This, in terms of \emph{conditioning number}, i.e., $\kappa = L/\mu \gg 1$, means that the level sets of $f$ are ellipsoid, i.e., we are dealing with an ill-conditioned problem. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
+
+Another method, that is usually deprecated in ML applications due to its increased computational complexity, is Newton’s method. Newton’s method favors a much faster \emph{convergence rate}, i.e., number of iterations, at the cost of being more expensive per iteration. For convex problems, the recursion is similar to the gradient descent algorithm:
+
+$$
+x_{t+1} = x_t - \alpha H^{-1} \nabla f(x_t)
+$$
+
+where $\alpha$ is often close to one (damped-Newton) or one, and $H^{-1}$ denotes the Hessian of $f$ at the current point, i.e., $\nabla^2 f(x_t)$.
+
+The above suggest a general rule in optimization: find any preconditioner, in convex optimization it has to be positive semidefinite, that improves the performance of gradient descent in terms of iterations, but without wasting too much time to compute that precoditioner. The above result into:
+
+$$
+x_{t+1} = x_t - \alpha P^{-1} \nabla f(x_t)
+$$
+
+where $P$ is the preconditioner. This idea is the basis of the BFGS quasi-Newton method.
+
+The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preconditioned gradient descent, where $P$ is selected to be a diagonal preconditioner matrix and is updated using the gradient information, in particular it is the diagonal approximation of the inverse of the square roots of gradient outer products, until the $k$-th iteration. The above lead to the algorithm:
+
+\begin{algorithm}[H]
+	\caption{AdaGrad}
+	\label{alg:adagrad}
+	\begin{algorithmic}
+		\Require{Function $f$ to minimize}
+		\Require{Learning rate or step size $\alpha > 0$}
+		\Require{Offset $\epsilon > 0$ to ensures not divide by 0}
+		\Function{AdaGrad}{$f,\alpha,\epsilon$}
+			\State Initialize weight vector $x_0$ and the squared accumulated gradients vector $s_t \gets 0$
+			\State $t = 1$
+			\While {$not\_convergence$}
+				\State $g_t \gets \nabla f(x_t)$
+				\State $s_t \gets s_{t-1} + g_t^2$
+				\State $x_{t+1} \gets x_t - \alpha P_t^{-1} g_t = x_t - \displaystyle \frac{\alpha}{\sqrt{s_t + \epsilon}} \odot g_t \ \text{where} \ P_t \gets diag(s_t + \epsilon)^{1/2}$
+				\State $t \gets t + 1$
+			\EndWhile
+			\State \Return $x_t$
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s \emph{convergence rate} for L-smooth convex functions is the same of the SGD method described above, i.e., $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$.
