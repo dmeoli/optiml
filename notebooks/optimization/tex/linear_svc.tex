@@ -113,7 +113,7 @@ The above formulation penalizes slacks $\xi$ linearly and is called $\mathcal{L}
   	\label{fig:svc_hinge_loss}
 \end{figure}
 
-To simplify the notation and so also the design of the algorithms, the simplest approach to learn the bias term $b$ is that of including that into the \emph{regularization term}; so we can rewrite~\eqref{eq:svc_hinge} and~\eqref{eq:svc_squared_hinge} as follows:
+To simplify the notation and so also the design of the algorithms, the simplest approach to learn the bias term $b$ is that of including that into the \emph{regularization term}; so we can rewrite~\eqref{eq:svc_hinge} as follows:
 
 \begin{equation} \label{eq:primal_svc_hinge1}
     \min_{w,b} \frac{1}{2} (\| w \|^2 + b^2) + C \sum_{i=1}^n \mathcal{L}(w,b;x_i,y_i)

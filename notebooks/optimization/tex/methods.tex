@@ -11,12 +11,30 @@ In order to explain the \emph{convergence} and \emph{efficiency} properties of t
 		$$
 		\item We say that a differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^1$, is convex if: 
 		$$ 
-			f(x) - f(y) \geq \langle \nabla f(y), x - y \rangle \ \forall \ x, y \in \Re^m 
+			f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle \ \forall \ x, y \in \Re^m 
 		$$
-		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^2$ and the Hessian matrix is \emph{symmetric}, is convex iff: 
+		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^2$ and the Hessian matrix is symmetric, is convex iff: 
 		$$ 
 			\nabla^2 f(x) \succeq 0 \ \forall \ x \in \Re^m 
 		$$ i.e., the Hessian matix is \emph{positive semidefinite}.
+	\end{enumerate}
+\end{definition}
+
+\begin{definition}[Strict Convexity] \label{def:strict_convexity}
+	\hfill
+	\begin{enumerate}[i]
+		\item We say that a function $f: \Re^m \rightarrow \Re$ is strictly convex if: 
+		$$ 
+			(\lambda x + (1 - \lambda) y ) < \lambda f(x) + (1 - \lambda) f(y) \ \forall \ x, y \in \Re^m, x \neq y, \lambda \in (0,1) 
+		$$
+		\item We say that a differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^1$, is strictly convex if: 
+		$$ 
+			f(y) > f(x) + \langle \nabla f(x), y - x \rangle \ \forall \ x, y \in \Re^m, x \neq y
+		$$
+		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^2$ and the Hessian matrix is symmetric, is strictly convex iff: 
+		$$ 
+			\nabla^2 f(x) \succ 0 \ \forall \ x \in \Re^m 
+		$$ i.e., the Hessian matix is \emph{positive definite}.
 	\end{enumerate}
 \end{definition}
 
@@ -28,9 +46,9 @@ $$
 is convex for any $\mu > 0$. 
 If $f$ is differentiable, i.e., $f \in C^1$, this is also equivalent to:
 $$
-f(x) - f(y) \geq \langle \nabla f(y), x - y \rangle + \frac{\mu}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^m
+f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle + \frac{\mu}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
 $$
-and, if $f$ is a twice differentiable function, i.e., $f \in C^2$ and the Hessian matrix is \emph{symmetric}, then $f$ is $\mu$-strongly convex iff:
+and, if $f$ is a twice differentiable function, i.e., $f \in C^2$ and the Hessian matrix is symmetric, then $f$ is $\mu$-strongly convex iff:
 $$
 \nabla^2 g(x) \succ 0 \ \forall \ x \in \Re^m
 $$
@@ -38,23 +56,21 @@ i.e., the Hessian matix is \emph{positive definite}, which is:
 $$
 \nabla^2 f(x) \succeq \mu I \ \forall \ x \in \Re^m
 $$
-where $I$ is the identity matrix.
 \end{definition}
 
 \begin{definition}[L-smoothness] \label{def:l_smoothness}
-We say that a function $f: \Re^m \rightarrow \Re$ is L-smooth, i.e., L-Lipschitz continuous, if it is differentiable and if:
+We say that a function $f: \Re^m \rightarrow \Re$ is L-smooth, i.e., L-Lipschitz continuous, if it is differentiable, i.e., $f \in C^1$, and if:
 $$
 \| \nabla f(x) - \nabla f(y) \| \leq L \| x - y \| \ \forall \ x, y \in \Re^m
 $$
 then:
 $$
-f(x) - f(y) \leq \langle \nabla f(y), x - y \rangle + \frac{L}{2} \| x - y \|^2 \ \forall \ x, y \in \Re^m
+f(y) \leq f(x) + \langle \nabla f(x), y - x \rangle + \frac{L}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
 $$
 and, if $f$ is a $\mu$-strongly convex function, we give the following Hessian bounds:
 $$
 0 \prec \mu I \preceq \nabla^2 f(x) \preceq L I \ \forall \ x \in \Re^m
 $$
-where $I$ is the identity matrix.
 \end{definition}
 
 \pagebreak
@@ -123,7 +139,7 @@ $$
 $$
 The downside is that every step is very computationally expensive, $\mathcal{O}(nm)$ per iteration, where $n$ is the number of samples in our dataset and $m$ is the number of dimensions.
 
-Since \emph{Gradient Descent} becomes impractical when dealing with large datasets we introduce a stochastic version, called \emph{Stochastic Gradient Descent}, which does not use the whole set of examples to compute the gradient at every step. By doing so, we can reduce computation all the way down to $\mathcal{O}(m)$ per iteration, instead of $\mathcal{O}(nm)$.
+Since \emph{Gradient Descent} becomes impractical when dealing with large datasets we introduce a stochastic version, called \emph{Stochastic Gradient Descent}, which does not use the whole set of examples to compute the gradient at every step. By doing so, we can reduce computation all the way down to $\mathcal{O}(m)$ per iteration.
 
 \begin{algorithm}[H]
 	\caption{Stochastic Gradient Descent}
@@ -275,12 +291,6 @@ Nesterov's momentum brings the \emph{rate of convergence} from $\displaystyle \m
 \bigskip
 
 We can write the \emph{iteration complexity} of these methods, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, for a L-smooth and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Big(\kappa \log \frac{1}{\epsilon}\Big)$ for the standard GD method, $\displaystyle \mathcal{O}\Big(\sqrt{\kappa}\log \frac{1}{\epsilon}\Big)$ for the accelerated methods where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the largest $\lambda_{max}$ and the smallest $\lambda_{min}$ eigenvalues respectively. Finally, NAG's \emph{iteration complexity} for L-smooth convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{\epsilon}}\Big)$.
-
-\subsubsection{SVM's losses properties}
-
-Several losses and objectives have been presented in section~\ref{section:svc} and~\ref{section:svr}. In our experiments, we will consider four different convex loss functions, two for the \emph{classification} and two for the \emph{regression} tasks. In particular, two of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, meanwhile, their two squared versions are smooth. This suggests us, as described in the methodological part, that we can achieve a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ for the nonsmooth objectives, meanwhile we can do better for the smooth ones using acceleration up to a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$.
-
-Also, notice that all these losses are not strongly convex when they consider the bias term $b$ explicitly, because for $| b |$ or $\| w \|$ sufficiently large, they are locally linear, i.e., $\nabla^2 \mathcal{L} = 0$. Therefore, the objectives in form~\eqref{eq:primal_svc} are not strongly convex wrt $b$. They are $\mu$-strongly convex only wrt $w$, solely due to the regularization term, i.e., $\displaystyle \frac{1}{2} \| w \|^2$. So, using the formulations~\eqref{eq:primal_svc_hinge1} or~\eqref{eq:primal_svc_hinge2} where the bias term $b$ is included into the regularization term, we obtain globally strongly convex objectives.
 
 \pagebreak
 
@@ -753,3 +763,28 @@ The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preco
 \end{algorithm}
 
 In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s \emph{convergence rate} for L-smooth convex functions is the same of the SGD method described above, i.e., $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$.
+
+
+\subsection{Losses properties}
+
+Several losses and objectives have been presented in section~\ref{section:svc} and~\ref{section:svr}. In our experiments, we will consider four different convex loss functions, two for the \emph{classification} and two for the \emph{regression} tasks. In particular, two of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, that linearly penalizes the misclassified points, i.e., $\mathcal{L}_1$-SVM, meanwhile, their two squared versions are smooth, i.e., $\mathcal{L}_2$-SVM, that quadratically penalizes the misclassified points. This suggests us, as described in the methodological part, that we can achieve a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ for the nonsmooth objectives, meanwhile we can do better for the smooth ones using acceleration up to a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$.
+
+If a convex function gives a minimum at a point not in an interval, the function is called strictly convex. In general, if the objective function of a quadratic programming problem constrained in a convex set is strictly convex or the associated Hessian matrix is positive definite, the solution is unique. And if the objective function is convex, there may be cases where the solution is nonunique.
+
+We must notice that since $b$ is not included in the dual problem, even if the solution of the dual problem is unique, the solution of the primal problem may not be unique. Assume that the hard margin SVM has a solution, i.e., the given problem is separable in the feature space. Then, since the objective function of the primal problem is $\displaystyle \frac{1}{2} \| w \|^2$, which is strictly convex, the primal problem has a unique solution for $w$ and $b$. But the dual solution may be nonunique because the Hessian matrix is positive semidefinite. Since the hard margin SVM for a separable problem is equivalent to the $\mathcal{L}_1$-SVM with an unbounded solution, we leave the discussion to that for the $\mathcal{L}_1$-SVM. The objective function of the primal problem for the $\mathcal{L}_2$-SVM is strictly convex. Therefore, $w$ and $b$ are uniquely determined if we solve the primal problem. In addition, since the Hessian matrix of the dual objective function is positive definite, $\alpha_i$ are uniquely determined. And because of the uniqueness of the primal problem, $b$ is determined uniquely using the KKT condition.
+The $\mathcal{L}_1$-SVM includes the linear sum of $\xi_i$. Therefore, the primal objective function is convex. Likewise, the Hessian matrix of the dual objective function is positive semidefinite. Thus the primal and dual solutions may be nonunique.
+
+\begin{table}[H]
+\centering
+\caption{SVM's objectives properties with methods convergence rates}
+\label{svm_objectives_props}
+\begin{tabular}{lrrrrr}
+\toprule
+	&  smooth &  convexity &  \vtop{\hbox{\strut SGD}\hbox{\strut convergence rate}} &  \vtop{\hbox{\strut Polyak SGD}\hbox{\strut convergence rate}} &  \vtop{\hbox{\strut Nesterov SGD}\hbox{\strut convergence rate}} \\
+objective & 		& 		& 		& 		& 		\\
+\midrule
+$\mathcal{L}_1$-SVM & no   &  convex &     $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ &    $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ &    $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ \\
+$\mathcal{L}_2$-SVM & yes   &  \vtop{\hbox{\strut strongly}\hbox{\strut convex}} &     $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ &    $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ &    $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
