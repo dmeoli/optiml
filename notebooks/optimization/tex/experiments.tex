@@ -16,7 +16,12 @@ The experiments results shown in~\ref{primal_svc_hinge_cv_results} referred to \
 
 The results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{accuracy} score. More training data points are selected as \emph{support vectors} from the SGD solver but it always requires lower iterations, i.e., epochs, to achieve the same \emph{numerical precision}. \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
 
-\pagebreak
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{img/svc_hinge_loss_history}
+	\caption{SVC Hinge loss convergence}
+	\label{fig:svc_hinge_loss_history}
+\end{figure}
 
 \paragraph{Linear Dual formulations}
 
@@ -30,8 +35,6 @@ For what about the linear \emph{Wolfe dual} formulation we can immediately notic
 
 For what about the linear \emph{Lagrangian dual} formulation we can see as it seems to be insensitive to the increasing complexity of the model in terms of number of \emph{iterations} but it tends to select many training data points as \emph{support vectors}.
 
-\pagebreak
-
 \paragraph{Nonlinear Dual formulations}
 
 The experiments results shown in~\ref{nonlinear_dual_svc_cv_results} and~\ref{nonlinear_lagrangian_dual_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm.
@@ -42,6 +45,8 @@ The experiments results shown in~\ref{nonlinear_dual_svc_cv_results} and~\ref{no
 
 The same considerations made for the previous linear \emph{Wolfe dual} and \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting the complexity of the model coming with higher $C$ regularization values seems to be not paying a tradeoff in terms of the number of \emph{iterations} of the algorithm and, moreover, the \emph{bcqp Lagrangian dual} formulation seems to perform better wrt the \emph{qp} formulation, both tends to select even more training data points as \emph{support vectors}.
 
+\pagebreak
+
 \subsubsection{Squared Hinge loss}
 
 \paragraph{Primal formulation}
@@ -51,6 +56,13 @@ The experiments results shown in~\ref{primal_svc_squared_hinge_cv_results} refer
 \input{experiments/primal_svc_squared_hinge}
 
 Again, the results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{accuracy} score. More training data points are selected as \emph{support vectors} from the SGD solver but it always requires even lower iterations, i.e., epochs, to achieve the same \emph{numerical precision}. \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{img/svc_squared_hinge_loss_history}
+	\caption{SVC Squared Hinge loss convergence}
+	\label{fig:svc_squared_hinge_loss_history}
+\end{figure}
 
 \pagebreak
 
@@ -67,6 +79,15 @@ The experiments results shown in~\ref{primal_svr_eps_cv_results} referred to \em
 \input{experiments/primal_svr_eps}
 
 The results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{r2} score, except in case of $C$ regularization hyperparameter equals to 1 for which those of SGD are lower. Moreover, the SGD solver always requires lower iterations, i.e., epochs, for higher $C$ regularization values, i.e., for $C$ equals to 10 or 100, to achieve the same \emph{numerical precision}. Again, \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate. The results in terms of \emph{support vectors} are strongly similar to each others.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{img/svr_eps_loss_history}
+	\caption{SVC Epsilon-insensitive loss convergence}
+	\label{fig:svr_eps_loss_history}
+\end{figure}
+
+\pagebreak
 
 \paragraph{Linear Dual formulations}
 
@@ -90,6 +111,8 @@ The experiments results shown in~\ref{nonlinear_dual_svr_cv_results} and~\ref{no
 
 The same considerations made for the previous linear \emph{Wolfe dual} and \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting, the complexity of the model coming with higher $C$ regularization hyperparameters and lower $\epsilon$ values pays a larger tradeoff in terms of the number of \emph{iterations} of the algorithm.
 
+\pagebreak
+
 \subsubsection{Squared Epsilon-insensitive loss}
 
 \paragraph{Primal formulation}
@@ -99,3 +122,10 @@ The experiments results shown in~\ref{primal_svr_squared_eps_cv_results} referre
 \input{experiments/primal_svr_squared_eps}
 
 Again, the results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{r2} score. SGD solver always requires even lower iterations, i.e., epochs, for higher $C$ regularization values, i.e., for $C$ equals to 10 or 100, to achieve the same \emph{numerical precision}. \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{img/svr_squared_eps_loss_history}
+	\caption{SVC Squared Epsilon-insensitive loss convergence}
+	\label{fig:svr_squared_eps_loss_history}
+\end{figure}
