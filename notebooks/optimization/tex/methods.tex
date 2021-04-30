@@ -1,6 +1,6 @@
 \section{Optimization Methods}
 
-In order to explain the \emph{convergence} and \emph{efficiency} properties of the following optimization methods, we need to introduce some preliminary definitions about \emph{convexity} and the \emph{L-smoothness} of a function~\cite{boyd2004convex}.
+In order to explain the \emph{convergence} and \emph{efficiency} properties of the following optimization methods, we need to introduce some preliminary definitions about \emph{convexity} and the \emph{L-Lipschitz continuity} of a function~\cite{boyd2004convex}.
 
 \begin{definition}[Convexity] \label{def:convexity}
 	\hfill
@@ -106,6 +106,62 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 	\end{algorithmic}
 \end{algorithm}
 
+Gradient Descent is based on full gradients, since at each iteration we compute the average gradient on the whole dataset:
+$$
+\nabla f(x) = \frac{1}{n} \sum_{i=1}^n \nabla f_i(x)
+$$
+The downside is that every step is very computationally expensive, $\mathcal{O}(nm)$ per iteration, where $n$ is the number of samples in our dataset and $m$ is the number of dimensions.
+
+Since \emph{Gradient Descent} becomes impractical when dealing with large datasets we introduce a stochastic version, called \emph{Stochastic Gradient Descent}, which does not use the whole set of examples to compute the gradient at every step. By doing so, we can reduce computation all the way down to $\mathcal{O}(m)$ per iteration.
+
+\begin{algorithm}[H]
+	\caption{Stochastic (Sub)Gradient Descent}
+	\label{alg:sgd}
+	\begin{algorithmic}
+		\Require{Function $f$ to minimize}
+		\Require{Learning rate or step size $\alpha > 0$}
+		\Require{Batch size $k$}
+		\Function{Stochastic(Sub)GradientDescent}{$f,\alpha,k$}
+			\State Initialize weight vector $x_0$
+			\State $t \gets 0$
+			\While{$not\_convergence$}
+				\State Sample $(i_1,\dots,i_k) \sim \mathcal{U}^k(1,\dots,n)$ 
+				\State $\displaystyle x_{t+1} \gets x_t - \alpha \frac{1}{k} \sum_{j=1}^k \nabla f_{i_j}(x_t)$
+				\State $t \gets t + 1$
+			\EndWhile
+			\State \Return $x_t$
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+Note that in expectation, we converge like GD, since $\displaystyle \mathbb{E}_{i \sim \mathcal{U}(1,\dots,n)}[\nabla f_i(x_t)] = \nabla f(x_t)$, therefore, the expected iterate of SGD converges to the optimum.
+
+Now, consider the SGD algorithm introduced previously but where each iteration is projected into the ball $\mathcal{B}(0, R)$ with radius $R > 0$ fixed. So, the following lower bounds on convergence rates are given.
+
+\begin{theorem}[Stochastic Gradient Descent convergence for convex functions] \label{thm:cvx_sgd_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function and assume that exists $b > 0$ satisfying:
+$$
+\| f_i(x) \| \leq b \ \forall \ x \in \mathcal{B}(0, R)
+$$
+Besides, assume that all minima of $f$ belong to $\mathcal{B}(0, R)$. Then the Stochastic Gradient Descent with step size $\displaystyle \alpha = \frac{2R}{b\sqrt{k}}$ satisfies:
+$$
+\mathbb{E}\Bigg[f\Bigg(\frac{1}{k} \sum_{t=1}^k x_t\Bigg)\Bigg] - f(x^*) \leq \frac{3Rb}{\sqrt{k}}
+$$
+\end{theorem}
+
+\begin{theorem}[Stochastic Gradient Descent convergence for strongly convex functions] \label{thm:str_cvx_sgd_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous, $\mu$-strongly convex function and assume that exists $b > 0$ satisfying:
+$$
+\| f_i(x) \| \leq b \ \forall \ x \in \mathcal{B}(0, R)
+$$
+Besides, assume that all minima of $f$ belong to $\mathcal{B}(0, R)$. Then the Stochastic Gradient Descent with step size $\displaystyle \alpha = \frac{2}{\mu(k+1)}$ satisfies:
+$$
+\mathbb{E}\Bigg[f\Bigg(\frac{2}{k(k+1)} \sum_{t=1}^k t x_{t-1}\Bigg)\Bigg] - f(x^*) \leq \frac{2b^2}{\mu(k+1)}
+$$
+\end{theorem}
+
+SGD’s \emph{convergence rate} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\bigg(\frac{1}{\sqrt{t}}\bigg)$ and $\displaystyle \mathcal{O}\bigg(\frac{1}{t}\bigg)$ for L-Lipschitz continuous strongly convex functions. More iterations are needed to reach the same accuracy as GD, but the iterations are far cheaper.
+
 % http://www.princeton.edu/~yc5/ele522_optimization/lectures/subgradient_methods.pdf
 
 \subsubsection{Nonsmooth}
@@ -135,7 +191,9 @@ f(x_t) - f(x^*) \leq \frac{2L^2}{\mu} \frac{1}{t+1}
 $$
 \end{theorem}
 
-If $f$ is strongly convex, then the \emph{convergence rate} can be improved from $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ to $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$. Among algorithms that only use subgradient, these \emph{convergence rates} cannot be futher improved.
+The Subgradient Descent \emph{convergence rate} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ and $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ for L-Lipschitz continuous strongly convex functions. We can also  write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, as $\displaystyle \mathcal{O}\Big(\frac{1}{\epsilon^2}\Big)$ for L-Lipschitz continuous convex functions and as $\displaystyle \mathcal{O}\Big(\frac{1}{\epsilon}\Big)$ for L-Lipschitz continuous strongly convex functions.
+
+Among algorithms that only use subgradient, these \emph{convergence rates} cannot be futher improved.
 
 \subsubsection{Smooth}
 
@@ -177,61 +235,7 @@ $$
 where $\kappa = L/\mu$.
 \end{theorem}
 
-Gradient Descent is based on full gradients, since at each iteration we compute the average gradient on the whole dataset:
-$$
-\nabla f(x) = \frac{1}{n} \sum_{i=1}^n \nabla f_i(x)
-$$
-The downside is that every step is very computationally expensive, $\mathcal{O}(nm)$ per iteration, where $n$ is the number of samples in our dataset and $m$ is the number of dimensions.
-
-Since \emph{Gradient Descent} becomes impractical when dealing with large datasets we introduce a stochastic version, called \emph{Stochastic Gradient Descent}, which does not use the whole set of examples to compute the gradient at every step. By doing so, we can reduce computation all the way down to $\mathcal{O}(m)$ per iteration.
-
-\begin{algorithm}[H]
-	\caption{Stochastic (Sub)Gradient Descent}
-	\label{alg:sgd}
-	\begin{algorithmic}
-		\Require{Function $f$ to minimize}
-		\Require{Learning rate or step size $\alpha > 0$}
-		\Require{Batch size $k$}
-		\Function{Stochastic(Sub)GradientDescent}{$f,\alpha,k$}
-			\State Initialize weight vector $x_0$
-			\State $t \gets 0$
-			\While{$not\_convergence$}
-				\State Sample $(i_1,\dots,i_k) \sim \mathcal{U}^k(1,\dots,n)$ 
-				\State $\displaystyle x_{t+1} \gets x_t - \alpha \frac{1}{k} \sum_{j=1}^k \nabla f_{i_j}(x_t)$
-				\State $t \gets t + 1$
-			\EndWhile
-			\State \Return $x_t$
-		\EndFunction
-	\end{algorithmic}
-\end{algorithm}
-
-Note that in expectation, we converge like GD, since $\displaystyle \mathbb{E}_{i \sim \mathcal{U}(1,\dots,n)}[\nabla f_i(x_t)] = \nabla f(x_t)$, therefore, the expected iterate of SGD converges to the optimum.
-
-Consider the SGD algorithm introduced previously but where each iteration is projected into the ball $\mathcal{B}(0, R)$ with radius $R > 0$ fixed.
-
-\begin{theorem}[Stochastic Gradient Descent convergence for convex functions] \label{thm:cvx_sgd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function and assume that exists $b > 0$ satisfying:
-$$
-\| f_i(x) \| \leq b \ \forall \ x \in \mathcal{B}(0, R)
-$$
-Besides, assume that all minima of $f$ belong to $\mathcal{B}(0, R)$. Then the Stochastic Gradient Descent with step size $\displaystyle \alpha = \frac{2R}{b\sqrt{k}}$ satisfies:
-$$
-\mathbb{E}\Bigg[f\Bigg(\frac{1}{k} \sum_{t=1}^k x_t\Bigg)\Bigg] - f(x^*) \leq \frac{3Rb}{\sqrt{k}}
-$$
-\end{theorem}
-
-\begin{theorem}[Stochastic Gradient Descent convergence for strongly convex functions] \label{thm:str_cvx_sgd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous, $\mu$-strongly convex function and assume that exists $b > 0$ satisfying:
-$$
-\| f_i(x) \| \leq b \ \forall \ x \in \mathcal{B}(0, R)
-$$
-Besides, assume that all minima of $f$ belong to $\mathcal{B}(0, R)$. Then the Stochastic Gradient Descent with step size $\displaystyle \alpha = \frac{2}{\mu(k+1)}$ satisfies:
-$$
-\mathbb{E}\Bigg[f\Bigg(\frac{2}{k(k+1)} \sum_{t=1}^k t x_{t-1}\Bigg)\Bigg] - f(x^*) \leq \frac{2b^2}{\mu(k+1)}
-$$
-\end{theorem}
-
-SGD’s \emph{convergence rate} for L-smooth convex functions is $\displaystyle \mathcal{O}\bigg(\frac{1}{\sqrt{t}}\bigg)$ and $\displaystyle \mathcal{O}\bigg(\frac{1}{t}\bigg)$ for strongly convex. More iterations are needed to reach the same accuracy as GD, but the iterations are far cheaper.
+\subsubsection{Momentum}
 
 To mitigate the pathological zig-zagging by speeding up the \emph{convergence rate} of the SGD method, we introduce two accelerated methods~\cite{polyak1964some} and~\cite{nesterov1998introductory, nesterov1983method} that exploits information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield smoother trajectory.
 
@@ -328,11 +332,9 @@ $$
 where $\kappa = L/\mu$.
 \end{theorem}
 
-Nesterov's momentum brings the \emph{rate of convergence} from $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ to $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$ and in the case of smooth and strongly convex functions gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great because we get the guarantee for a more general class of functions but this rate of convergence cannot be further improved only using first-order information.
+Nesterov's momentum brings the \emph{convergence rate} from $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ to $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$ and in the case of smooth and strongly convex functions gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great because we get the guarantee for a more general class of functions but this rate of convergence cannot be further improved only using first-order information.
 
-\bigskip
-
-We can write the \emph{iteration complexity} of these methods, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, for a L-smooth and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Big(\kappa \log \frac{1}{\epsilon}\Big)$ for the standard GD method, $\displaystyle \mathcal{O}\Big(\sqrt{\kappa}\log \frac{1}{\epsilon}\Big)$ for the accelerated methods where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the largest $\lambda_{max}$ and the smallest $\lambda_{min}$ eigenvalues respectively. Finally, NAG's \emph{iteration complexity} for L-smooth convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{\epsilon}}\Big)$.
+We can write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, for a L-Lipschitz continuous and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Big(\kappa \log \frac{1}{\epsilon}\Big)$ for the standard GD method, $\displaystyle \mathcal{O}\Big(\sqrt{\kappa}\log \frac{1}{\epsilon}\Big)$ for the accelerated methods where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the largest $\lambda_{max}$ and the smallest $\lambda_{min}$ eigenvalues respectively. Finally, NAG's \emph{iteration complexity} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{\epsilon}}\Big)$.
 
 \pagebreak
 
@@ -804,7 +806,7 @@ The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preco
 	\end{algorithmic}
 \end{algorithm}
 
-In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s \emph{convergence rate} for L-smooth convex functions is the same of the SGD method described above, i.e., $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$.
+In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s \emph{convergence rate} for L-Lipschitz continuous convex functions is the same of the SGD method described above, i.e., $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$.
 
 
 \subsection{Losses properties}
