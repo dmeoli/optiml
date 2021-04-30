@@ -106,6 +106,8 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 	\end{algorithmic}
 \end{algorithm}
 
+\subsubsection{Nonsmooth}
+
 % http://www.princeton.edu/~yc5/ele522_optimization/lectures/subgradient_methods.pdf
 
 \begin{theorem}[Subgradient Descent convergence for convex functions with Polyak's stepsize] \label{thm:cvx_polyak_subgd_convergence}
@@ -125,11 +127,15 @@ $$
 \end{theorem}
 
 \begin{theorem}[Subgradient Descent convergence for strongly convex functions] \label{thm:str_cvx_subgd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function. Then the Subgradient Descent with step size $\displaystyle \alpha_t = \frac{2}{\mu(t+1)}$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous and $\mu$-strongly convex function. Then the Subgradient Descent with step size $\displaystyle \alpha_t = \frac{2}{\mu(t+1)}$ satisfies:
 $$
 f(x_t) - f(x^*) \leq \frac{2L^2}{\mu} \frac{1}{t+1}
 $$
 \end{theorem}
+
+If $f$ is strongly convex, then the convergence guarantees can be improved from $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ to $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$.
+
+\subsubsection{Smooth}
 
 \begin{theorem}[Gradient Descent convergence for convex functions] \label{thm:cvx_gd_convergence}
 Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
@@ -222,8 +228,6 @@ $$
 \end{theorem}
 
 SGD’s \emph{convergence rate} for L-smooth convex functions is $\displaystyle \mathcal{O}\bigg(\frac{1}{\sqrt{t}}\bigg)$ and $\displaystyle \mathcal{O}\bigg(\frac{1}{t}\bigg)$ for strongly convex. More iterations are needed to reach the same accuracy as GD, but the iterations are far cheaper.
-
-\subsubsection{Momentum}
 
 To mitigate the pathological zig-zagging by speeding up the \emph{convergence rate} of the SGD method, we introduce two accelerated methods~\cite{polyak1964some} and~\cite{nesterov1998introductory, nesterov1983method} that exploits information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield smoother trajectory.
 
