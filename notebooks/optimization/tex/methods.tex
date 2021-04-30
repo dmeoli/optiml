@@ -74,9 +74,17 @@ $$
 We say that a function $f: \Re^m \rightarrow \Re$ is locally L-smooth, i.e., locally L-Lipschitz continuous, if for every $x$ in $\Re^m$ there exists a neighborhood $U$ of $x$ such that $f$ restricted to $U$ is L-Lipschitz continuous. Every convex function is locally L-Lipschitz continuous.
 \end{definition}
 
+\begin{definition}[Subgradient] \label{def:subgradient}
+Given a function $f: \Re^m \rightarrow \Re$ and $x \in \Re^m$, we define a subgradient $g \in \Re^m$ at $x$ to be any point satisfying:
+$$
+	f(y) \geq f(x) + \langle g, y - x \rangle \ \forall \ y \in \Re^m
+$$
+Subgradients always exist for convex function.
+\end{definition}
+
 \pagebreak
 
-\subsection{Gradient Descent for Primal formulations}
+\subsection{(Sub)Gradient Descent for Primal formulations}
 
 The Gradient Descent algorithm is the simplest \emph{first-order optimization} method that exploits the orthogonality of the gradient wrt the level sets to take a descent direction. In particular, it performs the following iterations:
 
