@@ -58,7 +58,7 @@ $$
 $$
 \end{definition}
 
-\begin{definition}[L-Lipschitz continuity] \label{def:l_smoothness}
+\begin{definition}[L-Lipschitz continuity] \label{def:l_lipschitz_continuity}
 We say that a function $f: \Re^m \rightarrow \Re$ is L-smooth, i.e., L-Lipschitz continuous, if:
 $$
 \| \nabla f(x) - \nabla f(y) \| \leq L \| x - y \| \ \forall \ x, y \in \Re^m
@@ -106,8 +106,33 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 	\end{algorithmic}
 \end{algorithm}
 
+% http://www.princeton.edu/~yc5/ele522_optimization/lectures/subgradient_methods.pdf
+
+\begin{theorem}[Subgradient Descent convergence for convex functions with Polyak's stepsize] \label{thm:cvx_polyak_subgd_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function. Then the Subgradient Descent with Polyak's step size $\displaystyle \alpha_t = \frac{f(x_t) - f(x^*)}{\| g_t \|^2}$ satisfies:
+$$
+f(x_t) - f(x^*) \leq \frac{L \| x_0 - x^* \|^2}{\sqrt{t+1}}
+$$
+\end{theorem}
+
+Unfortunately, Polyak’s stepsize rule requires knowledge of $f(x^*)$, which is often unknown a priori, so we might often need simpler rule for setting stepsizes.
+
+\begin{theorem}[Subgradient Descent convergence for convex functions] \label{thm:cvx_subgd_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function. Then the Subgradient Descent with step size $\displaystyle \alpha_t = \frac{1}{\sqrt{t}}$ satisfies:
+$$
+f(x_t) - f(x^*) \leq \frac{\| x_0 - x^* \|^2 + L^2 \log t}{\sqrt{t}}
+$$
+\end{theorem}
+
+\begin{theorem}[Subgradient Descent convergence for strongly convex functions] \label{thm:str_cvx_subgd_convergence}
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function. Then the Subgradient Descent with step size $\displaystyle \alpha_t = \frac{2}{\mu(t+1)}$ satisfies:
+$$
+f(x_t) - f(x^*) \leq \frac{2L^2}{\mu} \frac{1}{t+1}
+$$
+\end{theorem}
+
 \begin{theorem}[Gradient Descent convergence for convex functions] \label{thm:cvx_gd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
 $$
 f(x_t) - f(x^*) \leq \frac{\| x_0 - x^* \|^2}{2 \alpha t}
 $$
@@ -118,7 +143,7 @@ $$
 \end{theorem}
 
 \begin{theorem}[Gradient Descent convergence for strongly convex functions] \label{thm:str_cvx_gd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth and $\mu$-strongly convex function. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous and $\mu$-strongly convex function. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
 $$
 f(x_t) - f(x^*) \leq (1 - \alpha \mu)^t \| x_0 - x^* \|^2
 $$
@@ -133,7 +158,7 @@ where $\kappa = L/\mu$.
 \end{theorem}
 
 \begin{theorem}[Gradient Descent convergence for quadratic functions] \label{thm:quad_gd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth and $\mu$-strongly convex quadratic function. Then the Gradient Descent with step size $\alpha = \displaystyle \frac{2}{L + \mu}$ and momentum $\beta = \displaystyle \frac{\kappa-1}{\kappa+1} = 1 - \frac{2}{\kappa+1}$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous and $\mu$-strongly convex quadratic function. Then the Gradient Descent with step size $\alpha = \displaystyle \frac{2}{L + \mu}$ and momentum $\beta = \displaystyle \frac{\kappa-1}{\kappa+1} = 1 - \frac{2}{\kappa+1}$ satisfies:
 $$
 \begin{aligned}
 	\| x_t - x^* \| = \bigg(\frac{\kappa-1}{\kappa+1}\bigg)^t \| x_0 - x^* \|
@@ -175,7 +200,7 @@ Note that in expectation, we converge like GD, since $\displaystyle \mathbb{E}_{
 Consider the SGD algorithm introduced previously but where each iteration is projected into the ball $\mathcal{B}(0, R)$ with radius $R > 0$ fixed.
 
 \begin{theorem}[Stochastic Gradient Descent convergence for convex functions] \label{thm:cvx_sgd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function and assume that exists $b > 0$ satisfying:
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function and assume that exists $b > 0$ satisfying:
 $$
 \| f_i(x) \| \leq b \ \forall \ x \in \mathcal{B}(0, R)
 $$
@@ -186,7 +211,7 @@ $$
 \end{theorem}
 
 \begin{theorem}[Stochastic Gradient Descent convergence for strongly convex functions] \label{thm:str_cvx_sgd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth, $\mu$-strongly convex function and assume that exists $b > 0$ satisfying:
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous, $\mu$-strongly convex function and assume that exists $b > 0$ satisfying:
 $$
 \| f_i(x) \| \leq b \ \forall \ x \in \mathcal{B}(0, R)
 $$
@@ -232,7 +257,7 @@ In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calcul
 \end{algorithm}
 
 \begin{theorem}[Polyak's Accelerated Gradient Descent convergence for quadratic functions] \label{thm:quad_pag_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth and $\mu$-strongly convex quadratic function. Then the Polyak's Accelerated Gradient Descent with step size $\alpha = \displaystyle \frac{4}{(\sqrt{L} + \sqrt{\mu})^2}$ and momentum $\beta = \displaystyle \frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1} = 1 - \frac{2}{\sqrt{\kappa}+1}$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous and $\mu$-strongly convex quadratic function. Then the Polyak's Accelerated Gradient Descent with step size $\alpha = \displaystyle \frac{4}{(\sqrt{L} + \sqrt{\mu})^2}$ and momentum $\beta = \displaystyle \frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1} = 1 - \frac{2}{\sqrt{\kappa}+1}$ satisfies:
 $$
 \begin{aligned}
 	\| x_t - x^* \| = \bigg(\frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1}\bigg)^t \| x_0 - x^* \|
@@ -267,7 +292,7 @@ Leveraging the idea of momentum introduced by Polyak, Nesterov introduced a slig
 Comparing the algorithm~\ref{alg:pag} with the algorithm~\ref{alg:nag}, we can see that Polyak’s method evaluates the gradient before adding momentum, whereas Nesterov’s algorithm evaluates it after applying momentum, which intuitively brings us closer to the minimum $x^*$, as showb in figure~\ref{fig:momentum}.
 
 \begin{theorem}[Nesterov's Accelerated Gradient Descent convergence for convex functions] \label{thm:cvx_nag_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth convex function. Then the Nesterov's Accelerated Gradient Descent with step size $\alpha \leq 1/L$ and momentum $\beta_{t+1} = t / (t+3)$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function. Then the Nesterov's Accelerated Gradient Descent with step size $\alpha \leq 1/L$ and momentum $\beta_{t+1} = t / (t+3)$ satisfies:
 $$
 f(x_t) - f(x^*) \leq \frac{2 \| x_0 - x^* \|^2}{\alpha (t+1)^2}
 $$
@@ -278,7 +303,7 @@ $$
 \end{theorem}
 
 \begin{theorem}[Nesterov's Accelerated Gradient Descent convergence for strongly convex functions] \label{thm:str_cvx_nag_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-smooth and $\mu$-strongly convex function. Then the Nesterov's Accelerated Gradient Descent with step size $\alpha \leq 1/L$ and momentum $\beta_t = \displaystyle \frac{1 - \sqrt{\mu / L}}{1 + \sqrt{\mu / L}} = \frac{1-1/\sqrt{\kappa}}{1+1/\sqrt{\kappa}}$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous and $\mu$-strongly convex function. Then the Nesterov's Accelerated Gradient Descent with step size $\alpha \leq 1/L$ and momentum $\beta_t = \displaystyle \frac{1 - \sqrt{\mu / L}}{1 + \sqrt{\mu / L}} = \frac{1-1/\sqrt{\kappa}}{1+1/\sqrt{\kappa}}$ satisfies:
 $$
 \begin{aligned}
 	f(x_t) - f(x^*) \leq & \frac{\| x_0 - x^* \|^2}{\alpha} \Bigg(1 - \sqrt{\frac{\mu}{L}}\Bigg)^t \\
