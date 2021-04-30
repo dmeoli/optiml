@@ -53,7 +53,7 @@ or, equivalently:
 As the \emph{hinge} loss, also the \emph{epsilon-insensitive} loss is a nondifferentiable convex function due to its nonsmoothness in $\pm\epsilon$, but has a subgradient wrt $w$ that is given by:
 
 \begin{equation} \label{eq:eps_loss_der}
-	\frac{\partial \mathcal{L_\epsilon^1}}{\partial w}=
+	\frac{\partial \mathcal{L}_\epsilon^1}{\partial w}=
 		\begin{cases}
             (y - (w^T x + b)) x & \text{if} \ |y - (w^T x + b)| > \epsilon \\
             0 & \text{otherwise} \\ 
@@ -62,17 +62,23 @@ As the \emph{hinge} loss, also the \emph{epsilon-insensitive} loss is a nondiffe
 
 \subsubsection{Primal formulation}
 
-The general primal unconstrained formulation takes the same form of~\eqref{eq:primal_svc}.
+The general primal unconstrained formulation takes the same form of~\eqref{eq:primal_svm}.
 
 The quadratic optimization problem~\eqref{eq:quad_svr_obj} can be equivalently formulated as:
 
-\begin{equation} \label{eq:svr_eps}
+\begin{equation} \label{eq:primal_svr_eps}
 	\min_{w,b} \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)
 \end{equation}
 
 where we make use of the \emph{epsilon-insensitive} loss~\eqref{eq:eps_loss1} or~\eqref{eq:eps_loss2}.
 
 The above formulation penalizes slacks $\xi$ linearly and is called $\mathcal{L}_1$-SVR.
+
+The $\mathcal{L}_1$-SVR objective~\eqref{eq:primal_svr_eps} can be rewritten in form~\eqref{eq:biased_primal_svm1} or~\eqref{eq:biased_primal_svm2} as:
+
+\begin{equation} \label{eq:biased_primal_svr_eps}
+	\min_{w,b} \frac{1}{2} (\| w \|^2 + b^2) + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)
+\end{equation}
 
 \begin{figure}[h!]
 	\centering
@@ -174,7 +180,7 @@ As before it is better to average over all the indices $i$ in $S$:
     b=\frac{1}{N_s}\sum_{s\in S}y_s-\epsilon-\sum_{m \in S}(\alpha_m^+ - \alpha_m^-)\langle x_m, x_s \rangle
 \end{equation}
 
-From~\eqref{eq:svr_min_qp_wolfe_dual} we can notice that the equality constraint $e^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. We report below the box-constrained dual formulation~\cite{hsu2002simple} that arises from the primal~\eqref{eq:primal_svc_hinge1} or~\eqref{eq:primal_svc_hinge2} where the bias term $b$ is embedded into the weight vector $w$:
+From~\eqref{eq:svr_min_qp_wolfe_dual} we can notice that the equality constraint $e^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. We report below the box-constrained dual formulation~\cite{hsu2002simple} that arises from the primal~\eqref{eq:biased_primal_svm1} or~\eqref{eq:biased_primal_svm2} where the bias term $b$ is embedded into the weight vector $w$:
 
 \begin{equation} \label{eq:svr_min_bcqp_wolf_dual}
     \begin{aligned}
@@ -298,13 +304,19 @@ As the \emph{squared hinge} loss, also the \emph{squared epsilon-insensitive} lo
 
 \subsubsection{Primal formulation}
 
-To provide a continuously differentiable function the optimization problem~\eqref{eq:svr_eps} can be formulated as:
+To provide a continuously differentiable function the optimization problem~\eqref{eq:primal_svr_eps} can be formulated as:
 
-\begin{equation} \label{eq:svr_squared_eps}
+\begin{equation} \label{eq:primal_svr_squared_eps}
     \min_{w,b} \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)^2
 \end{equation}
 
 where we make use of the \emph{squared epsilon-insensitive} loss that quadratically penalized slacks $\xi$ and is called $\mathcal{L}_2$-SVR.
+
+The $\mathcal{L}_2$-SVR objective~\eqref{eq:primal_svr_squared_eps} can be rewritten in form~\eqref{eq:biased_primal_svm1} or~\eqref{eq:biased_primal_svm2} as:
+
+\begin{equation} \label{eq:biased_primal_svr_squared_eps}
+	\min_{w,b} \frac{1}{2} (\| w \|^2 + b^2) + C \sum_{i=1}^n \max(0, |y_i - (w^T x_i + b)| - \epsilon)^2
+\end{equation}
 
 \begin{figure}[h!]
 	\centering

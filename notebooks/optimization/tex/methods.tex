@@ -58,8 +58,8 @@ $$
 $$
 \end{definition}
 
-\begin{definition}[L-smoothness] \label{def:l_smoothness}
-We say that a function $f: \Re^m \rightarrow \Re$ is L-smooth, i.e., L-Lipschitz continuous, if it is differentiable, i.e., $f \in C^1$, and if:
+\begin{definition}[L-Lipschitz continuity] \label{def:l_smoothness}
+We say that a function $f: \Re^m \rightarrow \Re$ is L-smooth, i.e., L-Lipschitz continuous, if:
 $$
 \| \nabla f(x) - \nabla f(y) \| \leq L \| x - y \| \ \forall \ x, y \in \Re^m
 $$
@@ -71,6 +71,7 @@ and, if $f$ is a $\mu$-strongly convex function, we give the following Hessian b
 $$
 0 \prec \mu I \preceq \nabla^2 f(x) \preceq L I \ \forall \ x \in \Re^m
 $$
+We say that a function $f: \Re^m \rightarrow \Re$ is locally L-smooth, i.e., locally L-Lipschitz continuous, if for every $x$ in $\Re^m$ there exists a neighborhood $U$ of $x$ such that $f$ restricted to $U$ is L-Lipschitz continuous. Every convex function is locally L-Lipschitz continuous.
 \end{definition}
 
 \pagebreak
@@ -769,6 +770,8 @@ In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal b
 
 Several losses and objectives have been presented in section~\ref{section:svc} and~\ref{section:svr}. In our experiments, we will consider four different convex loss functions, two for the \emph{classification} and two for the \emph{regression} tasks. In particular, two of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, that linearly penalizes the misclassified points, i.e., $\mathcal{L}_1$-SVM, meanwhile, their two squared versions are smooth, i.e., $\mathcal{L}_2$-SVM, that quadratically penalizes the misclassified points. This suggests us, as described in the methodological part, that we can achieve a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ for the nonsmooth objectives, meanwhile we can do better for the smooth ones using acceleration up to a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$.
 
+In addition, for twhat about the \emph{margin-based} losses, i.e., the \emph{classification} losses, both the \emph{hinge} and the \emph{squared hinge} losses are Lipschitz continuous and convex; meanwhile, for twhat about the \emph{distance-based} losses, i.e., the \emph{regression} losses, the \emph{epsilon-insensitive} loss is Lipschitz continuous and convex but the \emph{squared epsilon-insensitive} is convex and for this reason is locally Lipschitz continuous.
+
 In general, if the objective function of a quadratic programming problem is strictly convex, i.e., the associated Hessian matrix is positive definite, the solution is unique. And if the objective function is convex, there may be cases where the solution is nonunique.
 
 Assume that the hard margin SVM has a solution, i.e., the given problem is separable in the feature space. Then, since the objective function of the primal problem is $\displaystyle \frac{1}{2} \| w \|^2$, which is 1-strongly convex, the primal problem has a unique solution for $w$ and $b$.
@@ -777,15 +780,47 @@ Since the $\mathcal{L}_1$-SVM includes the linear sum of $\xi_i$, the primal obj
 
 \begin{table}[H]
 \centering
-\caption{SVM's objectives properties with methods convergence rates}
-\label{svm_objectives_props}
-\begin{tabular}{lrrrrr}
+\caption{SVM's objectives properties for primal formulations}
+\label{primal_svm_objectives_props}
+\begin{tabular}{lrrr}
 \toprule
-	&  smooth &  convexity &  \vtop{\hbox{\strut SGD}\hbox{\strut convergence rate}} &  \vtop{\hbox{\strut Polyak SGD}\hbox{\strut convergence rate}} &  \vtop{\hbox{\strut Nesterov SGD}\hbox{\strut convergence rate}} \\
-objective & 		& 		& 		& 		& 		\\
+	& smooth & \vtop{\hbox{\strut Lipschitz}\hbox{\strut continuous}} & convexity \\
+objective & 		& 		& 		\\
 \midrule
-$\mathcal{L}_1$-SVM & no   &  convex &     $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ &    $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ &    $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ \\
-$\mathcal{L}_2$-SVM & yes   &  \vtop{\hbox{\strut strongly}\hbox{\strut convex}} &     $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ &    $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ &    $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$ \\
+$\mathcal{L}_1$-SVC~\eqref{eq:biased_primal_svc_hinge} & no & globally & convex \\
+$\mathcal{L}_2$-SVC~\eqref{eq:biased_primal_svc_squared_hinge} & yes & globally & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
+\midrule
+$\mathcal{L}_1$-SVR~\eqref{eq:biased_primal_svr_eps} & no & globally & convex \\
+$\mathcal{L}_2$-SVR~\eqref{eq:biased_primal_svr_squared_eps} & yes & locally & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{SVM's objectives convergence rates for primal formulations}
+\label{primal_svm_objectives_rates}
+\begin{tabular}{lrrr}
+\toprule
+	& \vtop{\hbox{\strut SGD}\hbox{\strut convergence rate}} & \vtop{\hbox{\strut Polyak SGD}\hbox{\strut convergence rate}} & \vtop{\hbox{\strut Nesterov SGD}\hbox{\strut convergence rate}} \\
+objective & 		& 		& 		\\
+\midrule
+$\mathcal{L}_1$-SVM~(\ref{eq:biased_primal_svc_hinge},~\ref{eq:biased_primal_svr_eps}) & $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ & $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ & $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ \\
+$\mathcal{L}_2$-SVM~(\ref{eq:biased_primal_svc_squared_hinge},~\ref{eq:biased_primal_svr_squared_eps}) & $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ & $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ & $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{SVM's objectives properties with AdaGrad convergence rate for Lagrangian dual formulations}
+\label{dual_svm_objectives_props}
+\begin{tabular}{lrr}
+\toprule
+	& convexity & \vtop{\hbox{\strut AdaGrad}\hbox{\strut convergence rate}} \\
+objective & 		& 		\\
+\midrule
+$\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual}) and~(\ref{eq:svc_bcqp_lagrangian_dual},~\ref{eq:svr_bcqp_lagrangian_dual}) & \vtop{\hbox{\strut convex}\hbox{\strut quadratic}} & $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
