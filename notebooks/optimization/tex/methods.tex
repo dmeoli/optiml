@@ -89,12 +89,12 @@ Subgradients always exist for convex function.
 The Gradient Descent algorithm is the simplest \emph{first-order optimization} method that exploits the orthogonality of the gradient wrt the level sets to take a descent direction. In particular, it performs the following iterations:
 
 \begin{algorithm}[H]
-	\caption{Gradient Descent}
+	\caption{(Sub)Gradient Descent}
 	\label{alg:gd}
 	\begin{algorithmic}
 		\Require{Function $f$ to minimize}
 		\Require{Learning rate or step size $\alpha > 0$}
-		\Function{GradientDescent}{$f,\alpha$}
+		\Function{(Sub)GradientDescent}{$f,\alpha$}
 			\State Initialize weight vector $x_0$
 			\State $t = 0$
 			\While{$not\_convergence$}
@@ -106,9 +106,11 @@ The Gradient Descent algorithm is the simplest \emph{first-order optimization} m
 	\end{algorithmic}
 \end{algorithm}
 
+% http://www.princeton.edu/~yc5/ele522_optimization/lectures/subgradient_methods.pdf
+
 \subsubsection{Nonsmooth}
 
-% http://www.princeton.edu/~yc5/ele522_optimization/lectures/subgradient_methods.pdf
+First, consider a nonsmooth, i.e., nondifferentiable, convex function. So, the following lower bounds on convergence rates are given.
 
 \begin{theorem}[Subgradient Descent convergence for convex functions with Polyak's stepsize] \label{thm:cvx_polyak_subgd_convergence}
 Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function. Then the Subgradient Descent with Polyak's step size $\displaystyle \alpha_t = \frac{f(x_t) - f(x^*)}{\| g_t \|^2}$ satisfies:
@@ -133,9 +135,11 @@ f(x_t) - f(x^*) \leq \frac{2L^2}{\mu} \frac{1}{t+1}
 $$
 \end{theorem}
 
-If $f$ is strongly convex, then the convergence guarantees can be improved from $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ to $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$.
+If $f$ is strongly convex, then the \emph{convergence rate} can be improved from $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ to $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$. Among algorithms that only use subgradient, these \emph{convergence rates} cannot be futher improved.
 
 \subsubsection{Smooth}
+
+Now, consider a smooth, i.e., differentiable, convex function. So, the following lower bounds on convergence rates are given.
 
 \begin{theorem}[Gradient Descent convergence for convex functions] \label{thm:cvx_gd_convergence}
 Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function. Then the Gradient Descent with step size $\alpha \leq 1/L$ satisfies:
