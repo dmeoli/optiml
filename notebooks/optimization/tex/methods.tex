@@ -247,6 +247,8 @@ To mitigate the pathological zig-zagging by speeding up the \emph{convergence ra
 
 In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calculated by applying the $\beta$ momentum to the previous $v_{t-1}$ displacement, and subtracting the gradient step to $x_t$.
 
+% http://mitliagkas.github.io/ift6085-2019/ift-6085-lecture-6-notes.pdf
+
 \begin{figure}[h!]
 	\centering
   	\includegraphics[scale=0.5]{img/momentum}
@@ -274,7 +276,9 @@ In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calcul
 	\end{algorithmic}
 \end{algorithm}
 
-\begin{theorem}[Polyak's Accelerated Gradient Descent convergence for quadratic functions] \label{thm:quad_pag_convergence}
+% https://angms.science/doc/CVX/CVX_HBM.pdf
+
+\begin{theorem}[Polyak's Accelerated Gradient Descent convergence for convex quadratic functions] \label{thm:quad_pag_convergence}
 Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous and $\mu$-strongly convex quadratic function. Then the Polyak's Accelerated Gradient Descent with step size $\alpha = \displaystyle \frac{4}{(\sqrt{L} + \sqrt{\mu})^2}$ and momentum $\beta = \displaystyle \frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1} = 1 - \frac{2}{\sqrt{\kappa}+1}$ satisfies:
 $$
 \begin{aligned}
@@ -339,6 +343,8 @@ where $\kappa = L/\mu$.
 \end{theorem}
 
 Nesterov's momentum brings the \emph{convergence rate} from $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ to $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$ and in the case of smooth and strongly convex functions gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great because we get the guarantee for a more general class of functions but this rate of convergence cannot be further improved only using first-order information.
+
+% https://blogs.princeton.edu/imabandit/2014/03/06/nesterovs-accelerated-gradient-descent-for-smooth-and-strongly-convex-optimization/
 
 We can write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, for a L-Lipschitz continuous and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Big(\sqrt{\kappa}\log \frac{1}{\epsilon}\Big)$ for the accelerated methods where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the largest $\lambda_{max}$ and the smallest $\lambda_{min}$ eigenvalues respectively. Finally, NAG's \emph{iteration complexity} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{\epsilon}}\Big)$.
 
@@ -826,6 +832,8 @@ In general, if the objective function of a quadratic programming problem is stri
 Assume that the hard margin SVM has a solution, i.e., the given problem is separable in the feature space. Then, since the objective function of the primal problem is $\displaystyle \frac{1}{2} \| w \|^2$, which is 1-strongly convex, the primal problem has a unique solution for $w$ and $b$.
 
 Since the $\mathcal{L}_1$-SVM includes the linear sum of $\xi_i$, the primal objective function is convex. Likewise, the Hessian matrix of the dual objective function is positive semidefinite. Thus the primal and dual solutions may be nonunique. Meanwhile, the objective function of the primal problem for the $\mathcal{L}_2$-SVM is strictly convex, due to the quadratic sum of $\xi_i$. Therefore, $w$ and $b$ are uniquely determined if we solve the primal or dual problem.
+
+% http://www.lib.kobe-u.ac.jp/repository/90000231.pdf
 
 \begin{table}[H]
 \centering
