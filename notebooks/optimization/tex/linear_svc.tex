@@ -181,7 +181,7 @@ or, equivalently:
 
 where $q^T = [1, \dots, 1]$.
 
-By solving~\eqref{eq:svc_min_wolfe_dual} we will know $\alpha$ and, from~\eqref{eq:svc_wolfe_der_w}, we will get $w$, so we need to calculate $b.$
+By solving~\eqref{eq:svc_min_wolfe_dual} we will know $\alpha$ and, from~\eqref{eq:svc_wolfe_der_w}, we will get $w$, so we need to calculate $b$.
 
 We know that any data point satisfying~\eqref{eq:svc_wolfe_der_b} which is a support vector $x_s$ will have the form:
 
@@ -363,3 +363,25 @@ The $\mathcal{L}_2$-SVC objective~\eqref{eq:primal_svc_squared_hinge} can be rew
   	\caption{SVC Squared Hinge loss with different optimization steps}
   	\label{fig:svc_squared_hinge_loss}
 \end{figure}
+
+\subsubsection{Wolfe Dual formulation}
+
+In the same way we can derive the dual form of the $\mathcal{L}_2$-SVC by obtaining:
+
+\begin{equation} \label{eq:wolfe_dual_svc_squared_hinge}
+    \begin{aligned}
+        \min_{\alpha} \quad & \frac{1}{2}\alpha^T (Q + D)\alpha+q^T\alpha \\
+            \text{subject to} \quad & \alpha_i\geq 0 \ \forall_i \\ & y^T\alpha=0
+    \end{aligned}
+\end{equation}
+
+or, alternatively, with the regularized bias term by obtaining:
+
+\begin{equation} \label{eq:biased_wolfe_dual_svc_squared_hinge}
+    \begin{aligned}
+        \min_{\alpha} \quad & \frac{1}{2}\alpha^T (Q + yy^T + D) \alpha + q^T \alpha \\
+            \text{subject to} \quad & \alpha_i \geq 0 \ \forall_i
+    \end{aligned}
+\end{equation}
+
+where the diagonal matrix $\displaystyle D_{ii} = \frac{1}{2C} \ \forall_i$.

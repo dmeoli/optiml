@@ -324,3 +324,25 @@ The $\mathcal{L}_2$-SVR objective~\eqref{eq:primal_svr_squared_eps} can be rewri
   	\caption{SVC Squared Epsilon-insensitive loss with different optimization steps}
   	\label{fig:svr_squared_eps_loss}
 \end{figure}
+
+\subsubsection{Wolfe Dual formulation}
+
+In the same way we can derive the dual form of the $\mathcal{L}_2$-SVR by obtaining:
+
+\begin{equation} \label{eq:wolfe_dual_svr_squared_eps}
+    \begin{aligned}
+        \min_{\alpha} \quad & \frac{1}{2} \alpha^T (Q + D) \alpha + q^T \alpha \\
+            \text{subject to} \quad & \alpha_i \geq 0 \ \forall_i \\ & e^T \alpha=0
+    \end{aligned}
+\end{equation}
+
+or, alternatively, with the regularized bias term by obtaining:
+
+\begin{equation} \label{eq:biased_wolfe_dual_svr_squared_eps}
+    \begin{aligned}
+        \min_{\alpha} \quad & \frac{1}{2}\alpha^T (Q + ee^T + D) \alpha + q^T \alpha \\
+            \text{subject to} \quad & \alpha_i \geq 0 \ \forall_i
+    \end{aligned}
+\end{equation}
+
+where the diagonal matrix $\displaystyle D_{ii} = \frac{1}{2C} \ \forall_i$.
