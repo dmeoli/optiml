@@ -383,32 +383,3 @@ the gradient wrt $\mu$ and $\lambda$ are:
 \begin{equation} \label{eq:l2_svr_lagrangian_der_lalbda}
     \frac{\partial \mathcal{L}}{\partial \lambda}=-\alpha
 \end{equation}
-
-\bigskip
-
-From~\eqref{eq:svr_min_qp_wolfe_dual} we can notice that the equality constraint $e^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of~\eqref{eq:svr_lagrangian_dual} is reduced of 1/3 by removing the multipliers $\mu$ which was allocated to control the equality constraint $e^T \alpha=0$, so we will end up solving exactly the problem~\eqref{eq:biased_wolfe_dual_svr_squared_eps}.
-
-\begin{equation} \label{eq:l2_svr_bcqp_lagrangian_dual}
-	\begin{aligned}
-    	\max_{\lambda} \min_{\alpha} \mathcal{L}(\alpha,\lambda) &= \frac{1}{2} \alpha^T (Q + ee^T + D)\alpha+q^T\alpha - \lambda^T \alpha \\
-    &= \frac{1}{2} \alpha^T (Q + ee^T + D)\alpha + (q - \lambda)^T \alpha
-	\end{aligned}
-\end{equation}
-
-Now, taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings it to 0 gives:
-
-\begin{equation} \label{eq:l2_svr_bcqp_lagrangian_der_a}
-	\frac{\partial \mathcal{L}}{\partial \alpha}=0\Rightarrow (Q + ee^T + D) \alpha + (q - \lambda) = 0
-\end{equation}
-
-With $\alpha$ optimal solution of the linear system:
-
-\begin{equation} \label{eq:l2_svr_bcqp_lagrangian_sol}
-    (Q + ee^T + D) \alpha = - (q - \lambda)
-\end{equation}
-
-the gradient wrt $\lambda$ is:
-
-\begin{equation} \label{eq:l2_svr_bcqp_lagrangian_der_lambda}
-    \frac{\partial \mathcal{L}}{\partial \lambda}=-\alpha
-\end{equation}
