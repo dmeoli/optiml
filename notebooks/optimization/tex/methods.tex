@@ -194,7 +194,7 @@ f(x_t) - f(x^*) \leq \frac{2L^2}{\mu} \frac{1}{t+1}
 $$
 \end{theorem}
 
-The Subgradient Descent \emph{convergence rate} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ and $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ for L-Lipschitz continuous and strongly convex functions. We can also  write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, as $\displaystyle \mathcal{O}\Big(\frac{1}{\epsilon^2}\Big)$ for L-Lipschitz continuous convex functions and as $\displaystyle \mathcal{O}\Big(\frac{1}{\epsilon}\Big)$ for L-Lipschitz continuous and strongly convex functions.
+The Subgradient Descent \emph{convergence rate} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ and $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ for L-Lipschitz continuous and strongly convex functions. We can also  write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, as $\displaystyle \mathcal{O}\Bigg(\frac{1}{\epsilon^2}\Bigg)$ for L-Lipschitz continuous convex functions and as $\displaystyle \mathcal{O}\Bigg(\frac{1}{\epsilon}\Bigg)$ for L-Lipschitz continuous and strongly convex functions.
 
 Among algorithms that only use subgradient, these \emph{convergence rates} cannot be futher improved.
 
@@ -240,7 +240,7 @@ $$
 where $\kappa = L/\mu$.
 \end{theorem}
 
-The Gradient Descent \emph{convergence rate} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$. We can also write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, as $\displaystyle \mathcal{O}\Big(\frac{1}{\epsilon}\Big)$ for L-Lipschitz continuous convex functions and as $\displaystyle \mathcal{O}\Big(\kappa \log \frac{1}{\epsilon}\Big)$ for L-Lipschitz continuous and strongly convex functions.
+The Gradient Descent \emph{convergence rate} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ and $\displaystyle \mathcal{O}\Bigg(\exp\Bigg(-\frac{t}{\kappa}\Bigg)\Bigg)$ for L-Lipschitz continuous and strongly convex functions. We can also write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, as $\displaystyle \mathcal{O}\Bigg(\frac{1}{\epsilon}\Bigg)$ for L-Lipschitz continuous convex functions and as $\displaystyle \mathcal{O}\Bigg(\kappa \log \frac{1}{\epsilon}\Bigg)$ for L-Lipschitz continuous and strongly convex functions.
 
 % http://www.princeton.edu/~yc5/ele522_optimization/lectures/accelerated_gradient.pdf
 
@@ -345,11 +345,9 @@ $$
 where $\kappa = L/\mu$.
 \end{theorem}
 
-Nesterov's momentum brings the \emph{convergence rate} from $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ to $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$ and in the case of smooth and strongly convex functions gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great because we get the guarantee for a more general class of functions but this rate of convergence cannot be further improved only using first-order information.
-
 % https://blogs.princeton.edu/imabandit/2014/03/06/nesterovs-accelerated-gradient-descent-for-smooth-and-strongly-convex-optimization/
 
-We can write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, for a L-Lipschitz continuous and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Big(\sqrt{\kappa}\log \frac{1}{\epsilon}\Big)$ for the accelerated methods where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the largest $\lambda_{max}$ and the smallest $\lambda_{min}$ eigenvalues respectively. Finally, NAG's \emph{iteration complexity} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{\epsilon}}\Big)$.
+Nesterov's momentum brings the \emph{convergence rate} from $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ to $\displaystyle \mathcal{O}\Bigg(\frac{1}{t^2}\Bigg)$ and in the case of smooth and strongly convex functions gives the acceleration that we had with Polyak’s momentum for quadratic functions, i.e., $\displaystyle \mathcal{O}\Bigg(\exp\Bigg(-\frac{t}{\sqrt{\kappa}}\Bigg)\Bigg)$. This is great because we get the guarantee for a more general class of functions but this rate of convergence cannot be further improved only using first-order information. We can also write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, for a L-Lipschitz continuous and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Bigg(\sqrt{\kappa}\log \frac{1}{\epsilon}\Bigg)$ for the accelerated methods where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the largest $\lambda_{max}$ and the smallest $\lambda_{min}$ eigenvalues respectively. Finally, NAG's \emph{iteration complexity} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{\epsilon}}\Bigg)$.
 
 \pagebreak
 
@@ -821,12 +819,12 @@ The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preco
 	\end{algorithmic}
 \end{algorithm}
 
-In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s \emph{convergence rate} for L-Lipschitz continuous convex functions is the same of the SGD method described above, i.e., $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$.
+In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s \emph{convergence rate} for L-Lipschitz continuous convex functions is the same of the SGD method described above, i.e., $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$.
 
 
 \subsection{Losses properties}
 
-Several losses and objectives have been presented in section~\ref{section:svc} and~\ref{section:svr}. In our experiments, we will consider four different convex loss functions, two for the \emph{classification} and two for the \emph{regression} tasks. In particular, two of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, that linearly penalizes the misclassified points, i.e., $\mathcal{L}_1$-SVM, meanwhile, their two squared versions are smooth, i.e., $\mathcal{L}_2$-SVM, that quadratically penalizes the misclassified points. This suggests us, as described in the methodological part, that we can achieve a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ for the nonsmooth objectives, meanwhile we can do better for the smooth ones using acceleration up to a \emph{convergence rate} of $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$.
+Several losses and objectives have been presented in section~\ref{section:svc} and~\ref{section:svr}. In our experiments, we will consider four different convex loss functions, two for the \emph{classification} and two for the \emph{regression} tasks. In particular, two of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, that linearly penalizes the misclassified points, i.e., $\mathcal{L}_1$-SVM, meanwhile, their two squared versions are smooth, i.e., $\mathcal{L}_2$-SVM, that quadratically penalizes the misclassified points. This suggests us, as described in the methodological part, that we can achieve a \emph{convergence rate} of $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ for the nonsmooth objectives, meanwhile we can do better for the smooth ones using acceleration up to a \emph{convergence rate} of $\displaystyle \mathcal{O}\Bigg(\frac{1}{t^2}\Bigg)$.
 
 In addition, for what about the \emph{margin-based} losses, i.e., the \emph{classification} losses, both the \emph{hinge} and the \emph{squared hinge} losses are Lipschitz continuous and convex; meanwhile, for twhat about the \emph{distance-based} losses, i.e., the \emph{regression} losses, the \emph{epsilon-insensitive} loss is Lipschitz continuous and convex but the \emph{squared epsilon-insensitive} is convex and for this reason is locally Lipschitz continuous.
 
@@ -867,8 +865,8 @@ $\mathcal{L}_2$-SVR~\eqref{eq:biased_primal_svr_squared_eps} & yes & locally & \
 	& \vtop{\hbox{\strut SGD}\hbox{\strut convergence rate}} & \vtop{\hbox{\strut Polyak SGD}\hbox{\strut convergence rate}} & \vtop{\hbox{\strut Nesterov SGD}\hbox{\strut convergence rate}} \\
 objective & 		& 		& 		\\
 \midrule
-$\mathcal{L}_1$-SVM~(\ref{eq:biased_primal_svc_hinge},~\ref{eq:biased_primal_svr_eps}) & $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ & $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ & $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ \\
-$\mathcal{L}_2$-SVM~(\ref{eq:biased_primal_svc_squared_hinge},~\ref{eq:biased_primal_svr_squared_eps}) & $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ & $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$ & $\displaystyle \mathcal{O}\Big(\frac{1}{t^2}\Big)$ \\
+$\mathcal{L}_1$-SVM~(\ref{eq:biased_primal_svc_hinge},~\ref{eq:biased_primal_svr_eps}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ \\
+$\mathcal{L}_2$-SVM~(\ref{eq:biased_primal_svc_squared_hinge},~\ref{eq:biased_primal_svr_squared_eps}) & $\displaystyle \mathcal{O}\Bigg(\exp\Bigg(-\frac{t}{\kappa}\Bigg)\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\exp\Bigg(-\frac{t}{\kappa}\Bigg)\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\exp\Bigg(-\frac{t}{\sqrt{\kappa}}\Bigg)\Bigg)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -882,7 +880,7 @@ $\mathcal{L}_2$-SVM~(\ref{eq:biased_primal_svc_squared_hinge},~\ref{eq:biased_pr
 	& convexity & \vtop{\hbox{\strut AdaGrad}\hbox{\strut convergence rate}} \\
 objective & 		& 		\\
 \midrule
-$\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual}) and~(\ref{eq:svc_bcqp_lagrangian_dual},~\ref{eq:svr_bcqp_lagrangian_dual}) & \vtop{\hbox{\strut convex}\hbox{\strut quadratic}} & $\displaystyle \mathcal{O}\Big(\frac{1}{\sqrt{t}}\Big)$ \\
+$\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual}) and~(\ref{eq:svc_bcqp_lagrangian_dual},~\ref{eq:svr_bcqp_lagrangian_dual}) & \vtop{\hbox{\strut convex}\hbox{\strut quadratic}} & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
