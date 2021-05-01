@@ -137,6 +137,7 @@ Since \emph{Gradient Descent} becomes impractical when dealing with large datase
 Note that in expectation, we converge like GD, since $\displaystyle \mathbb{E}_{i \sim \mathcal{U}(1,\dots,n)}[\nabla f_i(x_t)] = \nabla f(x_t)$, therefore, the expected iterate of SGD converges to the optimum.
 
 % https://erwanscornet.github.io/teaching/Optimization.pdf
+% https://www.math.univ-toulouse.fr/~agarivie/sites/default/files/8_optimization.pdf
 
 Now, consider the SGD algorithm introduced previously but where each iteration is projected into the ball $\mathcal{B}(0, R)$ with radius $R > 0$ fixed. So, the following lower bounds on convergence rates are given.
 
@@ -239,7 +240,7 @@ $$
 where $\kappa = L/\mu$.
 \end{theorem}
 
-For the GD method we can write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, as $\displaystyle \mathcal{O}\Big(\frac{1}{\epsilon}\Big)$ for L-Lipschitz continuous and convex functions and as $\displaystyle \mathcal{O}\Big(\kappa \log \frac{1}{\epsilon}\Big)$ for L-Lipschitz continuous and strongly convex functions.
+The Gradient Descent \emph{convergence rate} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Big(\frac{1}{t}\Big)$. We can also write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, as $\displaystyle \mathcal{O}\Big(\frac{1}{\epsilon}\Big)$ for L-Lipschitz continuous convex functions and as $\displaystyle \mathcal{O}\Big(\kappa \log \frac{1}{\epsilon}\Big)$ for L-Lipschitz continuous and strongly convex functions.
 
 % http://www.princeton.edu/~yc5/ele522_optimization/lectures/accelerated_gradient.pdf
 
