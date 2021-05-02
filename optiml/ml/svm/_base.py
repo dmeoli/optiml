@@ -311,7 +311,7 @@ class DualSVM(SVM, ABC):
             self.coef_ = np.zeros(0)
         self.lagrangian_solver = lagrangian_solver
         self.lagrangian_solver_verbose = lagrangian_solver_verbose
-        if issubclass(self.optimizer, StochasticOptimizer):
+        if not isinstance(optimizer, str) and issubclass(self.optimizer, StochasticOptimizer):
             self.train_loss_history = []
 
     def _store_train_info(self, opt):
