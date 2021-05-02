@@ -311,6 +311,14 @@ class DualSVM(SVM, ABC):
             self.coef_ = np.zeros(0)
         self.lagrangian_solver = lagrangian_solver
         self.lagrangian_solver_verbose = lagrangian_solver_verbose
+        if issubclass(self.optimizer, StochasticOptimizer):
+            self.train_loss_history = []
+
+    def _store_train_info(self, opt):
+        if opt.is_lagrangian_dual():
+            self.train_loss_history.append(opt.primal_f_x)
+        else:
+            self.train_loss_history.append(opt.f_x)
 
 
 class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
@@ -655,6 +663,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                         epochs=self.max_iter,
                                                         momentum_type=self.momentum_type,
                                                         momentum=self.momentum,
+                                                        callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
                     else:
@@ -662,6 +671,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                         self.optimizer = self.optimizer(f=self.obj,
                                                         step_size=self.learning_rate,
                                                         epochs=self.max_iter,
+                                                        callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
                 else:
@@ -1046,6 +1056,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                             epochs=self.max_iter,
                                                             momentum_type=self.momentum_type,
                                                             momentum=self.momentum,
+                                                            callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
                         else:
@@ -1053,6 +1064,7 @@ class DualSVR(RegressorMixin, DualSVM):
                             self.optimizer = self.optimizer(f=self.obj,
                                                             step_size=self.learning_rate,
                                                             epochs=self.max_iter,
+                                                            callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
                     else:

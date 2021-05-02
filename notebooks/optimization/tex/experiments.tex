@@ -45,6 +45,13 @@ The experiments results shown in~\ref{nonlinear_dual_svc_cv_results} and~\ref{no
 
 The same considerations made for the previous linear \emph{Wolfe dual} and \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting the complexity of the model coming with higher $C$ regularization values seems to be not paying a tradeoff in terms of the number of \emph{iterations} of the algorithm and, moreover, the \emph{bcqp Lagrangian dual} formulation seems to perform better wrt the \emph{qp} formulation, both tends to select even more training data points as \emph{support vectors}.
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{img/lagrangian_dual_svc_loss_history}
+	\caption{Lagrangian Dual SVC loss convergence}
+	\label{fig:lagrangian_dual_svc_loss_history}
+\end{figure}
+
 \pagebreak
 
 \subsubsection{Squared Hinge loss}
@@ -101,6 +108,13 @@ For what about the linear \emph{Wolfe dual} formulation we can immediately notic
 
 For what about the linear \emph{Lagrangian dual} formulation we can see as it seems to be insensitive to the increasing complexity of the model in terms of number of \emph{iterations} and require many \emph{iterations} wrt the \emph{Wolfe dual} formulation.
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{img/lagrangian_dual_linear_svr_loss_history}
+	\caption{Lagrangian Dual Linear SVC loss convergence}
+	\label{fig:lagrangian_dual_linear_svr_loss_history}
+\end{figure}
+
 \paragraph{Nonlinear Dual formulations}
 
 The experiments results shown in~\ref{nonlinear_dual_svr_cv_results} and~\ref{nonlinear_lagrangian_dual_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm.
@@ -110,6 +124,20 @@ The experiments results shown in~\ref{nonlinear_dual_svr_cv_results} and~\ref{no
 \input{experiments/nonlinear_lagrangian_dual_svr}
 
 The same considerations made for the previous linear \emph{Wolfe dual} and \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting, the complexity of the model coming with higher $C$ regularization hyperparameters and lower $\epsilon$ values pays a larger tradeoff in terms of the number of \emph{iterations} of the algorithm.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{img/lagrangian_dual_poly_svr_loss_history}
+	\caption{Lagrangian Dual Polynomial SVC loss convergence}
+	\label{fig:lagrangian_dual_poly_svr_loss_history}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{img/lagrangian_dual_gaussian_svr_loss_history}
+	\caption{Lagrangian Dual Gaussian SVC loss convergence}
+	\label{fig:lagrangian_dual_gaussian_svr_loss_history}
+\end{figure}
 
 \pagebreak
 

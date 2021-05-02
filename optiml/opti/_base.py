@@ -107,6 +107,9 @@ class Optimizer(ABC):
                 self.x1_history.append(self.primal_x[1])
                 self.f_x_history.append(self.primal_f_x)
 
+            if callable(self._callback):  # custom callback
+                self._callback(self, *args, *self.callback_args)
+
             if gap <= self.eps:
                 self.status = 'optimal'
                 raise StopIteration
@@ -118,8 +121,8 @@ class Optimizer(ABC):
                 self.x1_history.append(self.x[1])
                 self.f_x_history.append(self.f_x)
 
-        if callable(self._callback):  # custom callback
-            self._callback(self, *args, *self.callback_args)
+            if callable(self._callback):  # custom callback
+                self._callback(self, *args, *self.callback_args)
 
     def is_verbose(self):
         return self.verbose and not self.iter % self.verbose
