@@ -331,7 +331,7 @@ The $\mathcal{L}_2$-SVR objective~\eqref{eq:primal_svr_squared_eps} can be rewri
 
 \subsubsection{Wolfe Dual formulation}
 
-In the same way we can derive the dual form of the $\mathcal{L}_2$-SVR by obtaining:
+As done for the $\mathcal{L}_1$-SVR we can derive the \emph{Wolfe dual} formulation of the $\mathcal{L}_2$-SVR by obtaining:
 
 \begin{equation} \label{eq:wolfe_dual_svr_squared_eps}
     \begin{aligned}
@@ -371,7 +371,7 @@ Taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings 
 With $\alpha$ optimal solution of the linear system:
 
 \begin{equation} \label{eq:l2_svr_lagrangian_sol}
-    Q \alpha = - (q - \mu e - \lambda)
+    (Q+D) \alpha = - (q - \mu e - \lambda)
 \end{equation}
 
 the gradient wrt $\mu$ and $\lambda$ are:

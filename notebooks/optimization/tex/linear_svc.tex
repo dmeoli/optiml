@@ -370,7 +370,7 @@ The $\mathcal{L}_2$-SVC objective~\eqref{eq:primal_svc_squared_hinge} can be rew
 
 \subsubsection{Wolfe Dual formulation}
 
-In the same way we can derive the dual form of the $\mathcal{L}_2$-SVC by obtaining:
+As done for the $\mathcal{L}_1$-SVC we can derive the \emph{Wolfe dual} formulation of the $\mathcal{L}_2$-SVC by obtaining:
 
 \begin{equation} \label{eq:wolfe_dual_svc_squared_hinge}
     \begin{aligned}
@@ -410,7 +410,7 @@ Taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings 
 With $\alpha$ optimal solution of the linear system:
 
 \begin{equation} \label{eq:l2_svc_lagrangian_sol}
-    Q \alpha = - (q - \mu y - \lambda)
+    (Q+D) \alpha = - (q - \mu y - \lambda)
 \end{equation}
 
 the gradient wrt $\mu$ and $\lambda$ are:
