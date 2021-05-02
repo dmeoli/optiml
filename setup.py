@@ -4,7 +4,7 @@ with open("README.md", "r") as file_stream:
     readme = file_stream.read()
 
 setup(name="optiml",
-      version="0.1.6",
+      version="0.1.7",
       author="Donato Meoli",
       author_email="donato.meoli.95@gmail.com",
       description="Optimizers for/and sklearn compatible Machine Learning models",
