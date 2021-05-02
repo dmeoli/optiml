@@ -886,7 +886,7 @@ $\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual})
 \end{tabular}
 \end{table}
 
-Notice that since the Hessian matrix $Q$ of the $\mathcal{L}_1$-SVM is not positive definite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues and so it will be unbounded below, the Lagrangian dual relaxation will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute an approximation of the gradient, we will choose $\alpha$ in such a way as the one that minimizes the norm of the residual:
+Notice that since the Hessian matrix $Q$ of the $\mathcal{L}_1$-SVM is not positive definite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues and so it will be unbounded below, the Lagrangian dual relaxation, i.e.,~(\ref{eq:svc_lagrangian_sol},~\ref{eq:svc_bcqp_lagrangian_sol}) or~(\ref{eq:svr_lagrangian_sol},~\ref{eq:svr_bcqp_lagrangian_sol}), will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute an approximation of the gradient, we will choose $\alpha$ in such a way as the one that minimizes the norm of the residual:
 
 \begin{equation} \label{eq:lagrangian_krylov_sol}
 	\min_{\alpha_n \in K_n(Q, b)} \| Q \alpha_n - b \|
