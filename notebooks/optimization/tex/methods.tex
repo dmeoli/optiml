@@ -84,17 +84,17 @@ Subgradients always exist for convex function.
 
 \pagebreak
 
-\subsection{(Sub)Gradient Descent for Primal formulations}
+\subsection{Gradient Descent for Primal formulations}
 
 The Gradient Descent algorithm is the simplest \emph{first-order optimization} method that exploits the orthogonality of the gradient wrt the level sets to take a descent direction. In particular, it performs the following iterations:
 
 \begin{algorithm}[H]
-	\caption{(Sub)Gradient Descent}
+	\caption{Gradient Descent}
 	\label{alg:gd}
 	\begin{algorithmic}
 		\Require{Function $f$ to minimize}
 		\Require{Learning rate or step size $\alpha > 0$}
-		\Function{(Sub)GradientDescent}{$f,\alpha$}
+		\Function{GradientDescent}{$f,\alpha$}
 			\State Initialize weight vector $x_0$
 			\State $t = 0$
 			\While{$not\_convergence$}
@@ -115,13 +115,13 @@ The downside is that every step is very computationally expensive, $\mathcal{O}(
 Since \emph{Gradient Descent} becomes impractical when dealing with large datasets we introduce a stochastic version, called \emph{Stochastic Gradient Descent}, which does not use the whole set of examples to compute the gradient at every step. By doing so, we can reduce computation all the way down to $\mathcal{O}(m)$ per iteration.
 
 \begin{algorithm}[H]
-	\caption{Stochastic (Sub)Gradient Descent}
+	\caption{Stochastic Gradient Descent}
 	\label{alg:sgd}
 	\begin{algorithmic}
 		\Require{Function $f$ to minimize}
 		\Require{Learning rate or step size $\alpha > 0$}
 		\Require{Batch size $k$}
-		\Function{Stochastic(Sub)GradientDescent}{$f,\alpha,k$}
+		\Function{StochasticGradientDescent}{$f,\alpha,k$}
 			\State Initialize weight vector $x_0$
 			\State $t \gets 0$
 			\While{$not\_convergence$}
@@ -809,7 +809,7 @@ The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preco
 			\State Initialize weight vector $x_0$ and the squared accumulated gradients vector $s_t \gets 0$
 			\State $t = 1$
 			\While {$not\_convergence$}
-				\State $g_t \gets \nabla f(x_t)$
+				\State $g_t \gets \partial f(x_t)$ \Comment if $f$ is differentiable then $\partial f(x_t) = \nabla f(x_t)$
 				\State $s_t \gets s_{t-1} + g_t^2$
 				\State $x_{t+1} \gets x_t - \alpha P_t^{-1} g_t = x_t - \displaystyle \frac{\alpha}{\sqrt{s_t + \epsilon}} \odot g_t \ \text{where} \ P_t \gets diag(s_t + \epsilon)^{1/2}$
 				\State $t \gets t + 1$
@@ -819,8 +819,9 @@ The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preco
 	\end{algorithmic}
 \end{algorithm}
 
-In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s \emph{convergence rate} for L-Lipschitz continuous convex functions is the same of the SGD method described above, i.e., $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$.
+In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal by adaptively scaling the learning rate for each dimension with the magnitude of the gradients. Coordinates that routinely correspond to large gradients are scaled down significantly, whereas others with small gradients receive a much more gentle treatment. \emph{AdaGrad}'s \emph{convergence rate} for L-Lipschitz continuous convex functions is the same of the SGD method described above.
 
+\pagebreak
 
 \subsection{Losses properties}
 
@@ -830,7 +831,7 @@ In general, if the objective function of a quadratic programming problem is stri
 
 Assume that the hard margin SVM has a solution, i.e., the given problem is separable in the feature space. Then, since the objective function of the primal problem is $\displaystyle \frac{1}{2} \| w \|^2$, which is 1-strongly convex, the primal problem has a unique solution for $w$ and $b$.
 
-Since the $\mathcal{L}_1$-SVM linearly penalizes the misclassified points, the primal objective function is convex. Likewise, the Hessian matrix of the dual objective function is positive semidefinite. Thus the primal and dual solutions may be nonunique. Meanwhile, the objective function of the primal problem for the $\mathcal{L}_2$-SVM is strictly convex, due to the quadratic penalization of the misclassified points. Therefore, $w$ and $b$ are uniquely determined if we solve the primal or dual problem.
+Since the $\mathcal{L}_1$-SVM linearly penalizes the misclassified points, the primal objective function is convex. Likewise, the Hessian matrix of the dual objective function is positive semidefinite. Thus the primal and dual solutions may be nonunique. Meanwhile, the objective function of the primal problem for the $\mathcal{L}_2$-SVM is strictly convex, due to the quadratic penalization of the misclassified points. Therefore, $w$ and $b$ are uniquely determined if we solve the primal or dual problem. In summary, the following properties for the SVM's objectives are given:
 
 % http://www.lib.kobe-u.ac.jp/repository/90000231.pdf
 
@@ -852,6 +853,8 @@ $\mathcal{L}_2$-SVR~\eqref{eq:biased_primal_svr_squared_eps} & yes & locally & \
 \end{tabular}
 \end{table}
 
+And, according to the theoretical analysis, the following \emph{convergence rates} are given for the primal and Lagrangian dual formulations respectively: 
+
 % https://homepage.cs.uiowa.edu/~tyng/acml15-tutorial.pdf
 
 \begin{table}[H]
@@ -871,14 +874,14 @@ $\mathcal{L}_2$-SVM~(\ref{eq:biased_primal_svc_squared_hinge},~\ref{eq:biased_pr
 
 \begin{table}[H]
 \centering
-\caption{SVM's objectives properties with AdaGrad convergence rate for Lagrangian dual formulations}
+\caption{SVM's objectives convergence rate for Lagrangian dual formulations}
 \label{dual_svm_objectives_props}
-\begin{tabular}{lrr}
+\begin{tabular}{lr}
 \toprule
-	& convexity & \vtop{\hbox{\strut AdaGrad}\hbox{\strut convergence rate}} \\
-objective & 		& 		\\
+	& \vtop{\hbox{\strut AdaGrad}\hbox{\strut convergence rate}} \\
+objective & 		\\
 \midrule
-$\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual}) and~(\ref{eq:svc_bcqp_lagrangian_dual},~\ref{eq:svr_bcqp_lagrangian_dual}) & \vtop{\hbox{\strut convex}\hbox{\strut quadratic}} & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ \\
+$\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual}) or~(\ref{eq:svc_bcqp_lagrangian_dual},~\ref{eq:svr_bcqp_lagrangian_dual}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
