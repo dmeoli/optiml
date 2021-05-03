@@ -13,7 +13,8 @@ from sklearn.preprocessing import LabelBinarizer
 from wurlitzer import pipes, STDOUT
 
 from .kernels import gaussian, Kernel, LinearKernel
-from .losses import squared_hinge, SVMLoss, squared_epsilon_insensitive
+from .losses import hinge, squared_hinge, SVMLoss, epsilon_insensitive, squared_epsilon_insensitive, Hinge, \
+    SquaredHinge, SquaredEpsilonInsensitive, EpsilonInsensitive
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
@@ -89,6 +90,7 @@ class SVM(BaseEstimator, ABC):
     def __init__(self,
                  C=1.,
                  tol=1e-3,
+                 loss=SVMLoss,
                  optimizer=None,
                  max_iter=1000,
                  learning_rate=0.1,
@@ -106,6 +108,7 @@ class SVM(BaseEstimator, ABC):
         if not tol > 0:
             raise ValueError('tol must be > 0')
         self.tol = tol
+        self.loss = loss
         self.optimizer = optimizer
         self.max_iter = max_iter
         self.learning_rate = learning_rate
@@ -163,6 +166,7 @@ class PrimalSVM(SVM, ABC):
                  verbose=False):
         super().__init__(C=C,
                          tol=tol,
+                         loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
@@ -174,7 +178,6 @@ class PrimalSVM(SVM, ABC):
                          master_solver=master_solver,
                          master_verbose=master_verbose,
                          verbose=verbose)
-        self.loss = loss
         if not issubclass(self.optimizer, Optimizer):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
         self.validation_split = validation_split
@@ -274,6 +277,7 @@ class DualSVM(SVM, ABC):
                  kernel=gaussian,
                  C=1.,
                  tol=1e-3,
+                 loss=SVMLoss,
                  optimizer=SMO,
                  max_iter=1000,
                  learning_rate=0.1,
@@ -289,6 +293,7 @@ class DualSVM(SVM, ABC):
                  verbose=False):
         super().__init__(C=C,
                          tol=tol,
+                         loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
@@ -502,6 +507,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  kernel=gaussian,
                  C=1.,
                  tol=1e-3,
+                 loss=hinge,
                  optimizer=SMO,
                  max_iter=1000,
                  learning_rate=0.1,
@@ -518,6 +524,7 @@ class DualSVC(ClassifierMixin, DualSVM):
         super().__init__(kernel=kernel,
                          C=C,
                          tol=tol,
+                         loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
@@ -531,6 +538,8 @@ class DualSVC(ClassifierMixin, DualSVM):
                          lagrangian_solver=lagrangian_solver,
                          lagrangian_solver_verbose=lagrangian_solver_verbose,
                          verbose=verbose)
+        if not loss._loss_type == 'classifier':
+            raise TypeError(f'{loss} is not an allowed SVC loss function')
         self.lb = LabelBinarizer(neg_label=-1)
 
     def fit(self, X, y):
@@ -550,135 +559,146 @@ class DualSVC(ClassifierMixin, DualSVM):
 
         ub = np.ones(n_samples) * self.C  # upper bounds
 
-        if self.optimizer == 'smo' or self.optimizer == SMO:
+        if self.loss == Hinge:
 
-            self.obj = Quadratic(Q, q)
+            if self.optimizer == 'smo' or self.optimizer == SMO:
 
-            self.optimizer = SMOClassifier(self.obj, X, y, K, self.kernel, self.C,
-                                           self.tol, self.verbose).minimize()
-            alphas = self.optimizer.alphas
-            if isinstance(self.kernel, LinearKernel):
-                self.coef_ = self.optimizer.w
-            self.intercept_ = self.optimizer.b
-
-        elif isinstance(self.optimizer, str):
-
-            lb = np.zeros(n_samples)  # lower bounds
-
-            if self.fit_intercept:
-
-                out = StringIO()
-                with pipes(stdout=out, stderr=STDOUT):
-                    alphas = solve_qp(P=Q,
-                                      q=q,
-                                      A=y.astype(float),
-                                      b=np.zeros(1),
-                                      lb=lb,
-                                      ub=ub,
-                                      solver=self.optimizer,
-                                      verbose=True)
-
-            else:
-
-                Q += np.outer(y, y)
-
-                out = StringIO()
-                with pipes(stdout=out, stderr=STDOUT):
-                    alphas = solve_qp(P=Q,
-                                      q=q,
-                                      lb=lb,
-                                      ub=ub,
-                                      solver=self.optimizer,
-                                      verbose=True)
-
-            stdout = out.getvalue()
-            if stdout:
-                self.iter = int(max(re.findall(r'(\d+):', stdout)))
-                if self.verbose:
-                    print(stdout)
-
-        else:
-
-            if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
-
-                Q += np.outer(y, y)
                 self.obj = Quadratic(Q, q)
 
-                self.optimizer = self.optimizer(quad=self.obj,
-                                                ub=ub,
-                                                max_iter=self.max_iter,
-                                                verbose=self.verbose).minimize()
+                self.optimizer = SMOClassifier(self.obj, X, y, K, self.kernel, self.C,
+                                               self.tol, self.verbose).minimize()
+                alphas = self.optimizer.alphas
+                if isinstance(self.kernel, LinearKernel):
+                    self.coef_ = self.optimizer.w
+                self.intercept_ = self.optimizer.b
 
-            elif issubclass(self.optimizer, Optimizer):
+            elif isinstance(self.optimizer, str):
+
+                lb = np.zeros(n_samples)  # lower bounds
 
                 if self.fit_intercept:
 
-                    self.obj = LagrangianConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                              A=y,
-                                                              ub=ub,
-                                                              lagrangian_solver=self.lagrangian_solver,
-                                                              lagrangian_solver_verbose=self.lagrangian_solver_verbose)
+                    out = StringIO()
+                    with pipes(stdout=out, stderr=STDOUT):
+                        alphas = solve_qp(P=Q,
+                                          q=q,
+                                          A=y.astype(float),
+                                          b=np.zeros(1),
+                                          lb=lb,
+                                          ub=ub,
+                                          solver=self.optimizer,
+                                          verbose=True)
 
                 else:
 
                     Q += np.outer(y, y)
-                    self.obj = LagrangianBoxConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                 ub=ub,
-                                                                 lagrangian_solver=self.lagrangian_solver,
-                                                                 lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
-                if issubclass(self.optimizer, LineSearchOptimizer):
+                    out = StringIO()
+                    with pipes(stdout=out, stderr=STDOUT):
+                        alphas = solve_qp(P=Q,
+                                          q=q,
+                                          lb=lb,
+                                          ub=ub,
+                                          solver=self.optimizer,
+                                          verbose=True)
 
-                    self.optimizer = self.optimizer(f=self.obj,
+                stdout = out.getvalue()
+                if stdout:
+                    self.iter = int(max(re.findall(r'(\d+):', stdout)))
+                    if self.verbose:
+                        print(stdout)
+
+            else:
+
+                if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
+
+                    Q += np.outer(y, y)
+                    self.obj = Quadratic(Q, q)
+
+                    self.optimizer = self.optimizer(quad=self.obj,
+                                                    ub=ub,
                                                     max_iter=self.max_iter,
-                                                    max_f_eval=self.max_f_eval,
                                                     verbose=self.verbose).minimize()
 
-                    if self.optimizer.status == 'stopped':
-                        if self.optimizer.iter >= self.max_iter:
-                            warnings.warn('max_iter reached but the optimization has not converged yet',
-                                          ConvergenceWarning)
-                        elif self.optimizer.f_eval >= self.max_f_eval:
-                            warnings.warn('max_f_eval reached but the optimization has not converged yet',
-                                          ConvergenceWarning)
+                elif issubclass(self.optimizer, Optimizer):
 
-                elif issubclass(self.optimizer, ProximalBundle):
+                    if self.fit_intercept:
 
-                    self.optimizer = self.optimizer(f=self.obj,
-                                                    mu=self.mu,
-                                                    max_iter=self.max_iter,
-                                                    master_solver=self.master_solver,
-                                                    master_verbose=self.master_verbose,
-                                                    verbose=self.verbose).minimize()
-
-                    if self.optimizer.status == 'error':
-                        warnings.warn('failure while computing direction for the master problem', ConvergenceWarning)
-
-                elif issubclass(self.optimizer, StochasticOptimizer):
-
-                    if issubclass(self.optimizer, StochasticMomentumOptimizer):
-
-                        self.optimizer = self.optimizer(f=self.obj,
-                                                        step_size=self.learning_rate,
-                                                        epochs=self.max_iter,
-                                                        momentum_type=self.momentum_type,
-                                                        momentum=self.momentum,
-                                                        callback=self._store_train_info,
-                                                        verbose=self.verbose).minimize()
+                        self.obj = LagrangianConstrainedQuadratic(primal=Quadratic(Q, q),
+                                                                  A=y,
+                                                                  ub=ub,
+                                                                  lagrangian_solver=self.lagrangian_solver,
+                                                                  lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
                     else:
 
+                        Q += np.outer(y, y)
+                        self.obj = LagrangianBoxConstrainedQuadratic(primal=Quadratic(Q, q),
+                                                                     ub=ub,
+                                                                     lagrangian_solver=self.lagrangian_solver,
+                                                                     lagrangian_solver_verbose=self.lagrangian_solver_verbose)
+
+                    if issubclass(self.optimizer, LineSearchOptimizer):
+
                         self.optimizer = self.optimizer(f=self.obj,
-                                                        step_size=self.learning_rate,
-                                                        epochs=self.max_iter,
-                                                        callback=self._store_train_info,
+                                                        max_iter=self.max_iter,
+                                                        max_f_eval=self.max_f_eval,
                                                         verbose=self.verbose).minimize()
 
-                else:
+                        if self.optimizer.status == 'stopped':
+                            if self.optimizer.iter >= self.max_iter:
+                                warnings.warn('max_iter reached but the optimization has not converged yet',
+                                              ConvergenceWarning)
+                            elif self.optimizer.f_eval >= self.max_f_eval:
+                                warnings.warn('max_f_eval reached but the optimization has not converged yet',
+                                              ConvergenceWarning)
 
-                    raise TypeError(f'{self.optimizer} is not an allowed optimizer')
+                    elif issubclass(self.optimizer, ProximalBundle):
 
-            alphas = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
+                        self.optimizer = self.optimizer(f=self.obj,
+                                                        mu=self.mu,
+                                                        max_iter=self.max_iter,
+                                                        master_solver=self.master_solver,
+                                                        master_verbose=self.master_verbose,
+                                                        verbose=self.verbose).minimize()
+
+                        if self.optimizer.status == 'error':
+                            warnings.warn('failure while computing direction for the master problem',
+                                          ConvergenceWarning)
+
+                    elif issubclass(self.optimizer, StochasticOptimizer):
+
+                        if issubclass(self.optimizer, StochasticMomentumOptimizer):
+
+                            self.optimizer = self.optimizer(f=self.obj,
+                                                            step_size=self.learning_rate,
+                                                            epochs=self.max_iter,
+                                                            momentum_type=self.momentum_type,
+                                                            momentum=self.momentum,
+                                                            callback=self._store_train_info,
+                                                            verbose=self.verbose).minimize()
+
+                        else:
+
+                            self.optimizer = self.optimizer(f=self.obj,
+                                                            step_size=self.learning_rate,
+                                                            epochs=self.max_iter,
+                                                            callback=self._store_train_info,
+                                                            verbose=self.verbose).minimize()
+
+                    else:
+
+                        raise TypeError(f'{self.optimizer} is not an allowed optimizer')
+
+                alphas = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
+
+        elif self.loss == SquaredHinge:
+
+            pass
+
+        else:
+
+            raise TypeError(f'{self.loss} is not an allowed loss')
 
         sv = alphas > 1e-6
         self.support_ = np.arange(len(alphas))[sv]
@@ -888,6 +908,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  C=1.,
                  epsilon=0.1,
                  tol=1e-3,
+                 loss=epsilon_insensitive,
                  optimizer=SMO,
                  max_iter=1000,
                  learning_rate=0.1,
@@ -904,6 +925,7 @@ class DualSVR(RegressorMixin, DualSVM):
         super().__init__(kernel=kernel,
                          C=C,
                          tol=tol,
+                         loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
@@ -917,6 +939,8 @@ class DualSVR(RegressorMixin, DualSVM):
                          lagrangian_solver=lagrangian_solver,
                          lagrangian_solver_verbose=lagrangian_solver_verbose,
                          verbose=verbose)
+        if not loss._loss_type == 'regressor':
+            raise TypeError(f'{loss} is not an allowed SVR loss function')
         if not epsilon >= 0:
             raise ValueError('epsilon must be >= 0')
         self.epsilon = epsilon
@@ -938,142 +962,152 @@ class DualSVR(RegressorMixin, DualSVM):
 
         ub = np.ones(2 * n_samples) * self.C  # upper bounds
 
-        if self.optimizer == 'smo' or self.optimizer == SMO:
+        if self.loss == EpsilonInsensitive:
 
-            self.obj = Quadratic(Q, q)
+            if self.optimizer == 'smo' or self.optimizer == SMO:
 
-            self.optimizer = SMORegression(self.obj, X, y, K, self.kernel, self.C,
-                                           self.epsilon, self.tol, self.verbose).minimize()
-            alphas_p, alphas_n = self.optimizer.alphas_p, self.optimizer.alphas_n
-            if isinstance(self.kernel, LinearKernel):
-                self.coef_ = self.optimizer.w
-            self.intercept_ = self.optimizer.b
+                self.obj = Quadratic(Q, q)
 
-        else:
-
-            e = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
-
-            if isinstance(self.optimizer, str):
-
-                lb = np.zeros(2 * n_samples)  # lower bounds
-
-                if self.fit_intercept:
-
-                    out = StringIO()
-                    with pipes(stdout=out, stderr=STDOUT):
-                        alphas = solve_qp(P=Q,
-                                          q=q,
-                                          A=e,
-                                          b=np.zeros(1),
-                                          lb=lb,
-                                          ub=ub,
-                                          solver=self.optimizer,
-                                          verbose=True)
-
-                else:
-
-                    Q += np.outer(e, e)
-
-                    out = StringIO()
-                    with pipes(stdout=out, stderr=STDOUT):
-                        alphas = solve_qp(P=Q,
-                                          q=q,
-                                          lb=lb,
-                                          ub=ub,
-                                          solver=self.optimizer,
-                                          verbose=True)
-
-                stdout = out.getvalue()
-                if stdout:
-                    self.iter = int(max(re.findall(r'(\d+):', stdout)))
-                    if self.verbose:
-                        print(stdout)
+                self.optimizer = SMORegression(self.obj, X, y, K, self.kernel, self.C,
+                                               self.epsilon, self.tol, self.verbose).minimize()
+                alphas_p, alphas_n = self.optimizer.alphas_p, self.optimizer.alphas_n
+                if isinstance(self.kernel, LinearKernel):
+                    self.coef_ = self.optimizer.w
+                self.intercept_ = self.optimizer.b
 
             else:
 
-                if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
+                e = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix
 
-                    Q += np.outer(e, e)
-                    self.obj = Quadratic(Q, q)
+                if isinstance(self.optimizer, str):
 
-                    self.optimizer = self.optimizer(quad=self.obj,
-                                                    ub=ub,
-                                                    max_iter=self.max_iter,
-                                                    verbose=self.verbose).minimize()
-
-                elif issubclass(self.optimizer, Optimizer):
+                    lb = np.zeros(2 * n_samples)  # lower bounds
 
                     if self.fit_intercept:
 
-                        self.obj = LagrangianConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                  A=e,
-                                                                  ub=ub,
-                                                                  lagrangian_solver=self.lagrangian_solver,
-                                                                  lagrangian_solver_verbose=self.lagrangian_solver_verbose)
+                        out = StringIO()
+                        with pipes(stdout=out, stderr=STDOUT):
+                            alphas = solve_qp(P=Q,
+                                              q=q,
+                                              A=e,
+                                              b=np.zeros(1),
+                                              lb=lb,
+                                              ub=ub,
+                                              solver=self.optimizer,
+                                              verbose=True)
 
                     else:
 
                         Q += np.outer(e, e)
-                        self.obj = LagrangianBoxConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                     ub=ub,
-                                                                     lagrangian_solver=self.lagrangian_solver,
-                                                                     lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
-                    if issubclass(self.optimizer, LineSearchOptimizer):
+                        out = StringIO()
+                        with pipes(stdout=out, stderr=STDOUT):
+                            alphas = solve_qp(P=Q,
+                                              q=q,
+                                              lb=lb,
+                                              ub=ub,
+                                              solver=self.optimizer,
+                                              verbose=True)
 
-                        self.optimizer = self.optimizer(f=self.obj,
+                    stdout = out.getvalue()
+                    if stdout:
+                        self.iter = int(max(re.findall(r'(\d+):', stdout)))
+                        if self.verbose:
+                            print(stdout)
+
+                else:
+
+                    if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
+
+                        Q += np.outer(e, e)
+                        self.obj = Quadratic(Q, q)
+
+                        self.optimizer = self.optimizer(quad=self.obj,
+                                                        ub=ub,
                                                         max_iter=self.max_iter,
-                                                        max_f_eval=self.max_f_eval,
                                                         verbose=self.verbose).minimize()
 
-                        if self.optimizer.status == 'stopped':
-                            if self.optimizer.iter >= self.max_iter:
-                                warnings.warn('max_iter reached but the optimization has not converged yet',
-                                              ConvergenceWarning)
-                            elif self.optimizer.f_eval >= self.max_f_eval:
-                                warnings.warn('max_f_eval reached but the optimization has not converged yet',
-                                              ConvergenceWarning)
+                    elif issubclass(self.optimizer, Optimizer):
 
-                    elif issubclass(self.optimizer, ProximalBundle):
+                        if self.fit_intercept:
 
-                        self.optimizer = self.optimizer(f=self.obj,
-                                                        mu=self.mu,
-                                                        max_iter=self.max_iter,
-                                                        master_solver=self.master_solver,
-                                                        master_verbose=self.master_verbose,
-                                                        verbose=self.verbose).minimize()
-
-                        if self.optimizer.status == 'error':
-                            warnings.warn('failure while computing direction for the master problem',
-                                          ConvergenceWarning)
-
-                    elif issubclass(self.optimizer, StochasticOptimizer):
-
-                        if issubclass(self.optimizer, StochasticMomentumOptimizer):
-
-                            self.optimizer = self.optimizer(f=self.obj,
-                                                            step_size=self.learning_rate,
-                                                            epochs=self.max_iter,
-                                                            momentum_type=self.momentum_type,
-                                                            momentum=self.momentum,
-                                                            callback=self._store_train_info,
-                                                            verbose=self.verbose).minimize()
+                            self.obj = LagrangianConstrainedQuadratic(primal=Quadratic(Q, q),
+                                                                      A=e,
+                                                                      ub=ub,
+                                                                      lagrangian_solver=self.lagrangian_solver,
+                                                                      lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
                         else:
 
+                            Q += np.outer(e, e)
+                            self.obj = LagrangianBoxConstrainedQuadratic(primal=Quadratic(Q, q),
+                                                                         ub=ub,
+                                                                         lagrangian_solver=self.lagrangian_solver,
+                                                                         lagrangian_solver_verbose=self.lagrangian_solver_verbose)
+
+                        if issubclass(self.optimizer, LineSearchOptimizer):
+
                             self.optimizer = self.optimizer(f=self.obj,
-                                                            step_size=self.learning_rate,
-                                                            epochs=self.max_iter,
-                                                            callback=self._store_train_info,
+                                                            max_iter=self.max_iter,
+                                                            max_f_eval=self.max_f_eval,
                                                             verbose=self.verbose).minimize()
 
-                    else:
+                            if self.optimizer.status == 'stopped':
+                                if self.optimizer.iter >= self.max_iter:
+                                    warnings.warn('max_iter reached but the optimization has not converged yet',
+                                                  ConvergenceWarning)
+                                elif self.optimizer.f_eval >= self.max_f_eval:
+                                    warnings.warn('max_f_eval reached but the optimization has not converged yet',
+                                                  ConvergenceWarning)
 
-                        raise TypeError(f'{self.optimizer} is not an allowed optimizer')
+                        elif issubclass(self.optimizer, ProximalBundle):
 
-                alphas = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
+                            self.optimizer = self.optimizer(f=self.obj,
+                                                            mu=self.mu,
+                                                            max_iter=self.max_iter,
+                                                            master_solver=self.master_solver,
+                                                            master_verbose=self.master_verbose,
+                                                            verbose=self.verbose).minimize()
 
-            alphas_p, alphas_n = np.split(alphas, 2)
+                            if self.optimizer.status == 'error':
+                                warnings.warn('failure while computing direction for the master problem',
+                                              ConvergenceWarning)
+
+                        elif issubclass(self.optimizer, StochasticOptimizer):
+
+                            if issubclass(self.optimizer, StochasticMomentumOptimizer):
+
+                                self.optimizer = self.optimizer(f=self.obj,
+                                                                step_size=self.learning_rate,
+                                                                epochs=self.max_iter,
+                                                                momentum_type=self.momentum_type,
+                                                                momentum=self.momentum,
+                                                                callback=self._store_train_info,
+                                                                verbose=self.verbose).minimize()
+
+                            else:
+
+                                self.optimizer = self.optimizer(f=self.obj,
+                                                                step_size=self.learning_rate,
+                                                                epochs=self.max_iter,
+                                                                callback=self._store_train_info,
+                                                                verbose=self.verbose).minimize()
+
+                        else:
+
+                            raise TypeError(f'{self.optimizer} is not an allowed optimizer')
+
+                    alphas = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
+
+                alphas_p, alphas_n = np.split(alphas, 2)
+
+        elif self.loss == SquaredEpsilonInsensitive:
+
+            pass
+
+        else:
+
+            raise TypeError(f'{self.loss} is not an allowed loss')
 
         sv = np.logical_or(alphas_p > 1e-6, alphas_n > 1e-6)
         self.support_ = np.arange(len(alphas_p))[sv]

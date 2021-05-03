@@ -32,6 +32,86 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
         self.ub = ub
 
 
+class LagrangianEqualityConstrainedQuadratic(Quadratic):
+    """
+        Construct the lagrangian relaxation of a constrained quadratic function defined as:
+
+                1/2 x^T Q x + q^T x : A x = 0, x >= 0
+        """
+
+    def __init__(self, primal, A):
+        if not isinstance(primal, Quadratic):
+            raise TypeError(f'{primal} is not an allowed quadratic function')
+        super().__init__(primal.Q, primal.q)
+        self.primal = primal
+        self.ndim *= 2
+        self.L, self.low = cho_factor(self.Q)
+        self.is_posdef = True
+        # backup {lambda : x}
+        self.last_lmbda = None
+        self.last_x = None
+        self.A = np.asarray(A, dtype=float)
+
+    def function(self, lmbda):
+        """
+        Compute the value of the lagrangian relaxation defined as:
+
+        L(x, mu, lambda) = 1/2 x^T Q x + q^T x - mu^T A x - lambda^T x
+        L(x, mu, lambda) = 1/2 x^T Q x + (q - mu A - lambda)^T x
+
+        where mu are the first n components of lambda which controls the equality constraints and
+        lambda are the last n components which controls the inequality constraint;
+        both are constrained to be >= 0.
+
+        Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
+
+                Q x + (q - mu A - lambda) = 0
+
+        so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
+
+                Q x = - (q - mu A - lambda_-)
+
+        :param lmbda: the dual variable wrt evaluate the function
+        :return: the function value wrt lambda
+        """
+        mu, lmbda = np.split(lmbda, 2)
+        ql = self.q - mu.dot(self.A) - lmbda
+        if np.array_equal(self.last_lmbda, lmbda):
+            x = self.last_x.copy()  # speedup: just restore optimal solution
+        else:
+            x = cho_solve((self.L, self.low), -ql)
+            # backup new {lambda : x}
+            self.last_lmbda = lmbda.copy()
+            self.last_x = x.copy()
+        return 0.5 * x.dot(self.Q).dot(x) + ql.dot(x)
+
+    def jacobian(self, lmbda):
+        """
+        With x optimal solution of the minimization problem, the jacobian
+        of the Lagrangian dual relaxation at lambda is:
+
+                                [-A x, -x]
+
+        However, we rather want to maximize the Lagrangian dual relaxation,
+        hence we have to change the sign of gradient entries:
+
+                                 [A x, x]
+
+        :param lmbda: the dual variable wrt evaluate the gradient
+        :return: the gradient wrt lambda
+        """
+        if np.array_equal(self.last_lmbda, lmbda):
+            x = self.last_x.copy()  # speedup: just restore optimal solution
+        else:
+            mu, lmbda = np.split(lmbda, 2)
+            ql = self.q - mu.dot(self.A) - lmbda
+            x = cho_solve((self.L, self.low), -ql)
+            # backup new {lambda : x}
+            self.last_lmbda = lmbda.copy()
+            self.last_x = x.copy()
+        return np.hstack((self.A * x, x))
+
+
 class LagrangianBoxConstrainedQuadratic(Quadratic):
     """
     Construct the Lagrangian dual relaxation of a box-constrained quadratic function defined as:
