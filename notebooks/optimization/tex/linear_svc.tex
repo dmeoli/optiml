@@ -65,17 +65,17 @@ where the parameter $C$ controls the trade-off between the slack variable penalt
 The \emph{hinge} loss is defined as:
 
 \begin{equation} \label{eq:hinge_loss1}
-	\mathcal{L}_1 = 
-	\begin{cases}
-		0 & \text{if} \ y (w^T x + b) \geq 1 \\
-		1 - y (w^T x + b) & \text{otherwise} \\
-	\end{cases}
+	\mathcal{L}_1 = \max(0, 1 - y (w^T x + b))
 \end{equation}
 
 or, equivalently:
 
 \begin{equation} \label{eq:hinge_loss2}
-	\mathcal{L}_1 = \max(0, 1 - y (w^T x + b))
+	\mathcal{L}_1 = 
+	\begin{cases}
+		0 & \text{if} \ y (w^T x + b) \geq 1 \\
+		1 - y (w^T x + b) & \text{otherwise} \\
+	\end{cases}
 \end{equation}
 
 and it is a nondifferentiable convex function due to its nonsmoothness in 1, but has a subgradient that is given by:
@@ -308,6 +308,12 @@ the gradient wrt $\lambda_+$ and $\lambda_-$ are:
 
 The \emph{squared hinge} loss is defined as:
 
+\begin{equation} \label{eq:squared_hinge_loss2}
+	\mathcal{L}_2 = \max(0, 1 - y (w^T x + b))^2
+\end{equation}
+
+or, equivalently:
+
 \begin{equation} \label{eq:squared_hinge_loss1}
 	\mathcal{L}_2 = 
 	\begin{cases}
@@ -316,13 +322,7 @@ The \emph{squared hinge} loss is defined as:
 	\end{cases}
 \end{equation}
 
-or, equivalently:
-
-\begin{equation} \label{eq:squared_hinge_loss2}
-	\mathcal{L}_2 = \max(0, 1 - y (w^T x + b))^2
-\end{equation}
-
-It is a strictly convex function and its gradient wrt $w$ is given by:
+It is a strictly convex function and its gradient is given by:
 
 \begin{equation} \label{eq:squared_hinge_loss_der}
     \nabla \mathcal{L}_2=

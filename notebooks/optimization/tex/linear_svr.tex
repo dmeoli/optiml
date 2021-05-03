@@ -39,6 +39,12 @@ The objective function for SVR can then be written as:
 The \emph{epsilon-insensitive} loss is defined as:
 
 \begin{equation} \label{eq:eps_loss1}
+	\mathcal{L}_\epsilon^1 = \max(0, |y - (w^T x + b)| - \epsilon)
+\end{equation}
+
+or, equivalently:
+
+\begin{equation} \label{eq:eps_loss2}
 	\mathcal{L}_\epsilon^1 = 
 	\begin{cases}
 		0 & \text{if} \ |y - (w^T x + b)| \leq \epsilon \\
@@ -46,18 +52,12 @@ The \emph{epsilon-insensitive} loss is defined as:
 	\end{cases}
 \end{equation}
 
-or, equivalently:
-
-\begin{equation} \label{eq:eps_loss2}
-	\mathcal{L}_\epsilon^1 = \max(0, |y - (w^T x + b)| - \epsilon)
-\end{equation}
-
 As the \emph{hinge} loss, also the \emph{epsilon-insensitive} loss is a nondifferentiable convex function due to its nonsmoothness in $\pm\epsilon$, but has a subgradient that is given by:
 
 \begin{equation} \label{eq:eps_loss_der}
 	\partial \mathcal{L}_\epsilon^1=
 		\begin{cases}
-            (y - (w^T x + b)) x & \text{if} \ |y - (w^T x + b)| > \epsilon \\
+            \displaystyle \frac{y - (w^T x + b)}{|y - (w^T x + b)|}x & \text{if} \ |y - (w^T x + b)| > \epsilon \\
             0 & \text{otherwise} \\ 
         \end{cases}
 \end{equation}
@@ -270,6 +270,12 @@ the gradient wrt $\lambda_+$ and $\lambda_-$ are:
 The \emph{squared epsilon-insensitive} loss is defined as:
 
 \begin{equation} \label{eq:squared_eps_loss1}
+	\mathcal{L}_\epsilon^2 = \max(0, |y - (w^T x + b)| - \epsilon)^2
+\end{equation}
+
+or, equivalently:
+
+\begin{equation} \label{eq:squared_eps_loss2}
 	\mathcal{L}_\epsilon^2 = 
 	\begin{cases}
 		0 & \text{if} \ |y - (w^T x + b)| \leq \epsilon \\
@@ -277,18 +283,12 @@ The \emph{squared epsilon-insensitive} loss is defined as:
 	\end{cases}
 \end{equation}
 
-or, equivalently:
-
-\begin{equation} \label{eq:squared_eps_loss2}
-	\mathcal{L}_\epsilon^2 = \max(0, |y - (w^T x + b)| - \epsilon)^2
-\end{equation}
-
-As the \emph{squared hinge} loss, also the \emph{squared epsilon-insensitive} loss is a strictly convex function and it has a gradient wrt $w$ that is given by:
+As the \emph{squared hinge} loss, also the \emph{squared epsilon-insensitive} loss is a strictly convex function and its gradient is given by:
 
 \begin{equation} \label{eq:squared_eps_loss_der}
 	\nabla \mathcal{L}_\epsilon^2=
 		\begin{cases}
-            2 ((y - (w^T x + b)) x) & \text{if} \ |y - (w^T x + b)| > \epsilon \\
+            \displaystyle 2 \Bigg(\frac{y - (w^T x + b)}{|y - (w^T x + b)|} x\Bigg) & \text{if} \ |y - (w^T x + b)| > \epsilon \\
             0 & \text{otherwise} \\ 
         \end{cases}
 \end{equation}
