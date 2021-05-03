@@ -41,7 +41,7 @@ def test_neural_network_regressor_with_stochastic_optimizer():
                                   FullyConnected(13, 1, linear)),
                                  loss=mean_squared_error, optimizer=Adam, learning_rate=0.02)
     net.fit(X_train, y_train)
-    assert net.score(X_test, y_test) >= 0.84
+    assert net.score(X_test, y_test) >= 0.83
 
 
 def test_neural_network_regressor_with_proximal_bundle():
@@ -53,7 +53,7 @@ def test_neural_network_regressor_with_proximal_bundle():
                                   FullyConnected(13, 1, linear)),
                                  loss=mean_absolute_error, optimizer=ProximalBundle, max_iter=100)
     net.fit(X_train, y_train)
-    assert net.score(X_test, y_test) >= 0.84
+    assert net.score(X_test, y_test) >= 0.83
 
 
 def test_neural_network_classifier_with_stochastic_optimizer():
