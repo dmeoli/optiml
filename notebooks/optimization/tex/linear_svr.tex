@@ -55,7 +55,7 @@ or, equivalently:
 As the \emph{hinge} loss, also the \emph{epsilon-insensitive} loss is a nondifferentiable convex function due to its nonsmoothness in $\pm\epsilon$, but has a subgradient that is given by:
 
 \begin{equation} \label{eq:eps_loss_der}
-	\partial \mathcal{L}_\epsilon^1=
+	\partial_w \mathcal{L}_\epsilon^1=
 		\begin{cases}
             \displaystyle \frac{y - (w^T x + b)}{|y - (w^T x + b)|}x & \text{if} \ |y - (w^T x + b)| > \epsilon \\
             0 & \text{otherwise} \\ 
@@ -286,7 +286,7 @@ or, equivalently:
 As the \emph{squared hinge} loss, also the \emph{squared epsilon-insensitive} loss is a strictly convex function and its gradient is given by:
 
 \begin{equation} \label{eq:squared_eps_loss_der}
-	\nabla \mathcal{L}_\epsilon^2=
+	\nabla_w \mathcal{L}_\epsilon^2=
 		\begin{cases}
             \displaystyle 2 \Bigg(\frac{y - (w^T x + b)}{|y - (w^T x + b)|} x\Bigg) & \text{if} \ |y - (w^T x + b)| > \epsilon \\
             0 & \text{otherwise} \\ 

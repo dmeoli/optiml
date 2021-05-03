@@ -254,7 +254,7 @@ class LagrangianBoxConstrainedQuadratic(Quadratic):
         return H
 
 
-class LagrangianConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
+class LagrangianEqualityBoxConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
     """
     Construct the lagrangian relaxation of a constrained quadratic function defined as:
 

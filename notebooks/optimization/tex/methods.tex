@@ -1,3 +1,5 @@
+% http://www.seas.ucla.edu/~vandenbe/236C/lectures/gradient.pdf
+
 \section{Optimization Methods}
 
 In order to explain the \emph{convergence} and \emph{efficiency} properties of the following optimization methods, we need to introduce some preliminary definitions about \emph{convexity} and the \emph{L-Lipschitz continuity} of a function~\cite{boyd2004convex}.
@@ -13,7 +15,7 @@ In order to explain the \emph{convergence} and \emph{efficiency} properties of t
 		$$ 
 			f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle \ \forall \ x, y \in \Re^m 
 		$$
-		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^2$ and the Hessian matrix is symmetric, is convex iff: 
+		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^2$, is convex iff: 
 		$$ 
 			\nabla^2 f(x) \succeq 0 \ \forall \ x \in \Re^m 
 		$$ i.e., the Hessian matix is \emph{positive semidefinite}.
@@ -31,7 +33,7 @@ In order to explain the \emph{convergence} and \emph{efficiency} properties of t
 		$$ 
 			f(y) > f(x) + \langle \nabla f(x), y - x \rangle \ \forall \ x, y \in \Re^m, x \neq y
 		$$
-		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^2$ and the Hessian matrix is symmetric, is strictly convex iff: 
+		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^2$, is strictly convex iff: 
 		$$ 
 			\nabla^2 f(x) \succ 0 \ \forall \ x \in \Re^m 
 		$$ i.e., the Hessian matix is \emph{positive definite}.
@@ -48,7 +50,7 @@ If $f$ is differentiable, i.e., $f \in C^1$, this is also equivalent to:
 $$
 f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle + \frac{\mu}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
 $$
-and, if $f$ is a twice differentiable function, i.e., $f \in C^2$ and the Hessian matrix is symmetric, then $f$ is $\mu$-strongly convex iff:
+and, if $f$ is a twice differentiable function, i.e., $f \in C^2$, then $f$ is $\mu$-strongly convex iff:
 $$
 \nabla^2 g(x) \succ 0 \ \forall \ x \in \Re^m
 $$
@@ -56,22 +58,42 @@ i.e., the Hessian matix is \emph{positive definite}, which is:
 $$
 \nabla^2 f(x) \succeq \mu I \ \forall \ x \in \Re^m
 $$
+i.e., all the eigenvalues of the Hessian matrix are lowerbounded by $\mu I$.
 \end{definition}
 
+% https://angms.science/doc/CVX/CVX_alphabeta.pdf
+
 \begin{definition}[L-Lipschitz continuity] \label{def:l_lipschitz_continuity}
-We say that a function $f: \Re^m \rightarrow \Re$ is L-smooth, i.e., L-Lipschitz continuous, if:
+We say that a function $f: \Re^m \rightarrow \Re$ is L-Lipschitz gradient continuous, i.e., L-smooth, if $f$ is differentiable and:
 $$
 \| \nabla f(x) - \nabla f(y) \| \leq L \| x - y \| \ \forall \ x, y \in \Re^m
 $$
-then:
+that is equivalent to:
+$$
+| f(y) - f(x) - \langle \nabla f(x), y - x \rangle \leq \frac{L}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
+$$
+and, by removing the absolute value sign we give:
 $$
 f(y) \leq f(x) + \langle \nabla f(x), y - x \rangle + \frac{L}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
 $$
-and, if $f$ is a $\mu$-strongly convex function, we give the following Hessian bounds:
+$$
+f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle - \frac{L}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
+$$
+meaning that $f$ is bounded above and below by a quadratic function.
+
+Also, if $f$ is a twice differentiable function, i.e., $f \in C^2$, this is equivalent to:
+$$
+\nabla^2 f(x) \preceq L I \ \forall \ x \in \Re^m
+$$
+i.e., all the eigenvalues of the Hessian matrix are upperbounded by $L$.
+
+Notice that if $f$ is a $\mu$-strongly convex function, we give the following Hessian bounds:
 $$
 0 \prec \mu I \preceq \nabla^2 f(x) \preceq L I \ \forall \ x \in \Re^m
 $$
-We say that a function $f: \Re^m \rightarrow \Re$ is locally L-smooth, i.e., locally L-Lipschitz continuous, if for every $x$ in $\Re^m$ there exists a neighborhood $U$ of $x$ such that $f$ restricted to $U$ is L-Lipschitz continuous. Every convex function is locally L-Lipschitz continuous.
+i.e., all the eigenvalues of the Hessian matrix are lowerbounded by $\mu I$ and upperbounded by $L$.
+
+Finally, we say that a function $f: \Re^m \rightarrow \Re$ is locally L-Lipschitz gradient continuous, i.e., locally L-smooth, if for every $x$ in $\Re^m$ there exists a neighborhood $U$ of $x$ such that $f$ restricted to $U$ is L-Lipschitz gradient continuous.
 \end{definition}
 
 \begin{definition}[Subgradient] \label{def:subgradient}
@@ -825,7 +847,8 @@ In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal b
 
 \subsection{Losses properties}
 
-Several losses and objectives have been presented in section~\ref{section:svc} and~\ref{section:svr}. In our experiments, we will consider four different convex loss functions, two for the \emph{classification} and two for the \emph{regression} tasks. In particular, for what about the \emph{margin-based} losses, i.e., the \emph{classification} losses, both the \emph{hinge} and the \emph{squared hinge} losses are Lipschitz continuous and convex; meanwhile, for twhat about the \emph{distance-based} losses, i.e., the \emph{regression} losses, the \emph{epsilon-insensitive} loss is Lipschitz continuous and convex but the \emph{squared epsilon-insensitive} is convex and for this reason is locally Lipschitz continuous.
+Several losses and objectives have been presented in section~\ref{section:svc} and~\ref{section:svr}. In our experiments, we will consider four different convex loss functions, two for the \emph{classification} and two for the \emph{regression} tasks. In particular, two
+of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, that linearly penalizes the misclassified points, i.e., $\mathcal{L}_1$-SVM, meanwhile, their two \emph{squared} versions are smooth, i.e., $\mathcal{L}_2$-SVM, that quadratically penalizes the misclassified points.
 
 In general, if the objective function of a quadratic programming problem is strictly convex, i.e., the associated Hessian matrix is positive definite, the solution is unique. And if the objective function is convex, there may be cases where the solution is nonunique.
 
@@ -844,11 +867,11 @@ Since the $\mathcal{L}_1$-SVM linearly penalizes the misclassified points, the p
 	& smooth & \vtop{\hbox{\strut L-Lipschitz}\hbox{\strut continuous}} & convexity \\
 objective & 		& 		& 		\\
 \midrule
-$\mathcal{L}_1$-SVC~\eqref{eq:biased_primal_svc_hinge} & no & globally & convex \\
+$\mathcal{L}_1$-SVC~\eqref{eq:biased_primal_svc_hinge} & no & locally & convex \\
 $\mathcal{L}_2$-SVC~\eqref{eq:biased_primal_svc_squared_hinge} & yes & globally & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
 \midrule
-$\mathcal{L}_1$-SVR~\eqref{eq:biased_primal_svr_eps} & no & globally & convex \\
-$\mathcal{L}_2$-SVR~\eqref{eq:biased_primal_svr_squared_eps} & yes & locally & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
+$\mathcal{L}_1$-SVR~\eqref{eq:biased_primal_svr_eps} & no & locally & convex \\
+$\mathcal{L}_2$-SVR~\eqref{eq:biased_primal_svr_squared_eps} & yes & globally & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
 \bottomrule
 \end{tabular}
 \end{table}

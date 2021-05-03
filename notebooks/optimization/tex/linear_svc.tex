@@ -81,7 +81,7 @@ or, equivalently:
 and it is a nondifferentiable convex function due to its nonsmoothness in 1, but has a subgradient that is given by:
 
 \begin{equation} \label{eq:hinge_loss_der}
-    \partial \mathcal{L}_1=
+    \partial_w \mathcal{L}_1=
         \begin{cases}
             -y x & \text{if} \ y (w^T x + b) < 1 \\
             0 & \text{otherwise} \\ 
@@ -325,7 +325,7 @@ or, equivalently:
 It is a strictly convex function and its gradient is given by:
 
 \begin{equation} \label{eq:squared_hinge_loss_der}
-    \nabla \mathcal{L}_2=
+    \nabla_w \mathcal{L}_2=
         \begin{cases}
             - 2 y x & \text{if} \ y (w^T x + b) < 1 \\
             0 & \text{otherwise} \\ 

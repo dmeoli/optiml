@@ -19,7 +19,7 @@ from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
 from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
-from ...opti.constrained._base import LagrangianConstrainedQuadratic
+from ...opti.constrained._base import LagrangianEqualityBoxConstrainedQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, StochasticMomentumOptimizer
@@ -624,11 +624,11 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                     if self.fit_intercept:
 
-                        self.obj = LagrangianConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                  A=y,
-                                                                  ub=ub,
-                                                                  lagrangian_solver=self.lagrangian_solver,
-                                                                  lagrangian_solver_verbose=self.lagrangian_solver_verbose)
+                        self.obj = LagrangianEqualityBoxConstrainedQuadratic(primal=Quadratic(Q, q),
+                                                                             A=y,
+                                                                             ub=ub,
+                                                                             lagrangian_solver=self.lagrangian_solver,
+                                                                             lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
                     else:
 
@@ -1031,11 +1031,11 @@ class DualSVR(RegressorMixin, DualSVM):
 
                         if self.fit_intercept:
 
-                            self.obj = LagrangianConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                      A=e,
-                                                                      ub=ub,
-                                                                      lagrangian_solver=self.lagrangian_solver,
-                                                                      lagrangian_solver_verbose=self.lagrangian_solver_verbose)
+                            self.obj = LagrangianEqualityBoxConstrainedQuadratic(primal=Quadratic(Q, q),
+                                                                                 A=e,
+                                                                                 ub=ub,
+                                                                                 lagrangian_solver=self.lagrangian_solver,
+                                                                                 lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
                         else:
 
