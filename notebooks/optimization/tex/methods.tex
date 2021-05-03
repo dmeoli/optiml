@@ -11,11 +11,11 @@ In order to explain the \emph{convergence} and \emph{efficiency} properties of t
 		$$ 
 			(\lambda x + (1 - \lambda) y ) \leq \lambda f(x) + (1 - \lambda) f(y) \ \forall \ x, y \in \Re^m, \lambda \in [0,1] 
 		$$
-		\item We say that a differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^1$, is convex if: 
+		\item We say that a differentiable function $f: \Re^m \rightarrow \Re$ is convex if: 
 		$$ 
 			f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle \ \forall \ x, y \in \Re^m 
 		$$
-		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^2$, is convex iff: 
+		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$ is convex iff: 
 		$$ 
 			\nabla^2 f(x) \succeq 0 \ \forall \ x \in \Re^m 
 		$$ i.e., the Hessian matix is \emph{positive semidefinite}.
@@ -29,11 +29,11 @@ In order to explain the \emph{convergence} and \emph{efficiency} properties of t
 		$$ 
 			(\lambda x + (1 - \lambda) y ) < \lambda f(x) + (1 - \lambda) f(y) \ \forall \ x, y \in \Re^m, x \neq y, \lambda \in (0,1) 
 		$$
-		\item We say that a differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^1$, is strictly convex if: 
+		\item We say that a differentiable function $f: \Re^m \rightarrow \Re$ is strictly convex if: 
 		$$ 
 			f(y) > f(x) + \langle \nabla f(x), y - x \rangle \ \forall \ x, y \in \Re^m, x \neq y
 		$$
-		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$, i.e., $f \in C^2$, is strictly convex iff: 
+		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$ is strictly convex iff: 
 		$$ 
 			\nabla^2 f(x) \succ 0 \ \forall \ x \in \Re^m 
 		$$ i.e., the Hessian matix is \emph{positive definite}.
@@ -46,11 +46,11 @@ $$
 g(x) = f(x) - \frac{\mu}{2} \| x \|^2
 $$
 is convex for any $\mu > 0$. 
-If $f$ is differentiable, i.e., $f \in C^1$, this is also equivalent to:
+If $f$ is differentiable this is also equivalent to:
 $$
 f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle + \frac{\mu}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
 $$
-and, if $f$ is a twice differentiable function, i.e., $f \in C^2$, then $f$ is $\mu$-strongly convex iff:
+and, if $f$ is a twice differentiable function then $f$ is $\mu$-strongly convex iff:
 $$
 \nabla^2 g(x) \succ 0 \ \forall \ x \in \Re^m
 $$
@@ -81,7 +81,7 @@ f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle - \frac{L}{2} \| y - x \|^2 
 $$
 meaning that $f$ is bounded above and below by a quadratic function.
 
-Also, if $f$ is a twice differentiable function, i.e., $f \in C^2$, this is equivalent to:
+Also, if $f$ is a twice differentiable function this is equivalent to:
 $$
 \nabla^2 f(x) \preceq L I \ \forall \ x \in \Re^m
 $$
@@ -857,6 +857,7 @@ Assume that the hard margin SVM has a solution, i.e., the given problem is separ
 Since the $\mathcal{L}_1$-SVM linearly penalizes the misclassified points, the primal objective function is convex. Likewise, the Hessian matrix of the dual objective function is positive semidefinite. Thus the primal and dual solutions may be nonunique. Meanwhile, the objective function of the primal problem for the $\mathcal{L}_2$-SVM is strictly convex, due to the quadratic penalization of the misclassified points. Therefore, $w$ and $b$ are uniquely determined if we solve the primal or dual problem. In summary, the following properties for the SVM's objectives are given:
 
 % http://www.lib.kobe-u.ac.jp/repository/90000231.pdf
+% https://hal.archives-ouvertes.fr/hal-00708243v1/file/appendixMNBCI.pdf
 
 \begin{table}[H]
 \centering
