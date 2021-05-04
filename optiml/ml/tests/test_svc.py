@@ -341,7 +341,7 @@ def test_solve_dual_l2_svc_with_unreg_bias_with_stochastic_optimizers():
     assert svc.score(X_test, y_test) >= 0.92
 
     svc = OneVsRestClassifier(DualSVC(loss=squared_hinge, kernel=gaussian,
-                                      optimizer=AdaDelta, reg_bias=False))
+                                      optimizer=AdaDelta, learning_rate=1., reg_bias=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.92
 
