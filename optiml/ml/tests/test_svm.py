@@ -85,7 +85,7 @@ def test_solve_linear_svr_with_proximal_bundle():
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=ProximalBundle)
     svr.fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.77
+    assert svr.score(X_test, y_test) >= 0.76
 
 
 def test_solve_svr_with_smo():

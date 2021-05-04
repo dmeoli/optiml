@@ -93,12 +93,13 @@ class EpsilonInsensitive(SVMLoss):
         self.epsilon = epsilon
 
     def loss(self, y_pred, y_true):
-        return np.maximum(0, np.abs(y_pred - y_true) - self.epsilon)
+        return np.maximum(0, np.abs(y_true - y_pred) - self.epsilon)
 
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
         y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function
-        idx = np.argwhere(np.abs(y_pred - y_batch) > self.epsilon).ravel()
-        return np.dot(y_batch[idx] - y_pred[idx], X_batch[idx])
+        idx = np.argwhere(np.abs(y_batch - y_pred) >= self.epsilon).ravel()
+        z = y_batch[idx] - y_pred[idx]
+        return np.dot(np.divide(z, np.abs(z)), X_batch[idx])
 
 
 class SquaredEpsilonInsensitive(EpsilonInsensitive):
@@ -112,7 +113,10 @@ class SquaredEpsilonInsensitive(EpsilonInsensitive):
         return np.square(super().loss(y_pred, y_true))
 
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
-        return 2 * super().loss_jacobian(packed_coef_inter, X_batch, y_batch)
+        y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function
+        idx = np.argwhere(np.abs(y_batch - y_pred) >= self.epsilon).ravel()
+        z = y_batch[idx] - y_pred[idx]
+        return 2 * np.dot(np.sign(z) * (np.abs(z) - self.epsilon), X_batch[idx])
 
 
 hinge = Hinge

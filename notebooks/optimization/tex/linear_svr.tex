@@ -57,7 +57,7 @@ As the \emph{hinge} loss, also the \emph{epsilon-insensitive} loss is a nondiffe
 \begin{equation} \label{eq:eps_loss_der}
 	\partial_w \mathcal{L}_\epsilon^1=
 		\begin{cases}
-            \displaystyle \frac{y - (w^T x + b)}{|y - (w^T x + b)|}x & \text{if} \ |y - (w^T x + b)| > \epsilon \\
+            \displaystyle \frac{y - (w^T x + b)}{|y - (w^T x + b)|}x & \text{if} \ |y - (w^T x + b)| \geq \epsilon \\
             0 & \text{otherwise} \\ 
         \end{cases}
 \end{equation}
@@ -288,7 +288,7 @@ As the \emph{squared hinge} loss, also the \emph{squared epsilon-insensitive} lo
 \begin{equation} \label{eq:squared_eps_loss_der}
 	\nabla_w \mathcal{L}_\epsilon^2=
 		\begin{cases}
-            \displaystyle 2 \Bigg(\frac{y - (w^T x + b)}{|y - (w^T x + b)|} x\Bigg) & \text{if} \ |y - (w^T x + b)| > \epsilon \\
+            \displaystyle 2 \operatorname{sgn}(y - (w^T x + b)) (|y - (w^T x + b)| - \epsilon) x & \text{if} \ |y - (w^T x + b)| \geq \epsilon \\
             0 & \text{otherwise} \\ 
         \end{cases}
 \end{equation}
