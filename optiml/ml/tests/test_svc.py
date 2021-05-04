@@ -281,22 +281,22 @@ def test_solve_dual_l2_svc_with_unreg_bias_with_line_search_optimizers():
 
     svc = OneVsRestClassifier(DualSVC(loss=squared_hinge, kernel=gaussian, optimizer=Subgradient, reg_bias=False))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97
+    assert svc.score(X_test, y_test) >= 0.92
 
     svc = OneVsRestClassifier(DualSVC(loss=squared_hinge, kernel=gaussian,
                                       optimizer=SteepestGradientDescent, reg_bias=False))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97
+    assert svc.score(X_test, y_test) >= 0.92
 
     svc = OneVsRestClassifier(DualSVC(loss=squared_hinge, kernel=gaussian,
                                       optimizer=ConjugateGradient, reg_bias=False))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97
+    assert svc.score(X_test, y_test) >= 0.92
 
     svc = OneVsRestClassifier(DualSVC(loss=squared_hinge, kernel=gaussian,
                                       optimizer=HeavyBallGradient, reg_bias=False))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97
+    assert svc.score(X_test, y_test) >= 0.92
 
 
 def test_solve_dual_l2_svc_with_reg_bias_with_stochastic_optimizers():
@@ -333,22 +333,22 @@ def test_solve_dual_l2_svc_with_unreg_bias_with_stochastic_optimizers():
     svc = OneVsRestClassifier(DualSVC(loss=squared_hinge, kernel=gaussian,
                                       optimizer=StochasticGradientDescent, reg_bias=False))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97
+    assert svc.score(X_test, y_test) >= 0.92
 
     svc = OneVsRestClassifier(DualSVC(loss=squared_hinge, kernel=gaussian,
                                       optimizer=AdaGrad, reg_bias=False))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97
+    assert svc.score(X_test, y_test) >= 0.92
 
     svc = OneVsRestClassifier(DualSVC(loss=squared_hinge, kernel=gaussian,
                                       optimizer=AdaDelta, reg_bias=False))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97
+    assert svc.score(X_test, y_test) >= 0.92
 
     svc = OneVsRestClassifier(DualSVC(loss=squared_hinge, kernel=gaussian,
                                       optimizer=RProp, reg_bias=False))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97
+    assert svc.score(X_test, y_test) >= 0.92
 
 
 if __name__ == "__main__":

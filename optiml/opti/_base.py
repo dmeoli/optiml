@@ -30,7 +30,7 @@ class Optimizer(ABC):
             raise TypeError(f'{f} is not an allowed optimization function')
         self.f = f
         if x is None:
-            if self.is_lagrangian_dual():
+            if self.is_lagrangian_dual() and not self.f.__class__.__name__ == 'LagrangianQuadratic':
                 x = np.zeros
             else:
                 if random_state is None:
@@ -57,7 +57,10 @@ class Optimizer(ABC):
             if hasattr(self.f, 'ub'):
                 self.primal_x = self.f.ub / 2  # starts from the middle of the box
             else:
-                self.primal_x = np.zeros(self.f.primal.ndim)
+                if not self.f.__class__.__name__ == 'LagrangianQuadratic':
+                    self.primal_x = np.zeros(self.f.primal.ndim)
+                else:
+                    self.primal_x = self.x.copy()  # the same since it is just a wrapping
             self.primal_f_x = self.f.primal.function(self.primal_x)
             if self.f.primal.ndim == 2:
                 self.x0_history = [self.primal_x[0]]
