@@ -248,5 +248,93 @@ def test_solve_dual_l2_svr_with_with_cvxopt():
     assert svr.score(X_test, y_test) >= 0.77
 
 
+def test_solve_dual_l2_svr_with_reg_bias_with_line_search_optimizers():
+    X, y = load_boston(return_X_y=True)
+    X_scaled = StandardScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=Subgradient, reg_bias=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.48
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=SteepestGradientDescent, reg_bias=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.48
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=ConjugateGradient, reg_bias=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.48
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=HeavyBallGradient, reg_bias=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.48
+
+
+def test_solve_dual_l2_svr_with_unreg_bias_with_line_search_optimizers():
+    X, y = load_boston(return_X_y=True)
+    X_scaled = StandardScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=Subgradient, reg_bias=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.53
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=SteepestGradientDescent, reg_bias=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.53
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=ConjugateGradient, reg_bias=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.53
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=HeavyBallGradient, reg_bias=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.53
+
+
+def test_solve_dual_l2_svr_with_reg_bias_with_stochastic_optimizers():
+    X, y = load_boston(return_X_y=True)
+    X_scaled = StandardScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=StochasticGradientDescent, reg_bias=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.48
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=AdaGrad, learning_rate=1., reg_bias=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.48
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=AdaDelta, learning_rate=1., reg_bias=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.48
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=RProp, reg_bias=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.48
+
+
+def test_solve_dual_l2_svr_with_unreg_bias_with_stochastic_optimizers():
+    X, y = load_boston(return_X_y=True)
+    X_scaled = StandardScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=StochasticGradientDescent, reg_bias=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.53
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=AdaGrad, reg_bias=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.53
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=AdaDelta, reg_bias=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.53
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=RProp, reg_bias=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.53
+
+
 if __name__ == "__main__":
     pytest.main()

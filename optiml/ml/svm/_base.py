@@ -19,7 +19,8 @@ from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
 from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
-from ...opti.constrained._base import LagrangianEqualityBoxConstrainedQuadratic, LagrangianEqualityConstrainedQuadratic
+from ...opti.constrained._base import LagrangianEqualityBoxConstrainedQuadratic, LagrangianEqualityConstrainedQuadratic, \
+    LagrangianQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, StochasticMomentumOptimizer
@@ -743,8 +744,9 @@ class DualSVC(ClassifierMixin, DualSVM):
                     else:
 
                         Q += np.outer(y, y)
-                        self.obj = Quadratic(Q, q)
-                        self.obj.primal = Quadratic(Q, q)  # hack to enforce the method `is_lagrangian_dual()`
+                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
+                                                       lagrangian_solver=self.lagrangian_solver,
+                                                       lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -1258,8 +1260,9 @@ class DualSVR(RegressorMixin, DualSVM):
                     else:
 
                         Q += np.outer(e, e)
-                        self.obj = Quadratic(Q, q)
-                        self.obj.primal = Quadratic(Q, q)  # hack to enforce the method `is_lagrangian_dual()`
+                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
+                                                       lagrangian_solver=self.lagrangian_solver,
+                                                       lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 

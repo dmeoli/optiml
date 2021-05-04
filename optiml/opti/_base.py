@@ -54,7 +54,10 @@ class Optimizer(ABC):
         self.status = 'unknown'
         if self.is_lagrangian_dual():
             # initialize the primal problem
-            self.primal_x = self.f.ub / 2  # starts from the middle of the box
+            if hasattr(self.f, 'ub'):
+                self.primal_x = self.f.ub / 2  # starts from the middle of the box
+            else:
+                self.primal_x = np.zeros(self.f.primal.ndim)
             self.primal_f_x = self.f.primal.function(self.primal_x)
             if self.f.primal.ndim == 2:
                 self.x0_history = [self.primal_x[0]]
@@ -84,8 +87,9 @@ class Optimizer(ABC):
             # the Lagrangian relaxation by projecting x on the box
             last_x = self.f.last_x.copy()
             last_x[last_x < 0] = 0
-            idx = last_x > self.f.ub
-            last_x[idx] = self.f.ub[idx]
+            if hasattr(self.f, 'ub'):
+                idx = last_x > self.f.ub
+                last_x[idx] = self.f.ub[idx]
 
             v = self.f.primal.function(last_x)
             if v < self.primal_f_x:
