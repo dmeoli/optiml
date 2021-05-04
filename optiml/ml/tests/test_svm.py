@@ -97,25 +97,39 @@ def test_solve_svr_with_smo():
     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_svr_as_bcqp_with_cvxopt():
+def test_solve_svr_with_unreg_bias_with_with_cvxopt():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
-    svr = DualSVR(kernel=linear, optimizer='cvxopt', fit_intercept=False)
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer='cvxopt', reg_bias=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.77
+
+    X, y = load_boston(return_X_y=True)
+    X_scaled = StandardScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer='cvxopt', reg_bias=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_svr_as_qp_with_cvxopt():
+def test_solve_svr_with_reg_bias_with_with_cvxopt():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
-    svr = DualSVR(kernel=linear, optimizer='cvxopt', fit_intercept=True)
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer='cvxopt', reg_bias=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.77
+
+    X, y = load_boston(return_X_y=True)
+    X_scaled = StandardScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer='cvxopt', reg_bias=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_svr_as_bcqp_with_projected_gradient():
+def test_solve_svr_with_unreg_bias_with_with_projected_gradient():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
@@ -124,7 +138,7 @@ def test_solve_svr_as_bcqp_with_projected_gradient():
     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_svr_as_bcqp_with_active_set():
+def test_solve_svr_with_unreg_bias_with_with_active_set():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
@@ -133,7 +147,7 @@ def test_solve_svr_as_bcqp_with_active_set():
     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_svr_as_bcqp_with_interior_point():
+def test_solve_svr_with_unreg_bias_with_with_interior_point():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
@@ -142,7 +156,7 @@ def test_solve_svr_as_bcqp_with_interior_point():
     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_svr_as_bcqp_with_frank_wolfe():
+def test_solve_svr_with_unreg_bias_with_with_frank_wolfe():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
@@ -151,110 +165,110 @@ def test_solve_svr_as_bcqp_with_frank_wolfe():
     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_svr_as_bcqp_lagrangian_relaxation_with_line_search_optimizers():
+def test_solve_svr_with_unreg_bias_with_lagrangian_relaxation_with_line_search_optimizers():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svr = DualSVR(kernel=linear, optimizer=Subgradient, fit_intercept=False)
+    svr = DualSVR(kernel=linear, optimizer=Subgradient, reg_bias=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.53
 
-    svr = DualSVR(kernel=linear, optimizer=SteepestGradientDescent, fit_intercept=False)
+    svr = DualSVR(kernel=linear, optimizer=SteepestGradientDescent, reg_bias=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.53
 
-    svr = DualSVR(kernel=linear, optimizer=ConjugateGradient, fit_intercept=False)
+    svr = DualSVR(kernel=linear, optimizer=ConjugateGradient, reg_bias=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.53
 
-    svr = DualSVR(kernel=linear, optimizer=HeavyBallGradient, fit_intercept=False)
+    svr = DualSVR(kernel=linear, optimizer=HeavyBallGradient, reg_bias=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.53
 
 
-def test_solve_svr_as_qp_lagrangian_relaxation_with_line_search_optimizers():
+def test_solve_svr_with_reg_bias_with_lagrangian_relaxation_with_line_search_optimizers():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svr = DualSVR(kernel=linear, optimizer=Subgradient, fit_intercept=True)
+    svr = DualSVR(kernel=linear, optimizer=Subgradient, reg_bias=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.48
 
-    svr = DualSVR(kernel=linear, optimizer=SteepestGradientDescent, fit_intercept=True)
+    svr = DualSVR(kernel=linear, optimizer=SteepestGradientDescent, reg_bias=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.48
 
-    svr = DualSVR(kernel=linear, optimizer=ConjugateGradient, fit_intercept=True)
+    svr = DualSVR(kernel=linear, optimizer=ConjugateGradient, reg_bias=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.48
 
-    svr = DualSVR(kernel=linear, optimizer=HeavyBallGradient, fit_intercept=True)
+    svr = DualSVR(kernel=linear, optimizer=HeavyBallGradient, reg_bias=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.48
 
 
-def test_solve_svr_as_bcqp_lagrangian_relaxation_with_proximal_bundle():
+def test_solve_svr_with_unreg_bias_with_lagrangian_relaxation_with_proximal_bundle():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svr = DualSVR(kernel=linear, optimizer=ProximalBundle, max_iter=150, fit_intercept=False)
+    svr = DualSVR(kernel=linear, optimizer=ProximalBundle, max_iter=150, reg_bias=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.53
 
 
-def test_solve_svr_as_qp_lagrangian_relaxation_with_proximal_bundle():
+def test_solve_svr_with_reg_bias_with_lagrangian_relaxation_with_proximal_bundle():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svr = DualSVR(kernel=linear, optimizer=ProximalBundle, max_iter=150, fit_intercept=True)
+    svr = DualSVR(kernel=linear, optimizer=ProximalBundle, max_iter=150, reg_bias=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.48
 
 
-def test_solve_svr_as_bcqp_lagrangian_relaxation_with_stochastic_optimizers():
+def test_solve_svr_with_unreg_bias_with_lagrangian_relaxation_with_stochastic_optimizers():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svr = DualSVR(kernel=linear, optimizer=StochasticGradientDescent, fit_intercept=False)
+    svr = DualSVR(kernel=linear, optimizer=StochasticGradientDescent, reg_bias=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.53
 
-    svr = DualSVR(kernel=linear, optimizer=AdaGrad, fit_intercept=False)
+    svr = DualSVR(kernel=linear, optimizer=AdaGrad, reg_bias=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.53
 
-    svr = DualSVR(kernel=linear, optimizer=AdaDelta, fit_intercept=False)
+    svr = DualSVR(kernel=linear, optimizer=AdaDelta, reg_bias=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.53
 
-    svr = DualSVR(kernel=linear, optimizer=RProp, fit_intercept=False)
+    svr = DualSVR(kernel=linear, optimizer=RProp, reg_bias=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.53
 
 
-def test_solve_svr_as_qp_lagrangian_relaxation_with_stochastic_optimizers():
+def test_solve_svr_with_reg_bias_with_lagrangian_relaxation_with_stochastic_optimizers():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svr = DualSVR(kernel=linear, optimizer=StochasticGradientDescent, fit_intercept=True)
+    svr = DualSVR(kernel=linear, optimizer=StochasticGradientDescent, reg_bias=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.48
 
-    svr = DualSVR(kernel=linear, optimizer=AdaGrad, fit_intercept=True)
+    svr = DualSVR(kernel=linear, optimizer=AdaGrad, reg_bias=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.48
 
-    svr = DualSVR(kernel=linear, optimizer=AdaDelta, fit_intercept=True)
+    svr = DualSVR(kernel=linear, optimizer=AdaDelta, reg_bias=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.48
 
-    svr = DualSVR(kernel=linear, optimizer=RProp, fit_intercept=True)
+    svr = DualSVR(kernel=linear, optimizer=RProp, reg_bias=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.48
 
@@ -340,25 +354,39 @@ def test_solve_svc_with_smo():
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_bcqp_with_cvxopt():
+def test_solve_svc_with_unreg_bias_with_with_cvxopt():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer='cvxopt', fit_intercept=False))
+    svc = OneVsRestClassifier(DualSVC(loss=hinge, kernel=gaussian, optimizer='cvxopt', reg_bias=False))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.97
+
+    X, y = load_iris(return_X_y=True)
+    X_scaled = MinMaxScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+    svc = OneVsRestClassifier(DualSVC(loss=squared_hinge, kernel=gaussian, optimizer='cvxopt', reg_bias=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_qp_with_cvxopt():
+def test_solve_svc_with_reg_bias_with_with_cvxopt():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer='cvxopt', fit_intercept=True))
+    svc = OneVsRestClassifier(DualSVC(loss=hinge, kernel=gaussian, optimizer='cvxopt', reg_bias=True))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.97
+
+    X, y = load_iris(return_X_y=True)
+    X_scaled = MinMaxScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+    svc = OneVsRestClassifier(DualSVC(loss=squared_hinge, kernel=gaussian, optimizer='cvxopt', reg_bias=True))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_bcqp_with_projected_gradient():
+def test_solve_svc_with_unreg_bias_with_with_projected_gradient():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
@@ -367,7 +395,7 @@ def test_solve_svc_as_bcqp_with_projected_gradient():
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_bcqp_with_active_set():
+def test_solve_svc_with_unreg_bias_with_with_active_set():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
@@ -376,7 +404,7 @@ def test_solve_svc_as_bcqp_with_active_set():
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_bcqp_with_interior_point():
+def test_solve_svc_with_unreg_bias_with_with_interior_point():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
@@ -384,7 +412,7 @@ def test_solve_svc_as_bcqp_with_interior_point():
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_bcqp_with_frank_wolfe():
+def test_solve_svc_with_unreg_bias_with_with_frank_wolfe():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
@@ -392,110 +420,110 @@ def test_solve_svc_as_bcqp_with_frank_wolfe():
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_bcqp_lagrangian_relaxation_with_line_search_optimizers():
+def test_solve_svc_with_unreg_bias_with_lagrangian_relaxation_with_line_search_optimizers():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=Subgradient, fit_intercept=False))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=Subgradient, reg_bias=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=SteepestGradientDescent, fit_intercept=False))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=SteepestGradientDescent, reg_bias=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ConjugateGradient, fit_intercept=False))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ConjugateGradient, reg_bias=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=HeavyBallGradient, fit_intercept=False))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=HeavyBallGradient, reg_bias=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_qp_lagrangian_relaxation_with_line_search_optimizers():
+def test_solve_svc_with_reg_bias_with_lagrangian_relaxation_with_line_search_optimizers():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=Subgradient, fit_intercept=True))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=Subgradient, reg_bias=True))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.94
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=SteepestGradientDescent, fit_intercept=True))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=SteepestGradientDescent, reg_bias=True))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.94
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ConjugateGradient, fit_intercept=True))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ConjugateGradient, reg_bias=True))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.94
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=HeavyBallGradient, fit_intercept=True))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=HeavyBallGradient, reg_bias=True))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.94
 
 
-def test_solve_svc_as_bcqp_lagrangian_relaxation_with_proximal_bundle():
+def test_solve_svc_with_unreg_bias_with_lagrangian_relaxation_with_proximal_bundle():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ProximalBundle, max_iter=150, fit_intercept=False))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ProximalBundle, max_iter=150, reg_bias=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_qp_lagrangian_relaxation_with_proximal_bundle():
+def test_solve_svc_with_reg_bias_with_lagrangian_relaxation_with_proximal_bundle():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ProximalBundle, max_iter=150, fit_intercept=True))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=ProximalBundle, max_iter=150, reg_bias=True))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.84
 
 
-def test_solve_svc_as_bcqp_lagrangian_relaxation_with_stochastic_optimizers():
+def test_solve_svc_with_unreg_bias_with_lagrangian_relaxation_with_stochastic_optimizers():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=StochasticGradientDescent, fit_intercept=False))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=StochasticGradientDescent, reg_bias=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=AdaGrad, fit_intercept=False))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=AdaGrad, reg_bias=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=AdaDelta, fit_intercept=False))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=AdaDelta, reg_bias=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=RProp, fit_intercept=False))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=RProp, reg_bias=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
 
-def test_solve_svc_as_qp_lagrangian_relaxation_with_stochastic_optimizers():
+def test_solve_svc_with_reg_bias_with_lagrangian_relaxation_with_stochastic_optimizers():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=StochasticGradientDescent, fit_intercept=True))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=StochasticGradientDescent, reg_bias=True))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.94
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=AdaGrad, fit_intercept=True))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=AdaGrad, reg_bias=True))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.94
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=AdaDelta, fit_intercept=True))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=AdaDelta, reg_bias=True))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.94
 
-    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=RProp, fit_intercept=True))
+    svc = OneVsRestClassifier(DualSVC(kernel=gaussian, optimizer=RProp, reg_bias=True))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.94
 
