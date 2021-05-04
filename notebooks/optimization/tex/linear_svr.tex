@@ -54,6 +54,8 @@ or, equivalently:
 
 As the \emph{hinge} loss, also the \emph{epsilon-insensitive} loss is a nondifferentiable convex function due to its nonsmoothness in $\pm\epsilon$, but has a subgradient that is given by:
 
+% http://juliaml.github.io/LossFunctions.jl/stable/losses/distance/#L1EpsilonInsLoss-1
+
 \begin{equation} \label{eq:eps_loss_der}
 	\partial_w \mathcal{L}_\epsilon^1=
 		\begin{cases}
@@ -284,6 +286,8 @@ or, equivalently:
 \end{equation}
 
 As the \emph{squared hinge} loss, also the \emph{squared epsilon-insensitive} loss is a strictly convex function and its gradient is given by:
+
+% http://juliaml.github.io/LossFunctions.jl/stable/losses/distance/#L2EpsilonInsLoss-1
 
 \begin{equation} \label{eq:squared_eps_loss_der}
 	\nabla_w \mathcal{L}_\epsilon^2=
