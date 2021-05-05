@@ -695,7 +695,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
         elif self.loss == SquaredHinge:
 
-            D = np.diag(np.ones(n_samples) * 1 / (2 * self.C))
+            D = np.diag(np.ones(n_samples) / (2 * self.C))
             Q += D
 
             if isinstance(self.optimizer, str):
@@ -1211,7 +1211,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
         elif self.loss == SquaredEpsilonInsensitive:
 
-            D = np.diag(np.ones(2 * n_samples) * 1 / (2 * self.C))
+            D = np.diag(np.ones(2 * n_samples) / (2 * self.C))
             Q += D
 
             e = np.hstack((np.ones(n_samples), -np.ones(n_samples)))  # equality matrix

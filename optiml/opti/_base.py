@@ -57,10 +57,13 @@ class Optimizer(ABC):
             if hasattr(self.f, 'ub'):
                 self.primal_x = self.f.ub / 2  # starts from the middle of the box
             else:
-                if not self.f.__class__.__name__ == 'LagrangianQuadratic':
-                    self.primal_x = np.zeros(self.f.primal.ndim)
-                else:
+                if self.f.__class__.__name__ == 'LagrangianQuadratic':
                     self.primal_x = self.x.copy()  # the same since it is just a wrapping
+                else:
+                    if random_state is None:
+                        self.primal_x = np.random.uniform(size=self.f.primal.ndim)
+                    else:
+                        self.primal_x = np.random.RandomState(random_state).uniform(size=self.f.primal.ndim)
             self.primal_f_x = self.f.primal.function(self.primal_x)
             if self.f.primal.ndim == 2:
                 self.x0_history = [self.primal_x[0]]
