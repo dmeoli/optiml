@@ -218,7 +218,7 @@ Instead of using an arbitrary support vector $x_s$, it is better to take an aver
 We now have the variables $w$ and $b$ that define our separating hyperplane's optimal orientation and hence our support vector machine. Each new point $x'$ is classified by evaluating:
 
 \begin{equation} \label{eq:svc_pred}
-    y'=\operatorname{sgn}\big(\sum_{i=1}^n\alpha_i y_i\langle x_i, x' \rangle+b\big)
+    y'=\operatorname{sign}\big(\sum_{i=1}^n\alpha_i y_i\langle x_i, x' \rangle+b\big)
 \end{equation}
 
 From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. We report below the box-constrained dual formulation~\cite{hsu2002simple} that arises from the primal~\eqref{eq:biased_primal_svm1} or~\eqref{eq:biased_primal_svm2} where the bias term $b$ is embedded into the weight vector $w$:

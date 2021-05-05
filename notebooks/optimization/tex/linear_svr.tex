@@ -292,7 +292,7 @@ As the \emph{squared hinge} loss, also the \emph{squared epsilon-insensitive} lo
 \begin{equation} \label{eq:squared_eps_loss_der}
 	\nabla_w \mathcal{L}_\epsilon^2=
 		\begin{cases}
-            \displaystyle 2 \operatorname{sgn}(y - (w^T x + b)) (|y - (w^T x + b)| - \epsilon) x & \text{if} \ |y - (w^T x + b)| \geq \epsilon \\
+            \displaystyle 2 \operatorname{sign}(y - (w^T x + b)) (|y - (w^T x + b)| - \epsilon) x & \text{if} \ |y - (w^T x + b)| \geq \epsilon \\
             0 & \text{otherwise} \\ 
         \end{cases}
 \end{equation}

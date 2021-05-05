@@ -99,7 +99,7 @@ class EpsilonInsensitive(SVMLoss):
         y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function
         idx = np.argwhere(np.abs(y_batch - y_pred) >= self.epsilon).ravel()
         z = y_batch[idx] - y_pred[idx]
-        return np.dot(np.divide(z, np.abs(z)), X_batch[idx])
+        return np.dot(np.sign(z), X_batch[idx])  # or np.dot(np.divide(z, np.abs(z)), X_batch[idx])
 
 
 class SquaredEpsilonInsensitive(EpsilonInsensitive):
