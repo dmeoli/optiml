@@ -10,22 +10,22 @@ Below experiments are about the SVC for which I tested different values for the 
 
 \paragraph{Primal formulation}
 
-The experiments results shown in~\ref{primal_svc_hinge_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. The batch size is setted to 20. Training is stopped if after 5 iterations the training loss is not lower than the best found so far.
+The experiments results shown in~\ref{primal_l1_svc_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. The batch size is setted to 20. Training is stopped if after 5 iterations the training loss is not lower than the best found so far.
 
-\input{experiments/primal_svc_hinge}
+\input{experiments/primal_l1_svc}
 
 The results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{accuracy} score. More training data points are selected as \emph{support vectors} from the SGD solver but it always requires lower iterations, i.e., epochs, to achieve the same \emph{numerical precision}. \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.55]{img/svc_hinge_loss_history}
+	\includegraphics[scale=0.55]{img/l1_svc_loss_history}
 	\caption{Loss convergence for the Primal formulation of the $\protect \mathcal{L}_1$-SVC}
-	\label{fig:svc_hinge_loss_history}
+	\label{fig:l1_svc_history}
 \end{figure}
 
 \paragraph{Linear Dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm. Notice that the \emph{qp} dual refers to the formulation~\eqref{eq:svc_lagrangian_dual}, while the \emph{bcqp} dual refers to the formulation~\eqref{eq:svc_bcqp_lagrangian_dual}.
+The experiments results shown in~\ref{linear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm. Notice that the \emph{unreg\_bias} dual refers to the formulation~\eqref{eq:svc_lagrangian_dual}, while the \emph{reg\_bias} dual refers to the formulation~\eqref{eq:svc_bcqp_lagrangian_dual}.
 
 \input{experiments/linear_dual_svc}
 
@@ -43,11 +43,11 @@ The experiments results shown in~\ref{nonlinear_dual_svc_cv_results} and~\ref{no
 
 \input{experiments/nonlinear_lagrangian_dual_svc}
 
-The same considerations made for the previous linear \emph{Wolfe dual} and \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting the complexity of the model coming with higher $C$ regularization values seems to be not paying a tradeoff in terms of the number of \emph{iterations} of the algorithm and, moreover, the \emph{bcqp Lagrangian dual} formulation seems to perform better wrt the \emph{qp} formulation, both tends to select even more training data points as \emph{support vectors}.
+The same considerations made for the previous linear \emph{Wolfe dual} and \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting the complexity of the model coming with higher $C$ regularization values seems to be not paying a tradeoff in terms of the number of \emph{iterations} of the algorithm and, moreover, the \emph{reg\_bias Lagrangian dual} formulation seems to perform better wrt the \emph{unreg\_bias} formulation, both tends to select even more training data points as \emph{support vectors}.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.55]{img/lagrangian_dual_svc_loss_history}
+	\includegraphics[scale=0.55]{img/lagrangian_dual_l1_svc_loss_history}
 	\caption{Loss convergence for the Lagrangian Dual formulation of the Nonlinear $\protect \mathcal{L}_1$-SVC}
 	\label{fig:lagrangian_dual_svc_loss_history}
 \end{figure}
@@ -58,17 +58,17 @@ The same considerations made for the previous linear \emph{Wolfe dual} and \emph
 
 \paragraph{Primal formulation}
 
-The experiments results shown in~\ref{primal_svc_squared_hinge_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. The batch size is setted to 20. Training is stopped if after 5 iterations the training loss is not lower than the best found so far.
+The experiments results shown in~\ref{primal_l2_svc_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. The batch size is setted to 20. Training is stopped if after 5 iterations the training loss is not lower than the best found so far.
 
-\input{experiments/primal_svc_squared_hinge}
+\input{experiments/primal_l2_svc}
 
 Again, the results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{accuracy} score. More training data points are selected as \emph{support vectors} from the SGD solver but it always requires even lower iterations, i.e., epochs, to achieve the same \emph{numerical precision}. \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.55]{img/svc_squared_hinge_loss_history}
+	\includegraphics[scale=0.55]{img/l2_svc_loss_history}
 	\caption{Loss convergence for the Primal formulation of the $\protect \mathcal{L}_2$-SVC}
-	\label{fig:svc_squared_hinge_loss_history}
+	\label{fig:l2_svc_loss_history}
 \end{figure}
 
 \pagebreak
@@ -81,24 +81,24 @@ Below experiments are about the SVR for which I tested different values for regu
 
 \paragraph{Primal formulation}
 
-The experiments results shown in~\ref{primal_svr_eps_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. The batch size is setted to 20. Training is stopped if after 5 iterations the training loss is not lower than the best found so far.
+The experiments results shown in~\ref{primal_l1_svr_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. The batch size is setted to 20. Training is stopped if after 5 iterations the training loss is not lower than the best found so far.
 
-\input{experiments/primal_svr_eps}
+\input{experiments/primal_l1_svr}
 
 The results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{r2} score, except in case of $C$ regularization hyperparameter equals to 1 for which those of SGD are lower. Moreover, the SGD solver always requires lower iterations, i.e., epochs, for higher $C$ regularization values, i.e., for $C$ equals to 10 or 100, to achieve the same \emph{numerical precision}. Again, \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate. The results in terms of \emph{support vectors} are strongly similar to each others.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.5]{img/svr_eps_loss_history}
+	\includegraphics[scale=0.5]{img/l1_svr_loss_history}
 	\caption{Loss convergence for the Primal formulation of the $\protect \mathcal{L}_1$-SVR}
-	\label{fig:svr_eps_loss_history}
+	\label{fig:l1_svr_loss_history}
 \end{figure}
 
 \pagebreak
 
 \paragraph{Linear Dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm. Notice that the \emph{qp} dual refers to the formulation~\eqref{eq:svr_lagrangian_dual}, while the \emph{bcqp} dual refers to the formulation~\eqref{eq:svr_bcqp_lagrangian_dual}.
+The experiments results shown in~\ref{linear_lagrangian_dual_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm. Notice that the \emph{unreg\_bias} dual refers to the formulation~\eqref{eq:svr_lagrangian_dual}, while the \emph{reg\_bias} dual refers to the formulation~\eqref{eq:svr_bcqp_lagrangian_dual}.
 
 \input{experiments/linear_dual_svr}
 
@@ -110,7 +110,7 @@ For what about the linear \emph{Lagrangian dual} formulation we can see as it se
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.55]{img/lagrangian_dual_linear_svr_loss_history}
+	\includegraphics[scale=0.55]{img/linear_lagrangian_dual_l1_svr_loss_history}
 	\caption{Loss convergence for the Lagrangian Dual formulation of the Linear $\protect \mathcal{L}_1$-SVR}
 	\label{fig:lagrangian_dual_linear_svr_loss_history}
 \end{figure}
@@ -127,14 +127,14 @@ The same considerations made for the previous linear \emph{Wolfe dual} and \emph
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.55]{img/lagrangian_dual_poly_svr_loss_history}
+	\includegraphics[scale=0.55]{img/poly_lagrangian_dual_l1_svr_loss_history}
 	\caption{Loss convergence for the Lagrangian Dual formulation of the Polynomial $\protect \mathcal{L}_1$-SVR}
 	\label{fig:lagrangian_dual_poly_svr_loss_history}
 \end{figure}
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.55]{img/lagrangian_dual_gaussian_svr_loss_history}
+	\includegraphics[scale=0.55]{img/gaussian_lagrangian_dual_l1_svr_loss_history}
 	\caption{Loss convergence for the Lagrangian Dual formulation of the Gaussian $\protect \mathcal{L}_1$-SVR}
 	\label{fig:lagrangian_dual_gaussian_svr_loss_history}
 \end{figure}
@@ -145,15 +145,15 @@ The same considerations made for the previous linear \emph{Wolfe dual} and \emph
 
 \paragraph{Primal formulation}
 
-The experiments results shown in~\ref{primal_svr_squared_eps_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. The batch size is setted to 20. Training is stopped if after 5 iterations the training loss is not lower than the best found so far.
+The experiments results shown in~\ref{primal_l2_svr_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. The batch size is setted to 20. Training is stopped if after 5 iterations the training loss is not lower than the best found so far.
 
-\input{experiments/primal_svr_squared_eps}
+\input{experiments/primal_l2_svr}
 
 Again, the results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{r2} score. SGD solver always requires even lower iterations, i.e., epochs, for higher $C$ regularization values, i.e., for $C$ equals to 10 or 100, to achieve the same \emph{numerical precision}. \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.5]{img/svr_squared_eps_loss_history}
+	\includegraphics[scale=0.5]{img/l2_svr_loss_history}
 	\caption{Loss convergence for the Primal formulation of the $\protect \mathcal{L}_2$-SVR}
-	\label{fig:svr_squared_eps_loss_history}
+	\label{fig:l2_svr_loss_history}
 \end{figure}

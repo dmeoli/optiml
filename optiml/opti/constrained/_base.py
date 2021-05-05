@@ -131,7 +131,7 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
 
         so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
 
-                Q x = - (q - mu A - lambda_-)
+                Q x = - (q - mu A - lambda)
 
         :param lmbda: the dual variable wrt evaluate the function
         :return: the function value wrt lambda

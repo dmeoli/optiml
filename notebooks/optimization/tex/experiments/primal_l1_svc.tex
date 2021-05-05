@@ -1,0 +1,24 @@
+\begin{table}[H]
+\centering
+\caption{SVC Primal formulation results with Hinge loss}
+\label{primal_l1_svc_cv_results}
+\begin{tabular}{lllrrrr}
+\toprule
+          &   &     &  fit\_time &  accuracy &  n\_iter &  n\_sv \\
+solver & momentum & C &           &           &         &       \\
+\midrule
+sgd & none & 1   &  0.422416 &     0.970 &     313 &    53 \\
+          &   & 10  &  0.564852 &     0.985 &     383 &    19 \\
+          &   & 100 &  0.376213 &     0.980 &     206 &    10 \\
+          & standard & 1   &  0.342404 &     0.970 &     228 &    48 \\
+          &   & 10  &  0.419920 &     0.985 &     295 &    16 \\
+          &   & 100 &  0.158939 &     0.980 &     123 &    11 \\
+          & nesterov & 1   &  0.320175 &     0.970 &     228 &    48 \\
+          &   & 10  &  0.376395 &     0.985 &     287 &    16 \\
+          &   & 100 &  0.161822 &     0.985 &     129 &    11 \\
+liblinear & - & 1   &  0.001097 &     0.985 &     332 &    15 \\
+          &   & 10  &  0.001475 &     0.985 &     554 &     5 \\
+          &   & 100 &  0.002106 &     0.985 &    1000 &     7 \\
+\bottomrule
+\end{tabular}
+\end{table}

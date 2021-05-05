@@ -53,7 +53,7 @@ where the parameter $C$ controls the trade-off between the slack variable penalt
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[scale=0.6]{img/linear_dual_svc_hyperplane}
+	\includegraphics[scale=0.6]{img/linear_dual_l1_svc_hyperplane}
 	\caption{Linear SVC hyperplane}
 	\label{fig:linear_dual_svc_hyperplane}
 \end{figure}
@@ -100,7 +100,7 @@ where $\displaystyle \frac{1}{2} \| w \|^2$ is the \emph{regularization term} an
 
 The quadratic optimization problem~\eqref{eq:quad_svc_obj} can be equivalently formulated as:
 
-\begin{equation} \label{eq:primal_svc_hinge}
+\begin{equation} \label{eq:primal_l1_svc}
     \min_{w,b} \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))
 \end{equation}
 
@@ -110,20 +110,20 @@ The above formulation penalizes slacks $\xi$ linearly and is called $\mathcal{L}
 
 \begin{figure}[h!]
 	\centering
-  	\includegraphics[scale=0.4]{img/svc_hinge_loss}
+  	\includegraphics[scale=0.4]{img/l1_svc_loss}
   	\caption{SVC Hinge loss with different optimization steps}
-  	\label{fig:svc_hinge_loss}
+  	\label{fig:l1_svc_loss}
 \end{figure}
 
 To simplify the notation and so also the design of the algorithms, the simplest approach to learn the bias term $b$ is that of including that into the \emph{regularization term}; so we can rewrite~\eqref{eq:primal_svm} as follows:
 
-\begin{equation} \label{eq:biased_primal_svm1}
+\begin{equation} \label{eq:reg_bias_primal_svm1}
     \min_{w,b} \frac{1}{2} (\| w \|^2 + b^2) + C \sum_{i=1}^n \mathcal{L}(w,b;x_i,y_i)
 \end{equation}
 
 or, equivalently, by augmenting the weight vector $w$ with the bias term $b$ and each instance $x_i$ with an additional dimension, i.e., with constant value equal to 1:
 
-\begin{equation} \label{eq:biased_primal_svm2}
+\begin{equation} \label{eq:reg_bias_primal_svm2}
     \begin{aligned}
         \min_{w} \quad & \frac{1}{2} \| \bar{w} \|^2 + C \sum_{i=1}^n \mathcal{L}(\bar{w};\bar{x}_i,y_i) \\
             \text{where} \quad & \bar{w}^T = [w^T, b] \\ & \bar{x}_i^T = [x_i^T, 1]
@@ -132,13 +132,13 @@ or, equivalently, by augmenting the weight vector $w$ with the bias term $b$ and
 
 with the advantages of having convex properties of the objective function useful for convergence analysis and the possibility to directly apply algorithms designed for models without the bias term.
 
-In the specific case of the $\mathcal{L}_1$-SVC the objective~\eqref{eq:primal_svc_hinge} become:
+In the specific case of the $\mathcal{L}_1$-SVC the objective~\eqref{eq:primal_l1_svc} become:
 
-\begin{equation} \label{eq:biased_primal_svc_hinge}
+\begin{equation} \label{eq:reg_bias_primal_l1_svc}
     \min_{w,b} \frac{1}{2} (\| w \|^2 + b^2) + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))
 \end{equation}
 
-Notice that in terms of numerical optimization the formulation~\eqref{eq:primal_svc_hinge} is not equivalent to~\eqref{eq:biased_primal_svc_hinge} since in the first one the bias term $b$ does not contribute to the \emph{regularization term}, so the SVM formulation is based on an unregularized bias term $b$, as highlighted by the \emph{statistical learning theory}. But, in machine learning sense, numerical experiments in~\cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
+Notice that in terms of numerical optimization the formulation~\eqref{eq:primal_l1_svc} is not equivalent to~\eqref{eq:reg_bias_primal_l1_svc} since in the first one the bias term $b$ does not contribute to the \emph{regularization term}, so the SVM formulation is based on an unregularized bias term $b$, as highlighted by the \emph{statistical learning theory}. But, in machine learning sense, numerical experiments in~\cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
 
 \subsubsection{Wolfe Dual formulation}
 
@@ -221,7 +221,7 @@ We now have the variables $w$ and $b$ that define our separating hyperplane's op
     y'=\operatorname{sign}\big(\sum_{i=1}^n\alpha_i y_i\langle x_i, x' \rangle+b\big)
 \end{equation}
 
-From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. We report below the box-constrained dual formulation~\cite{hsu2002simple} that arises from the primal~\eqref{eq:biased_primal_svm1} or~\eqref{eq:biased_primal_svm2} where the bias term $b$ is embedded into the weight vector $w$:
+From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. We report below the box-constrained dual formulation~\cite{hsu2002simple} that arises from the primal~\eqref{eq:reg_bias_primal_svm1} or~\eqref{eq:reg_bias_primal_svm2} where the bias term $b$ is embedded into the weight vector $w$:
 
 \begin{equation} \label{eq:svc_min_bcqp_wolf_dual}
     \begin{aligned}
@@ -334,32 +334,32 @@ It is a strictly convex function and its gradient is given by:
 
 \subsubsection{Primal formulation}
 
-Since smoothed versions of objective functions may be preferred for optimization, we can reformulate~\eqref{eq:primal_svc_hinge} as:
+Since smoothed versions of objective functions may be preferred for optimization, we can reformulate~\eqref{eq:primal_l1_svc} as:
 
-\begin{equation} \label{eq:primal_svc_squared_hinge}
+\begin{equation} \label{eq:primal_l2_svc}
     \min_{w,b} \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))^2
 \end{equation}
 
 where we make use of the \emph{squared hinge} loss that quadratically penalized slacks $\xi$ and is called $\mathcal{L}_2$-SVC.
 
-The $\mathcal{L}_2$-SVC objective~\eqref{eq:primal_svc_squared_hinge} can be rewritten in form~\eqref{eq:biased_primal_svm1} or~\eqref{eq:biased_primal_svm2} as:
+The $\mathcal{L}_2$-SVC objective~\eqref{eq:primal_l2_svc} can be rewritten in form~\eqref{eq:reg_bias_primal_svm1} or~\eqref{eq:reg_bias_primal_svm2} as:
 
-\begin{equation} \label{eq:biased_primal_svc_squared_hinge}
+\begin{equation} \label{eq:reg_bias_primal_l2_svc}
     \min_{w,b} \frac{1}{2} (\| w \|^2 + b^2) + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))^2
 \end{equation}
 
 \begin{figure}[h!]
 	\centering
-  	\includegraphics[scale=0.4]{img/svc_squared_hinge_loss}
+  	\includegraphics[scale=0.4]{img/l2_svc_loss}
   	\caption{SVC Squared Hinge loss with different optimization steps}
-  	\label{fig:svc_squared_hinge_loss}
+  	\label{fig:l2_svc_loss}
 \end{figure}
 
 \subsubsection{Wolfe Dual formulation}
 
 As done for the $\mathcal{L}_1$-SVC we can derive the \emph{Wolfe dual} formulation of the $\mathcal{L}_2$-SVC by obtaining:
 
-\begin{equation} \label{eq:wolfe_dual_svc_squared_hinge}
+\begin{equation} \label{eq:wolfe_dual_l2_svc}
     \begin{aligned}
         \min_{\alpha} \quad & \frac{1}{2}\alpha^T (Q + D)\alpha+q^T\alpha \\
             \text{subject to} \quad & \alpha_i\geq 0 \ \forall_i \\ & y^T\alpha=0
@@ -368,7 +368,7 @@ As done for the $\mathcal{L}_1$-SVC we can derive the \emph{Wolfe dual} formulat
 
 or, alternatively, with the regularized bias term by obtaining:
 
-\begin{equation} \label{eq:biased_wolfe_dual_svc_squared_hinge}
+\begin{equation} \label{eq:reg_bias_wolfe_dual_l2_svc}
     \begin{aligned}
         \min_{\alpha} \quad & \frac{1}{2}\alpha^T (Q + yy^T + D) \alpha + q^T \alpha \\
             \text{subject to} \quad & \alpha_i \geq 0 \ \forall_i
@@ -379,7 +379,7 @@ where the diagonal matrix $\displaystyle D_{ii} = \frac{1}{2C} \ \forall_i$.
 
 \subsubsection{Lagrangian Dual formulation}
 
-In order to relax the constraints in the $\mathcal{L}_2$-SVC \emph{Wolfe dual} formulation~\eqref{eq:wolfe_dual_svc_squared_hinge} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrangian multipliers $\mu \geq 0, \lambda \geq 0$:
+In order to relax the constraints in the $\mathcal{L}_2$-SVC \emph{Wolfe dual} formulation~\eqref{eq:wolfe_dual_l2_svc} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrangian multipliers $\mu \geq 0, \lambda \geq 0$:
 
 \begin{equation} \label{eq:l2_svc_lagrangian_dual}
 	\begin{aligned}

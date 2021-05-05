@@ -1,0 +1,24 @@
+\begin{table}[H]
+\centering
+\caption{Nonlinear SVC Lagrangian Dual formulation results with Hinge loss}
+\label{nonlinear_lagrangian_dual_l1_svc_cv_results}
+\begin{tabular}{lllrrrr}
+\toprule
+           &     &     &  fit\_time &  accuracy &  n\_iter &  n\_sv \\
+dual & kernel & C &           &           &         &       \\
+\midrule
+reg\_bias & poly & 1   &  1.590877 &     0.635 &     222 &   317 \\
+           &     & 10  &  3.354160 &     0.635 &     222 &   317 \\
+           &     & 100 &  7.668567 &     0.635 &     222 &   317 \\
+           & rbf & 1   &  0.045249 &     1.000 &       1 &   399 \\
+           &     & 10  &  0.121899 &     1.000 &       1 &   399 \\
+           &     & 100 &  0.149201 &     1.000 &       1 &   399 \\
+unreg\_bias & poly & 1   &  0.056767 &     0.640 &       3 &   316 \\
+           &     & 10  &  0.216001 &     0.640 &       3 &   316 \\
+           &     & 100 &  0.236564 &     0.640 &       3 &   316 \\
+           & rbf & 1   &  0.179041 &     0.860 &       9 &   307 \\
+           &     & 10  &  0.745538 &     0.860 &       9 &   307 \\
+           &     & 100 &  0.446537 &     0.860 &       9 &   307 \\
+\bottomrule
+\end{tabular}
+\end{table}

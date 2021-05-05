@@ -1,0 +1,21 @@
+\begin{table}[H]
+\centering
+\caption{Linear SVC Wolfe Dual formulation results with Hinge loss}
+\label{linear_dual_l1_svc_cv_results}
+\begin{tabular}{llrrrr}
+\toprule
+       &     &  fit\_time &  accuracy &  n\_iter &  n\_sv \\
+solver & C &           &           &         &       \\
+\midrule
+smo & 1   &  0.042133 &     0.980 &      62 &    17 \\
+       & 10  &  0.172690 &     0.980 &     295 &    10 \\
+       & 100 &  0.211978 &     0.985 &     399 &     8 \\
+libsvm & 1   &  0.010787 &     0.985 &     243 &    17 \\
+       & 10  &  0.005744 &     0.985 &     194 &    10 \\
+       & 100 &  0.003183 &     0.985 &    1602 &     8 \\
+cvxopt & 1   &  0.030388 &     0.980 &      10 &    17 \\
+       & 10  &  0.032794 &     0.980 &      10 &    11 \\
+       & 100 &  0.054071 &     0.980 &      10 &    12 \\
+\bottomrule
+\end{tabular}
+\end{table}

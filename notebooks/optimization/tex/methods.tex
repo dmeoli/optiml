@@ -868,11 +868,11 @@ Since the $\mathcal{L}_1$-SVM linearly penalizes the misclassified points, the p
 	& smooth & \vtop{\hbox{\strut L-Lipschitz}\hbox{\strut continuous}} & convexity \\
 objective & 		& 		& 		\\
 \midrule
-$\mathcal{L}_1$-SVC~\eqref{eq:biased_primal_svc_hinge} & no & locally & convex \\
-$\mathcal{L}_2$-SVC~\eqref{eq:biased_primal_svc_squared_hinge} & yes & globally & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
+$\mathcal{L}_1$-SVC~\eqref{eq:reg_bias_primal_l1_svc} & no & locally & convex \\
+$\mathcal{L}_2$-SVC~\eqref{eq:reg_bias_primal_l2_svc} & yes & globally & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
 \midrule
-$\mathcal{L}_1$-SVR~\eqref{eq:biased_primal_svr_eps} & no & locally & convex \\
-$\mathcal{L}_2$-SVR~\eqref{eq:biased_primal_svr_squared_eps} & yes & globally & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
+$\mathcal{L}_1$-SVR~\eqref{eq:reg_bias_primal_l1_svr} & no & locally & convex \\
+$\mathcal{L}_2$-SVR~\eqref{eq:reg_bias_primal_l2_svr} & yes & globally & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -890,8 +890,8 @@ And, according to the theoretical analysis, the following \emph{convergence rate
 	& \vtop{\hbox{\strut SGD}\hbox{\strut convergence rate}} & \vtop{\hbox{\strut Polyak SGD}\hbox{\strut convergence rate}} & \vtop{\hbox{\strut Nesterov SGD}\hbox{\strut convergence rate}} \\
 objective & 		& 		& 		\\
 \midrule
-$\mathcal{L}_1$-SVM~(\ref{eq:biased_primal_svc_hinge},~\ref{eq:biased_primal_svr_eps}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ \\
-$\mathcal{L}_2$-SVM~(\ref{eq:biased_primal_svc_squared_hinge},~\ref{eq:biased_primal_svr_squared_eps}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\exp\Bigg(-\frac{t}{\sqrt{\kappa}}\Bigg)\Bigg)$ \\
+$\mathcal{L}_1$-SVM~(\ref{eq:reg_bias_primal_l1_svc},~\ref{eq:reg_bias_primal_l1_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ \\
+$\mathcal{L}_2$-SVM~(\ref{eq:reg_bias_primal_l2_svc},~\ref{eq:reg_bias_primal_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\exp\Bigg(-\frac{t}{\sqrt{\kappa}}\Bigg)\Bigg)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -906,7 +906,7 @@ $\mathcal{L}_2$-SVM~(\ref{eq:biased_primal_svc_squared_hinge},~\ref{eq:biased_pr
 objective & 		\\
 \midrule
 $\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual}) or~(\ref{eq:svc_bcqp_lagrangian_dual},~\ref{eq:svr_bcqp_lagrangian_dual}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ \\
-$\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:biased_wolfe_dual_svc_squared_hinge}) or~(\ref{eq:l2_svr_lagrangian_dual},~\ref{eq:biased_wolfe_dual_svr_squared_eps}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ \\
+$\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svc}) or~(\ref{eq:l2_svr_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ \\
 \bottomrule
 \end{tabular}
 \end{table}

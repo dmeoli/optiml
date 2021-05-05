@@ -98,7 +98,7 @@ class SVM(BaseEstimator, ABC):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 reg_bias=True,
+                 fit_intercept=True,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -116,7 +116,7 @@ class SVM(BaseEstimator, ABC):
         self.momentum_type = momentum_type
         self.momentum = momentum
         self.max_f_eval = max_f_eval
-        self.reg_bias = reg_bias
+        self.fit_intercept = fit_intercept
         self.intercept_ = 0.
         self.mu = mu
         self.master_solver = master_solver
@@ -158,7 +158,7 @@ class PrimalSVM(SVM, ABC):
                  max_f_eval=15000,
                  early_stopping=False,
                  patience=5,
-                 reg_bias=True,
+                 fit_intercept=True,
                  shuffle=True,
                  random_state=None,
                  mu=1,
@@ -174,7 +174,7 @@ class PrimalSVM(SVM, ABC):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
-                         reg_bias=reg_bias,
+                         fit_intercept=fit_intercept,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -201,7 +201,7 @@ class PrimalSVM(SVM, ABC):
                 self.best_loss = np.inf
 
     def _unpack(self, packed_coef_inter):
-        if self.reg_bias:
+        if self.fit_intercept:
             self.coef_, self.intercept_ = packed_coef_inter[:-1], packed_coef_inter[-1]
         else:
             self.coef_ = packed_coef_inter
@@ -285,7 +285,7 @@ class DualSVM(SVM, ABC):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 reg_bias=True,
+                 fit_intercept=True,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -301,7 +301,7 @@ class DualSVM(SVM, ABC):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
-                         reg_bias=reg_bias,
+                         fit_intercept=fit_intercept,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -343,7 +343,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                  max_f_eval=15000,
                  early_stopping=False,
                  patience=5,
-                 reg_bias=True,
+                 fit_intercept=True,
                  shuffle=True,
                  random_state=None,
                  mu=1,
@@ -363,7 +363,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                          max_f_eval=max_f_eval,
                          early_stopping=early_stopping,
                          patience=patience,
-                         reg_bias=reg_bias,
+                         fit_intercept=fit_intercept,
                          shuffle=shuffle,
                          random_state=random_state,
                          mu=mu,
@@ -397,7 +397,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
-            if self.reg_bias:
+            if self.fit_intercept:
                 X_biased = np.c_[X, np.ones_like(y)]
             else:
                 X_biased = X
@@ -419,7 +419,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
         elif issubclass(self.optimizer, ProximalBundle):
 
-            if self.reg_bias:
+            if self.fit_intercept:
                 X_biased = np.c_[X, np.ones_like(y)]
             else:
                 X_biased = X
@@ -445,7 +445,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                                                       test_size=self.validation_split,
                                                       random_state=self.random_state)
 
-                if self.reg_bias:
+                if self.fit_intercept:
                     X_val_biased = np.c_[X_val, np.ones_like(y_val)]
                 else:
                     X_val_biased = X_val
@@ -454,7 +454,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                 X_val_biased = None
                 y_val = None
 
-            if self.reg_bias:
+            if self.fit_intercept:
                 X_biased = np.c_[X, np.ones_like(y)]
             else:
                 X_biased = X
@@ -490,7 +490,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
             raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-        if self.reg_bias and X.shape[1] > 1:
+        if self.fit_intercept and X.shape[1] > 1:
             self.loss.X = X
 
         return self
@@ -515,7 +515,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 reg_bias=True,
+                 fit_intercept=True,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -532,7 +532,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
-                         reg_bias=reg_bias,
+                         fit_intercept=fit_intercept,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -577,7 +577,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 lb = np.zeros(n_samples)  # lower bounds
 
-                if self.reg_bias:
+                if not self.fit_intercept:
 
                     out = StringIO()
                     with pipes(stdout=out, stderr=STDOUT):
@@ -623,7 +623,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 elif issubclass(self.optimizer, Optimizer):
 
-                    if self.reg_bias:
+                    if not self.fit_intercept:
 
                         self.obj = LagrangianEqualityBoxConstrainedQuadratic(primal=Quadratic(Q, q),
                                                                              A=y,
@@ -702,7 +702,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 lb = np.zeros(n_samples)  # lower bounds
 
-                if self.reg_bias:
+                if not self.fit_intercept:
 
                     out = StringIO()
                     with pipes(stdout=out, stderr=STDOUT):
@@ -736,10 +736,12 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 if issubclass(self.optimizer, Optimizer):
 
-                    if self.reg_bias:
+                    if not self.fit_intercept:
 
                         self.obj = LagrangianEqualityConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                          A=y)
+                                                                          A=y,
+                                                                          lagrangian_solver=self.lagrangian_solver,
+                                                                          lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
                     else:
 
@@ -849,7 +851,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  max_f_eval=15000,
                  early_stopping=False,
                  patience=5,
-                 reg_bias=True,
+                 fit_intercept=True,
                  shuffle=True,
                  random_state=None,
                  mu=1,
@@ -869,7 +871,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                          max_f_eval=max_f_eval,
                          early_stopping=early_stopping,
                          patience=patience,
-                         reg_bias=reg_bias,
+                         fit_intercept=fit_intercept,
                          shuffle=shuffle,
                          random_state=random_state,
                          mu=mu,
@@ -904,7 +906,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
         if issubclass(self.optimizer, LineSearchOptimizer):
 
-            if self.reg_bias:
+            if self.fit_intercept:
                 X_biased = np.c_[X, np.ones_like(y)]
             else:
                 X_biased = X
@@ -926,7 +928,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
         elif issubclass(self.optimizer, ProximalBundle):
 
-            if self.reg_bias:
+            if self.fit_intercept:
                 X_biased = np.c_[X, np.ones_like(y)]
             else:
                 X_biased = X
@@ -952,7 +954,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                                                       test_size=self.validation_split,
                                                       random_state=self.random_state)
 
-                if self.reg_bias:
+                if self.fit_intercept:
                     X_val_biased = np.c_[X_val, np.ones_like(y_val)]
                 else:
                     X_val_biased = X_val
@@ -961,7 +963,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                 X_val_biased = None
                 y_val = None
 
-            if self.reg_bias:
+            if self.fit_intercept:
                 X_biased = np.c_[X, np.ones_like(y)]
             else:
                 X_biased = X
@@ -998,7 +1000,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
             raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-        if self.reg_bias and X.shape[1] > 1:
+        if self.fit_intercept and X.shape[1] > 1:
             self.loss.X = X
 
         return self
@@ -1021,7 +1023,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 reg_bias=True,
+                 fit_intercept=True,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -1038,7 +1040,7 @@ class DualSVR(RegressorMixin, DualSVM):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
-                         reg_bias=reg_bias,
+                         fit_intercept=fit_intercept,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -1089,7 +1091,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     lb = np.zeros(2 * n_samples)  # lower bounds
 
-                    if self.reg_bias:
+                    if not self.fit_intercept:
 
                         out = StringIO()
                         with pipes(stdout=out, stderr=STDOUT):
@@ -1135,7 +1137,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     elif issubclass(self.optimizer, Optimizer):
 
-                        if self.reg_bias:
+                        if not self.fit_intercept:
 
                             self.obj = LagrangianEqualityBoxConstrainedQuadratic(primal=Quadratic(Q, q),
                                                                                  A=e,
@@ -1218,7 +1220,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 lb = np.zeros(2 * n_samples)  # lower bounds
 
-                if self.reg_bias:
+                if not self.fit_intercept:
 
                     out = StringIO()
                     with pipes(stdout=out, stderr=STDOUT):
@@ -1252,10 +1254,12 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 if issubclass(self.optimizer, Optimizer):
 
-                    if self.reg_bias:
+                    if not self.fit_intercept:
 
                         self.obj = LagrangianEqualityConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                          A=e)
+                                                                          A=e,
+                                                                          lagrangian_solver=self.lagrangian_solver,
+                                                                          lagrangian_solver_verbose=self.lagrangian_solver_verbose)
 
                     else:
 
