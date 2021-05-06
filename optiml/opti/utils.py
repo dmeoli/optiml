@@ -173,7 +173,8 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
 
 def plot_trajectory_optimization(surface_contour, opt, color='k', label=None):
     # 3D trajectory optimization plot
-    surface_contour.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history, marker='.', color=color, label=label)
+    surface_contour.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history,
+                                 marker='.', color=color, label=label)
     angles_x = np.array(opt.x0_history)[1:] - np.array(opt.x0_history)[:-1]
     angles_y = np.array(opt.x1_history)[1:] - np.array(opt.x1_history)[:-1]
     # 2D trajectory optimization plot
@@ -181,7 +182,8 @@ def plot_trajectory_optimization(surface_contour, opt, color='k', label=None):
                                    scale_units='xy', angles='xy', scale=1, color=color)
     if isinstance(opt, ProximalBundle):  # plot ns steps
         # 3D trajectory optimization plot
-        surface_contour.axes[0].plot(opt.x0_history_ns, opt.x1_history_ns, opt.f_x_history_ns, marker='.', color='b')
+        surface_contour.axes[0].plot(opt.x0_history_ns, opt.x1_history_ns, opt.f_x_history_ns,
+                                     marker='.', color='b')
         angles_x = np.array(opt.x0_history_ns)[1:] - np.array(opt.x0_history_ns)[:-1]
         angles_y = np.array(opt.x1_history_ns)[1:] - np.array(opt.x1_history_ns)[:-1]
         # 2D trajectory optimization plot
@@ -189,3 +191,8 @@ def plot_trajectory_optimization(surface_contour, opt, color='k', label=None):
                                        scale_units='xy', angles='xy', scale=1, color='b')
     surface_contour.axes[0].legend()
     return surface_contour
+
+
+def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max, ub=None, color='k', label=None):
+    plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, ub),
+                                 opt, color, label)
