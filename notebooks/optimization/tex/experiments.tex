@@ -25,23 +25,23 @@ The results provided from the \emph{custom} implementation, i.e., the SGD with d
 
 \paragraph{Linear Dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm. Notice that the \emph{unreg\_bias} dual refers to the formulation~\eqref{eq:svc_lagrangian_dual}, while the \emph{reg\_bias} dual refers to the formulation~\eqref{eq:svc_bcqp_lagrangian_dual}.
+The experiments results shown in~\ref{linear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm. Notice that the \emph{unreg\_bias} dual refers to the formulation~\eqref{eq:svc_lagrangian_dual}, while the \emph{reg\_bias} dual refers to the formulation~\eqref{eq:svc_bcqp_lagrangian_dual}.
 
-\input{experiments/linear_dual_svc}
+\input{experiments/linear_dual_l1_svc}
 
 For what about the linear \emph{Wolfe dual} formulation we can immediately notice as higher \emph{regularization hyperparameter} $C$ makes the model harder, so the \emph{custom} implementation of the SMO algorithm and also the \emph{sklearn} implementation, i.e., \emph{libsvm}~\cite{chang2011libsvm} implementation, needs to perform more iterations to achieve the same \emph{numerical precision}; meanwhile the \emph{cvxopt}~\cite{vandenberghe2010cvxopt} seems to be insensitive to the increasing complexity of the model. The results in terms of \emph{accuracy} and number of \emph{support vectors} are strongly similar to each others.
 
-\input{experiments/linear_lagrangian_dual_svc}
+\input{experiments/linear_lagrangian_dual_l1_svc}
 
 For what about the linear \emph{Lagrangian dual} formulation we can see as it seems to be insensitive to the increasing complexity of the model in terms of number of \emph{iterations} but it tends to select many training data points as \emph{support vectors}.
 
 \paragraph{Nonlinear Dual formulations}
 
-The experiments results shown in~\ref{nonlinear_dual_svc_cv_results} and~\ref{nonlinear_lagrangian_dual_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm.
+The experiments results shown in~\ref{nonlinear_dual_l1_svc_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm.
 
-\input{experiments/nonlinear_dual_svc}
+\input{experiments/nonlinear_dual_l1_svc}
 
-\input{experiments/nonlinear_lagrangian_dual_svc}
+\input{experiments/nonlinear_lagrangian_dual_l1_svc}
 
 The same considerations made for the previous linear \emph{Wolfe dual} and \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting the complexity of the model coming with higher $C$ regularization values seems to be not paying a tradeoff in terms of the number of \emph{iterations} of the algorithm and, moreover, the \emph{reg\_bias Lagrangian dual} formulation seems to perform better wrt the \emph{unreg\_bias} formulation, both tends to select even more training data points as \emph{support vectors}.
 
@@ -49,7 +49,7 @@ The same considerations made for the previous linear \emph{Wolfe dual} and \emph
 	\centering
 	\includegraphics[scale=0.55]{img/lagrangian_dual_l1_svc_loss_history}
 	\caption{Loss convergence for the Lagrangian Dual formulation of the Nonlinear $\protect \mathcal{L}_1$-SVC}
-	\label{fig:lagrangian_dual_svc_loss_history}
+	\label{fig:lagrangian_dual_l1_svc_loss_history}
 \end{figure}
 
 \pagebreak
@@ -98,13 +98,13 @@ The results provided from the \emph{custom} implementation, i.e., the SGD with d
 
 \paragraph{Linear Dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm. Notice that the \emph{unreg\_bias} dual refers to the formulation~\eqref{eq:svr_lagrangian_dual}, while the \emph{reg\_bias} dual refers to the formulation~\eqref{eq:svr_bcqp_lagrangian_dual}.
+The experiments results shown in~\ref{linear_lagrangian_dual_l1_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm. Notice that the \emph{unreg\_bias} dual refers to the formulation~\eqref{eq:svr_lagrangian_dual}, while the \emph{reg\_bias} dual refers to the formulation~\eqref{eq:svr_bcqp_lagrangian_dual}.
 
-\input{experiments/linear_dual_svr}
+\input{experiments/linear_dual_l1_svr}
 
 For what about the linear \emph{Wolfe dual} formulation we can immediately notice as higher \emph{regularization hyperparameter} $C$ and lower $\epsilon$ values makes the model harder, so the \emph{custom} implementation of the SMO algorithm and also the \emph{sklearn} implementation, i.e., \emph{libsvm}~\cite{chang2011libsvm} implementation, needs to perform more iterations to achieve the same \emph{numerical precision}; meanwhile, again, the \emph{cvxopt}~\cite{vandenberghe2010cvxopt} seems to be insensitive to the increasing complexity of the model. The results in terms of \emph{r2} and number of \emph{support vectors} are strongly similar to each others.
 
-\input{experiments/linear_lagrangian_dual_svr}
+\input{experiments/linear_lagrangian_dual_l1_svr}
 
 For what about the linear \emph{Lagrangian dual} formulation we can see as it seems to be insensitive to the increasing complexity of the model in terms of number of \emph{iterations} and require many \emph{iterations} wrt the \emph{Wolfe dual} formulation.
 
@@ -112,16 +112,16 @@ For what about the linear \emph{Lagrangian dual} formulation we can see as it se
 	\centering
 	\includegraphics[scale=0.55]{img/linear_lagrangian_dual_l1_svr_loss_history}
 	\caption{Loss convergence for the Lagrangian Dual formulation of the Linear $\protect \mathcal{L}_1$-SVR}
-	\label{fig:lagrangian_dual_linear_svr_loss_history}
+	\label{fig:linear_lagrangian_dual_l1_svr_loss_history}
 \end{figure}
 
 \paragraph{Nonlinear Dual formulations}
 
-The experiments results shown in~\ref{nonlinear_dual_svr_cv_results} and~\ref{nonlinear_lagrangian_dual_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm.
+The experiments results shown in~\ref{nonlinear_dual_l1_svr_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm.
 
-\input{experiments/nonlinear_dual_svr}
+\input{experiments/nonlinear_dual_l1_svr}
 
-\input{experiments/nonlinear_lagrangian_dual_svr}
+\input{experiments/nonlinear_lagrangian_dual_l1_svr}
 
 The same considerations made for the previous linear \emph{Wolfe dual} and \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting, the complexity of the model coming with higher $C$ regularization hyperparameters and lower $\epsilon$ values pays a larger tradeoff in terms of the number of \emph{iterations} of the algorithm.
 
@@ -129,14 +129,14 @@ The same considerations made for the previous linear \emph{Wolfe dual} and \emph
 	\centering
 	\includegraphics[scale=0.55]{img/poly_lagrangian_dual_l1_svr_loss_history}
 	\caption{Loss convergence for the Lagrangian Dual formulation of the Polynomial $\protect \mathcal{L}_1$-SVR}
-	\label{fig:lagrangian_dual_poly_svr_loss_history}
+	\label{fig:poly_lagrangian_dual_l1_svr_loss_history}
 \end{figure}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/gaussian_lagrangian_dual_l1_svr_loss_history}
 	\caption{Loss convergence for the Lagrangian Dual formulation of the Gaussian $\protect \mathcal{L}_1$-SVR}
-	\label{fig:lagrangian_dual_gaussian_svr_loss_history}
+	\label{fig:gaussian_lagrangian_dual_l1_svr_loss_history}
 \end{figure}
 
 \pagebreak
