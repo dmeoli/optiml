@@ -142,7 +142,7 @@ Notice that in terms of numerical optimization the formulation~\eqref{eq:primal_
 
 \subsubsection{Wolfe Dual formulation}
 
-To reformulate the~\eqref{eq:quad_svc_obj} as a \emph{Wolfe dual}, we need to allocate the Lagrange multipliers $\alpha_i\geq 0, \mu_i \geq 0 \ \forall_i$:
+To reformulate the~\eqref{eq:quad_svc_obj} as a \emph{Wolfe dual}, we need to allocate the Lagrange multipliers $\alpha_i, \mu_i \geq 0 \ \forall_i$:
 
 \begin{equation} \label{eq:svc_wolfe_dual}
     \max_{\alpha,\mu} \min_{w,b,\xi} \mathcal{W}(w,b,\xi,\alpha,\mu) = \frac{1}{2} \| w \|^2 + C \sum_{i=1}^n \xi_i-\sum_{i=1}^n \alpha_i(y_i(w^T x_i + b)-1+\xi_i)-\sum_{i=1}^n\mu_i\xi_i
@@ -232,7 +232,7 @@ From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y
 
 \subsubsection{Lagrangian Dual formulation}
 
-In order to relax the constraints in the \emph{Wolfe dual} formulation~\eqref{eq:svc_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrangian multipliers $\mu \geq 0, \lambda_+ \geq 0$, $\lambda_- \geq 0$:
+In order to relax the constraints in the \emph{Wolfe dual} formulation~\eqref{eq:svc_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu, \lambda_+, \lambda_- \geq 0$:
 
 \begin{equation} \label{eq:svc_lagrangian_dual}
 	\begin{aligned}
@@ -379,7 +379,7 @@ where the diagonal matrix $\displaystyle D_{ii} = \frac{1}{2C} \ \forall_i$.
 
 \subsubsection{Lagrangian Dual formulation}
 
-In order to relax the constraints in the $\mathcal{L}_2$-SVC \emph{Wolfe dual} formulation~\eqref{eq:wolfe_dual_l2_svc} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrangian multipliers $\mu \geq 0, \lambda \geq 0$:
+In order to relax the constraints in the $\mathcal{L}_2$-SVC \emph{Wolfe dual} formulation~\eqref{eq:wolfe_dual_l2_svc} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu, \lambda \geq 0$:
 
 \begin{equation} \label{eq:l2_svc_lagrangian_dual}
 	\begin{aligned}

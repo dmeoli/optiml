@@ -93,7 +93,7 @@ The $\mathcal{L}_1$-SVR objective~\eqref{eq:primal_l1_svr} can be rewritten in f
 
 \subsubsection{Wolfe Dual formulation}
 
-To reformulate the~\eqref{eq:quad_svr_obj} as a \emph{Wolfe dual}, we introduce the Lagrange multipliers $\alpha_i^+ \geq 0, \alpha_i^- \geq 0, \mu_i^+ \geq 0, \mu_i^- \geq 0 \ \forall_i$:
+To reformulate the~\eqref{eq:quad_svr_obj} as a \emph{Wolfe dual}, we introduce the Lagrange multipliers $\alpha_i^+, \alpha_i^-, \mu_i^+, \mu_i^- \geq 0 \ \forall_i$:
 
 \begin{equation} \label{eq:svr_wolfe_dual}
 	\begin{aligned}
@@ -129,12 +129,12 @@ Using $\mu_i^+ \geq 0$ and $\mu_i^- \geq 0$ together with~\eqref{eq:svr_wolfe_de
 
 \begin{equation} \label{eq:svr_min_wolfe_dual}
     \begin{aligned}
-        \min_{\alpha^+,\alpha^-} \quad & \frac{1}{2}(\alpha^+ - \alpha^-)^TK(\alpha^+ - \alpha^-)+\epsilon q^T(\alpha^+ + \alpha^-)-y^T(\alpha^+ - \alpha^-) \\
-            \text{subject to} \quad & 0\leq\alpha_i^+,\alpha_i^- \leq C \ \forall_i \\ & q^T(\alpha^+ - \alpha^-)=0
+        \min_{\alpha^+,\alpha^-} \quad & \frac{1}{2}(\alpha^+ - \alpha^-)^TK(\alpha^+ - \alpha^-)+\epsilon e^T(\alpha^+ + \alpha^-)-y^T(\alpha^+ - \alpha^-) \\
+            \text{subject to} \quad & 0\leq\alpha_i^+,\alpha_i^- \leq C \ \forall_i \\ & e^T(\alpha^+ - \alpha^-)=0
     \end{aligned}
 \end{equation}
 
-where $q^T = [1, \dots, 1]$.
+where $e^T = [1, \dots, 1]$.
 
 We can write the~\eqref{eq:svr_min_wolfe_dual} in a standard quadratic form as:
 
@@ -145,20 +145,22 @@ We can write the~\eqref{eq:svr_min_wolfe_dual} in a standard quadratic form as:
     \end{aligned}
 \end{equation}
 
-where the Hessian matrix $Q$ is 
-$
+where the Hessian matrix $Q =
 \begin{bmatrix}
 K & -K\\
 -K & K 
 \end{bmatrix}$
-, $q$ is 
-$
+, $\alpha = 
+\begin{bmatrix}
+\alpha^+\\
+\alpha^-
+\end{bmatrix}$
+, $q =
 \begin{bmatrix}
 -y\\
 y
-\end{bmatrix}$ + $\epsilon$
-, and $e$ is 
-$
+\end{bmatrix} + \epsilon$
+, and $e =
 \begin{bmatrix}
 1\\
 -1
@@ -195,7 +197,7 @@ From~\eqref{eq:svr_min_qp_wolfe_dual} we can notice that the equality constraint
 
 \subsubsection{Lagrangian Dual formulation}
 
-In order to relax the constraints in the \emph{Wolfe dual} formulation~\eqref{eq:svr_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrangian multipliers $\mu \geq 0, \lambda_+ \geq 0$, $\lambda_- \geq 0$:
+In order to relax the constraints in the \emph{Wolfe dual} formulation~\eqref{eq:svr_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu, \lambda_+, \lambda_- \geq 0$:
 
 \begin{equation} \label{eq:svr_lagrangian_dual}
 	\begin{aligned}
@@ -344,7 +346,7 @@ where the diagonal matrix $\displaystyle D_{ii} = \frac{1}{2C} \ \forall_i$.
 
 \subsubsection{Lagrangian Dual formulation}
 
-In order to relax the constraints in the $\mathcal{L}_2$-SVR \emph{Wolfe dual} formulation~\eqref{eq:wolfe_dual_l2_svr} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrangian multipliers $\mu \geq 0, \lambda \geq 0$:
+In order to relax the constraints in the $\mathcal{L}_2$-SVR \emph{Wolfe dual} formulation~\eqref{eq:wolfe_dual_l2_svr} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu, \lambda \geq 0$:
 
 \begin{equation} \label{eq:l2_svr_lagrangian_dual}
 	\begin{aligned}
