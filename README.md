@@ -136,11 +136,6 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
 pip install optiml
 ```
 
-## Contribution
-
-Any bug report, bug fix or new pull request will be appreciated, especially from my classmates who will have the 
-opportunity to deal with some of these algorithms and could be improving their performance or adding new features.
-
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This software is released under the MIT License. See the [LICENSE](LICENSE) file for details.
