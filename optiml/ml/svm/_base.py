@@ -89,9 +89,9 @@ class SVM(BaseEstimator, ABC):
     """
 
     def __init__(self,
+                 loss=SVMLoss,
                  C=1.,
                  tol=1e-3,
-                 loss=SVMLoss,
                  optimizer=None,
                  max_iter=1000,
                  learning_rate=0.1,
@@ -145,9 +145,9 @@ class PrimalSVM(SVM, ABC):
     """
 
     def __init__(self,
+                 loss=SVMLoss,
                  C=1.,
                  tol=1e-4,
-                 loss=SVMLoss,
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
                  learning_rate=0.1,
@@ -165,9 +165,9 @@ class PrimalSVM(SVM, ABC):
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
-        super().__init__(C=C,
+        super().__init__(loss=loss,
+                         C=C,
                          tol=tol,
-                         loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
@@ -275,10 +275,10 @@ class DualSVM(SVM, ABC):
     """
 
     def __init__(self,
+                 loss=SVMLoss,
                  kernel=gaussian,
                  C=1.,
                  tol=1e-3,
-                 loss=SVMLoss,
                  optimizer=SMO,
                  max_iter=1000,
                  learning_rate=0.1,
@@ -292,9 +292,9 @@ class DualSVM(SVM, ABC):
                  lagrangian_solver='minres',
                  lagrangian_solver_verbose=False,
                  verbose=False):
-        super().__init__(C=C,
+        super().__init__(loss=loss,
+                         C=C,
                          tol=tol,
-                         loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
@@ -330,9 +330,9 @@ class DualSVM(SVM, ABC):
 class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
     def __init__(self,
+                 loss=squared_hinge,
                  C=1.,
                  tol=1e-4,
-                 loss=squared_hinge,
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
                  learning_rate=0.1,
@@ -350,9 +350,9 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
-        super().__init__(C=C,
+        super().__init__(loss=loss,
+                         C=C,
                          tol=tol,
-                         loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
@@ -505,10 +505,10 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 class DualSVC(ClassifierMixin, DualSVM):
 
     def __init__(self,
+                 loss=hinge,
                  kernel=gaussian,
                  C=1.,
                  tol=1e-3,
-                 loss=hinge,
                  optimizer=SMO,
                  max_iter=1000,
                  learning_rate=0.1,
@@ -522,10 +522,10 @@ class DualSVC(ClassifierMixin, DualSVM):
                  lagrangian_solver='minres',
                  lagrangian_solver_verbose=False,
                  verbose=False):
-        super().__init__(kernel=kernel,
+        super().__init__(loss=loss,
+                         kernel=kernel,
                          C=C,
                          tol=tol,
-                         loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
@@ -837,10 +837,10 @@ class DualSVC(ClassifierMixin, DualSVM):
 class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
     def __init__(self,
-                 C=1.,
-                 epsilon=0.,
-                 tol=1e-4,
                  loss=squared_epsilon_insensitive,
+                 epsilon=0.,
+                 C=1.,
+                 tol=1e-4,
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
                  learning_rate=0.1,
@@ -858,9 +858,9 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
-        super().__init__(C=C,
+        super().__init__(loss=loss,
+                         C=C,
                          tol=tol,
-                         loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
@@ -1012,11 +1012,11 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 class DualSVR(RegressorMixin, DualSVM):
 
     def __init__(self,
+                 loss=epsilon_insensitive,
+                 epsilon=0.1,
                  kernel=gaussian,
                  C=1.,
-                 epsilon=0.1,
                  tol=1e-3,
-                 loss=epsilon_insensitive,
                  optimizer=SMO,
                  max_iter=1000,
                  learning_rate=0.1,
@@ -1030,10 +1030,10 @@ class DualSVR(RegressorMixin, DualSVM):
                  lagrangian_solver='minres',
                  lagrangian_solver_verbose=False,
                  verbose=False):
-        super().__init__(kernel=kernel,
+        super().__init__(loss=loss,
+                         kernel=kernel,
                          C=C,
                          tol=tol,
-                         loss=loss,
                          optimizer=optimizer,
                          max_iter=max_iter,
                          learning_rate=learning_rate,
