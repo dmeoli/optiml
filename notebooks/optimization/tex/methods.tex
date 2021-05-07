@@ -939,8 +939,8 @@ And, according to the theoretical analysis, the following \emph{convergence rate
 	& \vtop{\hbox{\strut SGD}\hbox{\strut convergence rate}} & \vtop{\hbox{\strut Polyak SGD}\hbox{\strut convergence rate}} & \vtop{\hbox{\strut Nesterov SGD}\hbox{\strut convergence rate}} \\
 objective & 		& 		& 		\\
 \midrule
-$\mathcal{L}_1$-SVM~(\ref{eq:reg_bias_primal_l1_svc},~\ref{eq:reg_bias_primal_l1_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ \\
-$\mathcal{L}_2$-SVM~(\ref{eq:reg_bias_primal_l2_svc},~\ref{eq:reg_bias_primal_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\Bigg(1 - \frac{1}{\sqrt{\kappa}}\Bigg)^t\Bigg)$ \\
+$\mathcal{L}_1$-SVM~(\ref{eq:reg_bias_primal_l1_svc},~\ref{eq:reg_bias_primal_l1_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{m}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{m}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{m}{\sqrt{t}}\Bigg)$ \\
+$\mathcal{L}_2$-SVM~(\ref{eq:reg_bias_primal_l2_svc},~\ref{eq:reg_bias_primal_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{m}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{m}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\Bigg(1 - \frac{m}{\sqrt{\kappa}}\Bigg)^t\Bigg)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -954,8 +954,8 @@ $\mathcal{L}_2$-SVM~(\ref{eq:reg_bias_primal_l2_svc},~\ref{eq:reg_bias_primal_l2
 	& \vtop{\hbox{\strut AdaGrad}\hbox{\strut convergence rate}} \\
 objective & 		\\
 \midrule
-$\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual}) or~(\ref{eq:svc_bcqp_lagrangian_dual},~\ref{eq:svr_bcqp_lagrangian_dual}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ \\
-% $\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svc}) or~(\ref{eq:l2_svr_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ \\
+$\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual}) or~(\ref{eq:svc_bcqp_lagrangian_dual},~\ref{eq:svr_bcqp_lagrangian_dual}) & $\displaystyle \mathcal{O}\Bigg(\frac{nm}{\sqrt{t}}\Bigg)$ \\
+% $\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svc}) or~(\ref{eq:l2_svr_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{nm}{t}\Bigg)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
