@@ -86,19 +86,19 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
                 
                 | SVC          | SVR          |
                 |    :----:    |    :----:    |
-                | ![linear_dual_svc_hyperplane](notebooks/optimization/tex/img/linear_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/optimization/tex/img/linear_dual_svr_hyperplane.png) |
+                | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/linear_dual_l1_svc_hyperplane.png) | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/linear_dual_l1_svr_hyperplane.png) |
                 
             - [x] Polynomial
                  
                 | SVC          | SVR          |
                 |    :----:    |    :----:    |
-                | ![linear_dual_svc_hyperplane](notebooks/optimization/tex/img/poly_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/optimization/tex/img/poly_dual_svr_hyperplane.png) |              
+                | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/poly_dual_l1_svc_hyperplane.png) | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/poly_dual_l1_svr_hyperplane.png) |              
                 
             - [x] Gaussian
                 
                 | SVC          | SVR          |
                 |    :----:    |    :----:    |
-                | ![linear_dual_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_svc_hyperplane.png) | ![linear_dual_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_svr_hyperplane.png) |
+                | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_l1_svc_hyperplane.png) | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_l1_svr_hyperplane.png) |
                 
             - [x] Sigmoid
         - Optimizers (ad hoc)
