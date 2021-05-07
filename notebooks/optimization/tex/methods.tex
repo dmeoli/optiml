@@ -63,8 +63,17 @@ i.e., all the eigenvalues of the Hessian matrix are lowerbounded by $\mu I$.
 
 % https://angms.science/doc/CVX/CVX_alphabeta.pdf
 
+\begin{definition}[$L_f$-Lipschitz continuity] \label{def:l_f_lipschitz_continuity}
+We say that a function $f: \Re^m \rightarrow \Re$ is $L_f$-Lipschitz continuous if:
+$$
+| f(x) - f(y) | \leq L_f \| x - y \| \ \forall \ x, y \in \Re^m
+$$
+and is locally $L_f$-Lipschitz continuous if for every $x$ in $\Re^m$ there exists a neighborhood $U$ of $x$ such that $f$ restricted to $U$ is $L_f$-Lipschitz continuous.
+Every convex function is locally $L_f$-Lipschitz continuous.
+\end{definition}
+
 \begin{definition}[L-Lipschitz continuity] \label{def:l_lipschitz_continuity}
-We say that a function $f: \Re^m \rightarrow \Re$ is L-Lipschitz gradient continuous, i.e., L-smooth, if $f$ is differentiable and:
+We say that a function $f: \Re^m \rightarrow \Re$ is L-Lipschitz gradient continuous if $f$ is differentiable and:
 $$
 \| \nabla f(x) - \nabla f(y) \| \leq L \| x - y \| \ \forall \ x, y \in \Re^m
 $$
@@ -93,7 +102,7 @@ $$
 $$
 i.e., all the eigenvalues of the Hessian matrix are lowerbounded by $\mu I$ and upperbounded by $L$.
 
-Finally, we say that a function $f: \Re^m \rightarrow \Re$ is locally L-Lipschitz gradient continuous, i.e., locally L-smooth, if for every $x$ in $\Re^m$ there exists a neighborhood $U$ of $x$ such that $f$ restricted to $U$ is L-Lipschitz gradient continuous.
+Finally, we say that a function $f: \Re^m \rightarrow \Re$ is locally L-Lipschitz gradient continuous if for every $x$ in $\Re^m$ there exists a neighborhood $U$ of $x$ such that $f$ restricted to $U$ is L-Lipschitz gradient continuous.
 \end{definition}
 
 \begin{definition}[Subgradient] \label{def:subgradient}
@@ -194,7 +203,7 @@ SGD’s \emph{convergence rate} for L-Lipschitz continuous convex functions is $
 First, consider a nonsmooth, i.e., nondifferentiable, convex function. So, the following lower bounds on convergence rates are given.
 
 \begin{theorem}[\href{http://www.princeton.edu/~yc5/ele522_optimization/lectures/subgradient_methods.pdf\#page=34}{Subgradient Descent convergence for convex functions with Polyak's stepsize}] \label{thm:cvx_polyak_subgd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function. Then the Subgradient Descent with Polyak's step size $\displaystyle \alpha_t = \frac{f(x_t) - f(x^*)}{\| g_t \|^2}$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a $L_f$-Lipschitz continuous convex function. Then the Subgradient Descent with Polyak's step size $\displaystyle \alpha_t = \frac{f(x_t) - f(x^*)}{\| g_t \|^2}$ satisfies:
 $$
 f(x_t) - f(x^*) \leq \frac{L \| x_0 - x^* \|^2}{\sqrt{t+1}}
 $$
@@ -203,23 +212,39 @@ $$
 Unfortunately, Polyak’s stepsize rule requires knowledge of $f(x^*)$, which is often unknown a priori, so we might often need simpler rule for setting stepsizes.
 
 \begin{theorem}[\href{http://www.princeton.edu/~yc5/ele522_optimization/lectures/subgradient_methods.pdf\#page=39}{Subgradient Descent convergence for convex functions}] \label{thm:cvx_subgd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function. Then the Subgradient Descent with step size $\displaystyle \alpha_t = \frac{1}{\sqrt{t}}$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a $L_f$-Lipschitz continuous convex function. Then the Subgradient Descent with step size $\displaystyle \alpha_t = \frac{1}{\sqrt{t}}$ satisfies:
 $$
 f(x_t) - f(x^*) \leq \frac{\| x_0 - x^* \|^2 + L^2 \log t}{\sqrt{t}}
 $$
 \end{theorem}
 
 \begin{theorem}[\href{http://www.princeton.edu/~yc5/ele522_optimization/lectures/subgradient_methods.pdf\#page=41}{Subgradient Descent convergence for strongly convex functions}] \label{thm:str_cvx_subgd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous and $\mu$-strongly convex function. Then the Subgradient Descent with step size $\displaystyle \alpha_t = \frac{2}{\mu(t+1)}$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a $L_f$-Lipschitz continuous and $\mu$-strongly convex function. Then the Subgradient Descent with step size $\displaystyle \alpha_t = \frac{2}{\mu(t+1)}$ satisfies:
 $$
 f(x_t) - f(x^*) \leq \frac{2L^2}{\mu} \frac{1}{t+1}
 $$
 \end{theorem}
 
-The Subgradient Descent \emph{convergence rate} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ and $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ for L-Lipschitz continuous and strongly convex functions. We can also  write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, as $\displaystyle \mathcal{O}\Bigg(\frac{1}{\epsilon^2}\Bigg)$ for L-Lipschitz continuous convex functions and as $\displaystyle \mathcal{O}\Bigg(\frac{1}{\epsilon}\Bigg)$ for L-Lipschitz continuous and strongly convex functions.
+In summary, the following \emph{convergence rate} and \emph{iterations complexities} are given:
+
+\begin{table}[H]
+\centering
+\caption{Subgradient Descent convergence rates and iterations complexities}
+\label{subgradient_rates}
+\begin{tabular}{lrrr}
+\toprule
+	& stepsize rule & convergence rate & iteration complexity \\
+ 	& 		& 		& 		\\
+\midrule
+convex and $L_f$-Lipschitz & $\displaystyle \alpha = \frac{1}{\sqrt{t}}$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\epsilon^2}\Bigg)$ \\
+strongly convex and $L_f$-Lipschitz & $\displaystyle \alpha = \frac{1}{t}$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\epsilon}\Bigg)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 Among algorithms that only use subgradient, these \emph{convergence rates} cannot be futher improved.
 
+% http://www.princeton.edu/~yc5/ele522_optimization/lectures/grad_descent_unconstrained.pdf
 % http://www.stat.cmu.edu/~larry/=sml/optrates.pdf
 
 \subsubsection{Smooth}
@@ -254,7 +279,22 @@ $$
 where $\kappa = L/\mu$.
 \end{theorem}
 
-The Gradient Descent \emph{convergence rate} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ and $\displaystyle \mathcal{O}\Bigg(\exp\Bigg(-\frac{t}{\kappa}\Bigg)\Bigg)$ for L-Lipschitz continuous and strongly convex functions. We can also write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, as $\displaystyle \mathcal{O}\Bigg(\frac{1}{\epsilon}\Bigg)$ for L-Lipschitz continuous convex functions and as $\displaystyle \mathcal{O}\Bigg(\kappa \log \frac{1}{\epsilon}\Bigg)$ for L-Lipschitz continuous and strongly convex functions.
+In summary, the following \emph{convergence rate} and \emph{iterations complexities} are given:
+
+\begin{table}[H]
+\centering
+\caption{Gradient Descent convergence rates and iterations complexities}
+\label{gradient_rates}
+\begin{tabular}{lrrr}
+\toprule
+	& stepsize rule & convergence rate & iteration complexity \\
+ 	& 		& 		& 		\\
+\midrule
+convex and L-Lipschitz & $\displaystyle \alpha = \frac{1}{L}$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\epsilon}\Bigg)$ \\
+strongly convex and L-Lipschitz & $\displaystyle \alpha = \frac{1}{L}$ & $\displaystyle \mathcal{O}\Bigg(\Bigg(1 - \frac{1}{\kappa}\Bigg)^t\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\kappa \log \frac{1}{\epsilon}\Bigg)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 % http://www.princeton.edu/~yc5/ele522_optimization/lectures/accelerated_gradient.pdf
 
@@ -350,7 +390,24 @@ where $\kappa = L/\mu$.
 
 % https://blogs.princeton.edu/imabandit/2014/03/06/nesterovs-accelerated-gradient-descent-for-smooth-and-strongly-convex-optimization/
 
-Nesterov's momentum brings the \emph{convergence rate} from $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ to $\displaystyle \mathcal{O}\Bigg(\frac{1}{t^2}\Bigg)$ and in the case of strongly convex functions gives the acceleration that we had with Polyak’s momentum for quadratic functions, i.e., $\displaystyle \mathcal{O}\Bigg(\exp\Bigg(-\frac{t}{\sqrt{\kappa}}\Bigg)\Bigg)$. This is great because we get the guarantee for a more general class of functions but this rate of convergence cannot be further improved only using first-order information. We can also write the \emph{iteration complexity}, i.e., the smallest $t$ such that we’re within $\epsilon$-close to global optimum, for a L-Lipschitz continuous and $\mu$-strongly convex function as $\displaystyle \mathcal{O}\Bigg(\sqrt{\kappa}\log \frac{1}{\epsilon}\Bigg)$ for the accelerated methods where $\kappa$, i.e., the \emph{conditioning number}, is defined as $\kappa = L/\mu$ and where $L$ and $\mu$ are also equal to the largest $\lambda_{max}$ and the smallest $\lambda_{min}$ eigenvalues respectively. Finally, NAG's \emph{iteration complexity} for L-Lipschitz continuous convex functions is $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{\epsilon}}\Bigg)$.
+In summary, the following \emph{convergence rate} and \emph{iterations complexities} are given:
+
+\begin{table}[H]
+\centering
+\caption{Nesterov's Accelerated Gradient Descent convergence rates and iterations complexities}
+\label{nesterov_gradient_rates}
+\begin{tabular}{lrrr}
+\toprule
+	& stepsize rule & convergence rate & iteration complexity \\
+ 	& 		& 		& 		\\
+\midrule
+convex and L-Lipschitz & $\displaystyle \alpha = \frac{1}{L}$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t^2}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{\epsilon}}\Bigg)$ \\
+strongly convex and L-Lipschitz & $\displaystyle \alpha = \frac{1}{L}$ & $\displaystyle \mathcal{O}\Bigg(\Bigg(1 - \frac{1}{\sqrt{\kappa}}\Bigg)^t\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\sqrt{\kappa}\log \frac{1}{\epsilon}\Bigg)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Notice that in case of L-Lipschitz continuous and strongly convex functions, Nesterov's momentum gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great because we get the guarantee for a more general class of functions, but these \emph{convergence rates} cannot be futher improved only using first-order information.
 
 \pagebreak
 
@@ -828,8 +885,17 @@ In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal b
 
 \subsection{Losses properties}
 
-Several losses and objectives have been presented in section~\ref{section:svc} and~\ref{section:svr}. In our experiments, we will consider four different convex loss functions, two for the \emph{classification} and two for the \emph{regression} tasks. In particular, two
-of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, that linearly penalizes the misclassified points, i.e., $\mathcal{L}_1$-SVM, meanwhile, their two \emph{squared} versions are smooth, i.e., $\mathcal{L}_2$-SVM, that quadratically penalizes the misclassified points.
+Several losses and objectives have been presented in section~\ref{section:svc} and~\ref{section:svr}. In our experiments, we will consider the following.
+
+For what about the loss functions, two of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, that linearly penalizes the misclassified points, i.e., $\mathcal{L}_1$-SVM, meanwhile, their two \emph{squared} versions are smooth, i.e., $\mathcal{L}_2$-SVM, and quadratically penalizes the misclassified points.
+
+% http://juliaml.github.io/LossFunctions.jl/stable/losses/distance/#LPDistLoss-1
+% http://juliaml.github.io/LossFunctions.jl/stable/losses/margin/#L1HingeLoss-1
+% http://juliaml.github.io/LossFunctions.jl/stable/losses/margin/#SmoothedL1HingeLoss-1
+% http://juliaml.github.io/LossFunctions.jl/stable/losses/distance/#L1EpsilonInsLoss-1
+% http://juliaml.github.io/LossFunctions.jl/stable/losses/distance/#L2EpsilonInsLoss-1
+
+Also, the \emph{margin-based} losses, i.e., the \emph{classification} losses, both the \emph{hinge} and the \emph{squared hinge} losses are $L_f$-Lipschitz continuous; meanwhile, the \emph{distance-based} losses, i.e., the \emph{regression} losses, the \emph{epsilon-insensitive} loss is $L_f$-Lipschitz continuous but the \emph{squared epsilon-insensitive} is not $L_f$-Lipschitz continuous but is convex and for this reason is locally $L_f$-Lipschitz continuous. Also the regularization term, i.e., $\displaystyle \frac{1}{2} \| w \|^2$, is not $L_f$-Lipschitz continuous because it becomes arbitrarily steep as $w$ approaches infinity, but it is strictly convex and for this reason is locally $L_f$-Lipschitz continuous.
 
 In general, if the objective function of a quadratic programming problem is strictly convex, i.e., the associated Hessian matrix is positive definite, the solution is unique. And if the objective function is convex, there may be cases where the solution is nonunique.
 
@@ -844,16 +910,16 @@ Since the $\mathcal{L}_1$-SVM linearly penalizes the misclassified points, the p
 \centering
 \caption{SVM's objectives properties for primal formulations}
 \label{primal_svm_objectives_props}
-\begin{tabular}{lrr}
+\begin{tabular}{lrrr}
 \toprule
-	& L-smooth & convexity \\
-objective & 		& 		\\
+	& smooth & \vtop{\hbox{\strut Lipschitz}\hbox{\strut continuous}} & convexity \\
+objective & 		& 		& 		\\
 \midrule
-$\mathcal{L}_1$-SVC~\eqref{eq:reg_bias_primal_l1_svc} & locally & convex \\
-$\mathcal{L}_2$-SVC~\eqref{eq:reg_bias_primal_l2_svc} & globally & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
+$\mathcal{L}_1$-SVC~\eqref{eq:reg_bias_primal_l1_svc} & no & \vtop{\hbox{\strut locally}\hbox{\strut $L_f$-Lipschitz}} & convex \\
+$\mathcal{L}_2$-SVC~\eqref{eq:reg_bias_primal_l2_svc} & yes & \vtop{\hbox{\strut locally}\hbox{\strut L-Lipschitz}} & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
 \midrule
-$\mathcal{L}_1$-SVR~\eqref{eq:reg_bias_primal_l1_svr} & locally & convex \\
-$\mathcal{L}_2$-SVR~\eqref{eq:reg_bias_primal_l2_svr} & globally & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
+$\mathcal{L}_1$-SVR~\eqref{eq:reg_bias_primal_l1_svr} & no & \vtop{\hbox{\strut locally}\hbox{\strut $L_f$-Lipschitz}} & convex \\
+$\mathcal{L}_2$-SVR~\eqref{eq:reg_bias_primal_l2_svr} & yes & \vtop{\hbox{\strut locally}\hbox{\strut L-Lipschitz}} & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -872,7 +938,7 @@ And, according to the theoretical analysis, the following \emph{convergence rate
 objective & 		& 		& 		\\
 \midrule
 $\mathcal{L}_1$-SVM~(\ref{eq:reg_bias_primal_l1_svc},~\ref{eq:reg_bias_primal_l1_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ \\
-$\mathcal{L}_2$-SVM~(\ref{eq:reg_bias_primal_l2_svc},~\ref{eq:reg_bias_primal_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\exp\Bigg(-\frac{t}{\sqrt{\kappa}}\Bigg)\Bigg)$ \\
+$\mathcal{L}_2$-SVM~(\ref{eq:reg_bias_primal_l2_svc},~\ref{eq:reg_bias_primal_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ & $\displaystyle \mathcal{O}\Bigg(\Bigg(1 - \frac{1}{\sqrt{\kappa}}\Bigg)^t\Bigg)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -887,7 +953,7 @@ $\mathcal{L}_2$-SVM~(\ref{eq:reg_bias_primal_l2_svc},~\ref{eq:reg_bias_primal_l2
 objective & 		\\
 \midrule
 $\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual}) or~(\ref{eq:svc_bcqp_lagrangian_dual},~\ref{eq:svr_bcqp_lagrangian_dual}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{\sqrt{t}}\Bigg)$ \\
-$\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svc}) or~(\ref{eq:l2_svr_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ \\
+% $\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svc}) or~(\ref{eq:l2_svr_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{1}{t}\Bigg)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
