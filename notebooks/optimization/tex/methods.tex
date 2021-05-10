@@ -68,7 +68,16 @@ We say that a function $f: \Re^m \rightarrow \Re$ is $L_f$-Lipschitz continuous 
 $$
 | f(x) - f(y) | \leq L_f \| x - y \| \ \forall \ x, y \in \Re^m
 $$
-and is locally $L_f$-Lipschitz continuous if for every $x$ in $\Re^m$ there exists a neighborhood $U$ of $x$ such that $f$ restricted to $U$ is $L_f$-Lipschitz continuous.
+and, by removing the absolute value sign we give:
+$$
+f(x) \leq f(y) + L \| x - y \| \ \forall \ x, y \in \Re^m
+$$
+$$
+f(x) \geq f(y) - L \| x - y \| \ \forall \ x, y \in \Re^m
+$$
+meaning that $f$ is bounded above and below by a linear function.
+
+Finally, we say that a function $f: \Re^m \rightarrow \Re$ is locally $L_f$-Lipschitz continuous if for every $x$ in $\Re^m$ there exists a neighborhood $U$ of $x$ such that $f$ restricted to $U$ is $L_f$-Lipschitz continuous.
 Every convex function is locally $L_f$-Lipschitz continuous.
 \end{definition}
 
@@ -79,7 +88,7 @@ $$
 $$
 that is equivalent to:
 $$
-| f(y) - f(x) - \langle \nabla f(x), y - x \rangle \leq \frac{L}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
+| f(y) - f(x) - \langle \nabla f(x), y - x \rangle | \leq \frac{L}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
 $$
 and, by removing the absolute value sign we give:
 $$
