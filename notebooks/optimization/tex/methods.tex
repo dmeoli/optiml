@@ -81,6 +81,16 @@ Finally, we say that a function $f: \Re^m \rightarrow \Re$ is locally $L_f$-Lips
 Every convex function is locally $L_f$-Lipschitz continuous.
 \end{definition}
 
+% https://www-ljk.imag.fr/membres/Anatoli.Iouditski/cours/convex/chapitre_3.pdf
+
+\begin{definition}[$L_f$-Lipschitz continuity for convex functions] \label{def:l_f_lipschitz_cvx_continuity}
+Let $f: \Re^m \rightarrow \Re$ be a convex function and let $K$ be a closed and bounded set contained in the relative interior of the domain of $f$, i.e., $K \subset \Re^m$. Then $f$ is $L_f$-Lipschitz continuous on $K$, i.e.,:
+$$
+| f(x) - f(y) | \leq L_f \| x - y \| \ \forall \ x, y \in K
+$$
+In particular, $f$ is bounded on $K$.
+\end{definition}
+
 \begin{definition}[L-Lipschitz continuity] \label{def:l_lipschitz_continuity}
 We say that a function $f: \Re^m \rightarrow \Re$ is L-Lipschitz gradient continuous if $f$ is differentiable and:
 $$
@@ -926,10 +936,10 @@ In summary, the following properties for the SVM's objectives are given:
 	& smooth & \vtop{\hbox{\strut Lipschitz}\hbox{\strut continuous}} & convexity \\
 objective & 		& 		& 		\\
 \midrule
-$\mathcal{L}_1$-SVC~\eqref{eq:reg_bias_primal_l1_svc} & no & \vtop{\hbox{\strut locally}\hbox{\strut $L_f$-Lipschitz}} & convex \\
+$\mathcal{L}_1$-SVC~\eqref{eq:reg_bias_primal_l1_svc} & no & \vtop{\hbox{\strut $L_f$-Lipschitz}\hbox{\strut on $K=[0,1]$}} & convex \\
 $\mathcal{L}_2$-SVC~\eqref{eq:reg_bias_primal_l2_svc} & yes & \vtop{\hbox{\strut locally}\hbox{\strut L-Lipschitz}} & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
 \midrule
-$\mathcal{L}_1$-SVR~\eqref{eq:reg_bias_primal_l1_svr} & no & \vtop{\hbox{\strut locally}\hbox{\strut $L_f$-Lipschitz}} & convex \\
+$\mathcal{L}_1$-SVR~\eqref{eq:reg_bias_primal_l1_svr} & no & \vtop{\hbox{\strut $L_f$-Lipschitz}\hbox{\strut on $K=[0,1]$}} & convex \\
 $\mathcal{L}_2$-SVR~\eqref{eq:reg_bias_primal_l2_svr} & yes & \vtop{\hbox{\strut locally}\hbox{\strut L-Lipschitz}} & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
 \bottomrule
 \end{tabular}
