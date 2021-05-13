@@ -568,7 +568,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 self.optimizer = SMOClassifier(self.obj, X, y, K, self.kernel, self.C,
                                                self.tol, self.verbose).minimize()
-                alphas = self.optimizer.alphas
+                self.alphas_ = self.optimizer.alphas
                 if isinstance(self.kernel, LinearKernel):
                     self.coef_ = self.optimizer.w
                 self.intercept_ = self.optimizer.b
@@ -579,29 +579,32 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 if not self.fit_intercept:
 
+                    self.obj = Quadratic(Q, q)
+
                     out = StringIO()
                     with pipes(stdout=out, stderr=STDOUT):
-                        alphas = solve_qp(P=Q,
-                                          q=q,
-                                          A=y.astype(float),
-                                          b=np.zeros(1),
-                                          lb=lb,
-                                          ub=ub,
-                                          solver=self.optimizer,
-                                          verbose=True)
+                        self.alphas_ = solve_qp(P=Q,
+                                                q=q,
+                                                A=y.astype(float),
+                                                b=np.zeros(1),
+                                                lb=lb,
+                                                ub=ub,
+                                                solver=self.optimizer,
+                                                verbose=True)
 
                 else:
 
                     Q += np.outer(y, y)
+                    self.obj = Quadratic(Q, q)
 
                     out = StringIO()
                     with pipes(stdout=out, stderr=STDOUT):
-                        alphas = solve_qp(P=Q,
-                                          q=q,
-                                          lb=lb,
-                                          ub=ub,
-                                          solver=self.optimizer,
-                                          verbose=True)
+                        self.alphas_ = solve_qp(P=Q,
+                                                q=q,
+                                                lb=lb,
+                                                ub=ub,
+                                                solver=self.optimizer,
+                                                verbose=True)
 
                 stdout = out.getvalue()
                 if stdout:
@@ -691,7 +694,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                         raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-                alphas = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
+                self.alphas_ = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
 
         elif self.loss == SquaredHinge:
 
@@ -704,27 +707,30 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 if not self.fit_intercept:
 
+                    self.obj = Quadratic(Q, q)
+
                     out = StringIO()
                     with pipes(stdout=out, stderr=STDOUT):
-                        alphas = solve_qp(P=Q,
-                                          q=q,
-                                          A=y.astype(float),
-                                          b=np.zeros(1),
-                                          lb=lb,
-                                          solver=self.optimizer,
-                                          verbose=True)
+                        self.alphas_ = solve_qp(P=Q,
+                                                q=q,
+                                                A=y.astype(float),
+                                                b=np.zeros(1),
+                                                lb=lb,
+                                                solver=self.optimizer,
+                                                verbose=True)
 
                 else:
 
                     Q += np.outer(y, y)
+                    self.obj = Quadratic(Q, q)
 
                     out = StringIO()
                     with pipes(stdout=out, stderr=STDOUT):
-                        alphas = solve_qp(P=Q,
-                                          q=q,
-                                          lb=lb,
-                                          solver=self.optimizer,
-                                          verbose=True)
+                        self.alphas_ = solve_qp(P=Q,
+                                                q=q,
+                                                lb=lb,
+                                                solver=self.optimizer,
+                                                verbose=True)
 
                 stdout = out.getvalue()
                 if stdout:
@@ -802,15 +808,15 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                         raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-                alphas = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
+                self.alphas_ = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
 
         else:
 
             raise TypeError(f'{self.loss} is not an allowed loss')
 
-        sv = alphas > 1e-6
-        self.support_ = np.arange(len(alphas))[sv]
-        self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], alphas[sv]
+        sv = self.alphas_ > 1e-6
+        self.support_ = np.arange(len(self.alphas_))[sv]
+        self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], self.alphas_[sv]
         self.dual_coef_ = self.alphas * self.sv_y
 
         if self.optimizer != SMOClassifier:
@@ -1093,29 +1099,32 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     if not self.fit_intercept:
 
+                        self.obj = Quadratic(Q, q)
+
                         out = StringIO()
                         with pipes(stdout=out, stderr=STDOUT):
-                            alphas = solve_qp(P=Q,
-                                              q=q,
-                                              A=e,
-                                              b=np.zeros(1),
-                                              lb=lb,
-                                              ub=ub,
-                                              solver=self.optimizer,
-                                              verbose=True)
+                            self.alphas_ = solve_qp(P=Q,
+                                                    q=q,
+                                                    A=e,
+                                                    b=np.zeros(1),
+                                                    lb=lb,
+                                                    ub=ub,
+                                                    solver=self.optimizer,
+                                                    verbose=True)
 
                     else:
 
                         Q += np.outer(e, e)
+                        self.obj = Quadratic(Q, q)
 
                         out = StringIO()
                         with pipes(stdout=out, stderr=STDOUT):
-                            alphas = solve_qp(P=Q,
-                                              q=q,
-                                              lb=lb,
-                                              ub=ub,
-                                              solver=self.optimizer,
-                                              verbose=True)
+                            self.alphas_ = solve_qp(P=Q,
+                                                    q=q,
+                                                    lb=lb,
+                                                    ub=ub,
+                                                    solver=self.optimizer,
+                                                    verbose=True)
 
                     stdout = out.getvalue()
                     if stdout:
@@ -1205,9 +1214,9 @@ class DualSVR(RegressorMixin, DualSVM):
 
                             raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-                    alphas = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
+                    self.alphas_ = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
 
-                alphas_p, alphas_n = np.split(alphas, 2)
+                alphas_p, alphas_n = np.split(self.alphas_, 2)
 
         elif self.loss == SquaredEpsilonInsensitive:
 
@@ -1222,27 +1231,30 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 if not self.fit_intercept:
 
+                    self.obj = Quadratic(Q, q)
+
                     out = StringIO()
                     with pipes(stdout=out, stderr=STDOUT):
-                        alphas = solve_qp(P=Q,
-                                          q=q,
-                                          A=e,
-                                          b=np.zeros(1),
-                                          lb=lb,
-                                          solver=self.optimizer,
-                                          verbose=True)
+                        self.alphas_ = solve_qp(P=Q,
+                                                q=q,
+                                                A=e,
+                                                b=np.zeros(1),
+                                                lb=lb,
+                                                solver=self.optimizer,
+                                                verbose=True)
 
                 else:
 
                     Q += np.outer(e, e)
+                    self.obj = Quadratic(Q, q)
 
                     out = StringIO()
                     with pipes(stdout=out, stderr=STDOUT):
-                        alphas = solve_qp(P=Q,
-                                          q=q,
-                                          lb=lb,
-                                          solver=self.optimizer,
-                                          verbose=True)
+                        self.alphas_ = solve_qp(P=Q,
+                                                q=q,
+                                                lb=lb,
+                                                solver=self.optimizer,
+                                                verbose=True)
 
                 stdout = out.getvalue()
                 if stdout:
@@ -1320,9 +1332,9 @@ class DualSVR(RegressorMixin, DualSVM):
 
                         raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-                alphas = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
+                self.alphas_ = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
 
-            alphas_p, alphas_n = np.split(alphas, 2)
+            alphas_p, alphas_n = np.split(self.alphas_, 2)
 
         else:
 

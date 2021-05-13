@@ -325,6 +325,7 @@ def test_solve_dual_l2_svc_with_unreg_bias_with_stochastic_optimizers():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
+    # TODO needs to be fixed
     # svc = OneVsRestClassifier(DualSVC(loss=squared_hinge, kernel=gaussian,
     #                                   optimizer=StochasticGradientDescent, fit_intercept=False))
     # svc = svc.fit(X_train, y_train)

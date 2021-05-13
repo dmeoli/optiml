@@ -182,6 +182,9 @@ class OptimizationFunction(ABC):
         """
         return self.auto_hess(x)
 
+    def __call__(self, *args, **kwargs):
+        return self.function(*args, **kwargs)
+
 
 class Quadratic(OptimizationFunction):
 
