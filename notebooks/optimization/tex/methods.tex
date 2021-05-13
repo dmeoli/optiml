@@ -289,7 +289,7 @@ where $\kappa = L/\mu$.
 \end{theorem}
 
 \begin{theorem}[\href{https://angms.science/doc/CVX/CVX_HBM.pdf\#page=5}{Gradient Descent convergence for convex quadratic functions}] \label{thm:quad_gd_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous and $\mu$-strongly convex quadratic function. Then the Gradient Descent with step size $\alpha = \displaystyle \frac{2}{L + \mu}$ and momentum $\beta = \displaystyle \frac{\kappa-1}{\kappa+1}$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous and $\mu$-strongly convex quadratic function. Then the Gradient Descent with step size $\alpha = \displaystyle \frac{2}{L + \mu}$ and momentum $\beta = \max{\{|1 - \alpha \mu|, |1 - \alpha L|\}}$ satisfies:
 $$
 \begin{aligned}
 	\| x_t - x^* \| = \bigg(\frac{\kappa-1}{\kappa+1}\bigg)^t \| x_0 - x^* \|
@@ -355,7 +355,7 @@ In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calcul
 % https://angms.science/doc/CVX/CVX_HBM.pdf
 
 \begin{theorem}[\href{https://angms.science/doc/CVX/CVX_HBM.pdf\#page=21}{Polyak's Accelerated Gradient Descent convergence for convex quadratic functions}] \label{thm:quad_pag_convergence}
-Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous and $\mu$-strongly convex quadratic function. Then the Polyak's Accelerated Gradient Descent with step size $\alpha = \displaystyle \frac{4}{(\sqrt{L} + \sqrt{\mu})^2}$ and momentum $\beta = \displaystyle \frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1}$ satisfies:
+Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous and $\mu$-strongly convex quadratic function. Then the Polyak's Accelerated Gradient Descent with step size $\alpha = \displaystyle \frac{4}{(\sqrt{L} + \sqrt{\mu})^2}$ and momentum $\beta = \max{\{|1 - \sqrt{\alpha \mu}|, |1 - \sqrt{\alpha L}|\}^2}$ satisfies:
 $$
 \begin{aligned}
 	\| x_t - x^* \| = \bigg(\frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1}\bigg)^t \| x_0 - x^* \|
