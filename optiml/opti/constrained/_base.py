@@ -5,6 +5,7 @@ from scipy.linalg import cho_solve, cho_factor
 from scipy.sparse.linalg import minres, lsqr
 
 from optiml.opti import Optimizer, Quadratic
+from optiml.opti.unconstrained.line_search import LineSearchOptimizer
 
 
 class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
@@ -55,7 +56,7 @@ class LagrangianQuadratic(Quadratic):
     def _solve_sym_nonposdef(self, ql):
         # since Q is indefinite, i.e., the function is linear along the eigenvectors
         # correspondent to the null eigenvalues, the system has not solutions, so we
-        # will choose the one that minimizes the residue, i.e., the least-squares solution
+        # will choose the one that minimizes the residue
         # see more @ https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html#solving-linear-problems
 
         lagrangian_solver_verbose = self.lagrangian_solver_verbose() if callable(
@@ -79,6 +80,13 @@ class LagrangianQuadratic(Quadratic):
             if self.lagrangian_solver == 'minres':
 
                 x = minres(Q, -ql, show=lagrangian_solver_verbose)[0]
+
+            elif issubclass(self.lagrangian_solver, LineSearchOptimizer):  # just for tests
+
+                if lagrangian_solver_verbose:
+                    print(self.lagrangian_solver.__name__)
+
+                x = self.lagrangian_solver(Quadratic(Q, -ql), verbose=lagrangian_solver_verbose).minimize().x
 
             else:
 
