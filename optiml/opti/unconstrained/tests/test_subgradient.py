@@ -13,7 +13,7 @@ def test_quadratic():
 
 def test_Rosenbrock():
     rosen = Rosenbrock()
-    assert np.allclose(Subgradient(f=rosen, a_start=0.05).minimize().x, rosen.x_star(), rtol=0.1)
+    assert np.allclose(Subgradient(f=rosen, a_start=0.06).minimize().x, rosen.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":
