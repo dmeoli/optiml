@@ -13,7 +13,7 @@ def test_ConjugateGradient_quadratic_FletcherReeves():
 
 def test_ConjugateGradient_Rosenbrock_FletcherReeves():
     rosen = Rosenbrock()
-    assert np.allclose(ConjugateGradient(f=rosen, wf='fr').minimize().x, rosen.x_star(), rtol=0.1)
+    assert np.allclose(ConjugateGradient(f=rosen, wf='fr', max_iter=1500).minimize().x, rosen.x_star(), rtol=0.1)
 
 
 def test_ConjugateGradient_quadratic_PolakRibiere():
