@@ -94,7 +94,8 @@ def test_solve_dual_l1_svc_with_unreg_bias_with_line_search_optimizers():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svc = OneVsRestClassifier(DualSVC(loss=hinge, kernel=gaussian, optimizer=Subgradient, fit_intercept=False))
+    svc = OneVsRestClassifier(DualSVC(loss=hinge, kernel=gaussian, optimizer=Subgradient,
+                                      max_iter=1500, fit_intercept=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
@@ -156,8 +157,8 @@ def test_solve_dual_l1_svc_with_unreg_bias_with_stochastic_optimizers():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svc = OneVsRestClassifier(
-        DualSVC(loss=hinge, kernel=gaussian, optimizer=StochasticGradientDescent, fit_intercept=False))
+    svc = OneVsRestClassifier(DualSVC(loss=hinge, kernel=gaussian, optimizer=StochasticGradientDescent,
+                                      max_iter=1500, fit_intercept=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
