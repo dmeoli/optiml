@@ -13,7 +13,7 @@ def test_quadratic():
 
 def test_Rosenbrock():
     rosen = Rosenbrock()
-    assert np.allclose(ProximalBundle(f=rosen).minimize().x, rosen.x_star(), rtol=0.1)
+    assert np.allclose(ProximalBundle(f=rosen, max_iter=1500).minimize().x, rosen.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":

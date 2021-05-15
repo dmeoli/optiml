@@ -23,7 +23,7 @@ def test_ConjugateGradient_quadratic_PolakRibiere():
 
 def test_ConjugateGradient_Rosenbrock_PolakRibiere():
     rosen = Rosenbrock()
-    assert np.allclose(ConjugateGradient(f=rosen, wf='pr').minimize().x, rosen.x_star(), rtol=0.1)
+    assert np.allclose(ConjugateGradient(f=rosen, wf='pr', max_iter=1500).minimize().x, rosen.x_star(), rtol=0.1)
 
 
 def test_ConjugateGradient_quadratic_HestenesStiefel():
