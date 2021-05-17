@@ -78,9 +78,9 @@ class SVM(BaseEstimator, ABC):
         of loss function calls will be greater than or equal to the number
         of iterations.
 
-    mu :
+    mu : float, default=1.
 
-    master_solver :
+    master_solver : string, default='ecos'
 
     master_verbose : bool or int, default=False
 
@@ -139,7 +139,7 @@ class PrimalSVM(SVM, ABC):
     Whether to shuffle samples for batch sampling in each iteration. Only
     used when the `optimizer` is a subclass of `StochasticOptimizer`.
 
-    random_state : int, default=None
+    random_state : int, RandomState instance or None, default=None
         Controls the pseudo random number generation for train-test split if
         early stopping is used and shuffling the data for batch sampling when
         an instance of StochasticOptimizer class is used as `optimizer` value.
@@ -871,23 +871,23 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
     Parameters
     ----------
 
+    loss : `SVMLoss` instance like {epsilon_insensitive, squared_epsilon_insensitive}, default='epsilon_insensitive'
+        Specifies the loss function. The epsilon-insensitive loss
+        is the L1 loss, while the squared epsilon-insensitive
+        loss is the L2 loss.
+
     epsilon : float, default=0.1
         Epsilon parameter in the (squared) epsilon-insensitive loss function.
         It specifies the epsilon-tube within which no penalty is associated
         in the training loss function with points predicted within a distance
         epsilon from the actual value.
 
-    tol : float, default=1e-4
-        Tolerance for stopping criteria.
-
     C : float, default=1.0
         Regularization parameter. The strength of the regularization is
         inversely proportional to C. Must be strictly positive.
 
-    loss : `SVMLoss` like {epsilon_insensitive, squared_epsilon_insensitive}, default='epsilon_insensitive'
-        Specifies the loss function. The epsilon-insensitive loss
-        is the L1 loss, while the squared epsilon-insensitive
-        loss is the L2 loss.
+    tol : float, default=1e-4
+        Tolerance for stopping criterion.
 
     fit_intercept : bool, default=True
         Whether to calculate the intercept for this model. If set
@@ -904,15 +904,15 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
         feature weight (and therefore on the intercept) `intercept_scaling` has
         to be increased.
 
-    verbose : bool or int, default=False
-        Enable verbose output.
+    max_iter : int, default=1000
+        The maximum number of iterations to be run.
 
     random_state : int, RandomState instance or None, default=None
         Controls the pseudo random number generation for shuffling the data.
         Pass an int for reproducible output across multiple function calls.
 
-    max_iter : int, default=1000
-        The maximum number of iterations to be run.
+    verbose : bool or int, default=False
+        Enable verbose output.
 
     Attributes
     ----------
@@ -1115,10 +1115,7 @@ class DualSVR(RegressorMixin, DualSVM):
     Parameters
     ----------
 
-    kernel : `Kernel` instance like {linear, poly, gaussian, sigmoid}, default=gaussian
-         Specifies the kernel type to be used in the algorithm.
-
-    loss : `SVMLoss` like {epsilon_insensitive, squared_epsilon_insensitive}, default='epsilon_insensitive'
+    loss : `SVMLoss` instance like {epsilon_insensitive, squared_epsilon_insensitive}, default='epsilon_insensitive'
         Specifies the loss function. The epsilon-insensitive loss
         is the L1 loss, while the squared epsilon-insensitive
         loss is the L2 loss.
@@ -1129,18 +1126,21 @@ class DualSVR(RegressorMixin, DualSVM):
          in the training loss function with points predicted within a distance
          epsilon from the actual value.
 
-    tol : float, default=1e-3
-        Tolerance for stopping criterion.
+    kernel : `Kernel` instance like {linear, poly, gaussian, sigmoid}, default=gaussian
+         Specifies the kernel type to be used in the algorithm.
 
     C : float, default=1.0
         Regularization parameter. The strength of the regularization is
         inversely proportional to C. Must be strictly positive.
 
-    verbose : bool or int, default=False
-        Enable verbose output.
+    tol : float, default=1e-3
+        Tolerance for stopping criterion.
 
     max_iter : int, default=1000
-        Hard limit on iterations within solver.
+        The maximum number of iterations to be run.
+
+    verbose : bool or int, default=False
+        Enable verbose output.
 
     Attributes
     ----------
