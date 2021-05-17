@@ -28,6 +28,22 @@ class PolyKernel(Kernel):
     Compute the polynomial kernel between X and Y:
 
         K(X, Y) = (gamma <X, Y> + coef0)^degree
+
+    Parameters
+    ----------
+
+    degree : int, default=3
+        Degree of the polynomial kernel function.
+
+    gamma : {'scale', 'auto'} or float, default='scale'
+        Kernel coefficient for kernel function.
+
+        - if `gamma='scale'` (default) is passed then it uses
+          1 / (n_features * X.var()) as value of gamma,
+        - if `gamma='auto'`, uses 1 / n_features.
+
+    coef0 : float, default=0.0
+        Independent term in kernel function.
     """
 
     def __init__(self, degree=3, gamma='scale', coef0=0.):
@@ -56,6 +72,16 @@ class GaussianKernel(Kernel):
     Compute the gaussian RBF kernel between X and Y:
 
         K(X, Y) = exp(-gamma ||X - Y||_2^2)
+
+    Parameters
+    ----------
+
+    gamma : {'scale', 'auto'} or float, default='scale'
+        Kernel coefficient for kernel function.
+
+        - if `gamma='scale'` (default) is passed then it uses
+          1 / (n_features * X.var()) as value of gamma,
+        - if `gamma='auto'`, uses 1 / n_features.
     """
 
     def __init__(self, gamma='scale'):
@@ -80,6 +106,19 @@ class SigmoidKernel(Kernel):
     Compute the sigmoid kernel between X and Y:
 
         K(X, Y) = tanh(gamma <X, Y> + coef0)
+
+    Parameters
+    ----------
+
+    gamma : {'scale', 'auto'} or float, default='scale'
+        Kernel coefficient for kernel function.
+
+        - if `gamma='scale'` (default) is passed then it uses
+          1 / (n_features * X.var()) as value of gamma,
+        - if `gamma='auto'`, uses 1 / n_features.
+
+    coef0 : float, default=0.0
+        Independent term in kernel function.
     """
 
     def __init__(self, gamma='scale', coef0=0.):

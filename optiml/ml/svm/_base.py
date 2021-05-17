@@ -33,6 +33,7 @@ class SVM(BaseEstimator, ABC):
 
     Parameters
     ----------
+
     C : float, default=1.0
         Regularization parameter. The strength of the regularization is
         inversely proportional to C. Must be strictly positive. The penalty
@@ -51,7 +52,7 @@ class SVM(BaseEstimator, ABC):
 
     max_iter : int, default=1000
         Maximum number of iterations. The solver iterates until convergence
-        (determined by ``tol``) or this number of iterations. If the optimizer
+        (determined by `tol`) or this number of iterations. If the optimizer
         is a subclass of `StochasticOptimizer`, this value determines the number
         of epochs (how many times each data point will be used), not the number
         of gradient steps.
@@ -70,10 +71,10 @@ class SVM(BaseEstimator, ABC):
         solver is a subclass of `StochasticOptimizer`.
 
     max_f_eval : int, default=15000
-        Only used when ``optimizer`` is a subclass of `LineSearchOptimizer`.
+        Only used when `optimizer` is a subclass of `LineSearchOptimizer`.
         Maximum number of loss function calls. The solver iterates until
-        convergence (determined by ``tol``), number of iterations reaches
-        ``max_iter``, or this number of loss function calls. Note that number
+        convergence (determined by `tol`), number of iterations reaches
+        `max_iter`, or this number of loss function calls. Note that number
         of loss function calls will be greater than or equal to the number
         of iterations.
 
@@ -85,7 +86,7 @@ class SVM(BaseEstimator, ABC):
 
     verbose : bool or int, default=False
         Controls the verbosity of progress messages to stdout. Use a boolean value
-        to switch on/off or an int value to show progress each ``verbose`` time
+        to switch on/off or an int value to show progress each `verbose` time
         optimization steps.
     """
 
@@ -136,12 +137,12 @@ class PrimalSVM(SVM, ABC):
 
     shuffle : bool, default=True
     Whether to shuffle samples for batch sampling in each iteration. Only
-    used when the ``optimizer`` is a subclass of `StochasticOptimizer`.
+    used when the `optimizer` is a subclass of `StochasticOptimizer`.
 
     random_state : int, default=None
         Controls the pseudo random number generation for train-test split if
         early stopping is used and shuffling the data for batch sampling when
-        an instance of StochasticOptimizer class is used as ``optimizer`` value.
+        an instance of StochasticOptimizer class is used as `optimizer` value.
         Pass an int for reproducible output across multiple function calls.
     """
 
@@ -272,13 +273,13 @@ class DualSVM(SVM, ABC):
     Parameters
     ----------
 
-    kernel : Kernel instance like {linear, poly, gaussian, laplacian, sigmoid}, default=gaussian
+    kernel : `Kernel` instance like {linear, poly, gaussian, sigmoid}, default=gaussian
         Specifies the kernel type to be used in the algorithm.
         It must be one of linear, poly, gaussian, laplacian, sigmoid or
-        a custom one which extend the method ``__call__`` of the ``Kernel`` class.
+        a custom one which extend the method `__call__` of the `Kernel` class.
         If none is given, 'gaussian' will be used. If a custom is given it is
         used to pre-compute the kernel matrix from data matrices; that matrix
-        should be an array of shape ``(n_samples, n_samples)``.
+        should be an array of shape (n_samples, n_samples).
     """
 
     def __init__(self,
@@ -859,7 +860,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
     """
     Primal formulation of the (linear) Epsilon-Support Vector Regression.
 
-    To be preferred when `n_samples` > `n_features` and the instance
+    To be preferred when n_samples > n_features and the instance
     vector is linearly separable in the given space or, if not, consider
     the possibly to apply a non-linear transformation of the instance vector
     using a low-rank kernel matrix approximation, i.e., Nystrom, before training.
@@ -869,10 +870,12 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
     Parameters
     ----------
-    epsilon : float, default=0.0
+
+    epsilon : float, default=0.1
         Epsilon parameter in the (squared) epsilon-insensitive loss function.
-        Note that the value of this parameter depends on the scale of the target
-        variable y.
+        It specifies the epsilon-tube within which no penalty is associated
+        in the training loss function with points predicted within a distance
+        epsilon from the actual value.
 
     tol : float, default=1e-4
         Tolerance for stopping criteria.
@@ -881,7 +884,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
         Regularization parameter. The strength of the regularization is
         inversely proportional to C. Must be strictly positive.
 
-    loss : {epsilon_insensitive, squared_epsilon_insensitive}, default='epsilon_insensitive'
+    loss : `SVMLoss` like {epsilon_insensitive, squared_epsilon_insensitive}, default='epsilon_insensitive'
         Specifies the loss function. The epsilon-insensitive loss
         is the L1 loss, while the squared epsilon-insensitive
         loss is the L2 loss.
@@ -901,7 +904,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
         feature weight (and therefore on the intercept) `intercept_scaling` has
         to be increased.
 
-    verbose : int, default=0
+    verbose : bool or int, default=False
         Enable verbose output.
 
     random_state : int, RandomState instance or None, default=None
@@ -913,17 +916,18 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
     Attributes
     ----------
-    coef_ : ndarray of shape (n_features) if n_classes == 2 else (n_classes, n_features)
+
+    coef_ : ndarray of shape (n_features)
         Weights assigned to the features (coefficients in the primal
         problem).
 
-    intercept_ : ndarray of shape (1) if n_classes == 2 else (n_classes)
+    intercept_ : float
         Constants in decision function.
     """
 
     def __init__(self,
                  loss=squared_epsilon_insensitive,
-                 epsilon=0.,
+                 epsilon=0.1,
                  C=1.,
                  tol=1e-4,
                  optimizer=StochasticGradientDescent,
@@ -1098,6 +1102,65 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
 
 class DualSVR(RegressorMixin, DualSVM):
+    """
+    Dual formulation of the Epsilon-Support Vector Regression.
+
+    To be preferred when n_samples < n_features. The training time
+    complexity is more than quadratic with the number of samples which
+    makes it hard to scale to large datasets. In the latter case consider
+    using `PrimalSVR`, possibly after a non-linear transformation
+    of the instance vector (if this should not be in the given space) using a
+    low-rank kernel matrix approximation, i.e., Nystrom, before training.
+
+    Parameters
+    ----------
+
+    kernel : `Kernel` instance like {linear, poly, gaussian, sigmoid}, default=gaussian
+         Specifies the kernel type to be used in the algorithm.
+
+    loss : `SVMLoss` like {epsilon_insensitive, squared_epsilon_insensitive}, default='epsilon_insensitive'
+        Specifies the loss function. The epsilon-insensitive loss
+        is the L1 loss, while the squared epsilon-insensitive
+        loss is the L2 loss.
+
+    epsilon : float, default=0.1
+         Epsilon parameter in the (squared) epsilon-insensitive loss function.
+         It specifies the epsilon-tube within which no penalty is associated
+         in the training loss function with points predicted within a distance
+         epsilon from the actual value.
+
+    tol : float, default=1e-3
+        Tolerance for stopping criterion.
+
+    C : float, default=1.0
+        Regularization parameter. The strength of the regularization is
+        inversely proportional to C. Must be strictly positive.
+
+    verbose : bool or int, default=False
+        Enable verbose output.
+
+    max_iter : int, default=1000
+        Hard limit on iterations within solver.
+
+    Attributes
+    ----------
+
+    coef_ : ndarray of shape (1, n_features)
+        Weights assigned to the features (coefficients in the primal
+        problem). This is only available in the case of a linear kernel.
+
+    dual_coef_ : ndarray of shape (1, n_SV)
+        Coefficients of the support vector in the decision function.
+
+    intercept_ : float
+        Constants in decision function.
+
+    support_ : ndarray of shape (n_SV,)
+        Indices of support vectors.
+
+    support_vectors_ : ndarray of shape (n_SV, n_features)
+        Support vectors.
+    """
 
     def __init__(self,
                  loss=epsilon_insensitive,
