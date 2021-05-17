@@ -709,7 +709,7 @@ class SMORegression(SMO):
 
             if self.verbose and not self.iter % self.verbose:
                 print('{:4d}\t{: 1.4e}'.format(
-                    self.iter, self.quad.function(np.hstack((self.alphas_p, self.alphas_n)))))
+                    self.iter, self.quad.function(np.concatenate((self.alphas_p, self.alphas_n)))))
 
             self.iter += 1
 

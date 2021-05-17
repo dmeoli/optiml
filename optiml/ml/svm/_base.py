@@ -160,6 +160,7 @@ class PrimalSVM(SVM, ABC):
                  early_stopping=False,
                  patience=5,
                  fit_intercept=True,
+                 intercept_scaling=1.,
                  shuffle=True,
                  random_state=None,
                  mu=1,
@@ -186,6 +187,7 @@ class PrimalSVM(SVM, ABC):
         self.batch_size = batch_size
         self.early_stopping = early_stopping
         self.patience = patience
+        self.intercept_scaling = intercept_scaling
         self.shuffle = shuffle
         self.random_state = random_state
         self.coef_ = np.zeros(0)
@@ -353,6 +355,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                  early_stopping=False,
                  patience=5,
                  fit_intercept=True,
+                 intercept_scaling=1.,
                  shuffle=True,
                  random_state=None,
                  mu=1,
@@ -373,6 +376,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                          early_stopping=early_stopping,
                          patience=patience,
                          fit_intercept=fit_intercept,
+                         intercept_scaling=intercept_scaling,
                          shuffle=shuffle,
                          random_state=random_state,
                          mu=mu,
@@ -408,7 +412,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         if issubclass(self.optimizer, LineSearchOptimizer):
 
             if self.fit_intercept:
-                X_biased = np.c_[X, np.ones_like(y)]
+                X_biased = np.c_[X, np.full_like(y, self.intercept_scaling)]
             else:
                 X_biased = X
 
@@ -430,7 +434,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         elif issubclass(self.optimizer, ProximalBundle):
 
             if self.fit_intercept:
-                X_biased = np.c_[X, np.ones_like(y)]
+                X_biased = np.c_[X, np.full_like(y, self.intercept_scaling)]
             else:
                 X_biased = X
 
@@ -456,7 +460,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                                                       random_state=self.random_state)
 
                 if self.fit_intercept:
-                    X_val_biased = np.c_[X_val, np.ones_like(y_val)]
+                    X_val_biased = np.c_[X_val, np.full_like(y_val, self.intercept_scaling)]
                 else:
                     X_val_biased = X_val
 
@@ -465,7 +469,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                 y_val = None
 
             if self.fit_intercept:
-                X_biased = np.c_[X, np.ones_like(y)]
+                X_biased = np.c_[X, np.full_like(y, self.intercept_scaling)]
             else:
                 X_biased = X
 
@@ -827,18 +831,18 @@ class DualSVC(ClassifierMixin, DualSVM):
 
         sv = self.alphas_ > 1e-6
         self.support_ = np.arange(len(self.alphas_))[sv]
-        self.support_vectors_, self.sv_y, self.alphas = X[sv], y[sv], self.alphas_[sv]
-        self.dual_coef_ = self.alphas * self.sv_y
+        self.support_vectors_, self.sv_y, alphas = X[sv], y[sv], self.alphas_[sv]
+        self.dual_coef_ = alphas * self.sv_y
 
         if self.optimizer != SMOClassifier:
 
             if isinstance(self.kernel, LinearKernel):
                 self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
 
-            for n in range(len(self.alphas)):
+            for n in range(len(alphas)):
                 self.intercept_ += self.sv_y[n]
                 self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
-            self.intercept_ /= len(self.alphas)
+            self.intercept_ /= len(alphas)
 
         return self
 
@@ -852,6 +856,70 @@ class DualSVC(ClassifierMixin, DualSVM):
 
 
 class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
+    """
+    Primal formulation of the (linear) Epsilon-Support Vector Regression.
+
+    To be preferred when `n_samples` > `n_features` and the instance
+    vector is linearly separable in the given space or, if not, consider
+    the possibly to apply a non-linear transformation of the instance vector
+    using a low-rank kernel matrix approximation, i.e., Nystrom, before training.
+    See more at:
+    - https://scikit-learn.org/stable/modules/classes.html#module-sklearn.kernel_approximation
+    - https://cdn.rawgit.com/mstrazar/mklaren/master/docs/build/html/projection.html
+
+    Parameters
+    ----------
+    epsilon : float, default=0.0
+        Epsilon parameter in the (squared) epsilon-insensitive loss function.
+        Note that the value of this parameter depends on the scale of the target
+        variable y.
+
+    tol : float, default=1e-4
+        Tolerance for stopping criteria.
+
+    C : float, default=1.0
+        Regularization parameter. The strength of the regularization is
+        inversely proportional to C. Must be strictly positive.
+
+    loss : {epsilon_insensitive, squared_epsilon_insensitive}, default='epsilon_insensitive'
+        Specifies the loss function. The epsilon-insensitive loss
+        is the L1 loss, while the squared epsilon-insensitive
+        loss is the L2 loss.
+
+    fit_intercept : bool, default=True
+        Whether to calculate the intercept for this model. If set
+        to False, no intercept will be used in calculations
+        (i.e., data is expected to be already centered).
+
+    intercept_scaling : float, default=1.
+        When `fit_intercept` is True, instance vector x becomes
+        [x, intercept_scaling], i.e., a "synthetic" feature with constant
+        value equals to `intercept_scaling` is appended to the instance vector.
+        The intercept becomes intercept_scaling * synthetic feature weight
+        Note: the synthetic feature weight is subject to L1/L2 regularization
+        as all other features. To lessen the effect of regularization on synthetic
+        feature weight (and therefore on the intercept) `intercept_scaling` has
+        to be increased.
+
+    verbose : int, default=0
+        Enable verbose output.
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the pseudo random number generation for shuffling the data.
+        Pass an int for reproducible output across multiple function calls.
+
+    max_iter : int, default=1000
+        The maximum number of iterations to be run.
+
+    Attributes
+    ----------
+    coef_ : ndarray of shape (n_features) if n_classes == 2 else (n_classes, n_features)
+        Weights assigned to the features (coefficients in the primal
+        problem).
+
+    intercept_ : ndarray of shape (1) if n_classes == 2 else (n_classes)
+        Constants in decision function.
+    """
 
     def __init__(self,
                  loss=squared_epsilon_insensitive,
@@ -869,6 +937,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  early_stopping=False,
                  patience=5,
                  fit_intercept=True,
+                 intercept_scaling=1.,
                  shuffle=True,
                  random_state=None,
                  mu=1,
@@ -889,6 +958,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                          early_stopping=early_stopping,
                          patience=patience,
                          fit_intercept=fit_intercept,
+                         intercept_scaling=intercept_scaling,
                          shuffle=shuffle,
                          random_state=random_state,
                          mu=mu,
@@ -925,7 +995,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
         if issubclass(self.optimizer, LineSearchOptimizer):
 
             if self.fit_intercept:
-                X_biased = np.c_[X, np.ones_like(y)]
+                X_biased = np.c_[X, np.full_like(y, self.intercept_scaling)]
             else:
                 X_biased = X
 
@@ -947,7 +1017,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
         elif issubclass(self.optimizer, ProximalBundle):
 
             if self.fit_intercept:
-                X_biased = np.c_[X, np.ones_like(y)]
+                X_biased = np.c_[X, np.full_like(y, self.intercept_scaling)]
             else:
                 X_biased = X
 
@@ -973,7 +1043,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                                                       random_state=self.random_state)
 
                 if self.fit_intercept:
-                    X_val_biased = np.c_[X_val, np.ones_like(y_val)]
+                    X_val_biased = np.c_[X_val, np.full_like(y_val, self.intercept_scaling)]
                 else:
                     X_val_biased = X_val
 
@@ -982,7 +1052,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                 y_val = None
 
             if self.fit_intercept:
-                X_biased = np.c_[X, np.ones_like(y)]
+                X_biased = np.c_[X, np.full_like(y, self.intercept_scaling)]
             else:
                 X_biased = X
 
@@ -1098,6 +1168,7 @@ class DualSVR(RegressorMixin, DualSVM):
                 self.optimizer = SMORegression(self.obj, X, y, K, self.kernel, self.C,
                                                self.epsilon, self.tol, self.verbose).minimize()
                 alphas_p, alphas_n = self.optimizer.alphas_p, self.optimizer.alphas_n
+                self.alphas_ = np.concatenate((alphas_p, alphas_n))
                 if isinstance(self.kernel, LinearKernel):
                     self.coef_ = self.optimizer.w
                 self.intercept_ = self.optimizer.b
@@ -1355,19 +1426,19 @@ class DualSVR(RegressorMixin, DualSVM):
 
         sv = np.logical_or(alphas_p > 1e-6, alphas_n > 1e-6)
         self.support_ = np.arange(len(alphas_p))[sv]
-        self.support_vectors_, self.sv_y, self.alphas_p, self.alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
-        self.dual_coef_ = self.alphas_p - self.alphas_n
+        self.support_vectors_, self.sv_y, alphas_p, alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
+        self.dual_coef_ = alphas_p - alphas_n
 
         if self.optimizer != SMORegression:
 
             if isinstance(self.kernel, LinearKernel):
                 self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
 
-            for n in range(len(self.alphas_p)):
+            for n in range(len(alphas_p)):
                 self.intercept_ += self.sv_y[n]
                 self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
             self.intercept_ -= self.epsilon
-            self.intercept_ /= len(self.alphas_p)
+            self.intercept_ /= len(alphas_p)
 
         return self
 
