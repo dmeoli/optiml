@@ -46,7 +46,7 @@ class SVM(BaseEstimator, ABC):
         The solver for optimization. It can be a subclass of the `LineSearchOptimizer`
         which can converge faster and perform better for small datasets, e.g., the
         `LBFGS` quasi-Newton method or, alternatively, a subclass of the `StochasticOptimizer`
-        e.g, the `StochasticGradientDescent` or `Adam`, which works well on relatively
+        e.g., the `StochasticGradientDescent` or `Adam`, which works well on relatively
         large datasets (with thousands of training samples or more) in terms of both
         training time and validation score.
 
@@ -59,16 +59,16 @@ class SVM(BaseEstimator, ABC):
 
     learning_rate : double, default=0.1
         The initial learning rate used for weight update. It controls the
-        step-size in updating the weights. Only used when solver is a
+        step-size in updating the weights. Only used when `optimizer` is a
         subclass of `StochasticOptimizer`.
 
     momentum_type : {'none', 'standard', 'nesterov'}, default='none'
-        Momentum type used for weight update. Only used when solver is
+        Momentum type used for weight update. Only used when `optimizer` is
         a subclass of `StochasticOptimizer`.
 
     momentum : float, default=0.9
         Momentum for weight update. Should be between 0 and 1. Only used when
-        solver is a subclass of `StochasticOptimizer`.
+        `optimizer` is a subclass of `StochasticOptimizer`.
 
     max_f_eval : int, default=15000
         Only used when `optimizer` is a subclass of `LineSearchOptimizer`.
@@ -79,10 +79,16 @@ class SVM(BaseEstimator, ABC):
         of iterations.
 
     mu : float, default=1.
+        Mu parameter for the proximal bundle method.
+        Only used when `optimizer` is `ProximalBundle`.
 
     master_solver : string, default='ecos'
+        Master solver for the proximal bundle method for the `cvxpy` interface.
+        Only used when `optimizer` is `ProximalBundle`.
 
     master_verbose : bool or int, default=False
+        Controls the verbosity of the `cvxpy` interface.
+        Only used when `optimizer` is `ProximalBundle`.
 
     verbose : bool or int, default=False
         Controls the verbosity of progress messages to stdout. Use a boolean value
@@ -131,19 +137,15 @@ class SVM(BaseEstimator, ABC):
 
 class PrimalSVM(SVM, ABC):
     """
+    Base abstract class for the primal formulation of all (linear) SVM-type estimator.
 
-    Parameters
-    ----------
-
-    shuffle : bool, default=True
-    Whether to shuffle samples for batch sampling in each iteration. Only
-    used when the `optimizer` is a subclass of `StochasticOptimizer`.
-
-    random_state : int, RandomState instance or None, default=None
-        Controls the pseudo random number generation for train-test split if
-        early stopping is used and shuffling the data for batch sampling when
-        an instance of StochasticOptimizer class is used as `optimizer` value.
-        Pass an int for reproducible output across multiple function calls.
+    To be preferred when n_samples > n_features and the instance
+    vector is linearly separable in the given space or, if not, consider
+    the possibly to apply a non-linear transformation of the instance vector
+    using a low-rank kernel matrix approximation, i.e., Nystrom, before training.
+    See more at:
+    - https://scikit-learn.org/stable/modules/classes.html#module-sklearn.kernel_approximation
+    - https://cdn.rawgit.com/mstrazar/mklaren/master/docs/build/html/projection.html
     """
 
     def __init__(self,
@@ -269,17 +271,20 @@ class PrimalSVM(SVM, ABC):
 
 class DualSVM(SVM, ABC):
     """
+    Base abstract class for the dual formulation of all SVM-type estimator.
+
+    To be preferred when n_samples < n_features. The training time
+    complexity is more than quadratic with the number of samples which
+    makes it hard to scale to large datasets. In the latter case consider
+    using `PrimalSVM`, possibly after a non-linear transformation
+    of the instance vector (if this should not be in the given space) using a
+    low-rank kernel matrix approximation, i.e., Nystrom, before training.
 
     Parameters
     ----------
 
     kernel : `Kernel` instance like {linear, poly, gaussian, sigmoid}, default=gaussian
         Specifies the kernel type to be used in the algorithm.
-        It must be one of linear, poly, gaussian, laplacian, sigmoid or
-        a custom one which extend the method `__call__` of the `Kernel` class.
-        If none is given, 'gaussian' will be used. If a custom is given it is
-        used to pre-compute the kernel matrix from data matrices; that matrix
-        should be an array of shape (n_samples, n_samples).
     """
 
     def __init__(self,
@@ -341,6 +346,71 @@ class DualSVM(SVM, ABC):
 
 
 class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
+    """
+    Primal formulation of the (linear) C-Support Vector Classification.
+
+    To be preferred when n_samples > n_features and the instance
+    vector is linearly separable in the given space or, if not, consider
+    the possibly to apply a non-linear transformation of the instance vector
+    using a low-rank kernel matrix approximation, i.e., Nystrom, before training.
+    See more at:
+    - https://scikit-learn.org/stable/modules/classes.html#module-sklearn.kernel_approximation
+    - https://cdn.rawgit.com/mstrazar/mklaren/master/docs/build/html/projection.html
+
+    Parameters
+    ----------
+
+    loss : `SVMLoss` instance like {hinge, squared_hinge}, default='squared_hinge'
+        Specifies the loss function. The epsilon-insensitive loss is the
+        L1 loss, while the squared epsilon-insensitive loss is the L2 loss.
+
+    C : float, default=1.0
+        Regularization parameter. The strength of the regularization is
+        inversely proportional to C. Must be strictly positive.
+
+    tol : float, default=1e-4
+        Tolerance for stopping criterion.
+
+    fit_intercept : bool, default=True
+        Whether to calculate the intercept for this model. If set
+        to False, no intercept will be used in calculations
+        (i.e., data is expected to be already centered).
+
+    intercept_scaling : float, default=1.
+        When `fit_intercept` is True, instance vector x becomes
+        [x, intercept_scaling], i.e., a "synthetic" feature with constant
+        value equals to `intercept_scaling` is appended to the instance vector.
+        The intercept becomes intercept_scaling * synthetic feature weight
+        Note: the synthetic feature weight is subject to L1/L2 regularization
+        as all other features. To lessen the effect of regularization on synthetic
+        feature weight (and therefore on the intercept) `intercept_scaling` has
+        to be increased.
+
+    max_iter : int, default=1000
+        The maximum number of iterations to be run.
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the pseudo random number generation for train-test split if
+        `early_stopping` is True and shuffling the data for batch sampling when
+        an instance of `StochasticOptimizer` class is used as `optimizer` value.
+        Pass an int for reproducible output across multiple function calls.
+
+    shuffle : bool, default=True
+        Whether to shuffle samples for batch sampling in each iteration. Only
+        used when the `optimizer` is a subclass of `StochasticOptimizer`.
+
+    verbose : bool or int, default=False
+        Enable verbose output.
+
+    Attributes
+    ----------
+
+    coef_ : ndarray of shape (n_features,)
+        Weights assigned to the features (coefficients in the primal problem).
+
+    intercept_ : float
+        Constants in decision function.
+    """
 
     def __init__(self,
                  loss=squared_hinge,
@@ -516,6 +586,58 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
 
 class DualSVC(ClassifierMixin, DualSVM):
+    """
+    Dual formulation of the C-Support Vector Classification.
+
+    To be preferred when n_samples < n_features. The training time
+    complexity is more than quadratic with the number of samples which
+    makes it hard to scale to large datasets. In the latter case consider
+    using `PrimalSVR`, possibly after a non-linear transformation
+    of the instance vector (if this should not be in the given space) using a
+    low-rank kernel matrix approximation, i.e., Nystrom, before training.
+
+    Parameters
+    ----------
+
+    loss : `SVMLoss` instance like {hinge, squared_hinge}, default='hinge'
+        Specifies the loss function. The hinge loss is the L1 loss,
+        while the squared hinge loss is the L2 loss.
+
+    kernel : `Kernel` instance like {linear, poly, gaussian, sigmoid}, default=gaussian
+         Specifies the kernel type to be used in the algorithm.
+
+    C : float, default=1.0
+        Regularization parameter. The strength of the regularization is
+        inversely proportional to C. Must be strictly positive.
+
+    tol : float, default=1e-3
+        Tolerance for stopping criterion.
+
+    max_iter : int, default=1000
+        The maximum number of iterations to be run.
+
+    verbose : bool or int, default=False
+        Enable verbose output.
+
+    Attributes
+    ----------
+
+    coef_ : ndarray of shape (n_features,)
+        Weights assigned to the features (coefficients in the primal
+        problem). This is only available in the case of a linear kernel.
+
+    dual_coef_ : ndarray of shape (n_SV,)
+        Coefficients of the support vector in the decision function.
+
+    intercept_ : float
+        Constants in decision function.
+
+    support_ : ndarray of shape (n_SV,)
+        Indices of support vectors.
+
+    support_vectors_ : ndarray of shape (n_SV, n_features)
+        Support vectors.
+    """
 
     def __init__(self,
                  loss=hinge,
@@ -869,10 +991,10 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
     Parameters
     ----------
 
-    loss : `SVMLoss` instance like {epsilon_insensitive, squared_epsilon_insensitive}, default='epsilon_insensitive'
-        Specifies the loss function. The epsilon-insensitive loss
-        is the L1 loss, while the squared epsilon-insensitive
-        loss is the L2 loss.
+    loss : `SVMLoss` instance like {epsilon_insensitive, squared_epsilon_insensitive}, \
+                default='squared_epsilon_insensitive'
+        Specifies the loss function. The epsilon-insensitive loss is the
+        L1 loss, while the squared epsilon-insensitive loss is the L2 loss.
 
     epsilon : float, default=0.1
         Epsilon parameter in the (squared) epsilon-insensitive loss function.
@@ -906,8 +1028,14 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
         The maximum number of iterations to be run.
 
     random_state : int, RandomState instance or None, default=None
-        Controls the pseudo random number generation for shuffling the data.
+        Controls the pseudo random number generation for train-test split if
+        `early_stopping` is True and shuffling the data for batch sampling when
+        an instance of `StochasticOptimizer` class is used as `optimizer` value.
         Pass an int for reproducible output across multiple function calls.
+
+    shuffle : bool, default=True
+        Whether to shuffle samples for batch sampling in each iteration. Only
+        used when the `optimizer` is a subclass of `StochasticOptimizer`.
 
     verbose : bool or int, default=False
         Enable verbose output.
@@ -916,8 +1044,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
     ----------
 
     coef_ : ndarray of shape (n_features,)
-        Weights assigned to the features (coefficients in the primal
-        problem).
+        Weights assigned to the features (coefficients in the primal problem).
 
     intercept_ : float
         Constants in decision function.
