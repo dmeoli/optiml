@@ -293,7 +293,7 @@ class DualSVM(SVM, ABC):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 fit_intercept=True,
+                 reg_intercept=True,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -309,7 +309,7 @@ class DualSVM(SVM, ABC):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
-                         fit_intercept=fit_intercept,
+                         fit_intercept=True,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -321,6 +321,7 @@ class DualSVM(SVM, ABC):
                 not issubclass(optimizer, SMO) or
                 not issubclass(optimizer, Optimizer)):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
+        self.reg_intercept = reg_intercept
         if isinstance(self.kernel, LinearKernel):
             self.coef_ = np.zeros(0)
         self.lagrangian_solver = lagrangian_solver
@@ -527,7 +528,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 fit_intercept=True,
+                 reg_intercept=True,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -544,7 +545,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
-                         fit_intercept=fit_intercept,
+                         reg_intercept=reg_intercept,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -590,7 +591,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 lb = np.zeros(n_samples)  # lower bounds
 
-                if not self.fit_intercept:
+                if not self.reg_intercept:
 
                     self.obj = Quadratic(Q, q)
 
@@ -639,7 +640,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 elif issubclass(self.optimizer, Optimizer):
 
-                    if not self.fit_intercept:
+                    if not self.reg_intercept:
 
                         self.obj = LagrangianEqualityBoxConstrainedQuadratic(primal=Quadratic(Q, q),
                                                                              A=y,
@@ -718,7 +719,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 lb = np.zeros(n_samples)  # lower bounds
 
-                if not self.fit_intercept:
+                if not self.reg_intercept:
 
                     self.obj = Quadratic(Q, q)
 
@@ -755,7 +756,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 if issubclass(self.optimizer, Optimizer):
 
-                    if not self.fit_intercept:
+                    if not self.reg_intercept:
 
                         self.obj = LagrangianEqualityConstrainedQuadratic(primal=Quadratic(Q, q),
                                                                           A=y,
@@ -1168,7 +1169,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 fit_intercept=True,
+                 reg_intercept=True,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -1185,7 +1186,7 @@ class DualSVR(RegressorMixin, DualSVM):
                          momentum_type=momentum_type,
                          momentum=momentum,
                          max_f_eval=max_f_eval,
-                         fit_intercept=fit_intercept,
+                         reg_intercept=reg_intercept,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -1238,7 +1239,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     lb = np.zeros(2 * n_samples)  # lower bounds
 
-                    if not self.fit_intercept:
+                    if not self.reg_intercept:
 
                         self.obj = Quadratic(Q, q)
 
@@ -1287,7 +1288,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     elif issubclass(self.optimizer, Optimizer):
 
-                        if not self.fit_intercept:
+                        if not self.reg_intercept:
 
                             self.obj = LagrangianEqualityBoxConstrainedQuadratic(primal=Quadratic(Q, q),
                                                                                  A=e,
@@ -1370,7 +1371,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 lb = np.zeros(2 * n_samples)  # lower bounds
 
-                if not self.fit_intercept:
+                if not self.reg_intercept:
 
                     self.obj = Quadratic(Q, q)
 
@@ -1407,7 +1408,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 if issubclass(self.optimizer, Optimizer):
 
-                    if not self.fit_intercept:
+                    if not self.reg_intercept:
 
                         self.obj = LagrangianEqualityConstrainedQuadratic(primal=Quadratic(Q, q),
                                                                           A=e,
