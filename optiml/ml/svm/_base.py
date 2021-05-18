@@ -132,9 +132,21 @@ class SVM(BaseEstimator, ABC):
         self.verbose = verbose
         self.support_ = np.zeros(0)
         self.support_vectors_ = np.zeros(0)
+        if not isinstance(optimizer, str):
+            self.train_loss_history = []
+            self.train_time_history = []
 
     def fit(self, X, y):
         raise NotImplementedError
+
+    def _store_train_info(self, opt):
+        if opt.is_lagrangian_dual():
+            self.train_loss_history.append(opt.primal_f_x)
+        else:
+            self.train_loss_history.append(opt.f_x)
+        current_time = time.time()
+        elapsed_time = current_time - self.start_time
+        self.train_time_history.append(elapsed_time)
 
 
 class PrimalSVM(SVM, ABC):
@@ -333,18 +345,6 @@ class DualSVM(SVM, ABC):
             self.coef_ = np.zeros(0)
         self.lagrangian_solver = lagrangian_solver
         self.lagrangian_solver_verbose = lagrangian_solver_verbose
-        if not isinstance(optimizer, str) and issubclass(optimizer, StochasticOptimizer):
-            self.train_loss_history = []
-            self.train_time_history = []
-
-    def _store_train_info(self, opt):
-        if opt.is_lagrangian_dual():
-            self.train_loss_history.append(opt.primal_f_x)
-        else:
-            self.train_loss_history.append(opt.f_x)
-        current_time = time.time()
-        elapsed_time = current_time - self.start_time
-        self.train_time_history.append(elapsed_time)
 
 
 class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
@@ -501,6 +501,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                                             max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval,
                                             random_state=self.random_state,
+                                            callback=self._store_train_info,
                                             verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'stopped':
@@ -525,6 +526,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                                             master_solver=self.master_solver,
                                             master_verbose=self.master_verbose,
                                             random_state=self.random_state,
+                                            callback=self._store_train_info,
                                             verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'error':
@@ -769,6 +771,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                     self.optimizer = self.optimizer(quad=self.obj,
                                                     ub=ub,
                                                     max_iter=self.max_iter,
+                                                    callback=self._store_train_info,
                                                     verbose=self.verbose).minimize()
 
                 elif issubclass(self.optimizer, Optimizer):
@@ -794,6 +797,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                         self.optimizer = self.optimizer(f=self.obj,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
+                                                        callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
                         if self.optimizer.status == 'stopped':
@@ -811,6 +815,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                         max_iter=self.max_iter,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
+                                                        callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
                         if self.optimizer.status == 'error':
@@ -908,6 +913,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                         self.optimizer = self.optimizer(f=self.obj,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
+                                                        callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
                         if self.optimizer.status == 'stopped':
@@ -925,6 +931,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                         max_iter=self.max_iter,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
+                                                        callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
                         if self.optimizer.status == 'error':
@@ -1150,6 +1157,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                                             max_iter=self.max_iter,
                                             max_f_eval=self.max_f_eval,
                                             random_state=self.random_state,
+                                            callback=self._store_train_info,
                                             verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'stopped':
@@ -1174,6 +1182,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                                             master_solver=self.master_solver,
                                             master_verbose=self.master_verbose,
                                             random_state=self.random_state,
+                                            callback=self._store_train_info,
                                             verbose=self.verbose).minimize()
 
             if self.optimizer.status == 'error':
@@ -1431,6 +1440,7 @@ class DualSVR(RegressorMixin, DualSVM):
                         self.optimizer = self.optimizer(quad=self.obj,
                                                         ub=ub,
                                                         max_iter=self.max_iter,
+                                                        callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
                     elif issubclass(self.optimizer, Optimizer):
@@ -1456,6 +1466,7 @@ class DualSVR(RegressorMixin, DualSVM):
                             self.optimizer = self.optimizer(f=self.obj,
                                                             max_iter=self.max_iter,
                                                             max_f_eval=self.max_f_eval,
+                                                            callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
                             if self.optimizer.status == 'stopped':
@@ -1473,6 +1484,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                             max_iter=self.max_iter,
                                                             master_solver=self.master_solver,
                                                             master_verbose=self.master_verbose,
+                                                            callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
                             if self.optimizer.status == 'error':
@@ -1574,6 +1586,7 @@ class DualSVR(RegressorMixin, DualSVM):
                         self.optimizer = self.optimizer(f=self.obj,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
+                                                        callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
                         if self.optimizer.status == 'stopped':
@@ -1591,6 +1604,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         max_iter=self.max_iter,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
+                                                        callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
                         if self.optimizer.status == 'error':
