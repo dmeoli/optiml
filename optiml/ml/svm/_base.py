@@ -130,6 +130,8 @@ class SVM(BaseEstimator, ABC):
         self.master_solver = master_solver
         self.master_verbose = master_verbose
         self.verbose = verbose
+        self.support_ = np.zeros(0)
+        self.support_vectors_ = np.zeros(0)
 
     def fit(self, X, y):
         raise NotImplementedError
@@ -410,6 +412,12 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
     intercept_ : float
         Constants in decision function.
+
+    support_ : ndarray of shape (n_SV,)
+        Indices of support vectors.
+
+    support_vectors_ : ndarray of shape (n_SV, n_features)
+        Support vectors.
     """
 
     def __init__(self,
@@ -575,6 +583,9 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         else:
 
             raise TypeError(f'{self.optimizer} is not an allowed optimizer')
+
+        self.support_ = np.argwhere(np.abs(self.decision_function(X)) <= 1).ravel()
+        self.support_vectors_ = X[self.support_]
 
         return self
 
@@ -1048,6 +1059,12 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
     intercept_ : float
         Constants in decision function.
+
+    support_ : ndarray of shape (n_SV,)
+        Indices of support vectors.
+
+    support_vectors_ : ndarray of shape (n_SV, n_features)
+        Support vectors.
     """
 
     def __init__(self,
@@ -1216,6 +1233,9 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
         else:
 
             raise TypeError(f'{self.optimizer} is not an allowed optimizer')
+
+        self.support_ = np.argwhere(np.abs(y - self.predict(X)) >= self.epsilon).ravel()
+        self.support_vectors_ = X[self.support_]
 
         return self
 
