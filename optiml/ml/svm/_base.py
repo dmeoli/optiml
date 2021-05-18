@@ -391,12 +391,12 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
         super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
         if opt.is_batch_end():
-            acc = self.score(X_batch[:, :-1], y_batch)
+            acc = self.score(X_batch[:, :-1] if self.fit_intercept else X_batch, y_batch)
             self.train_score_history.append(acc)
             if opt.is_verbose():
                 print('\tacc: {:1.4f}'.format(acc), end='')
             if self.validation_split:
-                val_acc = self.score(X_val[:, :-1], y_val)
+                val_acc = self.score(X_val[:, :-1] if self.fit_intercept else X_val, y_val)
                 self.val_score_history.append(val_acc)
                 if opt.is_verbose():
                     print('\tval_acc: {:1.4f}'.format(val_acc), end='')
@@ -504,9 +504,6 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         else:
 
             raise TypeError(f'{self.optimizer} is not an allowed optimizer')
-
-        if self.fit_intercept and X.shape[1] > 1:
-            self.loss.X = X
 
         return self
 
@@ -832,8 +829,8 @@ class DualSVC(ClassifierMixin, DualSVM):
 
         sv = self.alphas_ > 1e-6
         self.support_ = np.arange(len(self.alphas_))[sv]
-        self.support_vectors_, self.sv_y, alphas = X[sv], y[sv], self.alphas_[sv]
-        self.dual_coef_ = alphas * self.sv_y
+        self.support_vectors_, sv_y, alphas = X[sv], y[sv], self.alphas_[sv]
+        self.dual_coef_ = alphas * sv_y
 
         if self.optimizer != SMOClassifier:
 
@@ -841,7 +838,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                 self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
 
             for n in range(len(alphas)):
-                self.intercept_ += self.sv_y[n]
+                self.intercept_ += sv_y[n]
                 self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
             self.intercept_ /= len(alphas)
 
@@ -917,7 +914,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
     Attributes
     ----------
 
-    coef_ : ndarray of shape (n_features)
+    coef_ : ndarray of shape (n_features,)
         Weights assigned to the features (coefficients in the primal
         problem).
 
@@ -978,12 +975,12 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
         super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
         if opt.is_batch_end():
-            r2 = self.score(X_batch[:, :-1], y_batch)
+            r2 = self.score(X_batch[:, :-1] if self.fit_intercept else X_batch, y_batch)
             self.train_score_history.append(r2)
             if opt.is_verbose():
                 print('\tr2: {: 1.4f}'.format(r2), end='')
             if self.validation_split:
-                val_r2 = self.score(X_val[:, :-1], y_val)
+                val_r2 = self.score(X_val[:, :-1] if self.fit_intercept else X_val, y_val)
                 self.val_score_history.append(val_r2)
                 if opt.is_verbose():
                     print('\tval_r2: {: 1.4f}'.format(val_r2), end='')
@@ -1092,9 +1089,6 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
             raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-        if self.fit_intercept and X.shape[1] > 1:
-            self.loss.X = X
-
         return self
 
     def predict(self, X):
@@ -1145,11 +1139,11 @@ class DualSVR(RegressorMixin, DualSVM):
     Attributes
     ----------
 
-    coef_ : ndarray of shape (1, n_features)
+    coef_ : ndarray of shape (n_features,)
         Weights assigned to the features (coefficients in the primal
         problem). This is only available in the case of a linear kernel.
 
-    dual_coef_ : ndarray of shape (1, n_SV)
+    dual_coef_ : ndarray of shape (n_SV,)
         Coefficients of the support vector in the decision function.
 
     intercept_ : float
@@ -1489,7 +1483,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
         sv = np.logical_or(alphas_p > 1e-6, alphas_n > 1e-6)
         self.support_ = np.arange(len(alphas_p))[sv]
-        self.support_vectors_, self.sv_y, alphas_p, alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
+        self.support_vectors_, sv_y, alphas_p, alphas_n = X[sv], y[sv], alphas_p[sv], alphas_n[sv]
         self.dual_coef_ = alphas_p - alphas_n
 
         if self.optimizer != SMORegression:
@@ -1498,7 +1492,7 @@ class DualSVR(RegressorMixin, DualSVM):
                 self.coef_ = np.dot(self.dual_coef_, self.support_vectors_)
 
             for n in range(len(alphas_p)):
-                self.intercept_ += self.sv_y[n]
+                self.intercept_ += sv_y[n]
                 self.intercept_ -= np.sum(self.dual_coef_ * K[self.support_[n], sv])
             self.intercept_ -= self.epsilon
             self.intercept_ /= len(alphas_p)

@@ -43,9 +43,6 @@ class SVMLoss(OptimizationFunction, ABC):
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
         raise NotImplementedError
 
-    def __call__(self, y_pred, y_true):
-        return self.loss(y_pred, y_true)
-
 
 class Hinge(SVMLoss):
     """

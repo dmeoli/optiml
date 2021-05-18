@@ -58,9 +58,6 @@ class NeuralNetworkLoss(OptimizationFunction, ABC):
         delta = 1 / n_samples * self.delta(self.neural_net.forward(X_batch), y_batch)
         return self.neural_net._pack(*self.neural_net.backward(delta))
 
-    def __call__(self, y_pred, y_true):
-        return self.loss(y_pred, y_true)
-
 
 class MeanSquaredError(NeuralNetworkLoss):
 
