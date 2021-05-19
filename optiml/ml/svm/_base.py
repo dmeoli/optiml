@@ -240,7 +240,7 @@ class PrimalSVM(SVM, ABC):
                 print('\tavg_loss: {: 1.4e}'.format(self._avg_epoch_loss), end='')
             self._avg_epoch_loss = 0.
             if self.validation_split:
-                val_loss = self.loss.function(opt.x, X_val, y_val)
+                val_loss = self.loss(opt.x, X_val, y_val)
                 self.val_loss_history.append(val_loss)
                 if opt.is_verbose():
                     print('\tval_loss: {: 1.4e}'.format(val_loss), end='')
@@ -343,6 +343,8 @@ class DualSVM(SVM, ABC):
         self.reg_intercept = reg_intercept
         if isinstance(self.kernel, LinearKernel):
             self.coef_ = np.zeros(0)
+        self.alphas_ = np.zeros(0)
+        self.dual_coef_ = np.zeros(0)
         self.lagrangian_solver = lagrangian_solver
         self.lagrangian_solver_verbose = lagrangian_solver_verbose
 

@@ -121,7 +121,7 @@ def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_
 def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
     X, Y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
-    Z = np.array([f.function(np.array([x, y]))
+    Z = np.array([f(np.array([x, y]))
                   for x, y in zip(X.ravel(), Y.ravel())]).reshape(X.shape)
 
     surface_contour = plt.figure(figsize=(16, 8))
@@ -171,7 +171,7 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
     return surface_contour
 
 
-def plot_trajectory_optimization(surface_contour, opt, color='k', label=None):
+def plot_trajectory_optimization(surface_contour, opt, color='k', label=None, linestyle='None', linewidth=1.):
     # 3D trajectory optimization plot
     surface_contour.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history,
                                  marker='.', color=color, label=label)
@@ -179,7 +179,8 @@ def plot_trajectory_optimization(surface_contour, opt, color='k', label=None):
     angles_y = np.array(opt.x1_history)[1:] - np.array(opt.x1_history)[:-1]
     # 2D trajectory optimization plot
     surface_contour.axes[1].quiver(opt.x0_history[:-1], opt.x1_history[:-1], angles_x, angles_y,
-                                   scale_units='xy', angles='xy', scale=1, color=color)
+                                   scale_units='xy', angles='xy', scale=1, color=color,
+                                   linestyle=linestyle, linewidth=linewidth)
     if isinstance(opt, ProximalBundle):  # plot ns steps
         # 3D trajectory optimization plot
         surface_contour.axes[0].plot(opt.x0_history_ns, opt.x1_history_ns, opt.f_x_history_ns,
@@ -193,6 +194,7 @@ def plot_trajectory_optimization(surface_contour, opt, color='k', label=None):
     return surface_contour
 
 
-def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max, ub=None, color='k', label=None):
+def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max, ub=None,
+                                         color='k', label=None, linestyle='None', linewidth=1.):
     plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, ub),
-                                 opt, color, label)
+                                 opt, color, label, linestyle, linewidth)

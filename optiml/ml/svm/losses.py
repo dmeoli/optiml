@@ -85,7 +85,7 @@ class EpsilonInsensitive(SVMLoss):
 
     _loss_type = 'regressor'
 
-    def __init__(self, svm, X, y, epsilon=0.1):
+    def __init__(self, svm, X, y, epsilon):
         super().__init__(svm, X, y)
         self.epsilon = epsilon
 

@@ -18,7 +18,7 @@ class Optimizer(ABC):
         """
 
         :param f:        the objective function.
-        :param x:        ([n x 1] real column vector): the point where to start the algorithm from.
+        :param x:        ([n x 1] real column vector): 1D array of points at which the Hessian is to be computed.
         :param eps:      (real scalar, optional, default value 1e-6): the accuracy in the stopping
                          criterion: the algorithm is stopped when the norm of the gradient is less
                          than or equal to eps.
@@ -229,7 +229,7 @@ class Quadratic(OptimizationFunction):
     def function(self, x):
         """
         A general quadratic function f(x) = 1/2 x^T Q x + q^T x.
-        :param x: ([n x 1] real column vector): the point where to start the algorithm from.
+        :param x: ([n x 1] real column vector): 1D array of points at which the Hessian is to be computed.
         :return:  the value of a general quadratic function if x, the optimal solution of a
                   linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
         """
@@ -238,7 +238,7 @@ class Quadratic(OptimizationFunction):
     def jacobian(self, x):
         """
         The Jacobian (i.e., the gradient) of a general quadratic function J f(x) = Q x + q.
-        :param x: ([n x 1] real column vector): the point where to start the algorithm from.
+        :param x: ([n x 1] real column vector): 1D array of points at which the Hessian is to be computed.
         :return:  the Jacobian of a general quadratic function.
         """
         return self.Q.dot(x) + self.q
