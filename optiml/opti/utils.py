@@ -171,16 +171,17 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
     return surface_contour
 
 
-def plot_trajectory_optimization(surface_contour, opt, color='k', label=None, linestyle='None', linewidth=1.):
+def plot_trajectory_optimization(surface_contour, opt, color='k', label=None,
+                                 linestyle='None', linewidth=1., alpha=.5):
     # 3D trajectory optimization plot
     surface_contour.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history,
-                                 marker='.', color=color, label=label)
+                                 marker='.', color=color, label=label, alpha=alpha, linewidth=linewidth)
     angles_x = np.array(opt.x0_history)[1:] - np.array(opt.x0_history)[:-1]
     angles_y = np.array(opt.x1_history)[1:] - np.array(opt.x1_history)[:-1]
     # 2D trajectory optimization plot
     surface_contour.axes[1].quiver(opt.x0_history[:-1], opt.x1_history[:-1], angles_x, angles_y,
                                    scale_units='xy', angles='xy', scale=1, color=color,
-                                   linestyle=linestyle, linewidth=linewidth)
+                                   linestyle=linestyle, linewidth=linewidth, alpha=alpha)
     if isinstance(opt, ProximalBundle):  # plot ns steps
         # 3D trajectory optimization plot
         surface_contour.axes[0].plot(opt.x0_history_ns, opt.x1_history_ns, opt.f_x_history_ns,
@@ -194,7 +195,7 @@ def plot_trajectory_optimization(surface_contour, opt, color='k', label=None, li
     return surface_contour
 
 
-def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max, ub=None,
+def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max, ub=None, alpha=.5,
                                          color='k', label=None, linestyle='None', linewidth=1.):
     plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, ub),
-                                 opt, color, label, linestyle, linewidth)
+                                 opt, color, label, linestyle, linewidth, alpha)
