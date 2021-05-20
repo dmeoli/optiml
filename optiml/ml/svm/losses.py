@@ -37,7 +37,7 @@ class SVMLoss(OptimizationFunction, ABC):
             y_batch = self.y
 
         n_samples = X_batch.shape[0]
-        return ((1 / n_samples) * 2 * packed_coef_inter -
+        return ((1 / n_samples) * packed_coef_inter -
                 self.svm.C / n_samples * self.loss_jacobian(packed_coef_inter, X_batch, y_batch))
 
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
