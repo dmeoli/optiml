@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.linalg import cho_solve, cho_factor
-from scipy.sparse.linalg import lsqr, minres
+from scipy.sparse.linalg import minres
 
 from optiml.opti.constrained import BoxConstrainedQuadraticOptimizer
 
@@ -41,7 +41,6 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                  max_iter=1000,
                  callback=None,
                  callback_args=(),
-                 sym_nonposdef_solver='minres',
                  verbose=False):
         super().__init__(quad=quad,
                          ub=ub,
@@ -51,36 +50,6 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                          callback=callback,
                          callback_args=callback_args,
                          verbose=verbose)
-        self.sym_nonposdef_solver = sym_nonposdef_solver
-
-    def _solve_sym_nonposdef(self, Q, q):
-        # since Q is indefinite, i.e., the function is linear along the eigenvectors
-        # correspondent to the null eigenvalues, the system has not solutions, so we
-        # will choose the one that minimizes the residue
-        # see more @ https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html#solving-linear-problems
-
-        # bad numerical solution: does not exploit the symmetricity of Q, waiting for `symmlq` in scipy
-        if self.sym_nonposdef_solver == 'lsqr':
-
-            x = lsqr(Q, -q)[0]
-
-        else:
-
-            # `min ||Ax - b||` is formally equivalent to solve the linear system:
-            #                           A^T A x = A^T b
-
-            Q, q = np.inner(Q, Q), Q.T.dot(q)
-
-            if self.sym_nonposdef_solver == 'minres':
-
-                x = minres(Q, -q)[0]
-
-            else:
-
-                raise TypeError(f'{self.sym_nonposdef_solver} is not an allowed solver, '
-                                f'choose one of `minres` or `lsqr`')
-
-        return x
 
     def minimize(self):
 
@@ -138,8 +107,16 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 xs[A] = cho_solve(cho_factor(self.f.Q[A, :][:, A]),
                                   -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
             except np.linalg.LinAlgError:
-                xs[A] = self._solve_sym_nonposdef(self.f.Q[A, :][:, A],
-                                                  (self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
+                # since Q is indefinite, i.e., the function is linear along the eigenvectors
+                # correspondent to the null eigenvalues, the system has not solutions, so we
+                # will choose the one that minimizes the residue in the least squares sense
+                # see more @ https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html#solving-linear-problems
+                Q = self.f.Q[A, :][:, A]
+                q = self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])
+                # `min ||Qx - q||^2` is formally equivalent to solve the linear system:
+                #                           Q^T Q x = Q^T q
+                Q, q = np.inner(Q, Q), Q.T.dot(q)
+                xs[A] = minres(Q, -q)[0]
 
             if np.logical_and(xs[A] <= self.ub[A] + 1e-12, xs[A] >= -1e-12).all():
                 # the solution of the unconstrained problem is actually feasible

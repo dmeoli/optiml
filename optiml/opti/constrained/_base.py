@@ -2,10 +2,9 @@ from abc import ABC
 
 import numpy as np
 from scipy.linalg import cho_solve, cho_factor
-from scipy.sparse.linalg import minres, lsqr
+from scipy.sparse.linalg import minres
 
 from optiml.opti import Optimizer, Quadratic
-from optiml.opti.unconstrained.line_search import LineSearchOptimizer
 
 
 class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
@@ -35,7 +34,7 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
 
 class LagrangianQuadratic(Quadratic):
 
-    def __init__(self, primal, lagrangian_solver='minres', lagrangian_solver_verbose=False):
+    def __init__(self, primal, minres_verbose=False):
         if not isinstance(primal, Quadratic):
             raise TypeError(f'{primal} is not an allowed quadratic function')
         super().__init__(primal.Q, primal.q)
@@ -45,55 +44,31 @@ class LagrangianQuadratic(Quadratic):
             self.is_posdef = True
         except np.linalg.LinAlgError:
             self.is_posdef = False
-        self.lagrangian_solver = lagrangian_solver
-        self.lagrangian_solver_verbose = lagrangian_solver_verbose
+        self.minres_verbose = minres_verbose
         # backup {lambda : x}
         self.last_lmbda = None
         self.last_x = None
-        self.last_itn = None
         self.last_r1norm = None
 
     def _solve_sym_nonposdef(self, ql):
         # since Q is indefinite, i.e., the function is linear along the eigenvectors
         # correspondent to the null eigenvalues, the system has not solutions, so we
-        # will choose the one that minimizes the residue
+        # will choose the one that minimizes the residue in the least squares sense
         # see more @ https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html#solving-linear-problems
 
-        lagrangian_solver_verbose = self.lagrangian_solver_verbose() if callable(
-            self.lagrangian_solver_verbose) else self.lagrangian_solver_verbose
+        minres_verbose = self.minres_verbose() if callable(self.minres_verbose) else self.minres_verbose
 
-        if lagrangian_solver_verbose:
+        if minres_verbose:
             print('\n')
 
-        # bad numerical solution: does not exploit the symmetricity of Q, waiting for `symmlq` in scipy
-        if self.lagrangian_solver == 'lsqr':
+        # `min ||Qx - ql||^2` is formally equivalent to solve the linear system:
+        #                           Q^T Q x = Q^T ql
 
-            x, _, self.last_itn, self.last_rnorm = lsqr(self.Q, -ql, show=lagrangian_solver_verbose)[:4]
+        Q, ql = np.inner(self.Q, self.Q), self.Q.T.dot(ql)
 
-        else:
+        x = minres(Q, -ql, show=minres_verbose)[0]
 
-            # `min ||Ax - b||` is formally equivalent to solve the linear system:
-            #                           A^T A x = A^T b
-
-            Q, ql = np.inner(self.Q, self.Q), self.Q.T.dot(ql)
-
-            if self.lagrangian_solver == 'minres':
-
-                x = minres(Q, -ql, show=lagrangian_solver_verbose)[0]
-
-            elif issubclass(self.lagrangian_solver, LineSearchOptimizer):  # just for tests
-
-                if lagrangian_solver_verbose:
-                    print(self.lagrangian_solver.__name__)
-
-                x = self.lagrangian_solver(Quadratic(Q, -ql), verbose=lagrangian_solver_verbose).minimize().x
-
-            else:
-
-                raise TypeError(f'{self.lagrangian_solver} is not an allowed solver, '
-                                f'choose one of `minres` or `lsqr`')
-
-            self.last_rnorm = np.linalg.norm(-ql - Q.dot(x))  # || b - Ax ||
+        self.last_rnorm = np.linalg.norm(-ql - Q.dot(x))  # || ql - Qx ||
 
         return x
 
@@ -109,10 +84,9 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
             1/2 x^T Q x + q^T x : A x = 0, x >= 0
     """
 
-    def __init__(self, primal, A, lagrangian_solver='minres', lagrangian_solver_verbose=False):
+    def __init__(self, primal, A, minres_verbose=False):
         super().__init__(primal=primal,
-                         lagrangian_solver=lagrangian_solver,
-                         lagrangian_solver_verbose=lagrangian_solver_verbose)
+                         minres_verbose=minres_verbose)
         self.ndim *= 2
         self.A = np.asarray(A, dtype=float)
 
@@ -200,10 +174,9 @@ class LagrangianBoxConstrainedQuadratic(LagrangianQuadratic):
                     1/2 x^T Q x + q^T x : 0 <= x <= ub
     """
 
-    def __init__(self, primal, ub, lagrangian_solver='minres', lagrangian_solver_verbose=False):
+    def __init__(self, primal, ub, minres_verbose=False):
         super().__init__(primal=primal,
-                         lagrangian_solver=lagrangian_solver,
-                         lagrangian_solver_verbose=lagrangian_solver_verbose)
+                         minres_verbose=minres_verbose)
         self.ndim *= 2
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
@@ -292,11 +265,10 @@ class LagrangianEqualityBoxConstrainedQuadratic(LagrangianBoxConstrainedQuadrati
             1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub
     """
 
-    def __init__(self, primal, A, ub, lagrangian_solver='minres', lagrangian_solver_verbose=False):
+    def __init__(self, primal, A, ub, minres_verbose=False):
         super().__init__(primal=primal,
                          ub=ub,
-                         lagrangian_solver=lagrangian_solver,
-                         lagrangian_solver_verbose=lagrangian_solver_verbose)
+                         minres_verbose=minres_verbose)
         self.ndim += int(self.ndim / 2)
         self.A = np.asarray(A, dtype=float)
 
