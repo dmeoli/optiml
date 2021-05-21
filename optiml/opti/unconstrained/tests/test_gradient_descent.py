@@ -27,14 +27,14 @@ def test_StochasticGradientDescent_Rosenbrock():
     assert np.allclose(StochasticGradientDescent(f=rosen).minimize().x, rosen.x_star(), rtol=0.1)
 
 
-def test_StochasticGradientDescent_standard_momentum_quadratic():
-    assert np.allclose(StochasticGradientDescent(f=quad1, momentum_type='standard').minimize().x, quad1.x_star())
-    assert np.allclose(StochasticGradientDescent(f=quad2, momentum_type='standard').minimize().x, quad2.x_star())
+def test_StochasticGradientDescent_Polyak_momentum_quadratic():
+    assert np.allclose(StochasticGradientDescent(f=quad1, momentum_type='polyak').minimize().x, quad1.x_star())
+    assert np.allclose(StochasticGradientDescent(f=quad2, momentum_type='polyak').minimize().x, quad2.x_star())
 
 
-def test_StochasticGradientDescent_standard_momentum_Rosenbrock():
+def test_StochasticGradientDescent_Polyak_momentum_Rosenbrock():
     rosen = Rosenbrock()
-    assert np.allclose(StochasticGradientDescent(f=rosen, momentum_type='standard').minimize().x, rosen.x_star())
+    assert np.allclose(StochasticGradientDescent(f=rosen, momentum_type='polyak').minimize().x, rosen.x_star())
 
 
 def test_StochasticGradientDescent_Nesterov_momentum_quadratic():

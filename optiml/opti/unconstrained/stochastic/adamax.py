@@ -97,7 +97,7 @@ class AdaMax(StochasticMomentumOptimizer):
 
             step2 = self.step_size * est_mom1_crt / (self.est_mom2 + self.offset)
 
-            if self.momentum_type == 'standard':
+            if self.momentum_type == 'polyak':
 
                 step_m1 = self.step
                 self.step = self.momentum * step_m1 + step2

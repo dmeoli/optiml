@@ -62,7 +62,7 @@ class SVM(BaseEstimator, ABC):
         step-size in updating the weights. Only used when `optimizer` is a
         subclass of `StochasticOptimizer`.
 
-    momentum_type : {'none', 'standard', 'nesterov'}, default='none'
+    momentum_type : {'none', 'polyak', 'nesterov'}, default='none'
         Momentum type used for weight update. Only used when `optimizer` is
         a subclass of `StochasticOptimizer`.
 

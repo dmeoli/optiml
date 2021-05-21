@@ -16,14 +16,14 @@ def test_RMSProp_Rosenbrock():
     assert np.allclose(RMSProp(f=rosen, epochs=1500).minimize().x, rosen.x_star(), rtol=0.1)
 
 
-def test_RMSProp_standard_momentum_quadratic():
-    assert np.allclose(RMSProp(f=quad1, momentum_type='standard').minimize().x, quad1.x_star(), rtol=0.1)
-    assert np.allclose(RMSProp(f=quad2, momentum_type='standard').minimize().x, quad2.x_star(), rtol=0.1)
+def test_RMSProp_Polyak_momentum_quadratic():
+    assert np.allclose(RMSProp(f=quad1, momentum_type='polyak').minimize().x, quad1.x_star(), rtol=0.1)
+    assert np.allclose(RMSProp(f=quad2, momentum_type='polyak').minimize().x, quad2.x_star(), rtol=0.1)
 
 
-def test_RMSProp_standard_momentum_Rosenbrock():
+def test_RMSProp_Polyak_momentum_Rosenbrock():
     rosen = Rosenbrock()
-    assert np.allclose(RMSProp(f=rosen, momentum_type='standard').minimize().x, rosen.x_star(), rtol=0.1)
+    assert np.allclose(RMSProp(f=rosen, momentum_type='polyak').minimize().x, rosen.x_star(), rtol=0.1)
 
 
 def test_Nadam_quadratic():

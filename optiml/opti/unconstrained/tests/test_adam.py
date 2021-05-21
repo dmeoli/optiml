@@ -16,14 +16,14 @@ def test_Adam_Rosenbrock():
     assert np.allclose(Adam(f=rosen, step_size=0.1).minimize().x, rosen.x_star(), rtol=0.1)
 
 
-def test_Adam_standard_momentum_quadratic():
-    assert np.allclose(Adam(f=quad1, momentum_type='standard').minimize().x, quad1.x_star(), rtol=0.1)
-    assert np.allclose(Adam(f=quad2, momentum_type='standard').minimize().x, quad2.x_star(), rtol=0.1)
+def test_Adam_Polyak_momentum_quadratic():
+    assert np.allclose(Adam(f=quad1, momentum_type='polyak').minimize().x, quad1.x_star(), rtol=0.1)
+    assert np.allclose(Adam(f=quad2, momentum_type='polyak').minimize().x, quad2.x_star(), rtol=0.1)
 
 
-def test_Adam_standard_momentum_Rosenbrock():
+def test_Adam_Polyak_momentum_Rosenbrock():
     rosen = Rosenbrock()
-    assert np.allclose(Adam(f=rosen, step_size=0.1, epochs=2000, momentum_type='standard').minimize().x,
+    assert np.allclose(Adam(f=rosen, step_size=0.1, epochs=2000, momentum_type='polyak').minimize().x,
                        rosen.x_star(), rtol=0.1)
 
 

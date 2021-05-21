@@ -16,14 +16,14 @@ def test_AMSGrad_Rosenbrock():
     assert np.allclose(AMSGrad(f=rosen, step_size=0.1).minimize().x, rosen.x_star(), rtol=0.1)
 
 
-def test_AMSGrad_standard_momentum_quadratic():
-    assert np.allclose(AMSGrad(f=quad1, momentum_type='standard').minimize().x, quad1.x_star(), rtol=0.1)
-    assert np.allclose(AMSGrad(f=quad2, momentum_type='standard').minimize().x, quad2.x_star(), rtol=0.1)
+def test_AMSGrad_Polyak_momentum_quadratic():
+    assert np.allclose(AMSGrad(f=quad1, momentum_type='polyak').minimize().x, quad1.x_star(), rtol=0.1)
+    assert np.allclose(AMSGrad(f=quad2, momentum_type='polyak').minimize().x, quad2.x_star(), rtol=0.1)
 
 
-def test_AMSGrad_standard_momentum_Rosenbrock():
+def test_AMSGrad_Polyak_momentum_Rosenbrock():
     rosen = Rosenbrock()
-    assert np.allclose(AMSGrad(f=rosen, momentum_type='standard').minimize().x, rosen.x_star(), rtol=0.1)
+    assert np.allclose(AMSGrad(f=rosen, momentum_type='polyak').minimize().x, rosen.x_star(), rtol=0.1)
 
 
 def test_AMSGrad_nesterov_momentum_quadratic():

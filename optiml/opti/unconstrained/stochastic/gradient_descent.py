@@ -80,7 +80,7 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
                     max_t = min(self.step_size, min(-self.x[idx] / d[idx]))
                     self.step_size = max_t
 
-            if self.momentum_type == 'standard':
+            if self.momentum_type == 'polyak':
 
                 step_m1 = self.step
                 self.step = self.step_size * d + self.momentum * step_m1

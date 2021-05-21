@@ -145,7 +145,7 @@ class StochasticMomentumOptimizer(StochasticOptimizer, ABC):
                          shuffle=shuffle,
                          random_state=random_state,
                          verbose=verbose)
-        if momentum_type not in ('standard', 'nesterov', 'none'):
+        if momentum_type not in ('polyak', 'nesterov', 'none'):
             raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type
         if not 0 <= momentum < 1:

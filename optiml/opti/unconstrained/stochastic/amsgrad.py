@@ -97,7 +97,7 @@ class AMSGrad(StochasticMomentumOptimizer):
 
             step2 = self.step_size * self.est_mom1 / (np.sqrt(est_mom2_crt) + self.offset)
 
-            if self.momentum_type == 'standard':
+            if self.momentum_type == 'polyak':
 
                 step_m1 = self.step
                 self.step = self.momentum * step_m1 + step2

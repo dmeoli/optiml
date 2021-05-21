@@ -18,7 +18,7 @@ The experiments results shown in~\ref{primal_l1_svc_cv_results} referred to \emp
 
 \input{experiments/primal_l1_svc}
 
-The results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{accuracy} score. More training data points are selected as \emph{support vectors} from the SGD solver but it always requires lower iterations, i.e., epochs, to achieve the same \emph{numerical precision}. \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
+The results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{accuracy} score. More training data points are selected as \emph{support vectors} from the SGD solver but it always requires lower iterations, i.e., epochs, to achieve the same \emph{numerical precision}. \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
 
 \begin{figure}[H]
 	\centering
@@ -66,7 +66,7 @@ The experiments results shown in~\ref{primal_l2_svc_cv_results} referred to \emp
 
 \input{experiments/primal_l2_svc}
 
-Again, the results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{accuracy} score. More training data points are selected as \emph{support vectors} from the SGD solver but it always requires even lower iterations, i.e., epochs, to achieve the same \emph{numerical precision}. \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
+Again, the results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{accuracy} score. More training data points are selected as \emph{support vectors} from the SGD solver but it always requires even lower iterations, i.e., epochs, to achieve the same \emph{numerical precision}. \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
 
 \begin{figure}[H]
 	\centering
@@ -91,7 +91,7 @@ The experiments results shown in~\ref{primal_l1_svr_cv_results} referred to \emp
 
 \input{experiments/primal_l1_svr}
 
-The results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{r2} score, except in case of $C$ regularization hyperparameter equals to 1 for which those of SGD are lower. Moreover, the SGD solver always requires lower iterations, i.e., epochs, for higher $C$ regularization values, i.e., for $C$ equals to 10 or 100, to achieve the same \emph{numerical precision}. Again, \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate. The results in terms of \emph{support vectors} are strongly similar to each others.
+The results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{r2} score, except in case of $C$ regularization hyperparameter equals to 1 for which those of SGD are lower. Moreover, the SGD solver always requires lower iterations, i.e., epochs, for higher $C$ regularization values, i.e., for $C$ equals to 10 or 100, to achieve the same \emph{numerical precision}. Again, \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate. The results in terms of \emph{support vectors} are strongly similar to each others.
 
 \begin{figure}[H]
 	\centering
@@ -155,7 +155,7 @@ The experiments results shown in~\ref{primal_l2_svr_cv_results} referred to \emp
 
 \input{experiments/primal_l2_svr}
 
-Again, the results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{r2} score. SGD solver always requires even lower iterations, i.e., epochs, for higher $C$ regularization values, i.e., for $C$ equals to 10 or 100, to achieve the same \emph{numerical precision}. \emph{Standard} or \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
+Again, the results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{r2} score. SGD solver always requires even lower iterations, i.e., epochs, for higher $C$ regularization values, i.e., for $C$ equals to 10 or 100, to achieve the same \emph{numerical precision}. \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
 
 \begin{figure}[H]
 	\centering

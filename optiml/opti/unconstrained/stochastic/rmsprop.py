@@ -77,7 +77,7 @@ class RMSProp(StochasticMomentumOptimizer):
             self.moving_mean_squared = self.decay * self.moving_mean_squared + (1. - self.decay) * self.g_x ** 2
             step2 = self.step_size * d / np.sqrt(self.moving_mean_squared + self.offset)
 
-            if self.momentum_type == 'standard':
+            if self.momentum_type == 'polyak':
 
                 step_m1 = self.step
                 self.step = self.momentum * step_m1 + step2

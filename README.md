@@ -36,26 +36,26 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
         - Stochastic Methods
             - [x] Stochastic Gradient Descent
                 - [x] Momentum
-                    - [x] standard
+                    - [x] Polyak
                     - [x] Nesterov
             - [x] Adam
                 - [x] Momentum
-                    - [x] standard
+                    - [x] Polyak
                     - [x] Nesterov
             - [x] AMSGrad
                 - [x] Momentum
-                    - [x] standard
+                    - [x] Polyak
                     - [x] Nesterov
             - [x] AdaMax
                 - [x] Momentum
-                    - [x] standard
+                    - [x] Polyak
                     - [x] Nesterov
             - [x] AdaGrad
             - [x] AdaDelta
             - [x] RProp
             - [x] RMSProp
                 - [x] Momentum
-                    - [x] standard
+                    - [x] Polyak
                     - [x] Nesterov
         - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface to 
           [ecos](https://github.com/embotech/ecos), [osqp](https://github.com/oxfordcontrol/osqp), 
