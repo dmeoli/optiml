@@ -11,9 +11,24 @@ def test_ConjugateGradient_quadratic():
     assert np.allclose(ConjugateGradient(f=quad2).minimize().x, quad2.x_star())
 
 
-def test_ConjugateGradient_Rosenbrock():
+def test_ConjugateGradient_Rosenbrock_FletcherReeves():
     rosen = Rosenbrock()
-    assert np.allclose(ConjugateGradient(f=rosen).minimize().x, rosen.x_star(), rtol=0.1)
+    assert np.allclose(ConjugateGradient(f=rosen, wf='fr', max_iter=1500).minimize().x, rosen.x_star(), rtol=0.1)
+
+
+def test_ConjugateGradient_Rosenbrock_PolakRibiere():
+    rosen = Rosenbrock()
+    assert np.allclose(ConjugateGradient(f=rosen, wf='pr', max_iter=1500).minimize().x, rosen.x_star(), rtol=0.1)
+
+
+def test_ConjugateGradient_Rosenbrock_HestenesStiefel():
+    rosen = Rosenbrock()
+    assert np.allclose(ConjugateGradient(f=rosen, wf='hs', r_start=1).minimize().x, rosen.x_star(), rtol=0.1)
+
+
+def test_ConjugateGradient_Rosenbrock_DaiYuan():
+    rosen = Rosenbrock()
+    assert np.allclose(ConjugateGradient(f=rosen, wf='dy').minimize().x, rosen.x_star(), rtol=0.1)
 
 
 if __name__ == "__main__":
