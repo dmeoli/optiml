@@ -1,6 +1,7 @@
 import numpy as np
 
 from . import LineSearchOptimizer
+from ... import Quadratic
 
 
 class ConjugateGradient(LineSearchOptimizer):
@@ -203,58 +204,90 @@ class ConjugateGradient(LineSearchOptimizer):
                     if self.is_verbose():
                         print('\t(res)\t\t', end='')
                 else:
-                    if self.wf == 'fr':  # Fletcher-Reeves
-                        beta = (self.ng / np.linalg.norm(past_g_x)) ** 2
-                    elif self.wf == 'pr':  # Polak-Ribiere
-                        beta = self.g_x.dot(self.g_x - past_g_x) / np.linalg.norm(past_g_x) ** 2
-                        beta = max(beta, 0)
-                    elif self.wf == 'hs':  # Hestenes-Stiefel
-                        beta = self.g_x.dot(self.g_x - past_g_x) / (self.g_x - past_g_x).dot(past_d)
-                    elif self.wf == 'dy':  # Dai-Yuan
-                        beta = self.ng ** 2 / (self.g_x - past_g_x).dot(past_d)
-                    if self.is_verbose():
-                        print('\tbeta: {: 1.4e}'.format(beta), end='')
+                    if isinstance(self.f, Quadratic) and not self.is_lagrangian_dual():
+                        beta = self.g_x.dot(self.f.Q).dot(past_d) / past_d.dot(self.f.Q).dot(past_d)
+                    else:
+                        if self.wf == 'fr':  # Fletcher-Reeves
+                            beta = (self.ng / np.linalg.norm(past_g_x)) ** 2
+                        elif self.wf == 'pr':  # Polak-Ribiere
+                            beta = self.g_x.dot(self.g_x - past_g_x) / np.linalg.norm(past_g_x) ** 2
+                            beta = max(beta, 0)
+                        elif self.wf == 'hs':  # Hestenes-Stiefel
+                            beta = self.g_x.dot(self.g_x - past_g_x) / (self.g_x - past_g_x).dot(past_d)
+                        elif self.wf == 'dy':  # Dai-Yuan
+                            beta = self.ng ** 2 / (self.g_x - past_g_x).dot(past_d)
+                        if self.is_verbose():
+                            print('\tbeta: {: 1.4e}'.format(beta), end='')
 
                 if beta != 0:
                     d = -self.g_x + beta * past_d
                 else:
                     d = -self.g_x
 
-            if self.is_lagrangian_dual():
-                # project the direction over the active constraints
-                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+            if isinstance(self.f, Quadratic) and not self.is_lagrangian_dual():
 
-                # first, compute the maximum feasible step size max_t such that:
-                #
-                #   0 <= lambda[i] + max_t * d[i]   for all i
-                #     -lambda[i] <= max_t * d[i]
-                #     -lambda[i] / d[i] <= max_t
+                den = d.dot(self.f.Q).dot(d)
 
-                idx = d < 0  # negative gradient entries
-                if any(idx):
-                    max_t = min(self.line_search.a_start, min(-self.x[idx] / d[idx]))
-                    self.line_search.a_start = max_t
+                if den <= 1e-12:
+                    # this is actually two different cases:
+                    #
+                    # - den = 0, i.e., f is linear along d, and since the
+                    #   gradient is not zero, it is unbounded below
+                    #
+                    # - den < 0, i.e., d is a direction of negative curvature for
+                    #   f, which is then necessarily unbounded below
+                    if self.is_verbose():
+                        print('\tden: {: 1.4e}'.format(den), end='')
 
-            phi_p0 = self.g_x.dot(d)
+                    self.status = 'unbounded'
+                    break
 
-            # compute step size
-            a, last_f_x, last_x, last_g_x, self.f_eval = self.line_search.search(
-                d, self.x, last_x, last_g_x, self.f_eval, self.f_x, phi_p0, self.is_verbose())
+                # compute step size
+                a = self.ng ** 2 / den
 
-            past_g_x = self.g_x  # previous gradient
+                # update new point
+                self.x += a * d
+                self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+
+            else:
+
+                if self.is_lagrangian_dual():
+                    # project the direction over the active constraints
+                    d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+
+                    # first, compute the maximum feasible step size max_t such that:
+                    #
+                    #   0 <= lambda[i] + max_t * d[i]   for all i
+                    #     -lambda[i] <= max_t * d[i]
+                    #     -lambda[i] / d[i] <= max_t
+
+                    idx = d < 0  # negative gradient entries
+                    if any(idx):
+                        max_t = min(self.line_search.a_start, min(-self.x[idx] / d[idx]))
+                        self.line_search.a_start = max_t
+
+                phi_p0 = self.g_x.dot(d)
+
+                # compute step size
+                a, last_f_x, last_x, last_g_x, self.f_eval = self.line_search.search(
+                    d, self.x, last_x, last_g_x, self.f_eval, self.f_x, phi_p0, self.is_verbose())
+
+                # stopping criteria
+                if a <= self.line_search.min_a:
+                    self.status = 'error'
+                    break
+
+                if last_f_x <= self.m_inf:
+                    self.status = 'unbounded'
+                    break
+
+                past_g_x = self.g_x  # previous gradient
+
+                # update new point and gradient
+                self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
+
             past_d = d  # previous search direction
 
-            # stopping criteria
-            if a <= self.line_search.min_a:
-                self.status = 'error'
-                break
-
-            if last_f_x <= self.m_inf:
-                self.status = 'unbounded'
-                break
-
-            # update new point and gradient
-            self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
             self.ng = np.linalg.norm(self.g_x)
 
             self.iter += 1

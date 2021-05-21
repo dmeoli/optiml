@@ -195,32 +195,35 @@ class SteepestGradientDescent(LineSearchOptimizer):
                 self.status = 'stopped'
                 break
 
-            if isinstance(self.f, Quadratic) and not hasattr(self.f, 'primal'):  # exact line search
+            if isinstance(self.f, Quadratic) and not self.is_lagrangian_dual():
 
-                # compute search direction
-                d = self.g_x.dot(self.f.hessian(self.x)).dot(self.g_x)
+                den = self.g_x.dot(self.f.Q).dot(self.g_x)
 
-                if d <= 1e-12:
+                if den <= 1e-12:
                     # this is actually two different cases:
                     #
-                    # - d = 0, i.e., f is linear along g, and since the
+                    # - den = 0, i.e., f is linear along g, and since the
                     #   gradient is not zero, it is unbounded below
                     #
-                    # - d < 0, i.e., g is a direction of negative curvature for
+                    # - den < 0, i.e., g is a direction of negative curvature for
                     #   f, which is then necessarily unbounded below
                     if self.is_verbose():
-                        print('\td: {: 1.4e}'.format(d), end='')
+                        print('\tden: {: 1.4e}'.format(den), end='')
 
                     self.status = 'unbounded'
                     break
 
-                a = self.ng ** 2 / d  # step size
+                # compute search direction
+                d = -self.g_x
+
+                # compute step size
+                a = self.ng ** 2 / den
 
                 # update new point
-                self.x -= a * self.g_x
-                self.f_x, self.g_x = self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
+                self.x += a * d
+                self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
 
-            else:  # inexact line search
+            else:
 
                 # compute search direction
                 d = -self.g_x
@@ -255,10 +258,9 @@ class SteepestGradientDescent(LineSearchOptimizer):
                     self.status = 'unbounded'
                     break
 
-                # update new point
+                # update new point and gradient
                 self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
 
-            # update gradient
             self.ng = np.linalg.norm(self.g_x)
 
             self.iter += 1
