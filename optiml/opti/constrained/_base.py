@@ -93,6 +93,10 @@ class LagrangianQuadratic(Quadratic):
         self.last_x = x.copy()
         return super().function(x)
 
+    def jacobian(self, x):
+        self.last_x = x.copy()
+        return super().jacobian(x)
+
 
 class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
     """
@@ -192,7 +196,7 @@ class LagrangianBoxConstrainedQuadratic(LagrangianQuadratic):
     """
     Construct the Lagrangian dual relaxation of a box-constrained quadratic function defined as:
 
-                    1/2 x^T Q x + q^T x : 0 <= x <= ub
+                    1/2 x^T Q x + q^T x : lb = 0 <= x <= ub
     """
 
     def __init__(self, primal, ub, minres_verbose=False):
@@ -286,7 +290,7 @@ class LagrangianEqualityBoxConstrainedQuadratic(LagrangianBoxConstrainedQuadrati
     """
     Construct the lagrangian relaxation of a constrained quadratic function defined as:
 
-            1/2 x^T Q x + q^T x : A x = 0, 0 <= x <= ub
+            1/2 x^T Q x + q^T x : A x = 0, lb = 0 <= x <= ub
     """
 
     def __init__(self, primal, A, ub, minres_verbose=False):
