@@ -34,6 +34,11 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
 
 
 class LagrangianQuadratic(Quadratic):
+    """
+    Construct the lagrangian relaxation of a constrained quadratic function defined as:
+
+            1/2 x^T Q x + q^T x : x >= 0
+    """
 
     def __init__(self, primal, minres_verbose=False):
         if not isinstance(primal, Quadratic):
