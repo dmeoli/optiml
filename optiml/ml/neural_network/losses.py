@@ -17,11 +17,6 @@ class NeuralNetworkLoss(OptimizationFunction, ABC):
         self.X = X
         self.y = y
 
-    def f_star(self):
-        if not np.isnan(self.x_star()).all():
-            return self.function(self.x_star())
-        return np.inf
-
     def args(self):
         return self.X, self.y
 
@@ -74,6 +69,11 @@ class MeanSquaredError(NeuralNetworkLoss):
                                                self.neural_net.layers[-1].coef_reg.lmbda).dot(self.X.T).dot(self.y)
             return self.x_opt
         return np.full(fill_value=np.nan, shape=self.ndim)
+
+    def f_star(self):
+        if not np.isnan(self.x_star()).all():
+            return self.function(self.x_star())
+        return np.inf
 
     def loss(self, y_pred, y_true):
         return np.sum(np.square(y_pred - y_true))

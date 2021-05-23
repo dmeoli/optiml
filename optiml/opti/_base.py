@@ -2,6 +2,8 @@ from abc import ABC
 
 import autograd.numpy as np
 from autograd import jacobian, hessian
+from scipy.linalg import cho_solve, cho_factor
+from scipy.sparse.linalg import minres
 
 
 class Optimizer(ABC):
@@ -216,9 +218,9 @@ class Quadratic(OptimizationFunction):
     def x_star(self):
         if not hasattr(self, 'x_opt'):
             try:
-                self.x_opt = np.linalg.solve(self.Q, -self.q)
+                self.x_opt = cho_solve(cho_factor(self.Q), -self.q)
             except np.linalg.LinAlgError:
-                self.x_opt = np.full(fill_value=np.nan, shape=self.ndim)
+                self.x_opt = minres(self.Q, -self.q)[0]
         return self.x_opt
 
     def f_star(self):

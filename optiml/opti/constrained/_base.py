@@ -1,6 +1,7 @@
 from abc import ABC
 
 import numpy as np
+from qpsolvers import solve_qp
 from scipy.linalg import cho_solve, cho_factor
 from scipy.sparse.linalg import minres
 
@@ -72,6 +73,17 @@ class LagrangianQuadratic(Quadratic):
 
         return x
 
+    def x_star(self):
+        if not hasattr(self, 'x_opt'):
+            self.x_opt = solve_qp(P=self.Q,
+                                  q=self.q,
+                                  lb=np.zeros_like(self.q),
+                                  solver='cvxopt')
+        return self.x_opt
+
+    def f_star(self):
+        return self.primal.function(self.x_star())
+
     def function(self, x):
         self.last_x = x.copy()
         return super().function(x)
@@ -91,10 +103,14 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
         self.A = np.asarray(A, dtype=float)
 
     def x_star(self):
-        raise np.full(fill_value=np.nan, shape=self.ndim)
-
-    def f_star(self):
-        return np.inf
+        if not hasattr(self, 'x_opt'):
+            self.x_opt = solve_qp(P=self.Q,
+                                  q=self.q,
+                                  A=self.A,
+                                  b=np.zeros(1),
+                                  lb=np.zeros_like(self.q),
+                                  solver='cvxopt')
+        return self.x_opt
 
     def function(self, lmbda):
         """
@@ -183,10 +199,13 @@ class LagrangianBoxConstrainedQuadratic(LagrangianQuadratic):
         self.ub = np.asarray(ub, dtype=float)
 
     def x_star(self):
-        raise np.full(fill_value=np.nan, shape=self.ndim)
-
-    def f_star(self):
-        return np.inf
+        if not hasattr(self, 'x_opt'):
+            self.x_opt = solve_qp(P=self.Q,
+                                  q=self.q,
+                                  lb=np.zeros_like(self.q),
+                                  ub=self.ub,
+                                  solver='cvxopt')
+        return self.x_opt
 
     def function(self, lmbda):
         """
@@ -271,6 +290,17 @@ class LagrangianEqualityBoxConstrainedQuadratic(LagrangianBoxConstrainedQuadrati
                          minres_verbose=minres_verbose)
         self.ndim += int(self.ndim / 2)
         self.A = np.asarray(A, dtype=float)
+
+    def x_star(self):
+        if not hasattr(self, 'x_opt'):
+            self.x_opt = solve_qp(P=self.Q,
+                                  q=self.q,
+                                  A=self.A,
+                                  b=np.zeros(1),
+                                  lb=np.zeros_like(self.q),
+                                  ub=self.ub,
+                                  solver='cvxopt')
+        return self.x_opt
 
     def function(self, lmbda):
         """
