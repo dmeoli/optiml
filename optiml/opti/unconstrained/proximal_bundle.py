@@ -178,7 +178,8 @@ class ProximalBundle(Optimizer):
             if self.is_verbose():
                 print('\n{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, self.nd), end='')
                 if self.f.f_star() < np.inf:
-                    print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) / max(abs(self.f.f_star()), 1)), end='')
+                    print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) /
+                                              max(abs(self.f.f_star()), 1)), end='')
 
             # stopping criteria
             if self.mu * self.nd <= self.eps * ng0:
