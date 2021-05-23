@@ -89,13 +89,71 @@ class LagrangianQuadratic(Quadratic):
     def f_star(self):
         return self.primal.function(self.x_star())
 
-    def function(self, x):
-        self.last_x = x.copy()
-        return super().function(x)
+    def function(self, lmbda):
+        """
+        The Lagrangian relaxation is defined as:
 
-    def jacobian(self, x):
-        self.last_x = x.copy()
-        return super().jacobian(x)
+         L(x, lambda) = 1/2 x^T Q x + q^T x - lambda^T x
+          L(x, lambda) = 1/2 x^T Q x + (q - lambda)^T x
+
+        where lambda is constrained to be >= 0.
+
+        Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
+
+                Q x + (q - lambda) = 0
+
+        so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
+
+                Q x = - (q - lambda)
+
+        :param lmbda: the dual variable wrt evaluate the function
+        :return: the function value wrt lambda
+        """
+        ql = self.q - lmbda
+        if np.array_equal(self.last_lmbda, lmbda):
+            x = self.last_x.copy()  # speedup: just restore optimal solution
+        else:
+            if self.is_posdef:
+                x = cho_solve((self.L, self.low), -ql)
+            else:
+                x = self._solve_sym_nonposdef(ql)
+            # backup new {lambda : x}
+            self.last_lmbda = lmbda.copy()
+            self.last_x = x.copy()
+        return 0.5 * x.dot(self.Q).dot(x) + ql.dot(x)
+
+    def jacobian(self, lmbda):
+        """
+        With x optimal solution of the minimization problem, the jacobian
+        of the Lagrangian dual relaxation at lambda is:
+
+                                [-x]
+
+        However, we rather want to maximize the Lagrangian dual relaxation,
+        hence we have to change the sign of gradient entries:
+
+                                 [x]
+
+        :param lmbda: the dual variable wrt evaluate the gradient
+        :return: the gradient wrt lambda
+        """
+        if np.array_equal(self.last_lmbda, lmbda):
+            x = self.last_x.copy()  # speedup: just restore optimal solution
+        else:
+            ql = self.q - lmbda
+            if self.is_posdef:
+                x = cho_solve((self.L, self.low), -ql)
+            else:
+                x = self._solve_sym_nonposdef(ql)
+            # backup new {lambda : x}
+            self.last_lmbda = lmbda.copy()
+            self.last_x = x.copy()
+        return x
+
+    def hessian(self, lmbda):
+        H = np.zeros((self.ndim, self.ndim))
+        H[0:self.Q.shape[0], 0:self.Q.shape[1]] = self.Q
+        return H
 
 
 class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
@@ -126,7 +184,7 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
         Compute the value of the lagrangian relaxation defined as:
 
         L(x, mu, lambda) = 1/2 x^T Q x + q^T x - mu^T A x - lambda^T x
-        L(x, mu, lambda) = 1/2 x^T Q x + (q - mu A - lambda)^T x
+           L(x, mu, lambda) = 1/2 x^T Q x + (q - mu A - lambda)^T x
 
         where mu are the first n components of lambda which controls the equality constraints and
         lambda are the last n components which controls the inequality constraint;
@@ -185,11 +243,6 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
         return np.hstack((self.A * x, x))
-
-    def hessian(self, lmbda):
-        H = np.zeros((self.ndim, self.ndim))
-        H[0:self.Q.shape[0], 0:self.Q.shape[1]] = self.Q
-        return H
 
 
 class LagrangianBoxConstrainedQuadratic(LagrangianQuadratic):
@@ -279,11 +332,6 @@ class LagrangianBoxConstrainedQuadratic(LagrangianQuadratic):
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
         return np.hstack((self.ub - x, x))
-
-    def hessian(self, lmbda):
-        H = np.zeros((self.ndim, self.ndim))
-        H[0:self.Q.shape[0], 0:self.Q.shape[1]] = self.Q
-        return H
 
 
 class LagrangianEqualityBoxConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
