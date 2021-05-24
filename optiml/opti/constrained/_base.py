@@ -160,12 +160,12 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
     """
     Construct a quadratic function from the KKT system of an equality constrained one defined as:
 
-            1/2 x^T Q x + q^T x : A x = 0
+            1/2 x^T Q x + q^T x : A x = b where b = 0
 
     as:
 
-            | Q A^T | |   x   | = | -q |
-            | A  0  | | lmbda |   |  0 |
+            | Q A^T | |   x   | = |   -q   |
+            | A  0  | | lmbda |   |  b = 0 |
     """
 
     def __init__(self, primal, A, minres_verbose=False):

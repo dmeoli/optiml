@@ -60,8 +60,8 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
         # active, L and U respectively. Of course, L and U have to be disjoint.
         # Since we start from the middle of the box, both the initial active sets
         # are empty
-        L = np.full(self.f.ndim, False)
-        U = np.full(self.f.ndim, False)
+        L = np.full(self.f.ndim, False)  # indexes of variables fixed to the lower bound
+        U = np.full(self.f.ndim, False)  # indexes of variables fixed to the upper bound
 
         # the set of "active variables", those that do *not* belong to any of the
         # two active sets and therefore are "free", is therefore the complement to
@@ -87,7 +87,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
             # solve the unconstrained problem restricted to A the problem reads:
             #
             #  min { (1/2) x_A^T Q_{AA} x_A + (q_A + u_U^T Q_{UA}) x_A }
-            #    [ + (1/2) x_U^T Q_{UU} x_U ]
+            #    [ + (1/2) x_U^T Q_{UU} x_U + q_U u_U ]
             #
             # and therefore the optimal solution is:
             #
