@@ -1,9 +1,10 @@
-__all__ = ['BoxConstrainedQuadraticOptimizer',
-           'LagrangianQuadratic', 'LagrangianEqualityConstrainedQuadratic',
+__all__ = ['BoxConstrainedQuadraticOptimizer', 'LagrangianEqualityConstrainedQuadratic',
+           'LagrangianQuadratic', 'LagrangianConstrainedQuadratic',
            'LagrangianBoxConstrainedQuadratic', 'LagrangianEqualityBoxConstrainedQuadratic',
            'ProjectedGradient', 'ActiveSet', 'FrankWolfe', 'InteriorPoint']
 
-from ._base import BoxConstrainedQuadraticOptimizer, LagrangianQuadratic, LagrangianEqualityConstrainedQuadratic, \
+from ._base import BoxConstrainedQuadraticOptimizer, LagrangianEqualityConstrainedQuadratic, \
+    LagrangianQuadratic, LagrangianConstrainedQuadratic, \
     LagrangianBoxConstrainedQuadratic, LagrangianEqualityBoxConstrainedQuadratic
 
 from .projected_gradient import ProjectedGradient

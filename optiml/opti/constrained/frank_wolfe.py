@@ -70,7 +70,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
         best_lb = -np.inf  # best lower bound so far (= none, really)
 
         if self.verbose:
-            print('iter\t cost\t\t lb\t\t gap')
+            print('iter\t cost\t\t lb\t\t gap', end='')
 
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
@@ -90,7 +90,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
             gap = (self.f_x - best_lb) / max(abs(self.f_x), 1)
 
             if self.is_verbose():
-                print('{:4d}\t{: 1.4e}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, best_lb, gap))
+                print('\n{:4d}\t{: 1.4e}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, best_lb, gap), end='')
 
             try:
                 self.callback()
@@ -133,6 +133,6 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
             self.iter += 1
 
         if self.verbose:
-            print()
+            print('\n')
 
         return self

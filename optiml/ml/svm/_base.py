@@ -20,8 +20,8 @@ from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
 from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
-from ...opti.constrained._base import LagrangianEqualityBoxConstrainedQuadratic, LagrangianEqualityConstrainedQuadratic, \
-    LagrangianQuadratic
+from ...opti.constrained._base import LagrangianEqualityBoxConstrainedQuadratic, LagrangianConstrainedQuadratic, \
+    LagrangianQuadratic, LagrangianEqualityConstrainedQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, StochasticMomentumOptimizer
@@ -763,8 +763,16 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                    Q += np.outer(y, y)
-                    self.obj = Quadratic(Q, q)
+                    if not self.reg_intercept:
+
+                        self.obj = LagrangianEqualityConstrainedQuadratic(primal=Quadratic(Q, q),
+                                                                          A=y,
+                                                                          minres_verbose=self.minres_verbose)
+
+                    else:
+
+                        Q += np.outer(y, y)
+                        self.obj = Quadratic(Q, q)
 
                     self.optimizer = self.optimizer(quad=self.obj,
                                                     ub=ub,
@@ -892,9 +900,9 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                     if not self.reg_intercept:
 
-                        self.obj = LagrangianEqualityConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                          A=y,
-                                                                          minres_verbose=self.minres_verbose)
+                        self.obj = LagrangianConstrainedQuadratic(primal=Quadratic(Q, q),
+                                                                  A=y,
+                                                                  minres_verbose=self.minres_verbose)
 
                     else:
 
@@ -1426,8 +1434,16 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
 
-                        Q += np.outer(e, e)
-                        self.obj = Quadratic(Q, q)
+                        if not self.reg_intercept:
+
+                            self.obj = LagrangianEqualityConstrainedQuadratic(primal=Quadratic(Q, q),
+                                                                              A=e,
+                                                                              minres_verbose=self.minres_verbose)
+
+                        else:
+
+                            Q += np.outer(e, e)
+                            self.obj = Quadratic(Q, q)
 
                         self.optimizer = self.optimizer(quad=self.obj,
                                                         ub=ub,
@@ -1559,9 +1575,9 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     if not self.reg_intercept:
 
-                        self.obj = LagrangianEqualityConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                          A=e,
-                                                                          minres_verbose=self.minres_verbose)
+                        self.obj = LagrangianConstrainedQuadratic(primal=Quadratic(Q, q),
+                                                                  A=e,
+                                                                  minres_verbose=self.minres_verbose)
 
                     else:
 

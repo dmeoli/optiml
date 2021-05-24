@@ -32,7 +32,7 @@ def test_solve_dual_l1_svr_with_smo():
     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_dual_l1_svr_with_with_cvxopt():
+def test_solve_dual_l1_svr_with_cvxopt():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
@@ -46,26 +46,48 @@ def test_solve_dual_l1_svr_with_with_cvxopt():
     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_dual_l1_svr_with_with_bcqp_optimizers():
+def test_solve_dual_l1_svr_with_reg_intercept_with_bcqp_optimizers():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
 
-    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=ProjectedGradient)
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=ProjectedGradient, reg_intercept=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
-    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=ActiveSet)
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=ActiveSet, reg_intercept=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
-    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=InteriorPoint)
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=InteriorPoint, reg_intercept=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
-    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=FrankWolfe)
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=FrankWolfe, reg_intercept=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
+
+
+def test_solve_dual_l1_svr_with_unreg_intercept_with_bcqp_optimizers():
+    X, y = load_boston(return_X_y=True)
+    X_scaled = StandardScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=ProjectedGradient, reg_intercept=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.48
+
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=ActiveSet, reg_intercept=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.48
+
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=InteriorPoint, reg_intercept=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.48
+
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=FrankWolfe, reg_intercept=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.48
 
 
 def test_solve_dual_l1_svr_with_reg_intercept_with_line_search_optimizers():
@@ -234,7 +256,7 @@ def test_solve_primal_l2_svr_with_stochastic_optimizers():
     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_dual_l2_svr_with_with_cvxopt():
+def test_solve_dual_l2_svr_with_cvxopt():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)

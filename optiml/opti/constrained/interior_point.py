@@ -149,7 +149,7 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
         lp[idx] = lp[idx] - self.g_x[idx]
 
         if self.verbose:
-            print('iter\t cost\t\t p\t\t gap')
+            print('iter\t cost\t\t p\t\t gap', end='')
 
         while True:
             self.f_x = self.f.function(self.x)
@@ -158,7 +158,7 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
             gap = (self.f_x - p) / max(abs(self.f_x), 1)
 
             if self.is_verbose():
-                print('{:4d}\t{: 1.4e}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, p, gap))
+                print('\n{:4d}\t{: 1.4e}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, p, gap), end='')
 
             try:
                 self.callback()
@@ -231,6 +231,6 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
             self.iter += 1
 
         if self.verbose:
-            print()
+            print('\n')
 
         return self

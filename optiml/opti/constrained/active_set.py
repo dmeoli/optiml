@@ -69,11 +69,11 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
         A = np.full(self.f.ndim, True)
 
         if self.verbose:
-            print('iter\t cost\t\t|B|\tI/O')
+            print('iter\t cost\t\t|B|', end='')
 
         while True:
             if self.is_verbose():
-                print('{:4d}\t{: 1.4e}\t{:d}\t'.format(self.iter, self.f_x, sum(L) + sum(U)), end='')
+                print('\n{:4d}\t{: 1.4e}\t{:d}\t'.format(self.iter, self.f_x, sum(L) + sum(U)), end='')
 
             try:
                 self.callback()
@@ -143,11 +143,11 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                     if uppr:
                         U[h] = False
                         if self.is_verbose():
-                            print('O {:d}(U)'.format(h))
+                            print('\tI/O: O {:d}(U)'.format(h), end='')
                     else:
                         L[h] = False
                         if self.is_verbose():
-                            print('O {:d}(L)'.format(h))
+                            print('\tI/O: O {:d}(L)'.format(h), end='')
             else:
                 # the solution of the unconstrained problem is not feasible
                 # this means that d = xs - self.x is a descent direction, use it
@@ -181,7 +181,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 A[nU] = False
 
                 if self.is_verbose():
-                    print('I {:d}+{:d}'.format(sum(nL), sum(nU)))
+                    print('\tI/O: I {:d}+{:d}'.format(sum(nL), sum(nU)), end='')
 
             self.x = last_x
 

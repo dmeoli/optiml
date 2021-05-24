@@ -56,7 +56,7 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
     def minimize(self):
 
         if self.verbose:
-            print('iter\t cost\t\t gnorm')
+            print('iter\t cost\t\t gnorm', end='')
 
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
@@ -70,7 +70,7 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
             ng = np.linalg.norm(d)
 
             if self.is_verbose():
-                print('{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, ng))
+                print('\n{:4d}\t{: 1.4e}\t{: 1.4e}'.format(self.iter, self.f_x, ng), end='')
 
             try:
                 self.callback()
@@ -111,6 +111,6 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
             self.iter += 1
 
         if self.verbose:
-            print()
+            print('\n')
 
         return self
