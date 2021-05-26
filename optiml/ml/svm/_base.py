@@ -20,8 +20,8 @@ from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
 from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
-from ...opti.constrained._base import LagrangianEqualityBoxConstrainedQuadratic, LagrangianConstrainedQuadratic, \
-    LagrangianQuadratic, LagrangianEqualityConstrainedQuadratic
+from ...opti.constrained._base import LagrangianEqualityBoxConstrainedQuadratic, \
+    LagrangianEqualityLowerBoundedQuadratic, LagrangianLowerBoundedQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, StochasticMomentumOptimizer
@@ -765,9 +765,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                     if not self.reg_intercept:
 
-                        self.obj = LagrangianEqualityConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                          A=y,
-                                                                          minres_verbose=self.minres_verbose)
+                        raise NotImplementedError
 
                     else:
 
@@ -900,15 +898,15 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                     if not self.reg_intercept:
 
-                        self.obj = LagrangianConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                  A=y,
-                                                                  minres_verbose=self.minres_verbose)
+                        self.obj = LagrangianEqualityLowerBoundedQuadratic(primal=Quadratic(Q, q),
+                                                                           A=y,
+                                                                           minres_verbose=self.minres_verbose)
 
                     else:
 
                         Q += np.outer(y, y)
-                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                       minres_verbose=self.minres_verbose)
+                        self.obj = LagrangianLowerBoundedQuadratic(primal=Quadratic(Q, q),
+                                                                   minres_verbose=self.minres_verbose)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -1436,9 +1434,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                         if not self.reg_intercept:
 
-                            self.obj = LagrangianEqualityConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                              A=e,
-                                                                              minres_verbose=self.minres_verbose)
+                            raise NotImplementedError
 
                         else:
 
@@ -1575,15 +1571,15 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     if not self.reg_intercept:
 
-                        self.obj = LagrangianConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                  A=e,
-                                                                  minres_verbose=self.minres_verbose)
+                        self.obj = LagrangianEqualityLowerBoundedQuadratic(primal=Quadratic(Q, q),
+                                                                           A=e,
+                                                                           minres_verbose=self.minres_verbose)
 
                     else:
 
                         Q += np.outer(e, e)
-                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                       minres_verbose=self.minres_verbose)
+                        self.obj = LagrangianLowerBoundedQuadratic(primal=Quadratic(Q, q),
+                                                                   minres_verbose=self.minres_verbose)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 

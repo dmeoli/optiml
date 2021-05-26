@@ -2,8 +2,29 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import SymLogNorm
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from scipy.sparse.linalg import minres
 
 from .unconstrained import ProximalBundle
+
+
+def solve_lagrangian_equality_constrained_quadratic(Q, q, A):
+    """
+    Solve a quadratic function subject to equality constraint:
+
+            1/2 x^T Q x + q^T x : A x = b = 0
+
+    by solving the KKT system:
+
+            | Q A^T | |   x   | = |   -q   |
+            | A  0  | | lmbda |   |  b = 0 |
+    """
+    A = np.atleast_2d(A).astype(float)
+    kkt_Q = np.vstack((np.hstack((Q, A.T)),
+                       np.hstack((A, np.zeros((A.shape[0], A.shape[0]))))))
+    kkt_q = np.hstack((-q, np.zeros((A.shape[0],))))
+    x_lmbda = minres(kkt_Q, kkt_q)[0]
+    # assert np.allclose(x_lmbda[:-A.shape[0]], solve_qp(P=Q, q=q, A=A, b=np.zeros(1), solver='cvxopt'))
+    return x_lmbda[:-A.shape[0]]
 
 
 # bcqp generator
@@ -118,7 +139,7 @@ def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_
 
 # plot functions
 
-def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
+def plot_surface_contour(f, x_min, x_max, y_min, y_max, A=None, ub=None):
     X, Y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
     Z = np.array([f(np.array([x, y]))
@@ -128,8 +149,11 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
 
     # 3D surface plot
     ax = surface_contour.add_subplot(1, 2, 1, projection='3d', elev=50, azim=-50)
-    ax.plot_surface(X, Y, Z, norm=SymLogNorm(linthresh=abs(Z.min()), base=np.e), cmap='jet', alpha=0.5)
-    ax.plot(f.x_star()[0], f.x_star()[1], f.f_star(), marker='*', color='r', linestyle='None', markersize=10)
+    surf = ax.plot_surface(X, Y, Z, norm=SymLogNorm(linthresh=abs(Z.min()), base=np.e), cmap='jet', alpha=0.5)
+    # bug https://stackoverflow.com/a/55534939/5555994
+    surf._facecolors2d = surf._facecolor3d
+    surf._edgecolors2d = surf._edgecolor3d
+    ax.plot(*f.x_star(), f.f_star(), marker='*', color='r', markersize=10)
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
     ax.set_zlabel(f'${type(f).__name__}$')
@@ -150,38 +174,51 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
                  [v[1], v[2], v[6], v[5]],
                  [v[4], v[7], v[3], v[0]]]
         # plot sides
-        ax.add_collection3d(Poly3DCollection(verts, facecolors='black', linewidths=1.,
-                                             edgecolors='k', alpha=0.1))
+        ax.add_collection3d(Poly3DCollection(verts, facecolors='k', alpha=0.1,
+                                             edgecolors='r', linewidths=1.,
+                                             label='$0 \leq x \leq ub$'))
+
+    if A is not None:
+        X, Y = np.meshgrid(np.arange(x_min, x_max, 2), np.arange(y_min, y_max, 2))
+        Z = np.array([f(np.array([x, y]))
+                      for x, y in zip(X.ravel(), Y.ravel())]).reshape(X.shape)
+        # y = m x + q => m = -(A[0] / A[1]), q = 0
+        ax.plot_surface(X, -(A[0] / A[1]) * X, Z, color='b', label='$Ax=0$')
 
     # 2D contour plot
     ax = surface_contour.add_subplot(1, 2, 2)
     ax.contour(X, Y, Z, 70, cmap='jet', alpha=0.5)
-    ax.plot(*f.x_star(), marker='*', color='r', linestyle='None', markersize=10)
+    ax.plot(*f.x_star(), marker='*', color='r', markersize=10)
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
 
     if ub is not None:
         # 2D box-constraints plot
         ax.plot([0, 0, ub[0], ub[0], 0],
-                [0, ub[1], ub[1], 0, 0], color='k', linewidth=1.5)
+                [0, ub[1], ub[1], 0, 0], color='r', linewidth=1.5)
         ax.fill_between([0, ub[0]],
                         [0, 0],
                         [ub[1], ub[1]], color='0.8')
+
+    if A is not None:
+        X = np.arange(x_min, x_max, 2)
+        # y = m x + q => m = -(A[0] / A[1]), q = 0
+        ax.plot(X, -(A[0] / A[1]) * X, color='b', linewidth=1.5)
 
     return surface_contour
 
 
 def plot_trajectory_optimization(surface_contour, opt, color='k', label=None,
-                                 linestyle='None', linewidth=1., alpha=.5):
+                                 linestyle='None', linewidth=1.):
     # 3D trajectory optimization plot
     surface_contour.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history,
-                                 marker='.', color=color, label=label, alpha=alpha, linewidth=linewidth)
+                                 marker='.', color=color, label=label, linewidth=linewidth)
     angles_x = np.array(opt.x0_history)[1:] - np.array(opt.x0_history)[:-1]
     angles_y = np.array(opt.x1_history)[1:] - np.array(opt.x1_history)[:-1]
     # 2D trajectory optimization plot
     surface_contour.axes[1].quiver(opt.x0_history[:-1], opt.x1_history[:-1], angles_x, angles_y,
                                    scale_units='xy', angles='xy', scale=1, color=color,
-                                   linestyle=linestyle, linewidth=linewidth, alpha=alpha)
+                                   linestyle=linestyle, linewidth=linewidth)
     if isinstance(opt, ProximalBundle):  # plot ns steps
         # 3D trajectory optimization plot
         surface_contour.axes[0].plot(opt.x0_history_ns, opt.x1_history_ns, opt.f_x_history_ns,
@@ -191,11 +228,11 @@ def plot_trajectory_optimization(surface_contour, opt, color='k', label=None,
         # 2D trajectory optimization plot
         surface_contour.axes[1].quiver(opt.x0_history_ns[:-1], opt.x1_history_ns[:-1], angles_x, angles_y,
                                        scale_units='xy', angles='xy', scale=1, color='b')
-    surface_contour.axes[0].legend()
+    # surface_contour.axes[0].legend()
     return surface_contour
 
 
-def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max, ub=None, alpha=.5,
+def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max, A=None, ub=None,
                                          color='k', label=None, linestyle='None', linewidth=1.):
-    plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, ub),
-                                 opt, color, label, linestyle, linewidth, alpha)
+    return plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, A, ub),
+                                        opt, color, label, linestyle, linewidth)

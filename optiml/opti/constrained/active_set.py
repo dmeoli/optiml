@@ -102,19 +102,18 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
             xs[U] = self.ub[U]
 
             try:
-                # use the Cholesky factorization to solve the linear system if Q_{AA}
-                # is symmetric and positive definite, i.e., the function is convex
+                # use the Cholesky factorization to solve the linear system if Q_{AA} is
+                # symmetric and positive definite, i.e., the function is strictly convex
                 xs[A] = cho_solve(cho_factor(self.f.Q[A, :][:, A]),
                                   -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
             except np.linalg.LinAlgError:
                 # since Q is indefinite, i.e., the function is linear along the eigenvectors
                 # correspondent to the null eigenvalues, the system has not solutions, so we
                 # will choose the one that minimizes the residue in the least squares sense
-                # see more @ https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html#solving-linear-problems
                 Q = self.f.Q[A, :][:, A]
                 q = self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])
-                # `min ||Qx - q||^2` is formally equivalent to solve the linear system:
-                #                           Q^T Q x = Q^T q
+                # `min ||Qx - q||^2` is formally equivalent to optimize the following quadratic function:
+                #                           min 1/2 x^T (Q^T Q) x + (-Q^T q)^T x
                 Q, q = np.inner(Q, Q), Q.T.dot(q)
                 xs[A] = minres(Q, -q)[0]
 

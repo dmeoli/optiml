@@ -105,7 +105,7 @@ class Optimizer(ABC):
 
             if self.is_verbose():
                 print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
-                print('\tgap: {: 1.4e}'.format(gap), end='')
+                print('\tdgap: {: 1.4e}'.format(gap), end='')
                 if not self.f.is_posdef:
                     print('\trnorm: {:1.4e}'.format(self.f.last_rnorm), end='')
 
@@ -215,16 +215,14 @@ class Quadratic(OptimizationFunction):
     def x_star(self):
         if not hasattr(self, 'x_opt'):
             try:
+                # use the Cholesky factorization to solve the linear system if Q is
+                # symmetric and positive definite, i.e., the function is strictly convex
                 self.x_opt = cho_solve(cho_factor(self.Q), -self.q)
             except np.linalg.LinAlgError:
                 # since Q is indefinite, i.e., the function is linear along the eigenvectors
                 # correspondent to the null eigenvalues, the system has not solutions, so we
-                # will choose the one that minimizes the residue in the least squares sense
-                # see more @ https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html#solving-linear-problems
-                # `min ||Qx - q||^2` is formally equivalent to solve the linear system:
-                #                           Q^T Q x = Q^T q
-                Q, q = np.inner(self.Q, self.Q), self.Q.T.dot(self.q)
-                self.x_opt = minres(Q, -q)[0]
+                # will choose the one that minimizes the residue
+                self.x_opt = minres(self.Q, -self.q)[0]
         return self.x_opt
 
     def f_star(self):

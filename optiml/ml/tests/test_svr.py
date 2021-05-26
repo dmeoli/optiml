@@ -68,28 +68,6 @@ def test_solve_dual_l1_svr_with_reg_intercept_with_bcqp_optimizers():
     assert svr.score(X_test, y_test) >= 0.77
 
 
-def test_solve_dual_l1_svr_with_unreg_intercept_with_bcqp_optimizers():
-    X, y = load_boston(return_X_y=True)
-    X_scaled = StandardScaler().fit_transform(X)
-    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
-
-    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=ProjectedGradient, reg_intercept=False)
-    svr.fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.48
-
-    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=ActiveSet, reg_intercept=False)
-    svr.fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.48
-
-    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=InteriorPoint, reg_intercept=False)
-    svr.fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.48
-
-    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=FrankWolfe, reg_intercept=False)
-    svr.fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.48
-
-
 def test_solve_dual_l1_svr_with_reg_intercept_with_line_search_optimizers():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
