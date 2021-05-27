@@ -1,4 +1,5 @@
 autograd
+casadi
 cvxopt
 cvxpy==1.1.7
 matplotlib
