@@ -18,7 +18,10 @@ def solve_lagrangian_equality_constrained_quadratic(Q, q, A, method='minres'):
 
             | Q A^T | |   x   | = |   -q   |
             | A  0  | | lmbda |   |  b = 0 |
+
+    See more @ https://www.math.uh.edu/~rohop/fall_06/Chapter3.pdf
     """
+
     A = np.atleast_2d(A).astype(float)
     if method in ('minres', 'ldl'):
         kkt_Q = np.vstack((np.hstack((Q, A.T)),
@@ -26,7 +29,7 @@ def solve_lagrangian_equality_constrained_quadratic(Q, q, A, method='minres'):
         kkt_q = np.hstack((-q, np.zeros((A.shape[0],))))
         if method == 'minres':
             x_lmbda = minres(kkt_Q, kkt_q)[0]
-        elif method == 'ldl':
+        elif method == 'ldl':  # cholesky for (symmetric) indefinite matrix
             #  https://www.math.uh.edu/~rohop/fall_06/Chapter3.pdf#page=3
             x_lmbda = np.array(ldl_solve(kkt_q, *ldl(kkt_Q))).ravel()
         # assert np.allclose(x_lmbda[:-A.shape[0]], solve_qp(P=Q, q=q, A=A, b=np.zeros(1), solver='cvxopt'))
