@@ -166,7 +166,7 @@ def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_
 
 # plot functions
 
-def plot_surface_contour(f, x_min, x_max, y_min, y_max):
+def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
     dual = None
     if hasattr(f, 'primal'):  # lagrangian dual
         dual = f
@@ -187,22 +187,27 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max):
     ax.set_ylabel('$x_2$')
     ax.set_zlabel(f'${type(f).__name__}$')
 
+    legend = False
+
     if dual and hasattr(dual, 'A'):
         X, Y = np.meshgrid(np.arange(x_min, x_max, 2), np.arange(y_min, y_max, 2))
         Z = np.array([f(np.array([x, y]))
                       for x, y in zip(X.ravel(), Y.ravel())]).reshape(X.shape)
         # y = m x + q => m = -(A[0] / A[1]), q = 0
         surf1 = ax.plot_surface(X, -(dual.A[0] / dual.A[1]) * X, Z, color='b', label='$Ax=0$')
+        legend = True
         # bug https://stackoverflow.com/a/55534939/5555994
         surf1._facecolors2d = surf1._facecolor3d
         surf1._edgecolors2d = surf1._edgecolor3d
 
-    if dual and hasattr(dual, 'ub'):  # and so also `lb`
+    if (ub is not None  # bcqp optimizer
+            or (dual and hasattr(dual, 'ub'))):  # and so also `lb`
+
+        ub = dual.ub if dual is not None else ub
 
         # 3D box-constraints plot
         z_min, z_max = Z.min(), Z.max()
         # vertices of the box
-        ub = dual.ub
         v = np.array([[ub[0], 0, z_min], [0, 0, z_min],
                       [0, ub[1], z_min], [ub[0], ub[1], z_min],
                       [ub[0], 0, z_max], [0, 0, z_max],
@@ -217,6 +222,7 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max):
         # plot sides
         surf2 = ax.add_collection3d(Poly3DCollection(verts, facecolors='k', edgecolors='k',
                                                      alpha=0.1, label='$0 \leq x \leq ub$'))
+        legend = True
         # bug https://stackoverflow.com/a/55534939/5555994
         surf2._facecolors2d = surf2._facecolor3d
         surf2._edgecolors2d = surf2._edgecolor3d
@@ -240,11 +246,13 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max):
         # plot sides
         surf3 = ax.add_collection3d(Poly3DCollection(verts, facecolors='k', edgecolors='k',
                                                      alpha=0.1, label='$x \geq 0$'))
+        legend = True
         # bug https://stackoverflow.com/a/55534939/5555994
         surf3._facecolors2d = surf3._facecolor3d
         surf3._edgecolors2d = surf3._edgecolor3d
 
-    ax.legend()
+    if legend:
+        ax.legend()
 
     # 2D contour plot
     ax = surface_contour.add_subplot(1, 2, 2)
@@ -258,10 +266,12 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max):
         # y = m x + q => m = -(A[0] / A[1]), q = 0
         ax.plot(X, -(dual.A[0] / dual.A[1]) * X, color='b')
 
-    if dual and hasattr(dual, 'ub'):  # and so also `lb`
+    if (ub is not None  # bcqp optimizer
+            or (dual and hasattr(dual, 'ub'))):  # and so also `lb`
+
+        ub = dual.ub if dual is not None else ub
 
         # 2D box-constraints plot
-        ub = dual.ub
         ax.plot([0, 0, ub[0], ub[0], 0],
                 [0, ub[1], ub[1], 0, 0], color='k')
         ax.fill_between([0, ub[0]],
@@ -305,5 +315,6 @@ def plot_trajectory_optimization(surface_contour, opt, color='k', label=None, li
 
 def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max,
                                          color='k', label=None, linewidth=1.5):
-    return plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max),
-                                        opt, color, label, linewidth)
+    ub = opt.ub if hasattr(opt, 'ub') else None
+    plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, ub),
+                                 opt, color, label, linewidth)
