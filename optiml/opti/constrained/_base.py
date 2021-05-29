@@ -51,10 +51,11 @@ class LagrangianQuadratic(Quadratic, ABC):
             self.is_posdef = True
         except np.linalg.LinAlgError:
             self.is_posdef = False
+        # multipliers constrained to be >= 0
+        self.constrained_idx = np.full(self.ndim, False)
         # backup {lambda : x}
         self.last_lmbda = None
         self.last_x = None
-        self.last_rnorm = None
 
     def f_star(self):
         return self.primal.function(self.x_star())
@@ -69,29 +70,39 @@ class LagrangianQuadratic(Quadratic, ABC):
         if minres_verbose:
             print('\n')
 
-        # `min ||Qx - q||^2` is formally equivalent to optimize the following quadratic function:
-        #                           min 1/2 x^T (Q^T Q) x + (-Q^T q)^T x
+        # `min ||Qx - q||` is formally equivalent to solve the linear system:
+        #                       (Q^T Q) x = (Q^T q)^T x
 
         Q, q = np.inner(Q, Q), Q.T.dot(q)
 
         x = minres(Q, q, show=minres_verbose)[0]
 
-        self.last_rnorm = np.linalg.norm(q - Q.dot(x))  # || q - Qx ||
-
         return x
+
+    def hessian(self, lmbda):
+        H = np.zeros((self.ndim, self.ndim))
+        H[0:self.Q.shape[0], 0:self.Q.shape[1]] = self.Q
+        return H
 
 
 class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
     """
     Construct the lagrangian dual relaxation of an equality constrained quadratic function defined as:
 
-            1/2 x^T Q x + q^T x : A x = b = 0
+            1/2 x^T Q x + q^T x : A x = 0
     """
 
     def __init__(self, primal, A, minres_verbose=False):
         super().__init__(primal=primal,
                          minres_verbose=minres_verbose)
         self.A = np.asarray(A, dtype=float)
+        A = np.atleast_2d(A)
+        # self.Z = scipy.null_space(A)  # worst, uses SVD
+        Q, R = np.linalg.qr(A.T, mode='complete')
+        # null space aka kernel - range aka image
+        self.Z = Q[:, A.shape[0]:]  # orthonormal basis for the null space of A, i.e., ker(A) = im(Q)
+        assert np.allclose(self.A.dot(self.Z), 0)
+        self.proj_Q = self.Z.T.dot(self.Q).dot(self.Z)
 
     def x_star(self):
         if not hasattr(self, 'x_opt'):
@@ -102,44 +113,39 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
                                   solver='cvxopt')
         return self.x_opt
 
-    def function(self, lmbda):
+    def function(self, mu):
         """
         Compute the value of the lagrangian relaxation defined as:
 
-        L(x, lambda) = 1/2 x^T Q x + q^T x - lambda^T A x
-         L(x, lambda) = 1/2 x^T Q x + (q - lambda A)^T x
-
-        where lambda is constrained to be >= 0.
+        L(x, mu) = 1/2 x^T Q x + q^T x - mu^T A x
+         L(x, mu) = 1/2 x^T Q x + (q - mu A)^T x
 
         Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
 
-                Q x + (q - lambda A) = 0
+                Q x + (q - mu A) = 0
 
         so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
 
-                Q x = - (q - lambda A)
+                Q x = - (q - mu A)
 
-        :param lmbda: the dual variable wrt evaluate the function
-        :return: the function value wrt lambda
+        :param mu: the dual variable wrt evaluate the function
+        :return: the function value wrt mu
         """
-        ql = self.q - lmbda.dot(self.A)
-        if np.array_equal(self.last_lmbda, lmbda):
+        ql = self.q - mu.dot(self.A)
+        if np.array_equal(self.last_lmbda, mu):
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
-            # if self.is_posdef:
-            #     x = cho_solve((self.L, self.low), -ql)
-            # else:
-            #
-            x = self._solve_sym_nonposdef(self.Q, -ql)
+            proj_q = self.Z.T.dot(ql)  # project
+            x = self.Z.dot(self._solve_sym_nonposdef(self.proj_Q, -proj_q))  # recover the primal solution
             # backup new {lambda : x}
-            self.last_lmbda = lmbda.copy()
+            self.last_lmbda = mu.copy()
             self.last_x = x.copy()
         return 0.5 * x.dot(self.Q).dot(x) + ql.dot(x)
 
-    def jacobian(self, lmbda):
+    def jacobian(self, mu):
         """
         With x optimal solution of the minimization problem, the jacobian
-        of the Lagrangian dual relaxation at lambda is:
+        of the Lagrangian dual relaxation at mu is:
 
                                 [-A x]
 
@@ -148,20 +154,17 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
 
                                  [A x]
 
-        :param lmbda: the dual variable wrt evaluate the gradient
-        :return: the gradient wrt lambda
+        :param mu: the dual variable wrt evaluate the gradient
+        :return: the gradient wrt mu
         """
-        if np.array_equal(self.last_lmbda, lmbda):
+        if np.array_equal(self.last_lmbda, mu):
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
-            ql = self.q - lmbda.dot(self.A)
-            # if self.is_posdef:
-            #     x = cho_solve((self.L, self.low), -ql)
-            # else:
-            #
-            x = self._solve_sym_nonposdef(self.Q, -ql)
+            ql = self.q - mu.dot(self.A)
+            proj_q = self.Z.T.dot(ql)  # project
+            x = self.Z.dot(self._solve_sym_nonposdef(self.proj_Q, -proj_q))  # recover the primal solution
             # backup new {lambda : x}
-            self.last_lmbda = lmbda.copy()
+            self.last_lmbda = mu.copy()
             self.last_x = x.copy()
         return self.A * x
 
@@ -176,6 +179,8 @@ class LagrangianLowerBoundedQuadratic(LagrangianQuadratic):
     def __init__(self, primal, minres_verbose=False):
         super().__init__(primal=primal,
                          minres_verbose=minres_verbose)
+        self.lb = np.zeros(self.ndim)
+        self.constrained_idx = np.full(self.ndim, True)  # lambda >= 0
 
     def x_star(self):
         if not hasattr(self, 'x_opt'):
@@ -246,25 +251,23 @@ class LagrangianLowerBoundedQuadratic(LagrangianQuadratic):
             self.last_x = x.copy()
         return x
 
-    def hessian(self, lmbda):
-        H = np.zeros((self.ndim, self.ndim))
-        H[0:self.Q.shape[0], 0:self.Q.shape[1]] = self.Q
-        return H
 
-
-class LagrangianEqualityLowerBoundedQuadratic(LagrangianLowerBoundedQuadratic):
+class LagrangianEqualityLowerBoundedQuadratic(LagrangianEqualityConstrainedQuadratic):
     """
     Construct the lagrangian relaxation of an equality constrained
     quadratic function with lower bounds defined as:
 
-            1/2 x^T Q x + q^T x : A x = b = 0, x >= 0
+            1/2 x^T Q x + q^T x : A x = 0, x >= 0
     """
 
     def __init__(self, primal, A, minres_verbose=False):
         super().__init__(primal=primal,
+                         A=A,
                          minres_verbose=minres_verbose)
+        self.lb = np.zeros(self.ndim)
         self.ndim *= 2
-        self.A = np.asarray(A, dtype=float)
+        self.constrained_idx = np.hstack((np.full(int(self.ndim / 2), False),  # mu
+                                          np.full(int(self.ndim / 2), True)))  # lambda >= 0
 
     def x_star(self):
         if not hasattr(self, 'x_opt'):
@@ -283,9 +286,9 @@ class LagrangianEqualityLowerBoundedQuadratic(LagrangianLowerBoundedQuadratic):
         L(x, mu, lambda) = 1/2 x^T Q x + q^T x - mu^T A x - lambda^T x
            L(x, mu, lambda) = 1/2 x^T Q x + (q - mu A - lambda)^T x
 
-        where mu are the first n components of lambda which controls the equality constraints and
-        lambda are the last n components which controls the inequality constraint;
-        both are constrained to be >= 0.
+        where mu are the first n components of lambda which controls the equality
+        constraints and lambda are the last n components which controls the inequality
+        constraint which are constrained to be >= 0.
 
         Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
 
@@ -303,10 +306,8 @@ class LagrangianEqualityLowerBoundedQuadratic(LagrangianLowerBoundedQuadratic):
         if np.array_equal(self.last_lmbda, lmbda):
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
-            if self.is_posdef:
-                x = cho_solve((self.L, self.low), -ql)
-            else:
-                x = self._solve_sym_nonposdef(self.Q, -ql)
+            proj_q = self.Z.T.dot(ql)  # project
+            x = self.Z.dot(self._solve_sym_nonposdef(self.proj_Q, -proj_q))  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
@@ -332,10 +333,8 @@ class LagrangianEqualityLowerBoundedQuadratic(LagrangianLowerBoundedQuadratic):
         else:
             mu, lmbda = np.split(lmbda, 2)
             ql = self.q - mu.dot(self.A) - lmbda
-            if self.is_posdef:
-                x = cho_solve((self.L, self.low), -ql)
-            else:
-                x = self._solve_sym_nonposdef(self.Q, -ql)
+            proj_q = self.Z.T.dot(ql)  # project
+            x = self.Z.dot(self._solve_sym_nonposdef(self.proj_Q, -proj_q))  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
@@ -356,12 +355,14 @@ class LagrangianBoxConstrainedQuadratic(LagrangianLowerBoundedQuadratic):
         if any(u < 0 for u in ub):
             raise ValueError('the lower bound must be > 0')
         self.ub = np.asarray(ub, dtype=float)
+        self.lb = np.zeros_like(ub)
+        self.constrained_idx = np.full(self.ndim, True)  # lambda_+, lambda_- >= 0
 
     def x_star(self):
         if not hasattr(self, 'x_opt'):
             self.x_opt = solve_qp(P=self.Q,
                                   q=self.q,
-                                  lb=np.zeros_like(self.q),
+                                  lb=np.zeros_like(self.ub),
                                   ub=self.ub,
                                   solver='cvxopt')
         return self.x_opt
@@ -431,20 +432,25 @@ class LagrangianBoxConstrainedQuadratic(LagrangianLowerBoundedQuadratic):
         return np.hstack((self.ub - x, x))
 
 
-class LagrangianEqualityBoxConstrainedQuadratic(LagrangianBoxConstrainedQuadratic):
+class LagrangianEqualityBoxConstrainedQuadratic(LagrangianEqualityConstrainedQuadratic):
     """
     Construct the lagrangian dual relaxation of an equality constrained
     quadratic function with lower and upper bounds defined as:
 
-            1/2 x^T Q x + q^T x : A x = b = 0, lb = 0 <= x <= ub
+            1/2 x^T Q x + q^T x : A x = 0, lb = 0 <= x <= ub
     """
 
     def __init__(self, primal, A, ub, minres_verbose=False):
         super().__init__(primal=primal,
-                         ub=ub,
+                         A=A,
                          minres_verbose=minres_verbose)
-        self.ndim += int(self.ndim / 2)
-        self.A = np.asarray(A, dtype=float)
+        self.ndim *= 3
+        if any(u < 0 for u in ub):
+            raise ValueError('the lower bound must be > 0')
+        self.ub = np.asarray(ub, dtype=float)
+        self.lb = np.zeros_like(ub)
+        self.constrained_idx = np.hstack((np.full(int(self.ndim / 3), False),  # mu
+                                          np.full(int(self.ndim / 3) * 2, True)))  # lambda_+, lambda_ >= 0
 
     def x_star(self):
         if not hasattr(self, 'x_opt'):
@@ -452,7 +458,7 @@ class LagrangianEqualityBoxConstrainedQuadratic(LagrangianBoxConstrainedQuadrati
                                   q=self.q,
                                   A=self.A,
                                   b=np.zeros(1),
-                                  lb=np.zeros_like(self.q),
+                                  lb=np.zeros_like(self.ub),
                                   ub=self.ub,
                                   solver='cvxopt')
         return self.x_opt
@@ -464,9 +470,9 @@ class LagrangianEqualityBoxConstrainedQuadratic(LagrangianBoxConstrainedQuadrati
         L(x, mu, lambda_+, lambda_-) = 1/2 x^T Q x + q^T x - mu^T A x - lambda_+^T (ub - x) - lambda_-^T x
         L(x, mu, lambda_+, lambda_-) = 1/2 x^T Q x + (q - mu A + lambda_+ - lambda_-)^T x - lambda_+^T ub
 
-        where mu are the first n components of lambda which controls the equality constraints,
-        lambda_+^T are the second n components of lambda and lambda_-^T are the last n components;
-        both controls the box-constraints and are constrained to be >= 0.
+        where mu are the first n components of lambda which controls the equality constraints and
+        lambda_+^T are the second n components of lambda and lambda_-^T are the last n components
+        which controls the inequality constraint which are constrained to be >= 0.
 
         Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
 
@@ -484,10 +490,8 @@ class LagrangianEqualityBoxConstrainedQuadratic(LagrangianBoxConstrainedQuadrati
         if np.array_equal(self.last_lmbda, lmbda):
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
-            if self.is_posdef:
-                x = cho_solve((self.L, self.low), -ql)
-            else:
-                x = self._solve_sym_nonposdef(self.Q, -ql)
+            proj_q = self.Z.T.dot(ql)  # project
+            x = self.Z.dot(self._solve_sym_nonposdef(self.proj_Q, -proj_q))  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
@@ -513,10 +517,8 @@ class LagrangianEqualityBoxConstrainedQuadratic(LagrangianBoxConstrainedQuadrati
         else:
             mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
             ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-            if self.is_posdef:
-                x = cho_solve((self.L, self.low), -ql)
-            else:
-                x = self._solve_sym_nonposdef(self.Q, -ql)
+            proj_q = self.Z.T.dot(ql)  # project
+            x = self.Z.dot(self._solve_sym_nonposdef(self.proj_Q, -proj_q))  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()

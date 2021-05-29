@@ -75,7 +75,7 @@ class RProp(StochasticOptimizer):
 
             if self.is_lagrangian_dual():
                 # project the direction over the active constraints
-                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+                d[np.logical_and(self.x <= 1e-12, d < 0, self.f.constrained_idx.copy())] = 0
 
             step = d * np.sign(self.g_x)
 
@@ -89,6 +89,6 @@ class RProp(StochasticOptimizer):
             print('\n')
 
         if self.is_lagrangian_dual():
-            assert all(self.x >= 0)  # Lagrange multipliers
+            assert all(self.x[self.f.constrained_idx] >= 0)  # Lagrange multipliers
 
         return self

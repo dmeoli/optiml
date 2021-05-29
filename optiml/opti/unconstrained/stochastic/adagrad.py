@@ -63,7 +63,7 @@ class AdaGrad(StochasticOptimizer):
 
             if self.is_lagrangian_dual():
                 # project the direction over the active constraints
-                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+                d[np.logical_and(self.x <= 1e-12, d < 0, self.f.constrained_idx.copy())] = 0
 
                 # first, compute the maximum feasible step size max_t such that:
                 #
@@ -71,9 +71,10 @@ class AdaGrad(StochasticOptimizer):
                 #     -lambda[i] <= max_t * d[i] / sqrt(gsm[i] + offset)
                 #     -lambda[i] / d[i] * sqrt(gsm[i] + offset) <= max_t
 
-                idx = d < 0  # negative gradient entries
+                idx = d[self.f.constrained_idx] < 0  # negative gradient entries
                 if any(idx):
-                    max_t = min(-self.x[idx] / d[idx] * np.sqrt(self.gms[idx] + self.offset))
+                    max_t = min(-self.x[self.f.constrained_idx][idx] / d[self.f.constrained_idx][idx] *
+                                np.sqrt(self.gms[self.f.constrained_idx][idx] + self.offset))
                     self.step_size = max_t
 
             self.gms += self.g_x ** 2
@@ -87,6 +88,6 @@ class AdaGrad(StochasticOptimizer):
             print('\n')
 
         if self.is_lagrangian_dual():
-            assert all(self.x >= 0)  # Lagrange multipliers
+            assert all(self.x[self.f.constrained_idx] >= 0)  # Lagrange multipliers
 
         return self

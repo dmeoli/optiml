@@ -148,7 +148,7 @@ class ProximalBundle(Optimizer):
             M = [v >= F + G @ (self.x + d)]
 
             if self.is_lagrangian_dual():  # Lagrange multipliers
-                M += [d >= 0]
+                M += [d[self.f.constrained_idx] >= 0]
 
             if self.f.f_star() < np.inf:
                 # cheating: use information about f_star in the model
@@ -228,6 +228,6 @@ class ProximalBundle(Optimizer):
             print('\n')
 
         if self.is_lagrangian_dual():
-            assert all(self.x >= 0)  # Lagrange multipliers
+            assert all(self.x[self.f.constrained_idx] >= 0)  # Lagrange multipliers
 
         return self

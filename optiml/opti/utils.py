@@ -3,55 +3,36 @@ import numpy as np
 from casadi import ldl_solve, ldl
 from matplotlib.colors import SymLogNorm
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from scipy.sparse.linalg import minres
+from scipy.sparse.linalg import gmres
 
 from .unconstrained import ProximalBundle
 
 
-def solve_lagrangian_equality_constrained_quadratic(Q, q, A, method='minres'):
+def solve_lagrangian_equality_constrained_quadratic(Q, q, A, b=None, method='gmres'):
     """
     Solve a quadratic function subject to equality constraint:
 
-            1/2 x^T Q x + q^T x : A x = b = 0
+            1/2 x^T Q x + q^T x : A x = b
 
     by solving the KKT system:
 
-            | Q A^T | |   x   | = |   -q   |
-            | A  0  | | lmbda |   |  b = 0 |
+            | Q A^T | |   x   | = | -q |
+            | A  0  | | lmbda |   |  b |
 
     See more @ https://www.math.uh.edu/~rohop/fall_06/Chapter3.pdf
     """
-
     A = np.atleast_2d(A).astype(float)
-    if method in ('minres', 'ldl'):
-        kkt_Q = np.vstack((np.hstack((Q, A.T)),
-                           np.hstack((A, np.zeros((A.shape[0], A.shape[0]))))))
-        kkt_q = np.hstack((-q, np.zeros((A.shape[0],))))
-        if method == 'minres':
-            x_lmbda = minres(kkt_Q, kkt_q)[0]
-        elif method == 'ldl':  # cholesky for (symmetric) indefinite matrix
-            #  https://www.math.uh.edu/~rohop/fall_06/Chapter3.pdf#page=3
-            x_lmbda = np.array(ldl_solve(kkt_q, *ldl(kkt_Q))).ravel()
-        # assert np.allclose(x_lmbda[:-A.shape[0]], solve_qp(P=Q, q=q, A=A, b=np.zeros(1), solver='cvxopt'))
-        return x_lmbda[:-A.shape[0]], x_lmbda[-A.shape[0]:]
-    elif method == 'nullspace':
-        q, r = np.linalg.qr(A.T, mode='complete')
-        Z = q[:, A.shape[0]:]  # orthonormal basis for the null space of A, i.e., kernel(A)
-        assert np.allclose(A.dot(Z), 0)
-        Y = q[:, :A.shape[0]]
-        Rp = r[:A.shape[0], :]
-        x_special = np.linalg.lstsq(A, -np.array([0]), rcond=None)[0]
-        reduced_Q = Z.T.dot(Q).dot(Z)
-        reduced_q = Z.T.dot(q) + Z.T.dot(Q).dot(x_special)
-        x_g = np.linalg.lstsq(reduced_Q, -reduced_q, rcond=None)[0]
-        x = Z.dot(x_g) + x_special
-        lmbda = np.linalg.lstsq(Rp, -Y.T.dot(Q.dot(x) + q), rcond=None)[0]
-        return x, lmbda
-    elif method == 'schur':
-        # http://www.cs.nthu.edu.tw/~cherung/teaching/2009cs5321/link/chap16ex.pdf#page=2
-        raise NotImplementedError
-    else:
-        raise NotImplementedError
+    if b is None:
+        b = np.zeros((A.shape[0],))
+    kkt_Q = np.vstack((np.hstack((Q, A.T)),
+                       np.hstack((A, np.zeros((A.shape[0], A.shape[0]))))))
+    kkt_q = np.hstack((-q, b))
+    if method == 'gmres':
+        x_lmbda = gmres(kkt_Q, kkt_q)[0]
+    elif method == 'ldl':
+        x_lmbda = np.array(ldl_solve(kkt_q, *ldl(kkt_Q))).ravel()
+    # assert np.allclose(x_lmbda[:-A.shape[0]], solve_qp(P=Q, q=q, A=A, b=b, solver='cvxopt'))
+    return x_lmbda[:-A.shape[0]], x_lmbda[-A.shape[0]:]
 
 
 # bcqp generator
@@ -313,8 +294,9 @@ def plot_trajectory_optimization(surface_contour, opt, color='k', label=None, li
     return surface_contour
 
 
+# utility for Jupyter Notebook
 def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max,
                                          color='k', label=None, linewidth=1.5):
     ub = opt.ub if hasattr(opt, 'ub') else None
-    plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, ub),
-                                 opt, color, label, linewidth)
+    return plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, ub),
+                                        opt, color, label, linewidth)

@@ -112,8 +112,8 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 # will choose the one that minimizes the residue in the least squares sense
                 Q = self.f.Q[A, :][:, A]
                 q = self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])
-                # `min ||Qx - q||^2` is formally equivalent to optimize the following quadratic function:
-                #                           min 1/2 x^T (Q^T Q) x + (-Q^T q)^T x
+                # `min ||Qx - q||` is formally equivalent to solve the linear system:
+                #                       (Q^T Q) x = (Q^T q)^T x
                 Q, q = np.inner(Q, Q), Q.T.dot(q)
                 xs[A] = minres(Q, -q)[0]
 

@@ -67,7 +67,7 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
 
             if self.is_lagrangian_dual():
                 # project the direction over the active constraints
-                d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+                d[np.logical_and(self.x <= 1e-12, d < 0, self.f.constrained_idx.copy())] = 0
 
                 # first, compute the maximum feasible step size max_t such that:
                 #
@@ -75,9 +75,10 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
                 #     -lambda[i] <= max_t * d[i]
                 #     -lambda[i] / d[i] <= max_t
 
-                idx = d < 0  # negative gradient entries
+                idx = d[self.f.constrained_idx] < 0  # negative gradient entries
                 if any(idx):
-                    max_t = min(self.step_size, min(-self.x[idx] / d[idx]))
+                    max_t = min(self.step_size, min(-self.x[self.f.constrained_idx][idx] /
+                                                    d[self.f.constrained_idx][idx]))
                     self.step_size = max_t
 
             if self.momentum_type == 'polyak':
@@ -103,6 +104,6 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
             print('\n')
 
         if self.is_lagrangian_dual():
-            assert all(self.x >= 0)  # Lagrange multipliers
+            assert all(self.x[self.f.constrained_idx] >= 0)  # Lagrange multipliers
 
         return self

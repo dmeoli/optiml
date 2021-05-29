@@ -56,9 +56,11 @@ class Optimizer(ABC):
         self.status = 'unknown'
         if self.is_lagrangian_dual():
             # initialize the primal problem
-            if hasattr(self.f, 'ub'):
+            if hasattr(self.f, 'A'):  # just `A x = 0` or `A x = 0` and `0 <= x <= ub`
+                self.primal_x = np.zeros(shape=self.f.primal.ndim)
+            elif hasattr(self.f, 'ub'):  # just `0 <= x <= ub`
                 self.primal_x = self.f.ub / 2  # starts from the middle of the box
-            else:
+            else:  # just `x >= 0`
                 if random_state is None:
                     self.primal_x = np.random.uniform(size=self.f.primal.ndim)
                 else:
@@ -88,10 +90,11 @@ class Optimizer(ABC):
 
         if self.is_lagrangian_dual():  # update primal
 
+            last_x = self.f.last_x.copy()
             # compute an heuristic solution out of the solution x of
             # the Lagrangian relaxation by projecting x on the box
-            last_x = self.f.last_x.copy()
-            last_x[last_x < 0] = 0
+            if hasattr(self.f, 'lb'):
+                last_x[last_x < 0] = 0
             if hasattr(self.f, 'ub'):
                 idx = last_x > self.f.ub
                 last_x[idx] = self.f.ub[idx]
@@ -101,13 +104,11 @@ class Optimizer(ABC):
                 self.primal_x = last_x
                 self.primal_f_x = v
 
-            gap = (self.primal_f_x - self.f_x) / max(abs(self.primal_f_x), 1)
+            dgap = (self.primal_f_x - self.f_x) / max(abs(self.primal_f_x), 1)
 
             if self.is_verbose():
                 print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
-                print('\tdgap: {: 1.4e}'.format(gap), end='')
-                if not self.f.is_posdef:
-                    print('\trnorm: {:1.4e}'.format(self.f.last_rnorm), end='')
+                print('\tdgap: {: 1.4e}'.format(dgap), end='')
 
             if self.f.primal.ndim == 2:
                 self.x0_history.append(self.primal_x[0])
@@ -117,7 +118,7 @@ class Optimizer(ABC):
             if callable(self._callback):  # custom callback
                 self._callback(self, *args, *self.callback_args)
 
-            if gap <= self.eps:
+            if dgap <= self.eps:
                 self.status = 'optimal'
                 raise StopIteration
 
