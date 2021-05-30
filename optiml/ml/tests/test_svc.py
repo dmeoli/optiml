@@ -15,6 +15,70 @@ from optiml.opti.unconstrained.stochastic import (StochasticGradientDescent, Ada
                                                   AdaMax, AdaGrad, AdaDelta, RProp, RMSProp)
 
 
+def test_solve_primal_l1_svc_with_line_search_optimizers():
+    X, y = load_iris(return_X_y=True)
+    X_scaled = MinMaxScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=SteepestGradientDescent))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=ConjugateGradient))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=HeavyBallGradient))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.5
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=Newton))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=BFGS))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+
+def test_solve_primal_l1_svc_with_stochastic_optimizers():
+    X, y = load_iris(return_X_y=True)
+    X_scaled = MinMaxScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=StochasticGradientDescent))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=Adam))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=AMSGrad))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=AdaMax))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=AdaGrad))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=AdaDelta, learning_rate=1.))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=RProp))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OneVsRestClassifier(PrimalSVC(loss=hinge, optimizer=RMSProp))
+    svc = svc.fit(X_train, y_train)
+    assert svc.score(X_test, y_test) >= 0.57
+
+
 def test_solve_primal_l1_svc_with_proximal_bundle():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)

@@ -107,9 +107,9 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 xs[A] = cho_solve(cho_factor(self.f.Q[A, :][:, A]),
                                   -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
             except np.linalg.LinAlgError:
-                # since Q is indefinite, i.e., the function is linear along the eigenvectors
-                # correspondent to the null eigenvalues, the system has not solutions, so we
-                # will choose the one that minimizes the residue in the least squares sense
+                # since Q is is not strictly psd, i.e., the function is linear along the
+                # eigenvectors correspondent to the null eigenvalues, the system has infinite
+                # solutions, so we will choose the one that minimizes the 2-norm
                 Q = self.f.Q[A, :][:, A]
                 q = self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])
                 # `min ||Qx - q||` is formally equivalent to solve the linear system:

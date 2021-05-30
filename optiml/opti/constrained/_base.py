@@ -142,11 +142,11 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
         if np.array_equal(self.last_lmbda, mu):
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
-            proj_q = self.Z.T.dot(ql)  # project
+            proj_ql = self.Z.T.dot(ql)  # project
             if self.is_posdef:
-                x = cho_solve((self.L, self.low), -proj_q)
+                x = cho_solve((self.L, self.low), -proj_ql)
             else:
-                x = self._solve_sym_nonposdef(self.proj_Q, -proj_q)
+                x = self._solve_sym_nonposdef(self.proj_Q, -proj_ql)
             x = self.Z.dot(x)  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = mu.copy()
@@ -172,11 +172,11 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
             ql = self.q - mu.dot(self.A)
-            proj_q = self.Z.T.dot(ql)  # project
+            proj_ql = self.Z.T.dot(ql)  # project
             if self.is_posdef:
-                x = cho_solve((self.L, self.low), -proj_q)
+                x = cho_solve((self.L, self.low), -proj_ql)
             else:
-                x = self._solve_sym_nonposdef(self.proj_Q, -proj_q)
+                x = self._solve_sym_nonposdef(self.proj_Q, -proj_ql)
             x = self.Z.dot(x)  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = mu.copy()
@@ -321,11 +321,11 @@ class LagrangianEqualityLowerBoundedQuadratic(LagrangianEqualityConstrainedQuadr
         if np.array_equal(self.last_lmbda, lmbda):
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
-            proj_q = self.Z.T.dot(ql)  # project
-            if self.is_posdef:
-                x = cho_solve((self.L, self.low), -proj_q)
-            else:
-                x = self._solve_sym_nonposdef(self.proj_Q, -proj_q)
+            proj_ql = self.Z.T.dot(ql)  # project
+            # if self.is_posdef:
+            #     x = cho_solve((self.L, self.low), -proj_ql)
+            # else:
+            x = self._solve_sym_nonposdef(self.proj_Q, -proj_ql)
             x = self.Z.dot(x)  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
@@ -352,11 +352,11 @@ class LagrangianEqualityLowerBoundedQuadratic(LagrangianEqualityConstrainedQuadr
         else:
             mu, lmbda = np.split(lmbda, 2)
             ql = self.q - mu.dot(self.A) - lmbda
-            proj_q = self.Z.T.dot(ql)  # project
-            if self.is_posdef:
-                x = cho_solve((self.L, self.low), -proj_q)
-            else:
-                x = self._solve_sym_nonposdef(self.proj_Q, -proj_q)
+            proj_ql = self.Z.T.dot(ql)  # project
+            # if self.is_posdef:
+            #     x = cho_solve((self.L, self.low), -proj_ql)
+            # else:
+            x = self._solve_sym_nonposdef(self.proj_Q, -proj_ql)
             x = self.Z.dot(x)  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
@@ -513,11 +513,11 @@ class LagrangianEqualityBoxConstrainedQuadratic(LagrangianEqualityConstrainedQua
         if np.array_equal(self.last_lmbda, lmbda):
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
-            proj_q = self.Z.T.dot(ql)  # project
+            proj_ql = self.Z.T.dot(ql)  # project
             if self.is_posdef:
-                x = cho_solve((self.L, self.low), -proj_q)
+                x = cho_solve((self.L, self.low), -proj_ql)
             else:
-                x = self._solve_sym_nonposdef(self.proj_Q, -proj_q)
+                x = self._solve_sym_nonposdef(self.proj_Q, -proj_ql)
             x = self.Z.dot(x)  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
@@ -544,11 +544,11 @@ class LagrangianEqualityBoxConstrainedQuadratic(LagrangianEqualityConstrainedQua
         else:
             mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
             ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-            proj_q = self.Z.T.dot(ql)  # project
+            proj_ql = self.Z.T.dot(ql)  # project
             if self.is_posdef:
-                x = cho_solve((self.L, self.low), -proj_q)
+                x = cho_solve((self.L, self.low), -proj_ql)
             else:
-                x = self._solve_sym_nonposdef(self.proj_Q, -proj_q)
+                x = self._solve_sym_nonposdef(self.proj_Q, -proj_ql)
             x = self.Z.dot(x)  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()

@@ -220,9 +220,9 @@ class Quadratic(OptimizationFunction):
                 # symmetric and positive definite, i.e., the function is strictly convex
                 self.x_opt = cho_solve(cho_factor(self.Q), -self.q)
             except np.linalg.LinAlgError:
-                # since Q is indefinite, i.e., the function is linear along the eigenvectors
-                # correspondent to the null eigenvalues, the system has not solutions, so we
-                # will choose the one that minimizes the residue
+                # since Q is is not strictly psd, i.e., the function is linear along the
+                # eigenvectors correspondent to the null eigenvalues, the system has infinite
+                # solutions, so we will choose the one that minimizes the residue
                 self.x_opt = minres(self.Q, -self.q)[0]
         return self.x_opt
 
