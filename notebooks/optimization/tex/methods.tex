@@ -979,13 +979,13 @@ $\mathcal{L}_2$-SVM~(\ref{eq:reg_bias_primal_l2_svc},~\ref{eq:reg_bias_primal_l2
 	& \vtop{\hbox{\strut AdaGrad}\hbox{\strut convergence rate}} \\
 objective & 		\\
 \midrule
-$\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual}) or~(\ref{eq:svc_bcqp_lagrangian_dual},~\ref{eq:svr_bcqp_lagrangian_dual}) & $\displaystyle \mathcal{O}\Bigg(\frac{nm}{\sqrt{t}}\Bigg)$ \\
-$\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svc}) or~(\ref{eq:l2_svr_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{nm}{t}\Bigg)$ \\
+$\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual}) or~(\ref{eq:l1_svc_bcqp_lagrangian_dual},~\ref{eq:l1_svr_bcqp_lagrangian_dual}) & $\displaystyle \mathcal{O}\Bigg(\frac{nm}{\sqrt{t}}\Bigg)$ \\
+$\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:l2_svr_lagrangian_dual}) or~(\ref{eq:l2_svc_lb_lagrangian_dual},~\ref{eq:l2_svr_lb_lagrangian_dual}) & $\displaystyle \mathcal{O}\Bigg(\frac{nm}{t}\Bigg)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Notice that since the Hessian matrix $Q$ of the $\mathcal{L}_1$-SVM is not positive definite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues and so it will be unbounded below, the Lagrangian dual relaxation, i.e.,~(\ref{eq:svc_lagrangian_sol},~\ref{eq:svc_bcqp_lagrangian_sol}) or~(\ref{eq:svr_lagrangian_sol},~\ref{eq:svr_bcqp_lagrangian_sol}), will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute an approximation of the gradient, we will choose $\alpha$ in such a way as the one that minimizes the norm of the residual:
+Notice that since the Hessian matrix $Q$ of the $\mathcal{L}_1$-SVM is not strictly positive definite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues and so it will be unbounded below, the Lagrangian dual relaxation, i.e.,~(\ref{eq:svc_lagrangian_sol},~\ref{eq:svr_lagrangian_sol}) or~(\ref{eq:l1_svc_bcqp_lagrangian_sol},~\ref{eq:l1_svr_bcqp_lagrangian_sol}), will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute an approximation of the gradient, we will choose $\alpha$ in such a way as the one that minimizes the 2-norm since it is good almost like the gradient:
 
 \begin{equation} \label{eq:lagrangian_krylov_sol}
 	\min_{\alpha_n \in K_n(Q, b)} \| Q \alpha_n - b \|
