@@ -130,7 +130,7 @@ class ProximalBundle(Optimizer):
 
         if self.is_lagrangian_dual():
             # project the direction (-g_x) over the active constraints
-            self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0)] = 0
+            self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0, self.f.constrained_idx.copy())] = 0
 
         F = self.f_x - self.g_x.dot(self.x)  # vector of translated function values
 
@@ -208,7 +208,7 @@ class ProximalBundle(Optimizer):
 
             if self.is_lagrangian_dual():
                 # project the direction (-g_x) over the active constraints
-                self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0)] = 0
+                self.g_x[np.logical_and(self.x <= 1e-12, -self.g_x < 0, self.f.constrained_idx.copy())] = 0
 
             F = np.hstack((F, fd - self.g_x.dot(last_x)))
 
