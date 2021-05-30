@@ -232,12 +232,13 @@ From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y
 
 \subsubsection{Lagrangian Dual formulation}
 
-In order to relax the constraints in the \emph{Wolfe dual} formulation~\eqref{eq:svc_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu, \lambda_+, \lambda_- \geq 0$:
+In order to relax the constraints in the \emph{Wolfe dual} formulation~\eqref{eq:svc_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu$ and $\lambda_+, \lambda_- \geq 0$:
 
 \begin{equation} \label{eq:svc_lagrangian_dual}
 	\begin{aligned}
 		    \max_{\mu,\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\mu,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T Q\alpha+q^T\alpha - \mu^T (y^T \alpha) - \lambda_+^T (u - \alpha) - \lambda_-^T \alpha \\
-    &= \frac{1}{2} \alpha^T Q\alpha + (q - \mu y + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T u
+    &= \frac{1}{2} \alpha^T Q\alpha + (q - \mu y + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T u \\
+    \text{subject to} \quad & \,\, \lambda_+, \lambda_- \geq 0
 	\end{aligned}
 \end{equation}
 
@@ -274,7 +275,8 @@ From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y
 \begin{equation} \label{eq:svc_bcqp_lagrangian_dual}
 	\begin{aligned}
     	\max_{\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T (Q + yy^T)\alpha+q^T\alpha - \lambda_+^T (u - \alpha) - \lambda_-^T \alpha \\
-    &= \frac{1}{2} \alpha^T (Q + yy^T)\alpha + (q + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T u
+    &= \frac{1}{2} \alpha^T (Q + yy^T)\alpha + (q + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T u \\
+    \text{subject to} \quad & \,\, \lambda_+, \lambda_- \geq 0
 	\end{aligned}
 \end{equation}
 
@@ -379,12 +381,13 @@ where the diagonal matrix $\displaystyle D_{ii} = \frac{1}{2C} \ \forall_i$.
 
 \subsubsection{Lagrangian Dual formulation}
 
-In order to relax the constraints in the $\mathcal{L}_2$-SVC \emph{Wolfe dual} formulation~\eqref{eq:wolfe_dual_l2_svc} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu, \lambda \geq 0$:
+In order to relax the constraints in the $\mathcal{L}_2$-SVC \emph{Wolfe dual} formulation~\eqref{eq:wolfe_dual_l2_svc} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu$ and $\lambda \geq 0$:
 
 \begin{equation} \label{eq:l2_svc_lagrangian_dual}
 	\begin{aligned}
 		    \max_{\mu,\lambda} \min_{\alpha} \mathcal{L}(\alpha,\mu,\lambda) &= \frac{1}{2} \alpha^T (Q+D)\alpha+q^T\alpha - \mu^T (y^T \alpha) - \lambda^T \alpha \\
-    &= \frac{1}{2} \alpha^T (Q+D)\alpha + (q - \mu y - \lambda)^T \alpha
+    &= \frac{1}{2} \alpha^T (Q+D)\alpha + (q - \mu y - \lambda)^T \alpha \\
+    \text{subject to} \quad & \,\, \lambda \geq 0
 	\end{aligned}
 \end{equation}
 

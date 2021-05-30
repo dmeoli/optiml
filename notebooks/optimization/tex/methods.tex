@@ -77,18 +77,10 @@ f(x) \geq f(y) - L \| x - y \| \ \forall \ x, y \in \Re^m
 $$
 meaning that $f$ is bounded above and below by a linear function.
 
+Intuitively, $L$ is a measure of how fast the function can change.
+
 Finally, we say that a function $f: \Re^m \rightarrow \Re$ is locally $L_f$-Lipschitz continuous if for every $x$ in $\Re^m$ there exists a neighborhood $U$ of $x$ such that $f$ restricted to $U$ is $L_f$-Lipschitz continuous.
 Every convex function is locally $L_f$-Lipschitz continuous.
-\end{definition}
-
-% https://www-ljk.imag.fr/membres/Anatoli.Iouditski/cours/convex/chapitre_3.pdf
-
-\begin{definition}[$L_f$-Lipschitz continuity for convex functions] \label{def:l_f_lipschitz_cvx_continuity}
-Let $f: \Re^m \rightarrow \Re$ be a convex function and let $K$ be a closed and bounded set contained in the relative interior of the domain of $f$, i.e., $K \subset \Re^m$. Then $f$ is $L_f$-Lipschitz continuous on $K$, i.e.,:
-$$
-| f(x) - f(y) | \leq L_f \| x - y \| \ \forall \ x, y \in K
-$$
-In particular, $f$ is bounded on $K$.
 \end{definition}
 
 \begin{definition}[L-Lipschitz continuity] \label{def:l_lipschitz_continuity}
@@ -131,6 +123,16 @@ $$
 $$
 Subgradients always exist for convex function.
 \end{definition}
+
+% https://www-ljk.imag.fr/membres/Anatoli.Iouditski/cours/convex/chapitre_3.pdf
+
+\begin{theorem}[$L_f$-Lipschitz continuity for convex functions] \label{def:l_f_lipschitz_cvx_continuity}
+Let $f: \Re^m \rightarrow \Re$ be a convex function and let $K$ be a closed and bounded set contained in the relative interior of the domain of $f$, i.e., $K \subset \Re^m$. Then $f$ is $L_f$-Lipschitz continuous on $K$, i.e.,:
+$$
+| f(x) - f(y) | \leq L_f \| x - y \| \ \forall \ x, y \in K
+$$
+In particular, $f$ is bounded on $K$.
+\end{theorem}
 
 \pagebreak
 
@@ -914,7 +916,11 @@ For what about the loss functions, two of them are nonsmooth convex functions, i
 % http://juliaml.github.io/LossFunctions.jl/stable/losses/distance/#L1EpsilonInsLoss-1
 % http://juliaml.github.io/LossFunctions.jl/stable/losses/distance/#L2EpsilonInsLoss-1
 
-Also, both the \emph{margin-based} losses, i.e., the \emph{hinge} and the \emph{squared hinge} losses, are $L_f$-Lipschitz continuous; meanwhile, among the \emph{distance-based} losses, the \emph{epsilon-insensitive} loss is $L_f$-Lipschitz continuous but the \emph{squared epsilon-insensitive} is not $L_f$-Lipschitz continuous, however it is convex and for this reason is locally $L_f$-Lipschitz continuous. Also the regularization term, i.e., $\displaystyle \frac{1}{2} \| w \|^2$, is not $L_f$-Lipschitz continuous since it becomes arbitrarily steep as $w$ approaches infinity, but it is strictly convex and for this reason is locally $L_f$-Lipschitz continuous.
+Also, both the \emph{margin-based} losses, i.e., the \emph{hinge} and the \emph{squared hinge} losses, are $L_f$-Lipschitz continuous; meanwhile, among the \emph{distance-based} losses, the \emph{epsilon-insensitive} loss is $L_f$-Lipschitz continuous but the \emph{squared epsilon-insensitive} is not $L_f$-Lipschitz continuous, however it is convex and for this reason is locally $L_f$-Lipschitz continuous. 
+
+Also the regularization term, i.e., $\displaystyle \frac{1}{2} \| w \|^2$, is not $L_f$-Lipschitz continuous since it becomes arbitrarily steep as $w$ approaches infinity, but it is strictly convex and for this reason is locally $L_f$-Lipschitz continuous. Clearly, its gradient, i.e., $w$, is not bounded since, again, they go to infinity as $w$ goes to infinity, so this function is not $L$-Lipschitz continuous.
+
+Since for our purposes, we need to show that our $\mathcal{L}_1$-SVM objectives are $L_f$-Lipschitz continuous and the $\mathcal{L}_2$-SVM objectives are $L$-Lipschitz continuous for the applicability of the convergence theorems, we will use the theorem~\ref{def:l_f_lipschitz_cvx_continuity}.
 
 In general, if the objective function of a quadratic programming problem is strictly convex, i.e., the associated Hessian matrix is positive definite, the solution is unique. Meanwhile, if the objective function is convex, there may be cases where the solution is nonunique.
 
@@ -936,11 +942,11 @@ In summary, the following properties for the SVM's objectives are given:
 	& smooth & \vtop{\hbox{\strut Lipschitz}\hbox{\strut continuous}} & convexity \\
 objective & 		& 		& 		\\
 \midrule
-$\mathcal{L}_1$-SVC~\eqref{eq:reg_bias_primal_l1_svc} & no & \vtop{\hbox{\strut $L_f$-Lipschitz}\hbox{\strut on $K=[0,1]$}} & convex \\
-$\mathcal{L}_2$-SVC~\eqref{eq:reg_bias_primal_l2_svc} & yes & \vtop{\hbox{\strut locally}\hbox{\strut L-Lipschitz}} & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
+$\mathcal{L}_1$-SVC~\eqref{eq:reg_bias_primal_l1_svc} & no & $L_f$-Lipschitz & convex \\
+$\mathcal{L}_2$-SVC~\eqref{eq:reg_bias_primal_l2_svc} & yes & L-Lipschitz & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
 \midrule
-$\mathcal{L}_1$-SVR~\eqref{eq:reg_bias_primal_l1_svr} & no & \vtop{\hbox{\strut $L_f$-Lipschitz}\hbox{\strut on $K=[0,1]$}} & convex \\
-$\mathcal{L}_2$-SVR~\eqref{eq:reg_bias_primal_l2_svr} & yes & \vtop{\hbox{\strut locally}\hbox{\strut L-Lipschitz}} & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
+$\mathcal{L}_1$-SVR~\eqref{eq:reg_bias_primal_l1_svr} & no & $L_f$-Lipschitz & convex \\
+$\mathcal{L}_2$-SVR~\eqref{eq:reg_bias_primal_l2_svr} & yes & L-Lipschitz & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -974,7 +980,7 @@ $\mathcal{L}_2$-SVM~(\ref{eq:reg_bias_primal_l2_svc},~\ref{eq:reg_bias_primal_l2
 objective & 		\\
 \midrule
 $\mathcal{L}_1$-SVM~(\ref{eq:svc_lagrangian_dual},~\ref{eq:svr_lagrangian_dual}) or~(\ref{eq:svc_bcqp_lagrangian_dual},~\ref{eq:svr_bcqp_lagrangian_dual}) & $\displaystyle \mathcal{O}\Bigg(\frac{nm}{\sqrt{t}}\Bigg)$ \\
-% $\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svc}) or~(\ref{eq:l2_svr_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{nm}{t}\Bigg)$ \\
+$\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svc}) or~(\ref{eq:l2_svr_lagrangian_dual},~\ref{eq:reg_bias_wolfe_dual_l2_svr}) & $\displaystyle \mathcal{O}\Bigg(\frac{nm}{t}\Bigg)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
