@@ -298,5 +298,5 @@ def plot_trajectory_optimization(surface_contour, opt, color='k', label=None, li
 def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max,
                                          color='k', label=None, linewidth=1.5):
     ub = opt.ub if hasattr(opt, 'ub') else None
-    return plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, ub),
-                                        opt, color, label, linewidth)
+    plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, ub),
+                                 opt, color, label, linewidth)

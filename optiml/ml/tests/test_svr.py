@@ -75,19 +75,19 @@ def test_solve_dual_l1_svr_with_reg_intercept_with_line_search_optimizers():
 
     svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=Subgradient, reg_intercept=True)
     svr.fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.77
+    assert svr.score(X_test, y_test) >= 0.53
 
     svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=SteepestGradientDescent, reg_intercept=True)
     svr.fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.77
+    assert svr.score(X_test, y_test) >= 0.53
 
     svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=ConjugateGradient, reg_intercept=True)
     svr.fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.77
+    assert svr.score(X_test, y_test) >= 0.53
 
     svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=HeavyBallGradient, reg_intercept=True)
     svr.fit(X_train, y_train)
-    assert svr.score(X_test, y_test) >= 0.77
+    assert svr.score(X_test, y_test) >= 0.53
 
 
 def test_solve_dual_l1_svr_with_unreg_intercept_with_line_search_optimizers():

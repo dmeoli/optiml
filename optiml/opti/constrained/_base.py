@@ -61,9 +61,11 @@ class LagrangianQuadratic(Quadratic, ABC):
         return self.primal.function(self.x_star())
 
     def _solve_sym_nonposdef(self, Q, q):
-        # since Q is indefinite, i.e., the function is linear along the eigenvectors
-        # correspondent to the null eigenvalues, the system has not solutions, so we
-        # will choose the one that minimizes the residue in the least squares sense
+        # since Q is not strictly psd, i.e., the function is linear along the eigenvectors
+        # correspondent to the null eigenvalues, the system has infinite solutions so the
+        # Lagrangian is non differentiable, and, for each solution x, the Lagrangian will
+        # have a different subgradient; so we will choose the one that minimizes the
+        # 2-norm since it is good almost like the gradient
 
         minres_verbose = self.minres_verbose() if callable(self.minres_verbose) else self.minres_verbose
 
@@ -97,12 +99,17 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
                          minres_verbose=minres_verbose)
         self.A = np.asarray(A, dtype=float)
         A = np.atleast_2d(A)
-        # self.Z = scipy.null_space(A)  # worst, uses SVD
+        # self.Z = scipy.null_space(A)  # more complex, uses SVD
         Q, R = np.linalg.qr(A.T, mode='complete')
         # null space aka kernel - range aka image
         self.Z = Q[:, A.shape[0]:]  # orthonormal basis for the null space of A, i.e., ker(A) = im(Q)
         assert np.allclose(self.A.dot(self.Z), 0)
-        self.proj_Q = self.Z.T.dot(self.Q).dot(self.Z)
+        self.proj_Q = self.Z.T.dot(self.Q).dot(self.Z)  # project
+        try:
+            self.L, self.low = cho_factor(self.proj_Q)
+            self.is_posdef = True
+        except np.linalg.LinAlgError:
+            self.is_posdef = False
 
     def x_star(self):
         if not hasattr(self, 'x_opt'):
@@ -136,7 +143,11 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
             proj_q = self.Z.T.dot(ql)  # project
-            x = self.Z.dot(self._solve_sym_nonposdef(self.proj_Q, -proj_q))  # recover the primal solution
+            if self.is_posdef:
+                x = cho_solve((self.L, self.low), -proj_q)
+            else:
+                x = self._solve_sym_nonposdef(self.proj_Q, -proj_q)
+            x = self.Z.dot(x)  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = mu.copy()
             self.last_x = x.copy()
@@ -162,7 +173,11 @@ class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
         else:
             ql = self.q - mu.dot(self.A)
             proj_q = self.Z.T.dot(ql)  # project
-            x = self.Z.dot(self._solve_sym_nonposdef(self.proj_Q, -proj_q))  # recover the primal solution
+            if self.is_posdef:
+                x = cho_solve((self.L, self.low), -proj_q)
+            else:
+                x = self._solve_sym_nonposdef(self.proj_Q, -proj_q)
+            x = self.Z.dot(x)  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = mu.copy()
             self.last_x = x.copy()
@@ -307,7 +322,11 @@ class LagrangianEqualityLowerBoundedQuadratic(LagrangianEqualityConstrainedQuadr
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
             proj_q = self.Z.T.dot(ql)  # project
-            x = self.Z.dot(self._solve_sym_nonposdef(self.proj_Q, -proj_q))  # recover the primal solution
+            if self.is_posdef:
+                x = cho_solve((self.L, self.low), -proj_q)
+            else:
+                x = self._solve_sym_nonposdef(self.proj_Q, -proj_q)
+            x = self.Z.dot(x)  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
@@ -334,7 +353,11 @@ class LagrangianEqualityLowerBoundedQuadratic(LagrangianEqualityConstrainedQuadr
             mu, lmbda = np.split(lmbda, 2)
             ql = self.q - mu.dot(self.A) - lmbda
             proj_q = self.Z.T.dot(ql)  # project
-            x = self.Z.dot(self._solve_sym_nonposdef(self.proj_Q, -proj_q))  # recover the primal solution
+            if self.is_posdef:
+                x = cho_solve((self.L, self.low), -proj_q)
+            else:
+                x = self._solve_sym_nonposdef(self.proj_Q, -proj_q)
+            x = self.Z.dot(x)  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
@@ -491,7 +514,11 @@ class LagrangianEqualityBoxConstrainedQuadratic(LagrangianEqualityConstrainedQua
             x = self.last_x.copy()  # speedup: just restore optimal solution
         else:
             proj_q = self.Z.T.dot(ql)  # project
-            x = self.Z.dot(self._solve_sym_nonposdef(self.proj_Q, -proj_q))  # recover the primal solution
+            if self.is_posdef:
+                x = cho_solve((self.L, self.low), -proj_q)
+            else:
+                x = self._solve_sym_nonposdef(self.proj_Q, -proj_q)
+            x = self.Z.dot(x)  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
@@ -518,7 +545,11 @@ class LagrangianEqualityBoxConstrainedQuadratic(LagrangianEqualityConstrainedQua
             mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
             ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
             proj_q = self.Z.T.dot(ql)  # project
-            x = self.Z.dot(self._solve_sym_nonposdef(self.proj_Q, -proj_q))  # recover the primal solution
+            if self.is_posdef:
+                x = cho_solve((self.L, self.low), -proj_q)
+            else:
+                x = self._solve_sym_nonposdef(self.proj_Q, -proj_q)
+            x = self.Z.dot(x)  # recover the primal solution
             # backup new {lambda : x}
             self.last_lmbda = lmbda.copy()
             self.last_x = x.copy()
