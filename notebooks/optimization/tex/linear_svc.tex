@@ -138,7 +138,7 @@ In the specific case of the $\mathcal{L}_1$-SVC the objective~\eqref{eq:primal_l
     \min_{w,b} \frac{1}{2} (\| w \|^2 + b^2) + C \sum_{i=1}^n \max(0, 1 - y_i (w^T x_i + b))
 \end{equation}
 
-Notice that in terms of numerical optimization the formulation~\eqref{eq:primal_l1_svc} is not equivalent to~\eqref{eq:reg_bias_primal_l1_svc} since in the first one the bias term $b$ does not contribute to the \emph{regularization term}, so the SVM formulation is based on an unregularized bias term $b$, as highlighted by the \emph{statistical learning theory}. But, in machine learning sense, numerical experiments in~\cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
+Note that in terms of numerical optimization the formulation~\eqref{eq:primal_l1_svc} is not equivalent to~\eqref{eq:reg_bias_primal_l1_svc} since in the first one the bias term $b$ does not contribute to the \emph{regularization term}, so the SVM formulation is based on an unregularized bias term $b$, as highlighted by the \emph{statistical learning theory}. But, in machine learning sense, numerical experiments in~\cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
 
 \subsubsection{Wolfe Dual formulation}
 
