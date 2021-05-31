@@ -40,6 +40,8 @@ In order to explain the \emph{convergence rates} of the following optimization m
 	\end{enumerate}
 \end{definition}
 
+% http://xingyuzhou.org/blog/notes/strong-convexity
+
 \begin{definition}[Strong Convexity] \label{def:strong_convexity}
 We say that a function $f: \Re^m \rightarrow \Re$ is $\mu$-strongly convex if the function:
 $$
@@ -62,6 +64,7 @@ i.e., all the eigenvalues of the Hessian matrix are lowerbounded by $\mu I$.
 \end{definition}
 
 % https://angms.science/doc/CVX/CVX_alphabeta.pdf
+% https://xingyuzhou.org/blog/notes/Lipschitz-gradient
 
 \begin{definition}[$L_f$-Lipschitz continuity] \label{def:l_f_lipschitz_continuity}
 We say that a function $f: \Re^m \rightarrow \Re$ is $L_f$-Lipschitz continuous if:
@@ -107,7 +110,7 @@ $$
 $$
 i.e., all the eigenvalues of the Hessian matrix are upperbounded by $L$.
 
-Notice that if $f$ is a $\mu$-strongly convex function, we give the following Hessian bounds:
+Note that if $f$ is a $\mu$-strongly convex function, we give the following Hessian bounds:
 $$
 0 \prec \mu I \preceq \nabla^2 f(x) \preceq L I \ \forall \ x \in \Re^m
 $$
@@ -163,6 +166,7 @@ $$
 $$
 showing that $f$ is $L_f$-Lipschitz continuous over $K$.
 \end{proof}
+
 Note that this proof shows how to determine the Lipschitz constant $L_f$: it is the maximum subgradient norm, over all subgradients in $\cup_{x \in K} \partial f(x)$.
 
 Strong convexity and L-Lipschitz continuity are related by Fenchel duality according to the following theorem, which proof is given in~\cite{zhou2018fenchel}.
@@ -474,7 +478,7 @@ strongly convex and L-Lipschitz & $\displaystyle \alpha = \frac{1}{L}$ & $\displ
 \end{tabular}
 \end{table}
 
-Notice that in case of L-Lipschitz continuous and strongly convex functions, Nesterov's momentum gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great because we get the guarantee for a more general class of functions, but these \emph{convergence rates} cannot be futher improved only using first-order information.
+Note that in case of L-Lipschitz continuous and strongly convex functions, Nesterov's momentum gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great because we get the guarantee for a more general class of functions, but these \emph{convergence rates} cannot be futher improved only using first-order information.
 
 \pagebreak
 
@@ -765,7 +769,7 @@ or, finally, if ($\alpha_1^- > 0$ or ($\alpha_1^+ = 0$ and $ E_1 - E_2 < 0$)) an
 	\alpha_1^{-,new} = \alpha_1^- - (\alpha_2^{-,new,clipped} - \alpha_2^-)
 \end{equation}
 
-where $\gamma = \alpha_1^+ - \alpha_1^- + \alpha_2^+ - \alpha_2^-$. Notice that $\eta$ and $\alpha_2^{+,new,clipped}$ or $\alpha_2^{-,new,clipped}$ are identical to~\eqref{eq:smo_eta} and~\eqref{eq:smo_svc_a2_new_clipped} respectively.
+where $\gamma = \alpha_1^+ - \alpha_1^- + \alpha_2^+ - \alpha_2^-$. Note that $\eta$ and $\alpha_2^{+,new,clipped}$ or $\alpha_2^{-,new,clipped}$ are identical to~\eqref{eq:smo_eta} and~\eqref{eq:smo_svc_a2_new_clipped} respectively.
 
 The KKT conditions for the regression problem~\eqref{eq:svr_min_wolfe_dual} are:
 
@@ -1031,7 +1035,7 @@ $\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:l2_svr_lagrangian_
 \end{tabular}
 \end{table}
 
-Notice that since the Hessian matrix $Q$ of the $\mathcal{L}_1$-SVM is not strictly positive definite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues and so it will be unbounded below, the Lagrangian dual relaxation, i.e.,~(\ref{eq:svc_lagrangian_sol},~\ref{eq:svr_lagrangian_sol}) or~(\ref{eq:l1_svc_bcqp_lagrangian_sol},~\ref{eq:l1_svr_bcqp_lagrangian_sol}), will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute an approximation of the gradient, we will choose $\alpha$ in such a way as the one that minimizes the 2-norm since it is good almost like the gradient:
+Note that since the Hessian matrix $Q$ of the $\mathcal{L}_1$-SVM is not strictly positive definite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues and so it will be unbounded below, the Lagrangian dual relaxation, i.e.,~(\ref{eq:svc_lagrangian_sol},~\ref{eq:svr_lagrangian_sol}) or~(\ref{eq:l1_svc_bcqp_lagrangian_sol},~\ref{eq:l1_svr_bcqp_lagrangian_sol}), will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute an approximation of the gradient, we will choose $\alpha$ in such a way as the one that minimizes the 2-norm since it is good almost like the gradient:
 
 \begin{equation} \label{eq:lagrangian_krylov_sol}
 	\min_{\alpha_n \in K_n(Q, b)} \| Q \alpha_n - b \|
