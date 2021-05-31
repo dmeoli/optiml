@@ -2,7 +2,7 @@
 
 \section{Optimization Methods}
 
-In order to explain the \emph{convergence} and \emph{efficiency} properties of the following optimization methods, we need to introduce some preliminary definitions about \emph{convexity} and the \emph{L-Lipschitz continuity} of a function~\cite{boyd2004convex}.
+In order to explain the \emph{convergence rates} of the following optimization methods, we need to introduce some preliminary definitions about \emph{convexity} and the \emph{Lipschitz continuity} of a function~\cite{boyd2004convex}.
 
 \begin{definition}[Convexity] \label{def:convexity}
 	\hfill
@@ -70,10 +70,10 @@ $$
 $$
 and, by removing the absolute value sign we give:
 $$
-f(x) \leq f(y) + L \| x - y \| \ \forall \ x, y \in \Re^m
+f(x) \leq f(y) + L_f \| x - y \| \ \forall \ x, y \in \Re^m
 $$
 $$
-f(x) \geq f(y) - L \| x - y \| \ \forall \ x, y \in \Re^m
+f(x) \geq f(y) - L_f \| x - y \| \ \forall \ x, y \in \Re^m
 $$
 meaning that $f$ is bounded above and below by a linear function.
 
@@ -126,13 +126,59 @@ Subgradients always exist for convex function.
 
 % https://www-ljk.imag.fr/membres/Anatoli.Iouditski/cours/convex/chapitre_3.pdf
 
-\begin{theorem}[$L_f$-Lipschitz continuity for convex functions] \label{def:l_f_lipschitz_cvx_continuity}
+\begin{theorem}[$L_f$-Lipschitz continuity for convex functions] \label{def:l_f_lipschitz_convex}
 Let $f: \Re^m \rightarrow \Re$ be a convex function and let $K$ be a closed and bounded set contained in the relative interior of the domain of $f$, i.e., $K \subset \Re^m$. Then $f$ is $L_f$-Lipschitz continuous on $K$, i.e.,:
 $$
 | f(x) - f(y) | \leq L_f \| x - y \| \ \forall \ x, y \in K
 $$
 In particular, $f$ is bounded on $K$.
 \end{theorem}
+
+% http://www.athenasc.com/convexsol4.pdf#page=7
+
+\begin{proof}
+Let $x$ and $y$ be any two points in the set $K$. Since $\partial f(x)$ is nonempty, by using the subgradient inequality~\ref{def:subgradient}, it follows that:
+$$
+	f(y) \geq f(x) + \langle g, y - x \rangle \ \forall \ g \in \partial f(x)
+$$
+implying that:
+$$
+	f(x) - f(y) \leq \|g\| \|x-y\| \ \forall \ g \in \partial f(x)
+$$
+By definition, the set $\cup_{x \in K} \partial f(x)$ is nonempty and bounded, so that for some constant $L > 0$, we have:
+$$
+	\|g\| \leq L_f \ \ \ \forall g \in \partial f(x) \ \ \ \forall x \in K
+$$
+and therefore:
+$$
+	f(x) - f(y) \leq L_f \|x-y\|
+$$
+By exchanging the roles of $x$ ad $y$, we similarly obtain:
+$$
+	f(y) - f(x) \leq L_f \|x-y\|
+$$
+and by combining the preceding two relations, we see that:
+$$
+	|f(x) - f(y)| \leq L_f \|x-y\|
+$$
+showing that $f$ is $L_f$-Lipschitz continuous over $K$.
+\end{proof}
+Note that this proof shows how to determine the Lipschitz constant $L_f$: it is the maximum subgradient norm, over all subgradients in $\cup_{x \in K} \partial f(x)$.
+
+Strong convexity and L-Lipschitz continuity are related by Fenchel duality according to the following theorem, which proof is given in~\cite{zhou2018fenchel}.
+
+% https://arxiv.org/pdf/1803.06573.pdf
+% https://www.stat.purdue.edu/~vishy/introml/notes/Optimization.pdf#page=8
+
+\begin{theorem}[$\mu$-strong convexity and L-Lipschitz continuity for convex functions]\label{def:strong_cvx_l_lipschitz_convex}
+A function $f$ and its Fenchel dual $f^*$ satisfy the following assertions:
+\begin{enumerate}[(i)]
+		\item if $f$ is $\mu$-strongly convex, then $f^*$ is $\displaystyle \frac{1}{\mu}$-Lipschitz continuous.
+		\item if $f$ is convex and L-Lipschitz continuous, then $f^*$ is $\displaystyle \frac{1}{L}$-strongly convex.
+\end{enumerate}
+\end{theorem}
+
+Note that since $f$ is convex and its epigraph is a closed convex set, $f^* = f$, i.e., strong duality holds.
 
 \pagebreak
 
@@ -920,11 +966,11 @@ Also, both the \emph{margin-based} losses, i.e., the \emph{hinge} and the \emph{
 
 Also the regularization term, i.e., $\displaystyle \frac{1}{2} \| w \|^2$, is not $L_f$-Lipschitz continuous since it becomes arbitrarily steep as $w$ approaches infinity, but it is strictly convex and for this reason is locally $L_f$-Lipschitz continuous. Clearly, its gradient, i.e., $w$, is not bounded since, again, they go to infinity as $w$ goes to infinity, so this function is not $L$-Lipschitz continuous.
 
-Since for our purposes, we need to show that our $\mathcal{L}_1$-SVM objectives are $L_f$-Lipschitz continuous and the $\mathcal{L}_2$-SVM objectives are $L$-Lipschitz continuous for the applicability of the convergence theorems, we will use the theorem~\ref{def:l_f_lipschitz_cvx_continuity}.
+Since for our purposes, we need to show that our $\mathcal{L}_1$-SVM objectives are $L_f$-Lipschitz continuous and the $\mathcal{L}_2$-SVM objectives are $L$-Lipschitz continuous for the applicability of the convergence theorems, we will use the theorem~\ref{def:l_f_lipschitz_convex} and~\ref{def:strong_cvx_l_lipschitz_convex} respectively.
 
 In general, if the objective function of a quadratic programming problem is strictly convex, i.e., the associated Hessian matrix is positive definite, the solution is unique. Meanwhile, if the objective function is convex, there may be cases where the solution is nonunique.
 
-Assume that the hard margin SVM has a solution, i.e., the given problem is separable in the feature space. Then, since the objective function of the primal problem is $\displaystyle \frac{1}{2} \| w \|^2$, which is 1-strongly convex, the primal problem has a unique solution for $w$ and $b$.
+Assume that the hard margin SVM has a solution, i.e., the given problem is separable in the feature space. Then, since the objective function of the primal problem is $\displaystyle \frac{1}{2} \| w \|^2$, which is strongly convex, the primal problem has a unique solution for $w$ and $b$.
 
 Since the $\mathcal{L}_1$-SVM linearly penalizes the misclassified points, the primal objective function is convex. Likewise, the Hessian matrix of the dual objective function is positive semidefinite. Thus the primal and dual solutions may be nonunique. Meanwhile, the objective function of the primal problem for the $\mathcal{L}_2$-SVM is strictly convex, due to the quadratic penalization of the misclassified points. Therefore, $w$ and $b$ are uniquely determined if we solve the primal or dual problem. 
 
@@ -943,10 +989,10 @@ In summary, the following properties for the SVM's objectives are given:
 objective & 		& 		& 		\\
 \midrule
 $\mathcal{L}_1$-SVC~\eqref{eq:reg_bias_primal_l1_svc} & no & $L_f$-Lipschitz & convex \\
-$\mathcal{L}_2$-SVC~\eqref{eq:reg_bias_primal_l2_svc} & yes & L-Lipschitz & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
+$\mathcal{L}_2$-SVC~\eqref{eq:reg_bias_primal_l2_svc} & yes & L-Lipschitz & \vtop{\hbox{\strut strongly}\hbox{\strut convex}} \\
 \midrule
 $\mathcal{L}_1$-SVR~\eqref{eq:reg_bias_primal_l1_svr} & no & $L_f$-Lipschitz & convex \\
-$\mathcal{L}_2$-SVR~\eqref{eq:reg_bias_primal_l2_svr} & yes & L-Lipschitz & \vtop{\hbox{\strut 1-strongly}\hbox{\strut convex}} \\
+$\mathcal{L}_2$-SVR~\eqref{eq:reg_bias_primal_l2_svr} & yes & L-Lipschitz & \vtop{\hbox{\strut strongly}\hbox{\strut convex}} \\
 \bottomrule
 \end{tabular}
 \end{table}
