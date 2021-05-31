@@ -71,13 +71,6 @@ We say that a function $f: \Re^m \rightarrow \Re$ is $L_f$-Lipschitz continuous 
 $$
 | f(x) - f(y) | \leq L_f \| x - y \| \ \forall \ x, y \in \Re^m
 $$
-and, by removing the absolute value sign we give:
-$$
-f(x) \leq f(y) + L_f \| x - y \| \ \forall \ x, y \in \Re^m
-$$
-$$
-f(x) \geq f(y) - L_f \| x - y \| \ \forall \ x, y \in \Re^m
-$$
 meaning that $f$ is bounded above and below by a linear function.
 
 Intuitively, $L$ is a measure of how fast the function can change.
@@ -94,13 +87,6 @@ $$
 that is equivalent to:
 $$
 | f(y) - f(x) - \langle \nabla f(x), y - x \rangle | \leq \frac{L}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
-$$
-and, by removing the absolute value sign we give:
-$$
-f(y) \leq f(x) + \langle \nabla f(x), y - x \rangle + \frac{L}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
-$$
-$$
-f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle - \frac{L}{2} \| y - x \|^2 \ \forall \ x, y \in \Re^m
 $$
 meaning that $f$ is bounded above and below by a quadratic function.
 
