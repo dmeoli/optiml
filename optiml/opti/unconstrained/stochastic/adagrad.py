@@ -63,7 +63,7 @@ class AdaGrad(StochasticOptimizer):
 
             if self.is_lagrangian_dual():
                 # project the direction over the active constraints
-                d[np.logical_and(self.x <= 1e-12, d < 0, self.f.constrained_idx.copy())] = 0
+                d[np.logical_and.reduce((self.x <= 1e-12, d < 0, self.f.constrained_idx))] = 0
 
                 # first, compute the maximum feasible step size max_t such that:
                 #
