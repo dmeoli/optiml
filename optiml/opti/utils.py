@@ -8,6 +8,16 @@ from scipy.sparse.linalg import gmres
 from .unconstrained import ProximalBundle
 
 
+def null_space(A):
+    A = np.atleast_2d(A)
+    # Z = scipy.null_space(A)  # more complex, uses SVD
+    Q = np.linalg.qr(A.T, mode='complete')[0]
+    # null space aka kernel - range aka image
+    Z = Q[:, A.shape[0]:]  # orthonormal basis for the null space of A, i.e., ker(A) = im(Q)
+    assert np.allclose(A.dot(Z), 0)
+    return Z
+
+
 def solve_lagrangian_equality_constrained_quadratic(Q, q, A, b=None, method='gmres'):
     """
     Solve a quadratic function subject to equality constraint:
@@ -201,7 +211,7 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
                  [v[1], v[2], v[6], v[5]],
                  [v[4], v[7], v[3], v[0]]]
         # plot sides
-        surf2 = ax.add_collection3d(Poly3DCollection(verts, facecolors='k', edgecolors='k',
+        surf2 = ax.add_collection3d(Poly3DCollection(verts, facecolors='k', edgecolors=None,  # edgecolors='k',
                                                      alpha=0.1, label='$0 \leq x \leq ub$'))
         legend = True
         # bug https://stackoverflow.com/a/55534939/5555994
@@ -225,7 +235,7 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
                  [v[1], v[2], v[6], v[5]],
                  [v[4], v[7], v[3], v[0]]]
         # plot sides
-        surf3 = ax.add_collection3d(Poly3DCollection(verts, facecolors='k', edgecolors='k',
+        surf3 = ax.add_collection3d(Poly3DCollection(verts, facecolors='k', edgecolors=None,  # edgecolors='k',
                                                      alpha=0.1, label='$x \geq 0$'))
         legend = True
         # bug https://stackoverflow.com/a/55534939/5555994
@@ -253,8 +263,8 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
         ub = dual.ub if dual is not None else ub
 
         # 2D box-constraints plot
-        ax.plot([0, 0, ub[0], ub[0], 0],
-                [0, ub[1], ub[1], 0, 0], color='k')
+        # ax.plot([0, 0, ub[0], ub[0], 0],
+        #         [0, ub[1], ub[1], 0, 0], color='k')
         ax.fill_between([0, ub[0]],
                         [0, 0],
                         [ub[1], ub[1]], color='0.8')
@@ -263,8 +273,8 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
 
         x_max = ax.get_xlim()[1]
         y_max = ax.get_ylim()[1]
-        ax.plot([0, 0, x_max, x_max, 0],
-                [0, y_max, y_max, 0, 0], color='k')
+        # ax.plot([0, 0, x_max, x_max, 0],
+        #         [0, y_max, y_max, 0, 0], color='k')
         ax.fill_between([0, x_max],
                         [0, 0],
                         [y_max, y_max], color='0.8')
