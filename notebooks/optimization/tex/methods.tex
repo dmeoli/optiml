@@ -1021,10 +1021,10 @@ $\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:l2_svr_lagrangian_
 \end{tabular}
 \end{table}
 
-Note that since the Hessian matrix $Q$ of the $\mathcal{L}_1$-SVM is not strictly positive definite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues and so it will be unbounded below, the Lagrangian dual relaxation, i.e.,~(\ref{eq:svc_lagrangian_sol},~\ref{eq:svr_lagrangian_sol}) or~(\ref{eq:l1_svc_bcqp_lagrangian_sol},~\ref{eq:l1_svr_bcqp_lagrangian_sol}), will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute an approximation of the gradient, we will choose $\alpha$ in such a way as the one that minimizes the 2-norm since it is good almost like the gradient:
-
-\begin{equation} \label{eq:lagrangian_krylov_sol}
-	\min_{\alpha_n \in K_n(Q, b)} \| Q \alpha_n - b \|
-\end{equation}
-
-Since we are dealing with a symmetric system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, to compute the vector $\alpha_n$ that minimizes the norm of the residual $r_n = Q \alpha_n - b$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
+%Note that since the Hessian matrix $Q$ of the $\mathcal{L}_1$-SVM is not strictly positive definite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues and so it will be unbounded below, the Lagrangian dual relaxation, i.e.,~(\ref{eq:svc_lagrangian_sol},~\ref{eq:svr_lagrangian_sol}) or~(\ref{eq:l1_svc_bcqp_lagrangian_sol},~\ref{eq:l1_svr_bcqp_lagrangian_sol}), will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute an approximation of the gradient, we will choose $\alpha$ in such a way as the one that minimizes the 2-norm since it is good almost like the gradient:
+%
+%\begin{equation} \label{eq:lagrangian_krylov_sol}
+%	\min_{\alpha_n \in K_n(Q, b)} \| Q \alpha_n - b \|
+%\end{equation}
+%
+%Since we are dealing with a symmetric system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, to compute the vector $\alpha_n$ that minimizes the norm of the residual $r_n = Q \alpha_n - b$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
