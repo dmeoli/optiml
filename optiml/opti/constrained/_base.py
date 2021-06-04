@@ -36,7 +36,7 @@ class LagrangianQuadratic(Quadratic):
             1/2 x^T Q x + q^T x : A x = b, G x <= h, lb <= x <= ub
     """
 
-    def __init__(self, primal, A=None, b=None, G=None, h=None, lb=None, ub=None, rho=0.1):
+    def __init__(self, primal, A=None, b=None, G=None, h=None, lb=None, ub=None, rho=1.):
         if not isinstance(primal, Quadratic):
             raise TypeError(f'{primal} is not an allowed quadratic function')
         super().__init__(primal.Q, primal.q)
