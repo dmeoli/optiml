@@ -113,7 +113,7 @@ class StochasticOptimizer(Optimizer, ABC):
                                           max(abs(self.f.f_star()), 1)), end='')
                 if self.prev_f_x < np.inf:
                     print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) /
-                                              (self.prev_f_x - self.f.f_star())), end='')
+                                              max(abs(self.prev_f_x - self.f.f_star()), 1)), end='')
                 else:
                     print('\t\t', end='')
                 self.prev_f_x = self.f_x

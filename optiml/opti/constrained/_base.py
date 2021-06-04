@@ -1,9 +1,7 @@
 from abc import ABC
 
-import numpy as np
-from qpsolvers import solve_qp
-from scipy.linalg import cho_solve, cho_factor
-from scipy.sparse.linalg import minres
+import autograd.numpy as np
+from qpsolvers import solve_qp, check_problem_constraints
 
 from optiml.opti import Optimizer, Quadratic
 
@@ -28,529 +26,112 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
                          callback=callback,
                          callback_args=callback_args,
                          verbose=verbose)
-        if any(u < 0 for u in ub):
-            raise ValueError('the upper bound must be > 0')
-        self.ub = ub
+        self.ub = np.asarray(ub, dtype=float)
 
 
-class LagrangianQuadratic(Quadratic, ABC):
+class LagrangianQuadratic(Quadratic):
     """
     Abstract class for the lagrangian relaxation of a constrained quadratic function defined as:
 
-            1/2 x^T Q x + q^T x
+            1/2 x^T Q x + q^T x : A x = b, G x <= h, lb <= x <= ub
     """
 
-    def __init__(self, primal, minres_verbose=False):
+    def __init__(self, primal, A=None, b=None, G=None, h=None, lb=None, ub=None, rho=0.1):
         if not isinstance(primal, Quadratic):
             raise TypeError(f'{primal} is not an allowed quadratic function')
         super().__init__(primal.Q, primal.q)
         self.primal = primal
-        self.minres_verbose = minres_verbose
-        try:
-            self.L, self.low = cho_factor(self.Q)
-            self.is_posdef = True
-        except np.linalg.LinAlgError:
-            self.is_posdef = False
-        # multipliers constrained to be >= 0
-        self.constrained_idx = np.full(self.ndim, False)
-        # backup {lambda : x}
-        self.last_lmbda = None
-        self.last_x = None
+        self.A = np.atleast_2d(A).astype(float) if A is not None else None
+        self.b = b
+        self.G = np.atleast_2d(G).astype(float) if G is not None else None
+        self.h = h
+        self.lb = np.asarray(lb, dtype=float) if lb is not None else None
+        if self.lb is not None:
+            if self.G is None:
+                self.G = -np.eye(self.ndim)
+                self.h = -self.lb
+            else:
+                self.G = np.concatenate((self.G, -np.eye(self.ndim)), axis=0)
+                self.h = np.concatenate((self.h, -self.lb))
+        self.ub = np.asarray(ub, dtype=float) if ub is not None else None
+        if self.ub is not None:
+            if self.G is None:
+                self.G = np.eye(self.ndim)
+                self.h = self.ub
+            else:
+                self.G = np.concatenate((self.G, np.eye(self.ndim)), axis=0)
+                self.h = np.concatenate((self.h, self.ub))
+        if not 0 < rho <= 1:
+            raise ValueError('rho must be must be between 0 and 1')
+        self.rho = rho
+        check_problem_constraints(G, h, A, b)
+        # concatenate A with G and b with h for convenience and save the
+        # first idx of the Lagrange multipliers constrained to be >= 0
+        self.n_eq = self.A.shape[0] if self.A is not None else 0
+        if self.A is not None and self.G is not None:
+            self.AG = np.concatenate((self.A, self.G))
+        elif self.A is not None:
+            self.AG = self.A
+        elif self.G is not None:
+            self.AG = self.G
+        else:
+            self.AG = np.zeros((self.ndim, self.ndim))
+        if self.b is not None and self.h is not None:
+            self.bh = np.concatenate((self.b, self.h))
+        elif self.b is not None:
+            self.bh = self.b
+        elif self.h is not None:
+            self.bh = self.h
+        else:
+            self.bh = np.zeros(self.ndim)
+        # initialize Lagrange multipliers to 0
+        self.dual_x = np.zeros(self.AG.shape[0])
 
     def f_star(self):
         return self.primal.function(self.x_star())
 
-    def _solve_sym_nonposdef(self, Q, q):
-        # since Q is not strictly psd, i.e., the function is linear along the eigenvectors
-        # correspondent to the null eigenvalues, the system has infinite solutions so the
-        # Lagrangian is nondifferentiable, and, for each solution x, the Lagrangian will
-        # have a different subgradient; so we will choose the one that minimizes the
-        # 2-norm since it is good almost like the gradient
-
-        minres_verbose = self.minres_verbose() if callable(self.minres_verbose) else self.minres_verbose
-
-        if minres_verbose:
-            print('\n')
-
-        # `min ||Qx - q||` is formally equivalent to solve the linear system:
-        #                       (Q^T Q) x = (Q^T q)^T x
-
-        Q, q = np.inner(Q, Q), Q.T.dot(q)
-
-        x = minres(Q, q, show=minres_verbose)[0]
-
-        return x
-
-    def hessian(self, lmbda):
-        H = np.zeros((self.ndim, self.ndim))
-        H[0:self.Q.shape[0], 0:self.Q.shape[1]] = self.Q
-        return H
-
-
-class LagrangianEqualityConstrainedQuadratic(LagrangianQuadratic):
-    """
-    Construct the lagrangian dual relaxation of an equality constrained quadratic function defined as:
-
-            1/2 x^T Q x + q^T x : A x = 0
-    """
-
-    def __init__(self, primal, A, minres_verbose=False):
-        super().__init__(primal=primal,
-                         minres_verbose=minres_verbose)
-        self.A = np.asarray(A, dtype=float)
-        A = np.atleast_2d(A)
-        # self.Z = null_space(A)  # more complex, uses SVD
-        Q, R = np.linalg.qr(A.T, mode='complete')
-        # null space aka kernel - range aka image
-        self.Z = Q[:, A.shape[0]:]  # orthonormal basis for the null space of A, i.e., ker(A) = im(Q)
-        assert np.allclose(self.A.dot(self.Z), 0)
-        self.proj_Q = self.Z.T.dot(self.Q).dot(self.Z)  # project
-        try:
-            self.L, self.low = cho_factor(self.proj_Q)
-            self.is_posdef = True
-        except np.linalg.LinAlgError:
-            self.is_posdef = False
-
     def x_star(self):
         if not hasattr(self, 'x_opt'):
             self.x_opt = solve_qp(P=self.Q,
                                   q=self.q,
                                   A=self.A,
-                                  b=np.zeros(1),
+                                  b=self.b,
+                                  G=self.G,
+                                  h=self.h,
                                   solver='cvxopt')
         return self.x_opt
 
-    def function(self, mu):
+    def function(self, x):
         """
-        Compute the value of the lagrangian relaxation defined as:
+        Compute the value of the (possibly augmented) lagrangian relaxation defined as:
 
-        L(x, mu) = 1/2 x^T Q x + q^T x - mu^T A x
-         L(x, mu) = 1/2 x^T Q x + (q - mu A)^T x
+        L(x, mu, lambda) = 1/2 x^T Q x + q^T x + mu^T (A x - b) + lambda^T (G x - h) + rho/2 ||(A x - b) (G x - h)||^2
 
-        Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
-
-                Q x + (q - mu A) = 0
-
-        so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
-
-                Q x = - (q - mu A)
-
-        :param mu: the dual variable wrt evaluate the function
-        :return: the function value wrt mu
+        :param x: the primal variable wrt evaluate the function
+        :return: the function value wrt primal-dual variable
         """
-        ql = self.q - mu.dot(self.A)
-        if np.array_equal(self.last_lmbda, mu):
-            x = self.last_x.copy()  # speedup: just restore optimal solution
-        else:
-            proj_ql = self.Z.T.dot(ql)  # project
-            # if self.is_posdef:
-            #     x = cho_solve((self.L, self.low), -proj_ql)
-            # else:
-            x = self._solve_sym_nonposdef(self.proj_Q, -proj_ql)
-            x = self.Z.dot(x)  # recover the primal solution
-            # backup new {lambda : x}
-            self.last_lmbda = mu.copy()
-            self.last_x = x.copy()
-        return 0.5 * x.dot(self.Q).dot(x) + ql.dot(x)
+        violations = self.AG @ x - self.bh
+        clipped_violations = violations.copy()
+        clipped_violations[self.n_eq:] = np.clip(violations[self.n_eq:], a_min=0, a_max=None)
+        return (super(LagrangianQuadratic, self).function(x) + self.dual_x @ violations +
+                0.5 * self.rho * np.linalg.norm(clipped_violations) ** 2)
 
-    def jacobian(self, mu):
+    def jacobian(self, x):
         """
-        With x optimal solution of the minimization problem, the jacobian
-        of the Lagrangian dual relaxation at mu is:
+        Compute the jacobian of the (possibly augmented) lagrangian relaxation defined as:
 
-                                [-A x]
+            J L(x, mu, lambda) = Q x + q + mu^T A + lambda^T G + rho ((A x - b) (G x - h))
 
-        However, we rather want to maximize the Lagrangian dual relaxation,
-        hence we have to change the sign of gradient entries:
-
-                                 [A x]
-
-        :param mu: the dual variable wrt evaluate the gradient
-        :return: the gradient wrt mu
+        :param x: the primal variable wrt evaluate the jacobian
+        :return: the jacobian wrt primal-dual variable
         """
-        if np.array_equal(self.last_lmbda, mu):
-            x = self.last_x.copy()  # speedup: just restore optimal solution
-        else:
-            ql = self.q - mu.dot(self.A)
-            proj_ql = self.Z.T.dot(ql)  # project
-            # if self.is_posdef:
-            #     x = cho_solve((self.L, self.low), -proj_ql)
-            # else:
-            x = self._solve_sym_nonposdef(self.proj_Q, -proj_ql)
-            x = self.Z.dot(x)  # recover the primal solution
-            # backup new {lambda : x}
-            self.last_lmbda = mu.copy()
-            self.last_x = x.copy()
-        return self.A * x
-
-
-class LagrangianLowerBoundedQuadratic(LagrangianQuadratic):
-    """
-    Construct the lagrangian relaxation of a lower bounded quadratic function defined as:
-
-            1/2 x^T Q x + q^T x : x >= 0
-    """
-
-    def __init__(self, primal, minres_verbose=False):
-        super().__init__(primal=primal,
-                         minres_verbose=minres_verbose)
-        self.lb = np.zeros(self.ndim)
-        self.constrained_idx = np.full(self.ndim, True)  # lambda >= 0
-
-    def x_star(self):
-        if not hasattr(self, 'x_opt'):
-            self.x_opt = solve_qp(P=self.Q,
-                                  q=self.q,
-                                  lb=np.zeros_like(self.q),
-                                  solver='cvxopt')
-        return self.x_opt
-
-    def function(self, lmbda):
-        """
-        The Lagrangian relaxation is defined as:
-
-         L(x, lambda) = 1/2 x^T Q x + q^T x - lambda^T x
-          L(x, lambda) = 1/2 x^T Q x + (q - lambda)^T x
-
-        where lambda is constrained to be >= 0.
-
-        Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
-
-                Q x + (q - lambda) = 0
-
-        so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
-
-                Q x = - (q - lambda)
-
-        :param lmbda: the dual variable wrt evaluate the function
-        :return: the function value wrt lambda
-        """
-        ql = self.q - lmbda
-        if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x.copy()  # speedup: just restore optimal solution
-        else:
-            if self.is_posdef:
-                x = cho_solve((self.L, self.low), -ql)
-            else:
-                x = self._solve_sym_nonposdef(self.Q, -ql)
-            # backup new {lambda : x}
-            self.last_lmbda = lmbda.copy()
-            self.last_x = x.copy()
-        return 0.5 * x.dot(self.Q).dot(x) + ql.dot(x)
-
-    def jacobian(self, lmbda):
-        """
-        With x optimal solution of the minimization problem, the jacobian
-        of the Lagrangian dual relaxation at lambda is:
-
-                                [-x]
-
-        However, we rather want to maximize the Lagrangian dual relaxation,
-        hence we have to change the sign of gradient entries:
-
-                                 [x]
-
-        :param lmbda: the dual variable wrt evaluate the gradient
-        :return: the gradient wrt lambda
-        """
-        if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x.copy()  # speedup: just restore optimal solution
-        else:
-            ql = self.q - lmbda
-            if self.is_posdef:
-                x = cho_solve((self.L, self.low), -ql)
-            else:
-                x = self._solve_sym_nonposdef(self.Q, -ql)
-            # backup new {lambda : x}
-            self.last_lmbda = lmbda.copy()
-            self.last_x = x.copy()
-        return x
-
-
-class LagrangianEqualityLowerBoundedQuadratic(LagrangianEqualityConstrainedQuadratic):
-    """
-    Construct the lagrangian relaxation of an equality constrained
-    quadratic function with lower bounds defined as:
-
-            1/2 x^T Q x + q^T x : A x = 0, x >= 0
-    """
-
-    def __init__(self, primal, A, minres_verbose=False):
-        super().__init__(primal=primal,
-                         A=A,
-                         minres_verbose=minres_verbose)
-        self.lb = np.zeros(self.ndim)
-        self.ndim *= 2
-        self.constrained_idx = np.hstack((np.full(int(self.ndim / 2), False),  # mu
-                                          np.full(int(self.ndim / 2), True)))  # lambda >= 0
-
-    def x_star(self):
-        if not hasattr(self, 'x_opt'):
-            self.x_opt = solve_qp(P=self.Q,
-                                  q=self.q,
-                                  A=self.A,
-                                  b=np.zeros(1),
-                                  lb=np.zeros_like(self.q),
-                                  solver='cvxopt')
-        return self.x_opt
-
-    def function(self, lmbda):
-        """
-        Compute the value of the lagrangian relaxation defined as:
-
-        L(x, mu, lambda) = 1/2 x^T Q x + q^T x - mu^T A x - lambda^T x
-           L(x, mu, lambda) = 1/2 x^T Q x + (q - mu A - lambda)^T x
-
-        where mu are the first n components of lambda which controls the equality
-        constraints and lambda are the last n components which controls the inequality
-        constraint which are constrained to be >= 0.
-
-        Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
-
-                Q x + (q - mu A - lambda) = 0
-
-        so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
-
-                Q x = - (q - mu A - lambda)
-
-        :param lmbda: the dual variable wrt evaluate the function
-        :return: the function value wrt lambda
-        """
-        mu, lmbda = np.split(lmbda, 2)
-        ql = self.q - mu.dot(self.A) - lmbda
-        if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x.copy()  # speedup: just restore optimal solution
-        else:
-            proj_ql = self.Z.T.dot(ql)  # project
-            # if self.is_posdef:
-            #     x = cho_solve((self.L, self.low), -proj_ql)
-            # else:
-            x = self._solve_sym_nonposdef(self.proj_Q, -proj_ql)
-            x = self.Z.dot(x)  # recover the primal solution
-            # backup new {lambda : x}
-            self.last_lmbda = lmbda.copy()
-            self.last_x = x.copy()
-        return 0.5 * x.dot(self.Q).dot(x) + ql.dot(x)
-
-    def jacobian(self, lmbda):
-        """
-        With x optimal solution of the minimization problem, the jacobian
-        of the Lagrangian dual relaxation at lambda is:
-
-                                [-A x, -x]
-
-        However, we rather want to maximize the Lagrangian dual relaxation,
-        hence we have to change the sign of gradient entries:
-
-                                 [A x, x]
-
-        :param lmbda: the dual variable wrt evaluate the gradient
-        :return: the gradient wrt lambda
-        """
-        if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x.copy()  # speedup: just restore optimal solution
-        else:
-            mu, lmbda = np.split(lmbda, 2)
-            ql = self.q - mu.dot(self.A) - lmbda
-            proj_ql = self.Z.T.dot(ql)  # project
-            # if self.is_posdef:
-            #     x = cho_solve((self.L, self.low), -proj_ql)
-            # else:
-            x = self._solve_sym_nonposdef(self.proj_Q, -proj_ql)
-            x = self.Z.dot(x)  # recover the primal solution
-            # backup new {lambda : x}
-            self.last_lmbda = lmbda.copy()
-            self.last_x = x.copy()
-        return np.hstack((self.A * x, x))
-
-
-class LagrangianBoxConstrainedQuadratic(LagrangianLowerBoundedQuadratic):
-    """
-    Construct the Lagrangian dual relaxation of a box-constrained quadratic function defined as:
-
-            1/2 x^T Q x + q^T x : lb = 0 <= x <= ub
-    """
-
-    def __init__(self, primal, ub, minres_verbose=False):
-        super().__init__(primal=primal,
-                         minres_verbose=minres_verbose)
-        self.ndim *= 2
-        if any(u < 0 for u in ub):
-            raise ValueError('the upper bound must be > 0')
-        self.ub = np.asarray(ub, dtype=float)
-        self.lb = np.zeros_like(ub)
-        self.constrained_idx = np.full(self.ndim, True)  # lambda_+, lambda_- >= 0
-
-    def x_star(self):
-        if not hasattr(self, 'x_opt'):
-            self.x_opt = solve_qp(P=self.Q,
-                                  q=self.q,
-                                  lb=np.zeros_like(self.ub),
-                                  ub=self.ub,
-                                  solver='cvxopt')
-        return self.x_opt
-
-    def function(self, lmbda):
-        """
-        The Lagrangian relaxation is defined as:
-
-         L(x, lambda_+, lambda_-) = 1/2 x^T Q x + q^T x - lambda_+^T (ub - x) - lambda_-^T x
-        L(x, lambda_+, lambda_-) = 1/2 x^T Q x + (q + lambda_+ - lambda_-)^T x - lambda_+^T ub
-
-        where lambda_+ are the first n components of lambda and lambda_- are the last n
-        components; both controls the box-constraints and are constrained to be >= 0.
-
-        Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
-
-                Q x + (q + lambda_+ - lambda_-) = 0
-
-        so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
-
-                Q x = - (q + lambda_+ - lambda_-)
-
-        :param lmbda: the dual variable wrt evaluate the function
-        :return: the function value wrt lambda
-        """
-        lmbda_p, lmbda_n = np.split(lmbda, 2)
-        ql = self.q + lmbda_p - lmbda_n
-        if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x.copy()  # speedup: just restore optimal solution
-        else:
-            if self.is_posdef:
-                x = cho_solve((self.L, self.low), -ql)
-            else:
-                x = self._solve_sym_nonposdef(self.Q, -ql)
-            # backup new {lambda : x}
-            self.last_lmbda = lmbda.copy()
-            self.last_x = x.copy()
-        return 0.5 * x.dot(self.Q).dot(x) + ql.dot(x) - lmbda_p.dot(self.ub)
-
-    def jacobian(self, lmbda):
-        """
-        With x optimal solution of the minimization problem, the jacobian
-        of the Lagrangian dual relaxation at lambda is:
-
-                                [x - ub, -x]
-
-        However, we rather want to maximize the Lagrangian dual relaxation,
-        hence we have to change the sign of gradient entries:
-
-                                 [ub - x, x]
-
-        :param lmbda: the dual variable wrt evaluate the gradient
-        :return: the gradient wrt lambda
-        """
-        if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x.copy()  # speedup: just restore optimal solution
-        else:
-            lmbda_p, lmbda_n = np.split(lmbda, 2)
-            ql = self.q + lmbda_p - lmbda_n
-            if self.is_posdef:
-                x = cho_solve((self.L, self.low), -ql)
-            else:
-                x = self._solve_sym_nonposdef(self.Q, -ql)
-            # backup new {lambda : x}
-            self.last_lmbda = lmbda.copy()
-            self.last_x = x.copy()
-        return np.hstack((self.ub - x, x))
-
-
-class LagrangianEqualityBoxConstrainedQuadratic(LagrangianEqualityConstrainedQuadratic):
-    """
-    Construct the lagrangian dual relaxation of an equality constrained
-    quadratic function with lower and upper bounds defined as:
-
-            1/2 x^T Q x + q^T x : A x = 0, lb = 0 <= x <= ub
-    """
-
-    def __init__(self, primal, A, ub, minres_verbose=False):
-        super().__init__(primal=primal,
-                         A=A,
-                         minres_verbose=minres_verbose)
-        self.ndim *= 3
-        if any(u < 0 for u in ub):
-            raise ValueError('the upper bound must be > 0')
-        self.ub = np.asarray(ub, dtype=float)
-        self.lb = np.zeros_like(ub)
-        self.constrained_idx = np.hstack((np.full(int(self.ndim / 3), False),  # mu
-                                          np.full(int(self.ndim / 3) * 2, True)))  # lambda_+, lambda_ >= 0
-
-    def x_star(self):
-        if not hasattr(self, 'x_opt'):
-            self.x_opt = solve_qp(P=self.Q,
-                                  q=self.q,
-                                  A=self.A,
-                                  b=np.zeros(1),
-                                  lb=np.zeros_like(self.ub),
-                                  ub=self.ub,
-                                  solver='cvxopt')
-        return self.x_opt
-
-    def function(self, lmbda):
-        """
-        Compute the value of the lagrangian relaxation defined as:
-
-        L(x, mu, lambda_+, lambda_-) = 1/2 x^T Q x + q^T x - mu^T A x - lambda_+^T (ub - x) - lambda_-^T x
-        L(x, mu, lambda_+, lambda_-) = 1/2 x^T Q x + (q - mu A + lambda_+ - lambda_-)^T x - lambda_+^T ub
-
-        where mu are the first n components of lambda which controls the equality constraints and
-        lambda_+^T are the second n components of lambda and lambda_-^T are the last n components
-        which controls the inequality constraint which are constrained to be >= 0.
-
-        Taking the derivative of the Lagrangian wrt x and settings it to 0 gives:
-
-                Q x + (q - mu A + lambda_+ - lambda_-) = 0
-
-        so, the optimal solution of the Lagrangian relaxation is the solution of the linear system:
-
-                Q x = - (q - mu A + lambda_+ - lambda_-)
-
-        :param lmbda: the dual variable wrt evaluate the function
-        :return: the function value wrt lambda
-        """
-        mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-        ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-        if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x.copy()  # speedup: just restore optimal solution
-        else:
-            proj_ql = self.Z.T.dot(ql)  # project
-            # if self.is_posdef:
-            #     x = cho_solve((self.L, self.low), -proj_ql)
-            # else:
-            x = self._solve_sym_nonposdef(self.proj_Q, -proj_ql)
-            x = self.Z.dot(x)  # recover the primal solution
-            # backup new {lambda : x}
-            self.last_lmbda = lmbda.copy()
-            self.last_x = x.copy()
-        return 0.5 * x.dot(self.Q).dot(x) + ql.dot(x) - lmbda_p.dot(self.ub)
-
-    def jacobian(self, lmbda):
-        """
-        With x optimal solution of the minimization problem, the jacobian
-        of the Lagrangian dual relaxation at lambda is:
-
-                                [-A x, x - ub, -x]
-
-        However, we rather want to maximize the Lagrangian dual relaxation,
-        hence we have to change the sign of gradient entries:
-
-                                 [A x, ub - x, x]
-
-        :param lmbda: the dual variable wrt evaluate the gradient
-        :return: the gradient wrt lambda
-        """
-        if np.array_equal(self.last_lmbda, lmbda):
-            x = self.last_x.copy()  # speedup: just restore optimal solution
-        else:
-            mu, lmbda_p, lmbda_n = np.split(lmbda, 3)
-            ql = self.q - mu.dot(self.A) + lmbda_p - lmbda_n
-            proj_ql = self.Z.T.dot(ql)  # project
-            # if self.is_posdef:
-            #     x = cho_solve((self.L, self.low), -proj_ql)
-            # else:
-            x = self._solve_sym_nonposdef(self.proj_Q, -proj_ql)
-            x = self.Z.dot(x)  # recover the primal solution
-            # backup new {lambda : x}
-            self.last_lmbda = lmbda.copy()
-            self.last_x = x.copy()
-        return np.hstack((self.A * x, self.ub - x, x))
+        violations = self.AG @ x - self.bh
+        clipped_violations = violations.copy()
+        clipped_violations[self.n_eq:] = np.clip(violations[self.n_eq:], a_min=0, a_max=None)
+        violations = clipped_violations != 0
+        return (super(LagrangianQuadratic, self).jacobian(x) + self.dual_x @ self.AG
+                + self.rho * self.AG.T[:, violations] @ self.AG.T[:, violations].T @ x
+                - self.rho * self.bh[violations] @ self.AG.T[:, violations].T)
+
+    def hessian(self, x):
+        return self.auto_hess(x)

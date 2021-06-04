@@ -130,7 +130,24 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
 
             self.x += a * d
 
+            if self.is_lagrangian_dual():
+                violations = self.f.AG.dot(self.x) - self.f.bh
+
+                self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
+
+                # upgrade and clip dual_x
+                self.f.dual_x += self.f.rho * violations
+                self.f.dual_x[self.f.n_eq:] = np.clip(self.f.dual_x[self.f.n_eq:], a_min=0, a_max=None)
+
+                if self.dgap <= self.tol and (np.linalg.norm(self.f.dual_x - self.f.past_dual_x) +
+                                              np.linalg.norm(self.x - self.past_x) <= self.tol):
+                    self.status = 'optimal'
+                    break
+
             self.iter += 1
+
+        if self.is_lagrangian_dual():
+            assert all(self.f.dual_x[self.f.n_eq:] >= 0)  # Lagrange multipliers
 
         if self.verbose:
             print('\n')

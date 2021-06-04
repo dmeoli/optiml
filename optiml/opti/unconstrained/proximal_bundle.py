@@ -104,8 +104,7 @@ class ProximalBundle(Optimizer):
         self.m_inf = m_inf
         self.master_solver = master_solver
         self.master_verbose = master_verbose
-        if ((self.is_lagrangian_dual() and self.f.primal.ndim == 2)
-                or self.f.ndim <= 3):
+        if self.f.ndim <= 3:
             self.x0_history_ns = []
             self.x1_history_ns = []
             self.f_x_history_ns = []
@@ -128,10 +127,6 @@ class ProximalBundle(Optimizer):
 
         G = self.g_x  # matrix of subgradients
 
-        if self.is_lagrangian_dual():
-            # project the direction (-g_x) over the active constraints
-            self.g_x[np.logical_and.reduce((self.x <= 1e-12, -self.g_x < 0, self.f.constrained_idx))] = 0
-
         F = self.f_x - self.g_x.dot(self.x)  # vector of translated function values
 
         while True:
@@ -146,9 +141,6 @@ class ProximalBundle(Optimizer):
             #
             # so we just keep the single constant fi - gi^T * xi instead of xi
             M = [v >= F + G @ (self.x + d)]
-
-            if self.is_lagrangian_dual():  # Lagrange multipliers
-                M += [d[self.f.constrained_idx] >= 0]
 
             if self.f.f_star() < np.inf:
                 # cheating: use information about f_star in the model
@@ -206,28 +198,37 @@ class ProximalBundle(Optimizer):
 
             G = np.vstack((G, self.g_x))
 
-            if self.is_lagrangian_dual():
-                # project the direction (-g_x) over the active constraints
-                self.g_x[np.logical_and.reduce((self.x <= 1e-12, -self.g_x < 0, self.f.constrained_idx))] = 0
-
             F = np.hstack((F, fd - self.g_x.dot(last_x)))
 
             if fd <= self.f_x + self.m1 * (v - self.f_x):  # SS: serious step
                 self.x = last_x
                 self.f_x = fd
             else:  # NS: null step
-                if ((self.is_lagrangian_dual() and self.f.primal.ndim == 2)
-                        or self.f.ndim <= 3):
+                if self.f.ndim <= 3:
                     self.x0_history_ns.append(self.x[0])
                     self.x1_history_ns.append(self.x[1])
                     self.f_x_history_ns.append(self.f_x)
 
+            if self.is_lagrangian_dual():
+                violations = self.f.AG.dot(self.x) - self.f.bh
+
+                self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
+
+                # upgrade and clip dual_x
+                self.f.dual_x += self.f.rho * violations
+                self.f.dual_x[self.f.n_eq:] = np.clip(self.f.dual_x[self.f.n_eq:], a_min=0, a_max=None)
+
+                if self.dgap <= self.tol and (np.linalg.norm(self.f.dual_x - self.f.past_dual_x) +
+                                              np.linalg.norm(self.x - self.past_x) <= self.tol):
+                    self.status = 'optimal'
+                    break
+
             self.iter += 1
+
+        if self.is_lagrangian_dual():
+            assert all(self.f.dual_x[self.f.n_eq:] >= 0)  # Lagrange multipliers
 
         if self.verbose:
             print('\n')
-
-        if self.is_lagrangian_dual():
-            assert all(self.x[self.f.constrained_idx] >= 0)  # Lagrange multipliers
 
         return self

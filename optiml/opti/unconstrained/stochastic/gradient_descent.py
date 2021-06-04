@@ -65,22 +65,6 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
             # compute search direction
             d = -self.g_x
 
-            if self.is_lagrangian_dual():
-                # project the direction over the active constraints
-                d[np.logical_and.reduce((self.x <= 1e-12, d < 0, self.f.constrained_idx))] = 0
-
-                # first, compute the maximum feasible step size max_t such that:
-                #
-                #   0 <= lambda[i] + max_t * d[i]   for all i
-                #     -lambda[i] <= max_t * d[i]
-                #     -lambda[i] / d[i] <= max_t
-
-                idx = d[self.f.constrained_idx] < 0  # negative gradient entries
-                if any(idx):
-                    max_t = min(self.step_size, min(-self.x[self.f.constrained_idx][idx] /
-                                                    d[self.f.constrained_idx][idx]))
-                    self.step_size = max_t
-
             if self.momentum_type == 'polyak':
 
                 step_m1 = self.step
@@ -98,12 +82,26 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
                 self.step = self.step_size * d
                 self.x += self.step
 
+            if self.is_lagrangian_dual():
+                violations = self.f.AG.dot(self.x) - self.f.bh
+
+                self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
+
+                # upgrade and clip dual_x
+                self.f.dual_x += self.f.rho * violations
+                self.f.dual_x[self.f.n_eq:] = np.clip(self.f.dual_x[self.f.n_eq:], a_min=0, a_max=None)
+
+                if self.dgap <= self.tol and (np.linalg.norm(self.f.dual_x - self.f.past_dual_x) +
+                                              np.linalg.norm(self.x - self.past_x) <= self.tol):
+                    self.status = 'optimal'
+                    break
+
             self.iter += 1
+
+        if self.is_lagrangian_dual():
+            assert all(self.f.dual_x[self.f.n_eq:] >= 0)  # Lagrange multipliers
 
         if self.verbose:
             print('\n')
-
-        if self.is_lagrangian_dual():
-            assert all(self.x[self.f.constrained_idx] >= 0)  # Lagrange multipliers
 
         return self

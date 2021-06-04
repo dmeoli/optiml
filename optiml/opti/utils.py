@@ -3,22 +3,23 @@ import numpy as np
 from casadi import ldl_solve, ldl
 from matplotlib.colors import SymLogNorm
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from qpsolvers import solve_qp
 from scipy.sparse.linalg import gmres
 
 from .unconstrained import ProximalBundle
 
 
-def null_space(A):
+def cholesky_null_space(A):
     A = np.atleast_2d(A)
-    # Z = scipy.null_space(A)  # more complex, uses SVD
+    # Z = scipy.null_space(A)  # more complex but more stable since uses SVD
     Q = np.linalg.qr(A.T, mode='complete')[0]
-    # null space aka kernel - range aka image
-    Z = Q[:, A.shape[0]:]  # orthonormal basis for the null space of A, i.e., ker(A) = im(Q)
+    # null space aka kernel
+    Z = Q[:, A.shape[0]:]  # orthonormal basis for the null space of A, i.e., ker(A)
     assert np.allclose(A.dot(Z), 0)
     return Z
 
 
-def solve_lagrangian_equality_constrained_quadratic(Q, q, A, b=None, method='gmres'):
+def solve_lagrangian_equality_constrained_quadratic(Q, q, A, b, method='gmres'):
     """
     Solve a quadratic function subject to equality constraint:
 
@@ -31,9 +32,7 @@ def solve_lagrangian_equality_constrained_quadratic(Q, q, A, b=None, method='gmr
 
     See more @ https://www.math.uh.edu/~rohop/fall_06/Chapter3.pdf
     """
-    A = np.atleast_2d(A).astype(float)
-    if b is None:
-        b = np.zeros((A.shape[0],))
+    A = np.atleast_2d(A)
     kkt_Q = np.vstack((np.hstack((Q, A.T)),
                        np.hstack((A, np.zeros((A.shape[0], A.shape[0]))))))
     kkt_q = np.hstack((-q, b))
@@ -173,36 +172,41 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
     # 3D surface plot
     ax = surface_contour.add_subplot(1, 2, 1, projection='3d', elev=50, azim=-50)
     ax.plot_surface(X, Y, Z, norm=SymLogNorm(linthresh=abs(Z.min()), base=np.e), cmap='jet', alpha=0.5)
-    ax.plot(*f.x_star(), f.f_star(), marker='*', color='r', markersize=10)
+    ax.plot(*f.x_star(), f.f_star(), marker='*', color='b', markersize=10, label='global optima')
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
     ax.set_zlabel(f'${type(f).__name__}$')
 
-    legend = False
+    constrained = False
 
-    if dual and hasattr(dual, 'A'):
-        X, Y = np.meshgrid(np.arange(x_min, x_max, 2), np.arange(y_min, y_max, 2))
-        Z = np.array([f(np.array([x, y]))
-                      for x, y in zip(X.ravel(), Y.ravel())]).reshape(X.shape)
+    if dual and dual.A is not None:
+        _X, _Y = np.meshgrid(np.arange(x_min, x_max, 2), np.arange(y_min, y_max, 2))
+        _Z = np.array([f(np.array([x, y]))
+                       for x, y in zip(_X.ravel(), _Y.ravel())]).reshape(_X.shape)
         # y = m x + q => m = -(A[0] / A[1]), q = 0
-        surf1 = ax.plot_surface(X, -(dual.A[0] / dual.A[1]) * X, Z, color='b', label='$Ax=0$')
-        legend = True
+        surf1 = ax.plot_surface(_X, -(dual.A[:, 0] / dual.A[:, 1]) * _X, _Z, color='b', label='$Ax=b$')
+        constrained = True
         # bug https://stackoverflow.com/a/55534939/5555994
         surf1._facecolors2d = surf1._facecolor3d
         surf1._edgecolors2d = surf1._edgecolor3d
 
     if (ub is not None  # bcqp optimizer
-            or (dual and hasattr(dual, 'ub'))):  # and so also `lb`
-
-        ub = dual.ub if dual is not None else ub
+            or (dual and dual.ub is not None)
+            or (dual and dual.lb is not None)):
+        _lb = ([0, 0] if ub is not None else  # bcqp optimizer just with lb = 0
+               dual.lb if hasattr(dual, 'lb') else  # dual with explicit lb
+               [X.min(), Y.min()])  # dual without explicit lb, so we take [x_min, y_min]
+        _ub = (ub if ub is not None else  # bcqp optimizer with given ub
+               dual.ub if hasattr(dual, 'ub') else  # dual with explicit ub
+               [X.max(), Y.max()])  # dual without explicit ub, so we take [x_max, y_max]
 
         # 3D box-constraints plot
         z_min, z_max = Z.min(), Z.max()
         # vertices of the box
-        v = np.array([[ub[0], 0, z_min], [0, 0, z_min],
-                      [0, ub[1], z_min], [ub[0], ub[1], z_min],
-                      [ub[0], 0, z_max], [0, 0, z_max],
-                      [0, ub[1], z_max], [ub[0], ub[1], z_max]])
+        v = np.array([[_ub[0], _lb[0], z_min], [_lb[0], _lb[1], z_min],
+                      [_lb[1], _ub[1], z_min], [_ub[0], _ub[1], z_min],
+                      [_ub[0], _lb[0], z_max], [_lb[0], _lb[1], z_max],
+                      [_lb[1], _ub[1], z_max], [_ub[0], _ub[1], z_max]])
         # generate list of sides' polygons of our box
         verts = [[v[0], v[1], v[2], v[3]],
                  [v[4], v[5], v[6], v[7]],
@@ -211,73 +215,66 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
                  [v[1], v[2], v[6], v[5]],
                  [v[4], v[7], v[3], v[0]]]
         # plot sides
-        surf2 = ax.add_collection3d(Poly3DCollection(verts, facecolors='k', edgecolors=None,  # edgecolors='k',
-                                                     alpha=0.1, label='$0 \leq x \leq ub$'))
-        legend = True
+        surf2 = ax.add_collection3d(Poly3DCollection(verts, facecolors='k', edgecolors='k', alpha=0.1,
+                                                     label=('$x \leq ub$' if np.all(_lb == [X.min(), Y.min()]) else
+                                                            '$x \geq lb$' if np.all(_ub == [X.max(), Y.max()]) else
+                                                            '$lb \leq x \leq ub$')))
+        constrained = True
         # bug https://stackoverflow.com/a/55534939/5555994
         surf2._facecolors2d = surf2._facecolor3d
         surf2._edgecolors2d = surf2._edgecolor3d
 
-    elif dual and hasattr(dual, 'lb'):
-
-        # 3D box-constraints plot
-        z_min, z_max = Z.min(), Z.max()
-        # vertices of the box
-        v = np.array([[x_max, 0, z_min], [0, 0, z_min],
-                      [0, y_max, z_min], [x_max, y_max, z_min],
-                      [x_max, 0, z_max], [0, 0, z_max],
-                      [0, y_max, z_max], [x_max, y_max, z_max]])
-        # generate list of sides' polygons of our box
-        verts = [[v[0], v[1], v[2], v[3]],
-                 [v[4], v[5], v[6], v[7]],
-                 [v[0], v[1], v[5], v[4]],
-                 [v[2], v[3], v[7], v[6]],
-                 [v[1], v[2], v[6], v[5]],
-                 [v[4], v[7], v[3], v[0]]]
-        # plot sides
-        surf3 = ax.add_collection3d(Poly3DCollection(verts, facecolors='k', edgecolors=None,  # edgecolors='k',
-                                                     alpha=0.1, label='$x \geq 0$'))
-        legend = True
-        # bug https://stackoverflow.com/a/55534939/5555994
-        surf3._facecolors2d = surf3._facecolor3d
-        surf3._edgecolors2d = surf3._edgecolor3d
-
-    if legend:
+    if constrained:
+        if ub is not None:  # bcqp optimizer
+            x_star = solve_qp(P=f.Q,
+                              q=f.q,
+                              lb=np.zeros_like(f.q),
+                              ub=ub)
+            ax.plot(*x_star, f(x_star), marker='*', color='r', markersize=10, label='constrained optima')
+        else:
+            ax.plot(*dual.x_star(), dual.f_star(), marker='*', color='r', markersize=10, label='constrained optima')
         ax.legend()
 
     # 2D contour plot
     ax = surface_contour.add_subplot(1, 2, 2)
     ax.contour(X, Y, Z, 70, cmap='jet', alpha=0.5)
-    ax.plot(*f.x_star(), marker='*', color='r', markersize=10)
+    ax.plot(*f.x_star(), marker='*', color='b', markersize=10)
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
 
-    if dual and hasattr(dual, 'A'):
-        X = np.arange(x_min, x_max, 2)
+    constrained = False
+
+    if dual and dual.A is not None:
+        _X = np.arange(x_min, x_max, 2)
         # y = m x + q => m = -(A[0] / A[1]), q = 0
-        ax.plot(X, -(dual.A[0] / dual.A[1]) * X, color='b')
+        ax.plot(_X, -(dual.A[:, 0] / dual.A[:, 1]) * _X, color='b')
+        constrained = True
 
     if (ub is not None  # bcqp optimizer
-            or (dual and hasattr(dual, 'ub'))):  # and so also `lb`
-
-        ub = dual.ub if dual is not None else ub
+            or (dual and dual.ub is not None)
+            or (dual and dual.lb is not None)):
+        _lb = ([0, 0] if ub is not None else  # bcqp optimizer just with lb = 0
+               dual.lb if hasattr(dual, 'lb') else  # dual with explicit lb
+               [X.min(), Y.min()])  # dual without explicit lb, so we take [x_min, y_min]
+        _ub = (ub if ub is not None else  # bcqp optimizer with given ub
+               dual.ub if hasattr(dual, 'ub') else  # dual with explicit ub
+               [X.max(), Y.max()])  # dual without explicit ub, so we take [x_max, y_max]
 
         # 2D box-constraints plot
-        # ax.plot([0, 0, ub[0], ub[0], 0],
-        #         [0, ub[1], ub[1], 0, 0], color='k')
-        ax.fill_between([0, ub[0]],
-                        [0, 0],
-                        [ub[1], ub[1]], color='0.8')
+        ax.fill_between([_lb[0], _ub[0]],
+                        [_lb[1], _lb[1]],
+                        [_ub[1], _ub[1]], color='0.8', edgecolor='k')
+        constrained = True
 
-    elif dual and hasattr(dual, 'lb'):
-
-        x_max = ax.get_xlim()[1]
-        y_max = ax.get_ylim()[1]
-        # ax.plot([0, 0, x_max, x_max, 0],
-        #         [0, y_max, y_max, 0, 0], color='k')
-        ax.fill_between([0, x_max],
-                        [0, 0],
-                        [y_max, y_max], color='0.8')
+    if constrained:
+        if ub is not None:  # bcqp optimizer
+            x_star = solve_qp(P=f.Q,
+                              q=f.q,
+                              lb=np.zeros_like(f.q),
+                              ub=ub)
+            ax.plot(*x_star, marker='*', color='r', markersize=10)
+        else:
+            ax.plot(*dual.x_star(), marker='*', color='r', markersize=10)
 
     return surface_contour
 

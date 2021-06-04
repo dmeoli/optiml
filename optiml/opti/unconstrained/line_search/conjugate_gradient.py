@@ -251,22 +251,6 @@ class ConjugateGradient(LineSearchOptimizer):
 
             else:
 
-                if self.is_lagrangian_dual():
-                    # project the direction over the active constraints
-                    d[np.logical_and.reduce((self.x <= 1e-12, d < 0, self.f.constrained_idx))] = 0
-
-                    # first, compute the maximum feasible step size max_t such that:
-                    #
-                    #   0 <= lambda[i] + max_t * d[i]   for all i
-                    #     -lambda[i] <= max_t * d[i]
-                    #     -lambda[i] / d[i] <= max_t
-
-                    idx = d[self.f.constrained_idx] < 0  # negative gradient entries
-                    if any(idx):
-                        max_t = min(self.line_search.a_start, min(-self.x[self.f.constrained_idx][idx] /
-                                                                  d[self.f.constrained_idx][idx]))
-                        self.line_search.a_start = max_t
-
                 phi_p0 = self.g_x.dot(d)
 
                 # compute step size
@@ -287,16 +271,30 @@ class ConjugateGradient(LineSearchOptimizer):
                 # update new point and gradient
                 self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
 
+                if self.is_lagrangian_dual():
+                    violations = self.f.AG.dot(self.x) - self.f.bh
+
+                    self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
+
+                    # upgrade and clip dual_x
+                    self.f.dual_x += self.f.rho * violations
+                    self.f.dual_x[self.f.n_eq:] = np.clip(self.f.dual_x[self.f.n_eq:], a_min=0, a_max=None)
+
+                    if self.dgap <= self.tol and (np.linalg.norm(self.f.dual_x - self.f.past_dual_x) +
+                                                  np.linalg.norm(self.x - self.past_x) <= self.tol):
+                        self.status = 'optimal'
+                        break
+
             past_d = d  # previous search direction
 
             self.ng = np.linalg.norm(self.g_x)
 
             self.iter += 1
 
+        if self.is_lagrangian_dual():
+            assert all(self.f.dual_x[self.f.n_eq:] >= 0)  # Lagrange multipliers
+
         if self.verbose:
             print('\n')
-
-        if self.is_lagrangian_dual():
-            assert all(self.x[self.f.constrained_idx] >= 0)  # Lagrange multipliers
 
         return self

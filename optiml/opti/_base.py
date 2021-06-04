@@ -12,6 +12,7 @@ class Optimizer(ABC):
                  f,
                  x=None,
                  eps=1e-6,
+                 tol=1e-10,
                  max_iter=1000,
                  callback=None,
                  callback_args=(),
@@ -32,13 +33,10 @@ class Optimizer(ABC):
             raise TypeError(f'{f} is not an allowed optimization function')
         self.f = f
         if x is None:
-            if self.is_lagrangian_dual():
-                x = np.zeros
+            if random_state is None:
+                x = np.random.uniform
             else:
-                if random_state is None:
-                    x = np.random.uniform
-                else:
-                    x = np.random.RandomState(random_state).uniform
+                x = np.random.RandomState(random_state).uniform
         if callable(x):
             try:
                 self.x = x(size=f.ndim)
@@ -49,37 +47,20 @@ class Optimizer(ABC):
         self.f_x = np.nan
         self.g_x = np.zeros(0)
         self.eps = eps
+        self.tol = tol
         if not max_iter > 0:
             raise ValueError('max_iter must be > 0')
         self.max_iter = max_iter
         self.iter = 0
         self.status = 'unknown'
-        if self.is_lagrangian_dual():
-            # initialize the primal problem
-            if hasattr(self.f, 'A'):  # just `A x = 0` or `A x = 0` and `0 <= x <= ub`
-                self.primal_x = np.zeros(shape=self.f.primal.ndim)
-            elif hasattr(self.f, 'ub'):  # just `0 <= x <= ub`
-                self.primal_x = self.f.ub / 2  # starts from the middle of the box
-            else:  # just `x >= 0`
-                if random_state is None:
-                    self.primal_x = np.random.uniform(size=self.f.primal.ndim)
-                else:
-                    self.primal_x = np.random.RandomState(random_state).uniform(size=self.f.primal.ndim)
-            self.primal_f_x = self.f.primal.function(self.primal_x)
-            if self.f.primal.ndim == 2:
-                self.x0_history = [self.primal_x[0]]
-                self.x1_history = [self.primal_x[1]]
-                self.f_x_history = [self.primal_f_x]
-        else:
-            if self.f.ndim <= 3:
-                self.x0_history = []
-                self.x1_history = []
-                self.f_x_history = []
+        if hasattr(self.f, 'primal'):
+            self.primal_f_x = self.f.primal.function(self.x)
+        if self.f.ndim <= 3:
+            self.x0_history = []
+            self.x1_history = []
+            self.f_x_history = []
         self._callback = callback
         self.callback_args = callback_args
-        if self.is_lagrangian_dual():
-            minres_verbose = self.f.minres_verbose  # save value to avoid circular call
-            self.f.minres_verbose = lambda: minres_verbose if self.is_verbose() else False
         self.random_state = random_state
         self.verbose = verbose
 
@@ -88,39 +69,25 @@ class Optimizer(ABC):
 
     def callback(self, args=()):
 
-        if self.is_lagrangian_dual():  # update primal
+        if hasattr(self.f, 'primal'):
 
-            last_x = self.f.last_x.copy()
-            # compute an heuristic solution out of the solution x of
-            # the Lagrangian relaxation by projecting x on the box
-            if hasattr(self.f, 'lb'):
-                last_x[last_x < 0] = 0
-            if hasattr(self.f, 'ub'):
-                idx = last_x > self.f.ub
-                last_x[idx] = self.f.ub[idx]
+            self.primal_f_x = self.f.primal.function(self.x)
 
-            v = self.f.primal.function(last_x)
-            if v < self.primal_f_x:
-                self.primal_x = last_x
-                self.primal_f_x = v
-
-            dgap = (self.primal_f_x - self.f_x) / max(abs(self.primal_f_x), 1)
+            self.dgap = abs((self.primal_f_x - self.f_x)) / max(abs(self.primal_f_x), 1)
 
             if self.is_verbose():
                 print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
-                print('\tdgap: {: 1.4e}'.format(dgap), end='')
+                print('\tdgap: {: 1.4e}'.format(self.dgap), end='')
 
             if self.f.primal.ndim == 2:
-                self.x0_history.append(self.primal_x[0])
-                self.x1_history.append(self.primal_x[1])
+                self.x0_history.append(self.x[0])
+                self.x1_history.append(self.x[1])
                 self.f_x_history.append(self.primal_f_x)
 
             if callable(self._callback):  # custom callback
                 self._callback(self, *args, *self.callback_args)
 
-            if dgap <= self.eps:
-                self.status = 'optimal'
-                raise StopIteration
+            self.past_x = self.x.copy()  # backup primal x before upgrade it
 
         else:
 
@@ -236,7 +203,7 @@ class Quadratic(OptimizationFunction):
         :return:  the value of a general quadratic function if x, the optimal solution of a
                   linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
         """
-        return 0.5 * x.dot(self.Q).dot(x) + self.q.dot(x)
+        return 0.5 * x @ self.Q @ x + self.q @ x
 
     def jacobian(self, x):
         """
@@ -244,7 +211,7 @@ class Quadratic(OptimizationFunction):
         :param x: ([n x 1] real column vector): 1D array of points at which the Hessian is to be computed.
         :return:  the Jacobian of a general quadratic function.
         """
-        return self.Q.dot(x) + self.q
+        return self.Q @ x + self.q
 
     def hessian(self, x):
         """

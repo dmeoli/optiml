@@ -52,7 +52,6 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
                     - [x] Nesterov
             - [x] AdaGrad
             - [x] AdaDelta
-            - [x] RProp
             - [x] RMSProp
                 - [x] Momentum
                     - [x] Polyak

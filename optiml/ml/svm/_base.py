@@ -19,9 +19,7 @@ from .losses import hinge, squared_hinge, SVMLoss, epsilon_insensitive, squared_
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
-from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianBoxConstrainedQuadratic
-from ...opti.constrained._base import LagrangianEqualityBoxConstrainedQuadratic, \
-    LagrangianEqualityLowerBoundedQuadratic, LagrangianLowerBoundedQuadratic
+from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, StochasticMomentumOptimizer
@@ -316,7 +314,6 @@ class DualSVM(SVM, ABC):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
-                 minres_verbose=False,
                  verbose=False):
         super().__init__(loss=loss,
                          C=C,
@@ -344,7 +341,6 @@ class DualSVM(SVM, ABC):
             self.coef_ = np.zeros(0)
         self.alphas_ = np.zeros(0)
         self.dual_coef_ = np.zeros(0)
-        self.minres_verbose = minres_verbose
 
 
 class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
@@ -667,7 +663,6 @@ class DualSVC(ClassifierMixin, DualSVM):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
-                 minres_verbose=False,
                  verbose=False):
         super().__init__(loss=loss,
                          kernel=kernel,
@@ -683,7 +678,6 @@ class DualSVC(ClassifierMixin, DualSVM):
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
-                         minres_verbose=minres_verbose,
                          verbose=verbose)
         if not loss._loss_type == 'classifier':
             raise TypeError(f'{loss} is not an allowed SVC loss function')
@@ -765,7 +759,11 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                     if not self.reg_intercept:
 
-                        raise NotImplementedError
+                        # TODO constrained optimizer with A x = 0 and 0 <= x <= ub is not available, so relax
+                        #  the equality constraint and solve with the lagrangian with the bcqp optimizer
+                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
+                                                       A=y,
+                                                       b=np.zeros(1))
 
                     else:
 
@@ -780,19 +778,22 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 elif issubclass(self.optimizer, Optimizer):
 
+                    lb = np.zeros(n_samples)  # lower bounds
+
                     if not self.reg_intercept:
 
-                        self.obj = LagrangianEqualityBoxConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                             A=y,
-                                                                             ub=ub,
-                                                                             minres_verbose=self.minres_verbose)
+                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
+                                                       A=y,
+                                                       b=np.zeros(1),
+                                                       lb=lb,
+                                                       ub=ub)
 
                     else:
 
                         Q += np.outer(y, y)
-                        self.obj = LagrangianBoxConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                     ub=ub,
-                                                                     minres_verbose=self.minres_verbose)
+                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
+                                                       lb=lb,
+                                                       ub=ub)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -844,11 +845,15 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                             callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
+                        if self.optimizer.status == 'stopped':
+                            warnings.warn('max_iter reached but the optimization has not converged yet',
+                                          ConvergenceWarning)
+
                     else:
 
                         raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-                self.alphas_ = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
+                self.alphas_ = self.optimizer.x
 
         elif self.loss == SquaredHinge:
 
@@ -896,17 +901,20 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                 if issubclass(self.optimizer, Optimizer):
 
+                    lb = np.zeros(n_samples)  # lower bounds
+
                     if not self.reg_intercept:
 
-                        self.obj = LagrangianEqualityLowerBoundedQuadratic(primal=Quadratic(Q, q),
-                                                                           A=y,
-                                                                           minres_verbose=self.minres_verbose)
+                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
+                                                       A=y,
+                                                       b=np.zeros(1),
+                                                       lb=lb)
 
                     else:
 
                         Q += np.outer(y, y)
-                        self.obj = LagrangianLowerBoundedQuadratic(primal=Quadratic(Q, q),
-                                                                   minres_verbose=self.minres_verbose)
+                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
+                                                       lb=lb)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -958,11 +966,15 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                             callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
+                        if self.optimizer.status == 'stopped':
+                            warnings.warn('max_iter reached but the optimization has not converged yet',
+                                          ConvergenceWarning)
+
                     else:
 
                         raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-                self.alphas_ = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
+                self.alphas_ = self.optimizer.x
 
         else:
 
@@ -1329,7 +1341,6 @@ class DualSVR(RegressorMixin, DualSVM):
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
-                 minres_verbose=False,
                  verbose=False):
         super().__init__(loss=loss,
                          kernel=kernel,
@@ -1345,7 +1356,6 @@ class DualSVR(RegressorMixin, DualSVM):
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
-                         minres_verbose=minres_verbose,
                          verbose=verbose)
         if not loss._loss_type == 'regressor':
             raise TypeError(f'{loss} is not an allowed SVR loss function')
@@ -1434,7 +1444,11 @@ class DualSVR(RegressorMixin, DualSVM):
 
                         if not self.reg_intercept:
 
-                            raise NotImplementedError
+                            # TODO constrained optimizer with A x = 0 and 0 <= x <= ub is not available, so relax
+                            #  the equality constraint and solve with the lagrangian with the bcqp optimizer
+                            self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
+                                                           A=e,
+                                                           b=np.zeros(1))
 
                         else:
 
@@ -1449,19 +1463,22 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     elif issubclass(self.optimizer, Optimizer):
 
+                        lb = np.zeros(2 * n_samples)  # lower bounds
+
                         if not self.reg_intercept:
 
-                            self.obj = LagrangianEqualityBoxConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                                 A=e,
-                                                                                 ub=ub,
-                                                                                 minres_verbose=self.minres_verbose)
+                            self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
+                                                           A=e,
+                                                           b=np.zeros(1),
+                                                           lb=lb,
+                                                           ub=ub)
 
                         else:
 
                             Q += np.outer(e, e)
-                            self.obj = LagrangianBoxConstrainedQuadratic(primal=Quadratic(Q, q),
-                                                                         ub=ub,
-                                                                         minres_verbose=self.minres_verbose)
+                            self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
+                                                           lb=lb,
+                                                           ub=ub)
 
                         if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -1513,11 +1530,15 @@ class DualSVR(RegressorMixin, DualSVM):
                                                                 callback=self._store_train_info,
                                                                 verbose=self.verbose).minimize()
 
+                            if self.optimizer.status == 'stopped':
+                                warnings.warn('max_iter reached but the optimization has not converged yet',
+                                              ConvergenceWarning)
+
                         else:
 
                             raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-                    self.alphas_ = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
+                    self.alphas_ = self.optimizer.x
 
                 alphas_p, alphas_n = np.split(self.alphas_, 2)
 
@@ -1569,17 +1590,20 @@ class DualSVR(RegressorMixin, DualSVM):
 
                 if issubclass(self.optimizer, Optimizer):
 
+                    lb = np.zeros(2 * n_samples)  # lower bounds
+
                     if not self.reg_intercept:
 
-                        self.obj = LagrangianEqualityLowerBoundedQuadratic(primal=Quadratic(Q, q),
-                                                                           A=e,
-                                                                           minres_verbose=self.minres_verbose)
+                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
+                                                       A=e,
+                                                       b=np.zeros(1),
+                                                       lb=lb)
 
                     else:
 
                         Q += np.outer(e, e)
-                        self.obj = LagrangianLowerBoundedQuadratic(primal=Quadratic(Q, q),
-                                                                   minres_verbose=self.minres_verbose)
+                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
+                                                       lb=lb)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -1631,11 +1655,15 @@ class DualSVR(RegressorMixin, DualSVM):
                                                             callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
+                        if self.optimizer.status == 'stopped':
+                            warnings.warn('max_iter reached but the optimization has not converged yet',
+                                          ConvergenceWarning)
+
                     else:
 
                         raise TypeError(f'{self.optimizer} is not an allowed optimizer')
 
-                self.alphas_ = self.optimizer.primal_x if self.optimizer.is_lagrangian_dual() else self.optimizer.x
+                self.alphas_ = self.optimizer.x
 
             alphas_p, alphas_n = np.split(self.alphas_, 2)
 

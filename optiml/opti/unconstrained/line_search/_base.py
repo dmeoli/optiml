@@ -3,7 +3,7 @@ from abc import ABC
 import numpy as np
 
 from ... import Optimizer
-from .line_search import ArmijoWolfeLineSearch, BacktrackingLineSearch, LagrangianArmijoWolfeLineSearch
+from .line_search import ArmijoWolfeLineSearch, BacktrackingLineSearch
 
 
 class LineSearchOptimizer(Optimizer, ABC):
@@ -78,10 +78,7 @@ class LineSearchOptimizer(Optimizer, ABC):
         self.ng = 0
         self.m_inf = m_inf
         if 0 < m2 < 1:
-            if self.is_lagrangian_dual():
-                self.line_search = LagrangianArmijoWolfeLineSearch(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a)
-            else:
-                self.line_search = ArmijoWolfeLineSearch(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a)
+            self.line_search = ArmijoWolfeLineSearch(f, max_f_eval, m1, m2, a_start, tau, sfgrd, min_a)
         else:
             self.line_search = BacktrackingLineSearch(f, max_f_eval, m1, a_start, min_a, tau)
         self.f_eval = 1
@@ -101,7 +98,7 @@ class LineSearchOptimizer(Optimizer, ABC):
                                           max(abs(self.f.f_star()), 1)), end='')
                 if self.prev_f_x < np.inf:
                     print('\t{: 1.4e}'.format((self.f_x - self.f.f_star()) /
-                                              (self.prev_f_x - self.f.f_star())), end='')
+                                              max(abs(self.prev_f_x - self.f.f_star()), 1)), end='')
                 else:
                     print('\t\t', end='')
                 self.prev_f_x = self.f_x
