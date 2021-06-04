@@ -1,5 +1,4 @@
 import re
-import time
 import warnings
 from abc import ABC
 from io import StringIO
@@ -132,7 +131,6 @@ class SVM(BaseEstimator, ABC):
         self.support_vectors_ = np.zeros(0)
         if not isinstance(optimizer, str):
             self.train_loss_history = []
-            self.train_time_history = []
 
     def fit(self, X, y):
         raise NotImplementedError
@@ -142,9 +140,6 @@ class SVM(BaseEstimator, ABC):
             self.train_loss_history.append(opt.primal_f_x)
         else:
             self.train_loss_history.append(opt.f_x)
-        current_time = time.time()
-        elapsed_time = current_time - self.start_time
-        self.train_time_history.append(elapsed_time)
 
 
 class PrimalSVM(SVM, ABC):
@@ -208,7 +203,6 @@ class PrimalSVM(SVM, ABC):
         self.coef_ = np.zeros(0)
         if issubclass(self.optimizer, StochasticOptimizer):
             self.train_loss_history = []
-            self.train_time_history = []
             self.train_score_history = []
             self._no_improvement_count = 0
             self._avg_epoch_loss = 0
@@ -231,9 +225,6 @@ class PrimalSVM(SVM, ABC):
         if opt.is_batch_end():
             self._avg_epoch_loss /= opt.f.X.shape[0]  # n_samples
             self.train_loss_history.append(self._avg_epoch_loss)
-            current_time = time.time()
-            elapsed_time = current_time - self.start_time
-            self.train_time_history.append(elapsed_time)
             if opt.is_verbose() and opt.epoch != opt.iter:
                 print('\tavg_loss: {: 1.4e}'.format(self._avg_epoch_loss), end='')
             self._avg_epoch_loss = 0.
@@ -480,7 +471,6 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
             self._update_no_improvement_count(opt)
 
     def fit(self, X, y):
-        self.start_time = time.time()
         self.lb.fit(y)
         if len(self.lb.classes_) > 2:
             raise ValueError('use OneVsOneClassifier or OneVsRestClassifier from sklearn.multiclass '
@@ -688,7 +678,6 @@ class DualSVC(ClassifierMixin, DualSVM):
         self.lb = LabelBinarizer(neg_label=-1)
 
     def fit(self, X, y):
-        self.start_time = time.time()
         self.lb.fit(y)
         if len(self.lb.classes_) > 2:
             raise ValueError('use OneVsOneClassifier or OneVsRestClassifier from sklearn.multiclass '
@@ -1160,7 +1149,6 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
             self._update_no_improvement_count(opt)
 
     def fit(self, X, y):
-        self.start_time = time.time()
         targets = y.shape[1] if y.ndim > 1 else 1
         if targets > 1:
             raise ValueError('use sklearn.multioutput.MultiOutputRegressor '
@@ -1375,7 +1363,6 @@ class DualSVR(RegressorMixin, DualSVM):
         self.epsilon = epsilon
 
     def fit(self, X, y):
-        self.start_time = time.time()
         targets = y.shape[1] if y.ndim > 1 else 1
         if targets > 1:
             raise ValueError('use sklearn.multioutput.MultiOutputRegressor '
