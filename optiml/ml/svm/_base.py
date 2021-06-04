@@ -311,6 +311,7 @@ class DualSVM(SVM, ABC):
                  momentum=0.9,
                  max_f_eval=15000,
                  reg_intercept=True,
+                 rho=1,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -337,6 +338,7 @@ class DualSVM(SVM, ABC):
                 not issubclass(optimizer, Optimizer)):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
         self.reg_intercept = reg_intercept
+        self.rho = rho
         if isinstance(self.kernel, LinearKernel):
             self.coef_ = np.zeros(0)
         self.alphas_ = np.zeros(0)
@@ -660,6 +662,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  momentum=0.9,
                  max_f_eval=15000,
                  reg_intercept=True,
+                 rho=1,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -675,6 +678,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                          momentum=momentum,
                          max_f_eval=max_f_eval,
                          reg_intercept=reg_intercept,
+                         rho=rho,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -763,7 +767,8 @@ class DualSVC(ClassifierMixin, DualSVM):
                         #  the equality constraint and solve with the lagrangian with the bcqp optimizer
                         self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
                                                        A=y,
-                                                       b=np.zeros(1))
+                                                       b=np.zeros(1),
+                                                       rho=self.rho)
 
                     else:
 
@@ -786,14 +791,16 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                        A=y,
                                                        b=np.zeros(1),
                                                        lb=lb,
-                                                       ub=ub)
+                                                       ub=ub,
+                                                       rho=self.rho)
 
                     else:
 
                         Q += np.outer(y, y)
                         self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
                                                        lb=lb,
-                                                       ub=ub)
+                                                       ub=ub,
+                                                       rho=self.rho)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -908,13 +915,15 @@ class DualSVC(ClassifierMixin, DualSVM):
                         self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
                                                        A=y,
                                                        b=np.zeros(1),
-                                                       lb=lb)
+                                                       lb=lb,
+                                                       rho=self.rho)
 
                     else:
 
                         Q += np.outer(y, y)
                         self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                       lb=lb)
+                                                       lb=lb,
+                                                       rho=self.rho)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -1338,6 +1347,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  momentum=0.9,
                  max_f_eval=15000,
                  reg_intercept=True,
+                 rho=1,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -1353,6 +1363,7 @@ class DualSVR(RegressorMixin, DualSVM):
                          momentum=momentum,
                          max_f_eval=max_f_eval,
                          reg_intercept=reg_intercept,
+                         rho=rho,
                          mu=mu,
                          master_solver=master_solver,
                          master_verbose=master_verbose,
@@ -1448,7 +1459,8 @@ class DualSVR(RegressorMixin, DualSVM):
                             #  the equality constraint and solve with the lagrangian with the bcqp optimizer
                             self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
                                                            A=e,
-                                                           b=np.zeros(1))
+                                                           b=np.zeros(1),
+                                                           rho=self.rho)
 
                         else:
 
@@ -1471,14 +1483,16 @@ class DualSVR(RegressorMixin, DualSVM):
                                                            A=e,
                                                            b=np.zeros(1),
                                                            lb=lb,
-                                                           ub=ub)
+                                                           ub=ub,
+                                                           rho=self.rho)
 
                         else:
 
                             Q += np.outer(e, e)
                             self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
                                                            lb=lb,
-                                                           ub=ub)
+                                                           ub=ub,
+                                                           rho=self.rho)
 
                         if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -1597,13 +1611,15 @@ class DualSVR(RegressorMixin, DualSVM):
                         self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
                                                        A=e,
                                                        b=np.zeros(1),
-                                                       lb=lb)
+                                                       lb=lb,
+                                                       rho=self.rho)
 
                     else:
 
                         Q += np.outer(e, e)
                         self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                       lb=lb)
+                                                       lb=lb,
+                                                       rho=self.rho)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 

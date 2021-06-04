@@ -64,7 +64,14 @@ class LagrangianQuadratic(Quadratic):
         if not 0 < rho <= 1:
             raise ValueError('rho must be must be between 0 and 1')
         self.rho = rho
-        check_problem_constraints(G, h, A, b)
+        if G is None and h is not None:
+            raise ValueError("incomplete inequality constraint (missing G)")
+        if G is not None and h is None:
+            raise ValueError("incomplete inequality constraint (missing h)")
+        if A is None and b is not None:
+            raise ValueError("incomplete equality constraint (missing A)")
+        if A is not None and b is None:
+            raise ValueError("incomplete equality constraint (missing b)")
         # concatenate A with G and b with h for convenience and save the
         # first idx of the Lagrange multipliers constrained to be >= 0
         self.n_eq = self.A.shape[0] if self.A is not None else 0
@@ -105,7 +112,7 @@ class LagrangianQuadratic(Quadratic):
         """
         Compute the value of the (possibly augmented) lagrangian relaxation defined as:
 
-        L(x, mu, lambda) = 1/2 x^T Q x + q^T x + mu^T (A x - b) + lambda^T (G x - h) + rho/2 ||(A x - b) (G x - h)||^2
+        L(x, mu, lambda) = 1/2 x^T Q x + q^T x + mu^T (A x - b) + lambda^T (G x - h) + rho/2 ||(A x - b) + (G x - h)||^2
 
         :param x: the primal variable wrt evaluate the function
         :return: the function value wrt primal-dual variable
@@ -120,7 +127,7 @@ class LagrangianQuadratic(Quadratic):
         """
         Compute the jacobian of the (possibly augmented) lagrangian relaxation defined as:
 
-            J L(x, mu, lambda) = Q x + q + mu^T A + lambda^T G + rho ((A x - b) (G x - h))
+            J L(x, mu, lambda) = Q x + q + mu^T A + lambda^T G + rho ((A x - b) + (G x - h))
 
         :param x: the primal variable wrt evaluate the jacobian
         :return: the jacobian wrt primal-dual variable

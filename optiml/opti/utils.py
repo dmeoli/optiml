@@ -172,7 +172,8 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
     # 3D surface plot
     ax = surface_contour.add_subplot(1, 2, 1, projection='3d', elev=50, azim=-50)
     ax.plot_surface(X, Y, Z, norm=SymLogNorm(linthresh=abs(Z.min()), base=np.e), cmap='jet', alpha=0.5)
-    ax.plot(*f.x_star(), f.f_star(), marker='*', color='b', markersize=10, label='global optima')
+    if f.f_star() < np.inf:
+        ax.plot(*f.x_star(), f.f_star(), marker='*', color='b', markersize=10, label='global optima')
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
     ax.set_zlabel(f'${type(f).__name__}$')
@@ -194,10 +195,10 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
             or (dual and dual.ub is not None)
             or (dual and dual.lb is not None)):
         _lb = ([0, 0] if ub is not None else  # bcqp optimizer just with lb = 0
-               dual.lb if hasattr(dual, 'lb') else  # dual with explicit lb
+               dual.lb if dual.lb is not None else  # dual with explicit lb
                [X.min(), Y.min()])  # dual without explicit lb, so we take [x_min, y_min]
         _ub = (ub if ub is not None else  # bcqp optimizer with given ub
-               dual.ub if hasattr(dual, 'ub') else  # dual with explicit ub
+               dual.ub if dual.ub is not None else  # dual with explicit ub
                [X.max(), Y.max()])  # dual without explicit ub, so we take [x_max, y_max]
 
         # 3D box-constraints plot
@@ -238,7 +239,8 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
     # 2D contour plot
     ax = surface_contour.add_subplot(1, 2, 2)
     ax.contour(X, Y, Z, 70, cmap='jet', alpha=0.5)
-    ax.plot(*f.x_star(), marker='*', color='b', markersize=10)
+    if f.f_star() < np.inf:
+        ax.plot(*f.x_star(), marker='*', color='b', markersize=10)
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
 
@@ -254,10 +256,10 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
             or (dual and dual.ub is not None)
             or (dual and dual.lb is not None)):
         _lb = ([0, 0] if ub is not None else  # bcqp optimizer just with lb = 0
-               dual.lb if hasattr(dual, 'lb') else  # dual with explicit lb
+               dual.lb if dual.lb is not None else  # dual with explicit lb
                [X.min(), Y.min()])  # dual without explicit lb, so we take [x_min, y_min]
         _ub = (ub if ub is not None else  # bcqp optimizer with given ub
-               dual.ub if hasattr(dual, 'ub') else  # dual with explicit ub
+               dual.ub if dual.ub is not None else  # dual with explicit ub
                [X.max(), Y.max()])  # dual without explicit ub, so we take [x_max, y_max]
 
         # 2D box-constraints plot
