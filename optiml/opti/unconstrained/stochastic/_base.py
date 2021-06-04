@@ -152,6 +152,3 @@ class StochasticMomentumOptimizer(StochasticOptimizer, ABC):
         if not 0 <= momentum < 1:
             raise ValueError('momentum must be must be between 0 and 1')
         self.momentum = momentum
-        if (self.is_lagrangian_dual() and
-                not (isinstance(self, StochasticMomentumOptimizer) and self.momentum_type == 'none')):
-            raise ValueError('cannot solve lagrangian dual with a momentum optimizer')
