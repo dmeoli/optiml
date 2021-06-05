@@ -14,7 +14,7 @@ The experiments about SVCs are available at: \\ \href{https://github.com/dmeoli/
 
 \paragraph{Primal formulation}
 
-The experiments results shown in~\ref{primal_l1_svc_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. Training is stopped if after 5 iterations the training loss is not lower than the best found so far within a tolerance of $1\mathrm{e}{-8}$.
+The experiments results shown in~\ref{primal_l1_svc_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.002 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. Training is stopped if after 5 iterations the training loss is not lower than the best found so far within a tolerance of $1\mathrm{e}{-8}$.
 
 \input{experiments/primal_l1_svc}
 
@@ -29,7 +29,7 @@ The results provided from the \emph{custom} implementation, i.e., the SGD with d
 
 \paragraph{Linear Dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} dual refers to the formulation~\eqref{eq:svc_lagrangian_dual}, while the \emph{reg\_bias} dual refers to the formulation~\eqref{eq:l1_svc_bcqp_lagrangian_dual}.
+The experiments results shown in~\ref{linear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} dual refers to the formulation~\eqref{eq:svc_lagrangian_dual}, while the \emph{reg\_bias} dual refers to the formulation~\eqref{eq:l1_svc_bcqp_lagrangian_dual}.
 
 \input{experiments/linear_dual_l1_svc}
 
@@ -41,7 +41,7 @@ For what about the linear \emph{Lagrangian dual} formulation we can see as it se
 
 \paragraph{Nonlinear Dual formulations}
 
-The experiments results shown in~\ref{nonlinear_dual_l1_svc_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm.
+The experiments results shown in~\ref{nonlinear_dual_l1_svc_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm.
 
 \input{experiments/nonlinear_dual_l1_svc}
 
@@ -62,7 +62,7 @@ The same considerations made for the previous linear \emph{Wolfe dual} and \emph
 
 \paragraph{Primal formulation}
 
-The experiments results shown in~\ref{primal_l2_svc_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. Training is stopped if after 5 iterations the training loss is not lower than the best found so far within a tolerance of $1\mathrm{e}{-8}$.
+The experiments results shown in~\ref{primal_l2_svc_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.002 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. Training is stopped if after 5 iterations the training loss is not lower than the best found so far within a tolerance of $1\mathrm{e}{-8}$.
 
 \input{experiments/primal_l2_svc}
 
@@ -73,6 +73,29 @@ Again, the results provided from the \emph{custom} implementation, i.e., the SGD
 	\includegraphics[scale=0.55]{img/l2_svc_loss_history}
 	\caption{SGD convergence for the Primal formulation of the $\protect \mathcal{L}_2$-SVC}
 	\label{fig:l2_svc_loss_history}
+\end{figure}
+
+\paragraph{Linear Dual formulations}
+
+The experiments results shown in~\ref{linear_lagrangian_dual_l2_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} dual refers to the formulation~\eqref{eq:l2_svc_lagrangian_dual}, while the \emph{reg\_bias} dual refers to the formulation~\eqref{eq:l2_svc_lb_lagrangian_dual}.
+
+\input{experiments/linear_lagrangian_dual_l2_svc}
+
+For what about the linear \emph{Lagrangian dual} formulation we can see as it seems to be insensitive to the increasing complexity of the model in terms of number of \emph{iterations} but it tends to select many training data points as \emph{support vectors}.
+
+\paragraph{Nonlinear Dual formulations}
+
+The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm.
+
+\input{experiments/nonlinear_lagrangian_dual_l2_svc}
+
+The same considerations made for the previous linear \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting the complexity of the model coming with higher $C$ regularization values seems to be not paying a tradeoff in terms of the number of \emph{iterations} of the algorithm and, moreover, the \emph{reg\_bias Lagrangian dual} formulation seems to perform better wrt the \emph{unreg\_bias} formulation, both tends to select even more training data points as \emph{support vectors}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.55]{img/lagrangian_dual_l2_svc_loss_history}
+	\caption{AdaGrad convergence for the Lagrangian Dual formulation of the Nonlinear $\protect \mathcal{L}_2$-SVC}
+	\label{fig:lagrangian_dual_l2_svc_loss_history}
 \end{figure}
 
 \pagebreak
@@ -87,7 +110,7 @@ The experiments about SVRs are available at: \\ \href{https://github.com/dmeoli/
 
 \paragraph{Primal formulation}
 
-The experiments results shown in~\ref{primal_l1_svr_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. Training is stopped if after 5 iterations the training loss is not lower than the best found so far within a tolerance of $1\mathrm{e}{-8}$.
+The experiments results shown in~\ref{primal_l1_svr_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.002 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. Training is stopped if after 5 iterations the training loss is not lower than the best found so far within a tolerance of $1\mathrm{e}{-8}$.
 
 \input{experiments/primal_l1_svr}
 
@@ -104,7 +127,7 @@ The results provided from the \emph{custom} implementation, i.e., the SGD with d
 
 \paragraph{Linear Dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_l1_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} dual refers to the formulation~\eqref{eq:svr_lagrangian_dual}, while the \emph{reg\_bias} dual refers to the formulation~\eqref{eq:l1_svr_bcqp_lagrangian_dual}.
+The experiments results shown in~\ref{linear_lagrangian_dual_l1_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} dual refers to the formulation~\eqref{eq:svr_lagrangian_dual}, while the \emph{reg\_bias} dual refers to the formulation~\eqref{eq:l1_svr_bcqp_lagrangian_dual}.
 
 \input{experiments/linear_dual_l1_svr}
 
@@ -123,7 +146,7 @@ For what about the linear \emph{Lagrangian dual} formulation we can see as it se
 
 \paragraph{Nonlinear Dual formulations}
 
-The experiments results shown in~\ref{nonlinear_dual_l1_svr_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 for the \emph{AdaGrad} algorithm.
+The experiments results shown in~\ref{nonlinear_dual_l1_svr_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm.
 
 \input{experiments/nonlinear_dual_l1_svr}
 
@@ -151,7 +174,7 @@ The same considerations made for the previous linear \emph{Wolfe dual} and \emph
 
 \paragraph{Primal formulation}
 
-The experiments results shown in~\ref{primal_l2_svr_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.001 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. Training is stopped if after 5 iterations the training loss is not lower than the best found so far within a tolerance of $1\mathrm{e}{-8}$.
+The experiments results shown in~\ref{primal_l2_svr_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.002 and $\beta$, i.e., the \emph{momentum}, equal to 0.4. Training is stopped if after 5 iterations the training loss is not lower than the best found so far within a tolerance of $1\mathrm{e}{-8}$.
 
 \input{experiments/primal_l2_svr}
 
@@ -162,4 +185,43 @@ Again, the results provided from the \emph{custom} implementation, i.e., the SGD
 	\includegraphics[scale=0.5]{img/l2_svr_loss_history}
 	\caption{SGD convergence for the Primal formulation of the $\protect \mathcal{L}_2$-SVR}
 	\label{fig:l2_svr_loss_history}
+\end{figure}
+
+\pagebreak
+
+\paragraph{Linear Dual formulations}
+
+The experiments results shown in~\ref{linear_lagrangian_dual_l2_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} dual refers to the formulation~\eqref{eq:l2_svr_lagrangian_dual}, while the \emph{reg\_bias} dual refers to the formulation~\eqref{eq:l2_svr_lb_lagrangian_dual}.
+
+\input{experiments/linear_lagrangian_dual_l2_svr}
+
+For what about the linear \emph{Lagrangian dual} formulation we can see as it seems to be insensitive to the increasing complexity of the model in terms of number of \emph{iterations} and require many \emph{iterations} wrt the \emph{Wolfe dual} formulation.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.55]{img/linear_lagrangian_dual_l2_svr_loss_history}
+	\caption{AdaGrad convergence for the Lagrangian Dual formulation of the Linear $\protect \mathcal{L}_2$-SVR}
+	\label{fig:linear_lagrangian_dual_l2_svr_loss_history}
+\end{figure}
+
+\paragraph{Nonlinear Dual formulations}
+
+The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian RBF} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm.
+
+\input{experiments/nonlinear_lagrangian_dual_l2_svr}
+
+The same considerations made for the previous linear \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting, the complexity of the model coming with higher $C$ regularization hyperparameters and lower $\epsilon$ values pays a larger tradeoff in terms of the number of \emph{iterations} of the algorithm.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.55]{img/poly_lagrangian_dual_l2_svr_loss_history}
+	\caption{AdaGrad convergence for the Lagrangian Dual formulation of the Polynomial $\protect \mathcal{L}_2$-SVR}
+	\label{fig:poly_lagrangian_dual_l2_svr_loss_history}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.55]{img/gaussian_lagrangian_dual_l2_svr_loss_history}
+	\caption{AdaGrad convergence for the Lagrangian Dual formulation of the Gaussian $\protect \mathcal{L}_2$-SVR}
+	\label{fig:gaussian_lagrangian_dual_l2_svr_loss_history}
 \end{figure}
