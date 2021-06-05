@@ -33,10 +33,13 @@ class Optimizer(ABC):
             raise TypeError(f'{f} is not an allowed optimization function')
         self.f = f
         if x is None:
-            if random_state is None:
-                x = np.random.uniform
+            if self.is_lagrangian_dual():
+                x = np.zeros
             else:
-                x = np.random.RandomState(random_state).uniform
+                if random_state is None:
+                    x = np.random.uniform
+                else:
+                    x = np.random.RandomState(random_state).uniform
         if callable(x):
             try:
                 self.x = x(size=f.ndim)
@@ -45,6 +48,10 @@ class Optimizer(ABC):
         else:
             self.x = np.asarray(x, dtype=float)
         self.f_x = np.nan
+        if self.is_lagrangian_dual():
+            self.past_x = self.x.copy()
+            self.primal_f_x = np.nan
+            self.dgap = np.nan
         self.g_x = np.zeros(0)
         self.eps = eps
         self.tol = tol
@@ -53,8 +60,6 @@ class Optimizer(ABC):
         self.max_iter = max_iter
         self.iter = 0
         self.status = 'unknown'
-        if hasattr(self.f, 'primal'):
-            self.primal_f_x = self.f.primal.function(self.x)
         if self.f.ndim <= 3:
             self.x0_history = []
             self.x1_history = []
@@ -69,7 +74,7 @@ class Optimizer(ABC):
 
     def callback(self, args=()):
 
-        if hasattr(self.f, 'primal'):
+        if hasattr(self.f, 'primal'):  # is_lagrangian_dual()
 
             self.primal_f_x = self.f.primal.function(self.x)
 

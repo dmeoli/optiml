@@ -180,12 +180,12 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
 
     constrained = False
 
-    if dual and dual.A is not None:
+    if dual and (dual.A is not None and not np.all((dual.A == 0))):
         _X, _Y = np.meshgrid(np.arange(x_min, x_max, 2), np.arange(y_min, y_max, 2))
         _Z = np.array([f(np.array([x, y]))
                        for x, y in zip(_X.ravel(), _Y.ravel())]).reshape(_X.shape)
-        # y = m x + q => m = -(A[0] / A[1]), q = 0
-        surf1 = ax.plot_surface(_X, -(dual.A[:, 0] / dual.A[:, 1]) * _X, _Z, color='b', label='$Ax=b$')
+        # y = m x + q => m = -(A[0] / A[1]), q = b
+        surf1 = ax.plot_surface(_X, -(dual.A[:, 0] / dual.A[:, 1]) * _X + dual.b, _Z, color='b', label='$Ax=b$')
         constrained = True
         # bug https://stackoverflow.com/a/55534939/5555994
         surf1._facecolors2d = surf1._facecolor3d
@@ -246,10 +246,10 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
 
     constrained = False
 
-    if dual and dual.A is not None:
+    if dual and (dual.A is not None and not np.all((dual.A == 0))):
         _X = np.arange(x_min, x_max, 2)
-        # y = m x + q => m = -(A[0] / A[1]), q = 0
-        ax.plot(_X, -(dual.A[:, 0] / dual.A[:, 1]) * _X, color='b')
+        # y = m x + q => m = -(A[0] / A[1]), q = b
+        ax.plot(_X, -(dual.A[:, 0] / dual.A[:, 1]) * _X + dual.b, color='b')
         constrained = True
 
     if (ub is not None  # bcqp optimizer

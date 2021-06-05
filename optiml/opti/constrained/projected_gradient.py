@@ -109,12 +109,12 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
             self.x += t * d
 
             if self.is_lagrangian_dual():
-                violations = self.f.AG.dot(self.x) - self.f.bh
+                constraints = self.f.AG.dot(self.x) - self.f.bh
 
                 self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
 
                 # upgrade and clip dual_x
-                self.f.dual_x += self.f.rho * violations
+                self.f.dual_x += self.f.rho * constraints
                 self.f.dual_x[self.f.n_eq:] = np.clip(self.f.dual_x[self.f.n_eq:], a_min=0, a_max=None)
 
                 if (np.linalg.norm(self.f.dual_x - self.f.past_dual_x) +

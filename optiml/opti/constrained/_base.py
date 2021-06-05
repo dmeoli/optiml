@@ -1,7 +1,7 @@
 from abc import ABC
 
 import autograd.numpy as np
-from qpsolvers import solve_qp, check_problem_constraints
+from qpsolvers import solve_qp
 
 from optiml.opti import Optimizer, Quadratic
 
@@ -65,13 +65,13 @@ class LagrangianQuadratic(Quadratic):
             raise ValueError('rho must be must be between 0 and 1')
         self.rho = rho
         if G is None and h is not None:
-            raise ValueError("incomplete inequality constraint (missing G)")
+            raise ValueError('incomplete inequality constraint (missing G)')
         if G is not None and h is None:
-            raise ValueError("incomplete inequality constraint (missing h)")
+            raise ValueError('incomplete inequality constraint (missing h)')
         if A is None and b is not None:
-            raise ValueError("incomplete equality constraint (missing A)")
+            raise ValueError('incomplete equality constraint (missing A)')
         if A is not None and b is None:
-            raise ValueError("incomplete equality constraint (missing b)")
+            raise ValueError('incomplete equality constraint (missing b)')
         # concatenate A with G and b with h for convenience and save the
         # first idx of the Lagrange multipliers constrained to be >= 0
         self.n_eq = self.A.shape[0] if self.A is not None else 0
@@ -79,20 +79,29 @@ class LagrangianQuadratic(Quadratic):
             self.AG = np.concatenate((self.A, self.G))
         elif self.A is not None:
             self.AG = self.A
+            self.G = np.zeros((self.ndim, self.ndim))  # G is None
         elif self.G is not None:
             self.AG = self.G
+            self.A = np.zeros((self.ndim, self.ndim))  # A is None
         else:
-            self.AG = np.zeros((self.ndim, self.ndim))
+            self.A = np.zeros((self.ndim, self.ndim))
+            self.G = np.zeros((self.ndim, self.ndim))
+            self.AG = np.concatenate((self.A, self.G))  # A and G are None
         if self.b is not None and self.h is not None:
             self.bh = np.concatenate((self.b, self.h))
         elif self.b is not None:
+            self.h = np.zeros(self.ndim)  # h is None
             self.bh = self.b
         elif self.h is not None:
+            self.b = np.zeros(self.ndim)  # b is None
             self.bh = self.h
         else:
-            self.bh = np.zeros(self.ndim)
+            self.b = np.zeros(self.ndim)
+            self.h = np.zeros(self.ndim)
+            self.bh = np.concatenate((self.b, self.h))  # b and h are None
         # initialize Lagrange multipliers to 0
         self.dual_x = np.zeros(self.AG.shape[0])
+        self.past_dual_x = self.dual_x.copy()
 
     def f_star(self):
         return self.primal.function(self.x_star())
@@ -117,11 +126,9 @@ class LagrangianQuadratic(Quadratic):
         :param x: the primal variable wrt evaluate the function
         :return: the function value wrt primal-dual variable
         """
-        violations = self.AG @ x - self.bh
-        clipped_violations = violations.copy()
-        clipped_violations[self.n_eq:] = np.clip(violations[self.n_eq:], a_min=0, a_max=None)
-        return (super(LagrangianQuadratic, self).function(x) + self.dual_x @ violations +
-                0.5 * self.rho * np.linalg.norm(clipped_violations) ** 2)
+        return (super(LagrangianQuadratic, self).function(x) + self.dual_x @ (self.AG @ x - self.bh) +
+                0.5 * self.rho * np.sum(np.square(self.A @ x - self.b)) +
+                0.5 * self.rho * np.sum(np.square(np.clip(self.G @ x - self.h, a_min=0, a_max=None))))
 
     def jacobian(self, x):
         """
@@ -132,13 +139,13 @@ class LagrangianQuadratic(Quadratic):
         :param x: the primal variable wrt evaluate the jacobian
         :return: the jacobian wrt primal-dual variable
         """
-        violations = self.AG @ x - self.bh
-        clipped_violations = violations.copy()
-        clipped_violations[self.n_eq:] = np.clip(violations[self.n_eq:], a_min=0, a_max=None)
-        violations = clipped_violations != 0
-        return (super(LagrangianQuadratic, self).jacobian(x) + self.dual_x @ self.AG
-                + self.rho * self.AG.T[:, violations] @ self.AG.T[:, violations].T @ x
-                - self.rho * self.bh[violations] @ self.AG.T[:, violations].T)
+        constraints = self.AG @ x - self.bh
+        clipped_constraints = constraints.copy()
+        clipped_constraints[self.n_eq:] = np.clip(constraints[self.n_eq:], a_min=0, a_max=None)
+        constraints = clipped_constraints != 0
+        return (super(LagrangianQuadratic, self).jacobian(x) + self.dual_x @ self.AG +
+                self.rho * self.AG[constraints].T @ self.AG[constraints] @ x -
+                self.rho * self.bh[constraints] @ self.AG[constraints])
 
     def hessian(self, x):
         return self.auto_hess(x)
