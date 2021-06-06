@@ -80,7 +80,8 @@ class Optimizer(ABC):
 
             self.dgap = abs((self.primal_f_x - self.f_x)) / max(abs(self.primal_f_x), 1)
 
-            if self.is_verbose():
+            # primal x initialize to 0, so the dgap will be zero at first iteration
+            if self.is_verbose() and self.iter > 0:
                 print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
                 print('\tdgap: {: 1.4e}'.format(self.dgap), end='')
 

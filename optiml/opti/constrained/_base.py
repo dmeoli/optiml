@@ -31,7 +31,7 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
 
 class LagrangianQuadratic(Quadratic):
     """
-    Abstract class for the lagrangian relaxation of a constrained quadratic function defined as:
+    Construct the augmented lagrangian relaxation of a constrained quadratic function defined as:
 
             1/2 x^T Q x + q^T x : A x = b, G x <= h, lb <= x <= ub
     """
@@ -61,8 +61,8 @@ class LagrangianQuadratic(Quadratic):
             else:
                 self.G = np.concatenate((self.G, np.eye(self.ndim)), axis=0)
                 self.h = np.concatenate((self.h, self.ub))
-        if not 0 < rho <= 1:
-            raise ValueError('rho must be must be between 0 and 1')
+        if not rho > 0:
+            raise ValueError('rho must be must > 0')
         self.rho = rho
         if G is None and h is not None:
             raise ValueError('incomplete inequality constraint (missing G)')
@@ -110,29 +110,35 @@ class LagrangianQuadratic(Quadratic):
         if not hasattr(self, 'x_opt'):
             self.x_opt = solve_qp(P=self.Q,
                                   q=self.q,
-                                  A=self.A,
-                                  b=self.b,
-                                  G=self.G,
-                                  h=self.h,
+                                  A=self.A if not np.all((self.A == 0)) else None,
+                                  b=self.b if not np.all((self.A == 0)) else None,  # check for A since b can be zero
+                                  G=self.G if not np.all((self.G == 0)) else None,
+                                  h=self.h if not np.all((self.G == 0)) else None,  # check for G since h can be zero
                                   solver='cvxopt')
         return self.x_opt
 
     def function(self, x):
         """
-        Compute the value of the (possibly augmented) lagrangian relaxation defined as:
+        Compute the value of the augmented lagrangian relaxation defined as:
 
         L(x, mu, lambda) = 1/2 x^T Q x + q^T x + mu^T (A x - b) + lambda^T (G x - h) + rho/2 ||(A x - b) + (G x - h)||^2
 
         :param x: the primal variable wrt evaluate the function
         :return: the function value wrt primal-dual variable
         """
+        # constraints = self.AG @ x - self.bh
+        # clipped_constraints = constraints.copy()
+        # clipped_constraints[self.n_eq:] = np.clip(constraints[self.n_eq:], a_min=0, a_max=None)
+        # return (super(LagrangianQuadratic, self).function(x) + self.dual_x @ constraints +
+        #         0.5 * self.rho * np.linalg.norm(clipped_constraints) ** 2)
+        # rewritten avoiding vector assignments to make it understandable by autograd
         return (super(LagrangianQuadratic, self).function(x) + self.dual_x @ (self.AG @ x - self.bh) +
                 0.5 * self.rho * np.sum(np.square(self.A @ x - self.b)) +
                 0.5 * self.rho * np.sum(np.square(np.clip(self.G @ x - self.h, a_min=0, a_max=None))))
 
     def jacobian(self, x):
         """
-        Compute the jacobian of the (possibly augmented) lagrangian relaxation defined as:
+        Compute the jacobian of the augmented lagrangian relaxation defined as:
 
             J L(x, mu, lambda) = Q x + q + mu^T A + lambda^T G + rho ((A x - b) + (G x - h))
 
