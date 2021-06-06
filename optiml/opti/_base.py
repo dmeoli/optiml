@@ -33,13 +33,10 @@ class Optimizer(ABC):
             raise TypeError(f'{f} is not an allowed optimization function')
         self.f = f
         if x is None:
-            if self.is_lagrangian_dual():
-                x = np.zeros
+            if random_state is None:
+                x = np.random.uniform
             else:
-                if random_state is None:
-                    x = np.random.uniform
-                else:
-                    x = np.random.RandomState(random_state).uniform
+                x = np.random.RandomState(random_state).uniform
         if callable(x):
             try:
                 self.x = x(size=f.ndim)
@@ -78,10 +75,9 @@ class Optimizer(ABC):
 
             self.primal_f_x = self.f.primal.function(self.x)
 
-            self.dgap = abs((self.primal_f_x - self.f_x)) / max(abs(self.primal_f_x), 1)
+            self.dgap = (self.primal_f_x - self.f_x) / max(abs(self.primal_f_x), 1)
 
-            # primal x initialize to 0, so the dgap will be zero at first iteration
-            if self.is_verbose() and self.iter > 0:
+            if self.is_verbose():
                 print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
                 print('\tdgap: {: 1.4e}'.format(self.dgap), end='')
 

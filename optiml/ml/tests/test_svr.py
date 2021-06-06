@@ -61,7 +61,7 @@ def test_solve_primal_l1_svr_with_stochastic_optimizers():
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.75
 
-    svr = PrimalSVR(loss=epsilon_insensitive, optimizer=AdaGrad)
+    svr = PrimalSVR(loss=epsilon_insensitive, learning_rate=1., optimizer=AdaGrad)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.75
 
@@ -171,6 +171,14 @@ def test_solve_dual_l1_svr_with_reg_intercept_with_line_search_optimizers():
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=Newton, reg_intercept=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.77
+
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=BFGS, reg_intercept=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.77
+
 
 def test_solve_dual_l1_svr_with_unreg_intercept_with_line_search_optimizers():
     X, y = load_boston(return_X_y=True)
@@ -190,6 +198,14 @@ def test_solve_dual_l1_svr_with_unreg_intercept_with_line_search_optimizers():
     assert svr.score(X_test, y_test) >= 0.77
 
     svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=HeavyBallGradient, reg_intercept=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.77
+
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=Newton, reg_intercept=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.77
+
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=BFGS, reg_intercept=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
@@ -328,13 +344,19 @@ def test_solve_dual_l2_svr_with_reg_intercept_with_line_search_optimizers():
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
-    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear,
-                  optimizer=ConjugateGradient, reg_intercept=True)
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=ConjugateGradient, reg_intercept=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
-    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear,
-                  optimizer=HeavyBallGradient, reg_intercept=True)
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=HeavyBallGradient, reg_intercept=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.77
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=Newton, reg_intercept=True)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.77
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=BFGS, reg_intercept=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
@@ -349,13 +371,19 @@ def test_solve_dual_l2_svr_with_unreg_intercept_with_line_search_optimizers():
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
-    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear,
-                  optimizer=ConjugateGradient, reg_intercept=False)
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=ConjugateGradient, reg_intercept=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
-    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear,
-                  optimizer=HeavyBallGradient, reg_intercept=False)
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=HeavyBallGradient, reg_intercept=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.77
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=Newton, reg_intercept=False)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.77
+
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=BFGS, reg_intercept=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.77
 
