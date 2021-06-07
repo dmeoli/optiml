@@ -30,14 +30,16 @@ class SVMLoss(OptimizationFunction, ABC):
                                              kernel=linear,
                                              C=self.svm.C,
                                              reg_intercept=True,
-                                             optimizer='cvxopt')
+                                             optimizer='cvxopt',
+                                             verbose=-1)
                 elif self.svm.loss._loss_type == 'regressor':
                     dual_svm = self.svm.dual(loss=self.svm.loss.__class__,
                                              epsilon=self.svm.epsilon,
                                              kernel=linear,
                                              C=self.svm.C,
                                              reg_intercept=True,
-                                             optimizer='cvxopt')
+                                             optimizer='cvxopt',
+                                             verbose=-1)
                 dual_svm.fit(self.X[:, :-1], self.y)
                 self.x_opt = np.hstack((dual_svm.coef_, dual_svm.intercept_))
             return self.x_opt

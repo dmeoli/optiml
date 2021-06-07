@@ -724,7 +724,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                 lb=lb,
                                                 ub=ub,
                                                 solver=self.optimizer,
-                                                verbose=True)
+                                                verbose=False if self.verbose < 0 else True)
 
                 else:
 
@@ -738,7 +738,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                 lb=lb,
                                                 ub=ub,
                                                 solver=self.optimizer,
-                                                verbose=True)
+                                                verbose=False if self.verbose < 0 else True)
 
                 stdout = out.getvalue()
                 if stdout:
@@ -872,7 +872,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                 b=np.zeros(1),
                                                 lb=lb,
                                                 solver=self.optimizer,
-                                                verbose=True)
+                                                verbose=False if self.verbose < 0 else True)
 
                 else:
 
@@ -885,7 +885,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                 q=q,
                                                 lb=lb,
                                                 solver=self.optimizer,
-                                                verbose=True)
+                                                verbose=False if self.verbose < 0 else True)
 
                 stdout = out.getvalue()
                 if stdout:
@@ -1415,7 +1415,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                     lb=lb,
                                                     ub=ub,
                                                     solver=self.optimizer,
-                                                    verbose=True)
+                                                    verbose=False if self.verbose < 0 else True)
 
                     else:
 
@@ -1429,7 +1429,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                     lb=lb,
                                                     ub=ub,
                                                     solver=self.optimizer,
-                                                    verbose=True)
+                                                    verbose=False if self.verbose < 0 else True)
 
                     stdout = out.getvalue()
                     if stdout:
@@ -1567,7 +1567,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                 b=np.zeros(1),
                                                 lb=lb,
                                                 solver=self.optimizer,
-                                                verbose=True)
+                                                verbose=False if self.verbose < 0 else True)
 
                 else:
 
@@ -1580,7 +1580,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                 q=q,
                                                 lb=lb,
                                                 solver=self.optimizer,
-                                                verbose=True)
+                                                verbose=False if self.verbose < 0 else True)
 
                 stdout = out.getvalue()
                 if stdout:
