@@ -1059,7 +1059,7 @@ h & -lb & ub
 
 \begin{equation} \label{eq:aug_lagrangian_dual}
 	\begin{aligned}
-		    \max_{\mu,\lambda} \min_{\alpha} \quad & \frac{1}{2} \alpha^T Q \alpha + q^T \alpha + \mu^T (A \alpha - b) + \lambda^T (\hat{G} \alpha - \hat{h}) + \frac{\rho}{2} \| (A \alpha - b) + (\hat{G} \alpha - \hat{h}) \|^2 \\
+		    \max_{\mu,\lambda} \min_{\alpha} \quad & \frac{1}{2} \alpha^T Q \alpha + q^T \alpha + \mu^T (A \alpha - b) + \lambda^T (\hat{G} \alpha - \hat{h}) + \frac{\rho}{2} \| A \alpha - b \|^2 + \frac{\rho}{2} \| \hat{G} \alpha - \hat{h} \|^2 \\
     \text{subject to} \quad & \lambda \geq 0
 	\end{aligned}
 \end{equation}
