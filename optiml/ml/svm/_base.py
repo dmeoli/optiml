@@ -33,8 +33,7 @@ class SVM(BaseEstimator, ABC):
 
     C : float, default=1.0
         Regularization parameter. The strength of the regularization is
-        inversely proportional to C. Must be strictly positive. The penalty
-        is a squared l2 penalty.
+        inversely proportional to C. Must be strictly positive.
 
     tol : float, default=1e-3
         Tolerance for stopping criterion.
@@ -42,7 +41,7 @@ class SVM(BaseEstimator, ABC):
     optimizer : LineSearchOptimizer or StochasticOptimizer subclass, default=None
         The solver for optimization. It can be a subclass of the `LineSearchOptimizer`
         which can converge faster and perform better for small datasets, e.g., the
-        `LBFGS` quasi-Newton method or, alternatively, a subclass of the `StochasticOptimizer`
+        `BFGS` quasi-Newton method or, alternatively, a subclass of the `StochasticOptimizer`
         e.g., the `StochasticGradientDescent` or `Adam`, which works well on relatively
         large datasets (with thousands of training samples or more) in terms of both
         training time and validation score.
@@ -753,7 +752,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                     if not self.reg_intercept:
 
                         # TODO constrained optimizer with A x = 0 and 0 <= x <= ub is not available, so relax
-                        #  the equality constraint and solve with the lagrangian with the bcqp optimizer
+                        #  the equality constraint and solve the lagrangian with the bcqp optimizer
                         self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
                                                        A=y,
                                                        b=np.zeros(1),
@@ -1443,7 +1442,7 @@ class DualSVR(RegressorMixin, DualSVM):
                         if not self.reg_intercept:
 
                             # TODO constrained optimizer with A x = 0 and 0 <= x <= ub is not available, so relax
-                            #  the equality constraint and solve with the lagrangian with the bcqp optimizer
+                            #  the equality constraint and solve the lagrangian with the bcqp optimizer
                             self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
                                                            A=e,
                                                            b=np.zeros(1),
