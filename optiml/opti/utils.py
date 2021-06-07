@@ -156,9 +156,9 @@ def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_
 
 # plot functions
 
-def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
+def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None, primal=True):
     dual = None
-    if hasattr(f, 'primal'):  # lagrangian dual
+    if hasattr(f, 'primal') and primal:  # plot primal with constraints
         dual = f
         f = dual.primal
 
@@ -176,7 +176,7 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
         ax.plot(*f.x_star(), f.f_star(), marker='*', color='b', markersize=10, label='global optima')
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
-    ax.set_zlabel(f'${type(f).__name__}$')
+    ax.set_zlabel(f'${f.__class__.__name__}$')
 
     constrained = False
 
@@ -284,6 +284,9 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None):
 
 
 def plot_trajectory_optimization(surface_contour, opt, color='k', label=None, linewidth=1.5):
+    if label is None:
+        label = opt.__class__.__name__
+
     # 3D trajectory optimization plot
     surface_contour.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history,
                                  marker='.', color=color, label=label, linewidth=linewidth)
@@ -306,8 +309,8 @@ def plot_trajectory_optimization(surface_contour, opt, color='k', label=None, li
 
 
 # utility for Jupyter Notebook
-def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max,
+def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max, primal=True,
                                          color='k', label=None, linewidth=1.5):
     ub = opt.ub if hasattr(opt, 'ub') else None
-    plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, ub),
+    plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, ub, primal),
                                  opt, color, label, linewidth)
