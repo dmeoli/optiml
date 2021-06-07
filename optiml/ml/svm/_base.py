@@ -454,6 +454,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         if not loss._loss_type == 'classifier':
             raise TypeError(f'{loss} is not an allowed SVC loss function')
         self.lb = LabelBinarizer(neg_label=-1)
+        self.dual = DualSVC
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
         super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
@@ -1132,6 +1133,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
         if not epsilon >= 0:
             raise ValueError('epsilon must be >= 0')
         self.epsilon = epsilon
+        self.dual = DualSVR
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
         super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)

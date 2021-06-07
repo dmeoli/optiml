@@ -2,6 +2,7 @@ from abc import ABC
 
 import autograd.numpy as np
 
+from .kernels import linear
 from ...opti import OptimizationFunction
 
 
@@ -15,6 +16,32 @@ class SVMLoss(OptimizationFunction, ABC):
 
     def args(self):
         return self.X, self.y
+
+    def f_star(self):
+        if self.svm.fit_intercept:
+            return self.function(self.x_star())
+        return super().f_star()
+
+    def x_star(self):
+        if self.svm.fit_intercept:
+            if not hasattr(self, 'x_opt'):
+                if self.svm.loss._loss_type == 'classifier':
+                    dual_svm = self.svm.dual(loss=self.svm.loss.__class__,
+                                             kernel=linear,
+                                             C=self.svm.C,
+                                             reg_intercept=True,
+                                             optimizer='cvxopt')
+                elif self.svm.loss._loss_type == 'regressor':
+                    dual_svm = self.svm.dual(loss=self.svm.loss.__class__,
+                                             epsilon=self.svm.epsilon,
+                                             kernel=linear,
+                                             C=self.svm.C,
+                                             reg_intercept=True,
+                                             optimizer='cvxopt')
+                dual_svm.fit(self.X[:, :-1], self.y)
+                self.x_opt = np.hstack((dual_svm.coef_, dual_svm.intercept_))
+            return self.x_opt
+        return super().x_star()
 
     def function(self, packed_coef_inter, X_batch=None, y_batch=None):
         if X_batch is None:
