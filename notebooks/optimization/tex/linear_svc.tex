@@ -125,8 +125,8 @@ or, equivalently, by augmenting the weight vector $w$ with the bias term $b$ and
 
 \begin{equation} \label{eq:reg_bias_primal_svm2}
     \begin{aligned}
-        \min_{w} \quad & \frac{1}{2} \| \bar{w} \|^2 + C \sum_{i=1}^n \mathcal{L}(\bar{w};\bar{x}_i,y_i) \\
-            \text{where} \quad & \bar{w}^T = [w^T, b] \\ & \bar{x}_i^T = [x_i^T, 1]
+        \min_{w} \quad & \frac{1}{2} \| \hat{w} \|^2 + C \sum_{i=1}^n \mathcal{L}(\hat{w};\hat{x}_i,y_i) \\
+            \text{where} \quad & \hat{w}^T = [w^T, b] \\ & \hat{x}_i^T = [x_i^T, 1]
     \end{aligned}
 \end{equation}
 

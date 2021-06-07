@@ -987,7 +987,7 @@ $\mathcal{L}_2$-SVR~\eqref{eq:reg_bias_primal_l2_svr} & yes & L-Lipschitz & \vto
 \end{tabular}
 \end{table}
 
-And, according to the theoretical analysis, the following \emph{convergence rates} are given for the primal and Lagrangian dual formulations respectively: 
+And, according to the theoretical analysis, the following \emph{convergence rates} are given for the primal and \emph{Lagrangian dual} formulations respectively: 
 
 % https://homepage.cs.uiowa.edu/~tyng/acml15-tutorial.pdf
 
@@ -1028,3 +1028,40 @@ $\mathcal{L}_2$-SVM~(\ref{eq:l2_svc_lagrangian_dual},~\ref{eq:l2_svr_lagrangian_
 %\end{equation}
 %
 %Since we are dealing with a symmetric system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, to compute the vector $\alpha_n$ that minimizes the norm of the residual $r_n = Q \alpha_n - b$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
+
+To improve the practical convergence of all the \emph{Lagrangian dual} formulations we adding a strictly convex augmentation term, so by considering a general quadratic optimization problem subject to linear constraints, i.e., equality and inequality constraints, defined as:
+
+\begin{equation}
+    \begin{aligned} 
+        \min_{\alpha} \quad & \frac{1}{2} \alpha^T Q \alpha + q^T \alpha \\
+            \textrm{subject to} \quad & A \alpha = b \\ & G \alpha \leq h \\ & lb \leq \alpha \leq ub
+    \end{aligned}
+\end{equation}
+
+or, equivalently:
+
+\begin{equation}
+    \begin{aligned}
+        \min_{\alpha} \quad & \frac{1}{2} \alpha^T Q \alpha + q^T \alpha \\
+            \textrm{subject to} \quad & A \alpha = b \\ & \hat{G} \alpha \leq \hat{h}
+    \end{aligned}
+\end{equation}
+
+where $\hat{G} =
+\begin{bmatrix}
+ G \\
+-I \\
+ I 
+\end{bmatrix}$ and $\hat{h} =
+\begin{bmatrix}
+h & -lb & ub
+\end{bmatrix}$; we give the following \emph{augmented Lagrangian dual}:
+
+\begin{equation} \label{eq:aug_lagrangian_dual}
+	\begin{aligned}
+		    \max_{\mu,\lambda} \min_{\alpha} \quad & \frac{1}{2} \alpha^T Q \alpha + q^T \alpha + \mu^T (A \alpha - b) + \lambda^T (\hat{G} \alpha - \hat{h}) + \frac{\rho}{2} \| (A \alpha - b) + (\hat{G} \alpha - \hat{h}) \|^2 \\
+    \text{subject to} \quad & \lambda \geq 0
+	\end{aligned}
+\end{equation}
+
+with $\rho > 0$. 
