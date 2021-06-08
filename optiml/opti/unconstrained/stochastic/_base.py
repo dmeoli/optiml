@@ -33,15 +33,14 @@ class StochasticOptimizer(Optimizer, ABC):
         :param verbose: (boolean, optional, default value False): print details about each iteration
                         if True, nothing otherwise.
         """
-
-        super().__init__(f=f,
-                         x=x,
-                         eps=eps,
-                         max_iter=epochs,
-                         callback=callback,
-                         callback_args=callback_args,
-                         random_state=random_state,
-                         verbose=verbose)
+        super(StochasticOptimizer, self).__init__(f=f,
+                                                  x=x,
+                                                  eps=eps,
+                                                  max_iter=epochs,
+                                                  callback=callback,
+                                                  callback_args=callback_args,
+                                                  random_state=random_state,
+                                                  verbose=verbose)
         if not step_size > 0:
             raise ValueError('step_size must be > 0')
         self.step_size = step_size
@@ -135,17 +134,17 @@ class StochasticMomentumOptimizer(StochasticOptimizer, ABC):
                  shuffle=True,
                  random_state=None,
                  verbose=False):
-        super().__init__(f=f,
-                         x=x,
-                         step_size=step_size,
-                         batch_size=batch_size,
-                         eps=eps,
-                         epochs=epochs,
-                         callback=callback,
-                         callback_args=callback_args,
-                         shuffle=shuffle,
-                         random_state=random_state,
-                         verbose=verbose)
+        super(StochasticMomentumOptimizer, self).__init__(f=f,
+                                                          x=x,
+                                                          step_size=step_size,
+                                                          batch_size=batch_size,
+                                                          eps=eps,
+                                                          epochs=epochs,
+                                                          callback=callback,
+                                                          callback_args=callback_args,
+                                                          shuffle=shuffle,
+                                                          random_state=random_state,
+                                                          verbose=verbose)
         if momentum_type not in ('polyak', 'nesterov', 'none'):
             raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type

@@ -170,7 +170,7 @@ class Quadratic(OptimizationFunction):
         q = np.array(q)
 
         n = len(Q)
-        super().__init__(n)
+        super(Quadratic, self).__init__(n)
 
         if n <= 1:
             raise ValueError('Q is too small')

@@ -176,20 +176,20 @@ class PrimalSVM(SVM, ABC):
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
-        super().__init__(loss=loss,
-                         C=C,
-                         tol=tol,
-                         optimizer=optimizer,
-                         max_iter=max_iter,
-                         learning_rate=learning_rate,
-                         momentum_type=momentum_type,
-                         momentum=momentum,
-                         max_f_eval=max_f_eval,
-                         fit_intercept=fit_intercept,
-                         mu=mu,
-                         master_solver=master_solver,
-                         master_verbose=master_verbose,
-                         verbose=verbose)
+        super(PrimalSVM, self).__init__(loss=loss,
+                                        C=C,
+                                        tol=tol,
+                                        optimizer=optimizer,
+                                        max_iter=max_iter,
+                                        learning_rate=learning_rate,
+                                        momentum_type=momentum_type,
+                                        momentum=momentum,
+                                        max_f_eval=max_f_eval,
+                                        fit_intercept=fit_intercept,
+                                        mu=mu,
+                                        master_solver=master_solver,
+                                        master_verbose=master_verbose,
+                                        verbose=verbose)
         if not issubclass(self.optimizer, Optimizer):
             raise TypeError(f'{optimizer} is not an allowed optimization method')
         self.validation_split = validation_split
@@ -306,20 +306,20 @@ class DualSVM(SVM, ABC):
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
-        super().__init__(loss=loss,
-                         C=C,
-                         tol=tol,
-                         optimizer=optimizer,
-                         max_iter=max_iter,
-                         learning_rate=learning_rate,
-                         momentum_type=momentum_type,
-                         momentum=momentum,
-                         max_f_eval=max_f_eval,
-                         fit_intercept=True,
-                         mu=mu,
-                         master_solver=master_solver,
-                         master_verbose=master_verbose,
-                         verbose=verbose)
+        super(DualSVM, self).__init__(loss=loss,
+                                      C=C,
+                                      tol=tol,
+                                      optimizer=optimizer,
+                                      max_iter=max_iter,
+                                      learning_rate=learning_rate,
+                                      momentum_type=momentum_type,
+                                      momentum=momentum,
+                                      max_f_eval=max_f_eval,
+                                      fit_intercept=True,
+                                      mu=mu,
+                                      master_solver=master_solver,
+                                      master_verbose=master_verbose,
+                                      verbose=verbose)
         if not isinstance(kernel, Kernel):
             raise TypeError(f'{kernel} is not an allowed kernel function')
         self.kernel = kernel
@@ -430,34 +430,34 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
-        super().__init__(loss=loss,
-                         C=C,
-                         tol=tol,
-                         optimizer=optimizer,
-                         max_iter=max_iter,
-                         learning_rate=learning_rate,
-                         momentum_type=momentum_type,
-                         momentum=momentum,
-                         validation_split=validation_split,
-                         batch_size=batch_size,
-                         max_f_eval=max_f_eval,
-                         early_stopping=early_stopping,
-                         patience=patience,
-                         fit_intercept=fit_intercept,
-                         intercept_scaling=intercept_scaling,
-                         shuffle=shuffle,
-                         random_state=random_state,
-                         mu=mu,
-                         master_solver=master_solver,
-                         master_verbose=master_verbose,
-                         verbose=verbose)
+        super(PrimalSVC, self).__init__(loss=loss,
+                                        C=C,
+                                        tol=tol,
+                                        optimizer=optimizer,
+                                        max_iter=max_iter,
+                                        learning_rate=learning_rate,
+                                        momentum_type=momentum_type,
+                                        momentum=momentum,
+                                        validation_split=validation_split,
+                                        batch_size=batch_size,
+                                        max_f_eval=max_f_eval,
+                                        early_stopping=early_stopping,
+                                        patience=patience,
+                                        fit_intercept=fit_intercept,
+                                        intercept_scaling=intercept_scaling,
+                                        shuffle=shuffle,
+                                        random_state=random_state,
+                                        mu=mu,
+                                        master_solver=master_solver,
+                                        master_verbose=master_verbose,
+                                        verbose=verbose)
         if not loss._loss_type == 'classifier':
             raise TypeError(f'{loss} is not an allowed SVC loss function')
         self.lb = LabelBinarizer(neg_label=-1)
         self.dual = DualSVC
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
-        super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
+        super(PrimalSVC, self)._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
         if opt.is_batch_end():
             acc = self.score(X_batch[:, :-1] if self.fit_intercept else X_batch, y_batch)
             self.train_score_history.append(acc)
@@ -657,22 +657,22 @@ class DualSVC(ClassifierMixin, DualSVM):
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
-        super().__init__(loss=loss,
-                         kernel=kernel,
-                         C=C,
-                         tol=tol,
-                         optimizer=optimizer,
-                         max_iter=max_iter,
-                         learning_rate=learning_rate,
-                         momentum_type=momentum_type,
-                         momentum=momentum,
-                         max_f_eval=max_f_eval,
-                         reg_intercept=reg_intercept,
-                         rho=rho,
-                         mu=mu,
-                         master_solver=master_solver,
-                         master_verbose=master_verbose,
-                         verbose=verbose)
+        super(DualSVC, self).__init__(loss=loss,
+                                      kernel=kernel,
+                                      C=C,
+                                      tol=tol,
+                                      optimizer=optimizer,
+                                      max_iter=max_iter,
+                                      learning_rate=learning_rate,
+                                      momentum_type=momentum_type,
+                                      momentum=momentum,
+                                      max_f_eval=max_f_eval,
+                                      reg_intercept=reg_intercept,
+                                      rho=rho,
+                                      mu=mu,
+                                      master_solver=master_solver,
+                                      master_verbose=master_verbose,
+                                      verbose=verbose)
         if not loss._loss_type == 'classifier':
             raise TypeError(f'{loss} is not an allowed SVC loss function')
         self.lb = LabelBinarizer(neg_label=-1)
@@ -1107,27 +1107,27 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
-        super().__init__(loss=loss,
-                         C=C,
-                         tol=tol,
-                         optimizer=optimizer,
-                         max_iter=max_iter,
-                         learning_rate=learning_rate,
-                         momentum_type=momentum_type,
-                         momentum=momentum,
-                         validation_split=validation_split,
-                         batch_size=batch_size,
-                         max_f_eval=max_f_eval,
-                         early_stopping=early_stopping,
-                         patience=patience,
-                         fit_intercept=fit_intercept,
-                         intercept_scaling=intercept_scaling,
-                         shuffle=shuffle,
-                         random_state=random_state,
-                         mu=mu,
-                         master_solver=master_solver,
-                         master_verbose=master_verbose,
-                         verbose=verbose)
+        super(PrimalSVR, self).__init__(loss=loss,
+                                        C=C,
+                                        tol=tol,
+                                        optimizer=optimizer,
+                                        max_iter=max_iter,
+                                        learning_rate=learning_rate,
+                                        momentum_type=momentum_type,
+                                        momentum=momentum,
+                                        validation_split=validation_split,
+                                        batch_size=batch_size,
+                                        max_f_eval=max_f_eval,
+                                        early_stopping=early_stopping,
+                                        patience=patience,
+                                        fit_intercept=fit_intercept,
+                                        intercept_scaling=intercept_scaling,
+                                        shuffle=shuffle,
+                                        random_state=random_state,
+                                        mu=mu,
+                                        master_solver=master_solver,
+                                        master_verbose=master_verbose,
+                                        verbose=verbose)
         if not loss._loss_type == 'regressor':
             raise TypeError(f'{loss} is not an allowed SVR loss function')
         if not epsilon >= 0:
@@ -1136,7 +1136,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
         self.dual = DualSVR
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
-        super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
+        super(PrimalSVR, self)._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
         if opt.is_batch_end():
             r2 = self.score(X_batch[:, :-1] if self.fit_intercept else X_batch, y_batch)
             self.train_score_history.append(r2)
@@ -1341,22 +1341,22 @@ class DualSVR(RegressorMixin, DualSVM):
                  master_solver='ecos',
                  master_verbose=False,
                  verbose=False):
-        super().__init__(loss=loss,
-                         kernel=kernel,
-                         C=C,
-                         tol=tol,
-                         optimizer=optimizer,
-                         max_iter=max_iter,
-                         learning_rate=learning_rate,
-                         momentum_type=momentum_type,
-                         momentum=momentum,
-                         max_f_eval=max_f_eval,
-                         reg_intercept=reg_intercept,
-                         rho=rho,
-                         mu=mu,
-                         master_solver=master_solver,
-                         master_verbose=master_verbose,
-                         verbose=verbose)
+        super(DualSVR, self).__init__(loss=loss,
+                                      kernel=kernel,
+                                      C=C,
+                                      tol=tol,
+                                      optimizer=optimizer,
+                                      max_iter=max_iter,
+                                      learning_rate=learning_rate,
+                                      momentum_type=momentum_type,
+                                      momentum=momentum,
+                                      max_f_eval=max_f_eval,
+                                      reg_intercept=reg_intercept,
+                                      rho=rho,
+                                      mu=mu,
+                                      master_solver=master_solver,
+                                      master_verbose=master_verbose,
+                                      verbose=verbose)
         if not loss._loss_type == 'regressor':
             raise TypeError(f'{loss} is not an allowed SVR loss function')
         if not epsilon >= 0:

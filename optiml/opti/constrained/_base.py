@@ -19,13 +19,13 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
                  verbose=False):
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
-        super().__init__(f=quad,
-                         x=x or ub / 2,  # starts from the middle of the box
-                         eps=eps,
-                         max_iter=max_iter,
-                         callback=callback,
-                         callback_args=callback_args,
-                         verbose=verbose)
+        super(BoxConstrainedQuadraticOptimizer, self).__init__(f=quad,
+                                                               x=x or ub / 2,  # starts from the middle of the box
+                                                               eps=eps,
+                                                               max_iter=max_iter,
+                                                               callback=callback,
+                                                               callback_args=callback_args,
+                                                               verbose=verbose)
         self.ub = np.asarray(ub, dtype=float)
 
 
@@ -39,7 +39,7 @@ class LagrangianQuadratic(Quadratic):
     def __init__(self, primal, A=None, b=None, G=None, h=None, lb=None, ub=None, rho=1.):
         if not isinstance(primal, Quadratic):
             raise TypeError(f'{primal} is not an allowed quadratic function')
-        super().__init__(primal.Q, primal.q)
+        super(LagrangianQuadratic, self).__init__(primal.Q, primal.q)
         self.primal = primal
         self.A = np.atleast_2d(A).astype(float) if A is not None else None
         self.b = b

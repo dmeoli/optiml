@@ -279,7 +279,7 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
 class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
-        super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
+        super(NeuralNetworkClassifier, self)._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
         if opt.is_batch_end():
             acc = self.score(X_batch, y_batch)
             self.train_score_history.append(acc)
@@ -315,7 +315,7 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
                 raise ValueError(f'NeuralNetworkClassifier with {type(self.loss).__name__} loss '
                                  'function only works with one neuron in the output layer')
 
-        return super().fit(X, y)
+        return super(NeuralNetworkClassifier, self).fit(X, y)
 
     def predict(self, X):
         if self.layers[-1].activation == sigmoid:
@@ -333,7 +333,7 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
-        super()._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
+        super(NeuralNetworkRegressor, self)._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
         if opt.is_batch_end():
             r2 = self.score(X_batch, y_batch)
             self.train_score_history.append(r2)
@@ -365,7 +365,7 @@ class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
             raise ValueError(f'the number of neurons in the output layer must be '
                              f'equal to the number of targets, i.e., {n_targets}')
 
-        return super().fit(X, y)
+        return super(NeuralNetworkRegressor, self).fit(X, y)
 
     def predict(self, X):
         if self.layers[-1].fan_out == 1:  # one target

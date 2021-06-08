@@ -19,19 +19,19 @@ class StochasticGradientDescent(StochasticMomentumOptimizer):
                  shuffle=True,
                  random_state=None,
                  verbose=False):
-        super().__init__(f=f,
-                         x=x,
-                         step_size=step_size,
-                         momentum_type=momentum_type,
-                         momentum=momentum,
-                         batch_size=batch_size,
-                         eps=eps,
-                         epochs=epochs,
-                         callback=callback,
-                         callback_args=callback_args,
-                         shuffle=shuffle,
-                         random_state=random_state,
-                         verbose=verbose)
+        super(StochasticGradientDescent, self).__init__(f=f,
+                                                        x=x,
+                                                        step_size=step_size,
+                                                        momentum_type=momentum_type,
+                                                        momentum=momentum,
+                                                        batch_size=batch_size,
+                                                        eps=eps,
+                                                        epochs=epochs,
+                                                        callback=callback,
+                                                        callback_args=callback_args,
+                                                        shuffle=shuffle,
+                                                        random_state=random_state,
+                                                        verbose=verbose)
 
     def minimize(self):
 

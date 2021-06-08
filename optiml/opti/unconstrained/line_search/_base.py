@@ -67,14 +67,14 @@ class LineSearchOptimizer(Optimizer, ABC):
         :param verbose:    (boolean, optional, default value False): print details about each iteration
                            if True, nothing otherwise.
         """
-        super().__init__(f=f,
-                         x=x,
-                         eps=eps,
-                         max_iter=max_iter,
-                         callback=callback,
-                         callback_args=callback_args,
-                         random_state=random_state,
-                         verbose=verbose)
+        super(LineSearchOptimizer, self).__init__(f=f,
+                                                  x=x,
+                                                  eps=eps,
+                                                  max_iter=max_iter,
+                                                  callback=callback,
+                                                  callback_args=callback_args,
+                                                  random_state=random_state,
+                                                  verbose=verbose)
         self.ng = 0
         self.m_inf = m_inf
         if 0 < m2 < 1:

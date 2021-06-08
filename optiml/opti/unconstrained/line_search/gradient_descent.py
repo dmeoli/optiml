@@ -145,22 +145,22 @@ class SteepestGradientDescent(LineSearchOptimizer):
                               - 'error': the algorithm found a numerical error that prev_vents it from continuing
                            optimization (see min_a above).
         """
-        super().__init__(f=f,
-                         x=x,
-                         eps=eps,
-                         max_iter=max_iter,
-                         max_f_eval=max_f_eval,
-                         m1=m1,
-                         m2=m2,
-                         a_start=a_start,
-                         tau=tau,
-                         sfgrd=sfgrd,
-                         m_inf=m_inf,
-                         min_a=min_a,
-                         callback=callback,
-                         callback_args=callback_args,
-                         random_state=random_state,
-                         verbose=verbose)
+        super(SteepestGradientDescent, self).__init__(f=f,
+                                                      x=x,
+                                                      eps=eps,
+                                                      max_iter=max_iter,
+                                                      max_f_eval=max_f_eval,
+                                                      m1=m1,
+                                                      m2=m2,
+                                                      a_start=a_start,
+                                                      tau=tau,
+                                                      sfgrd=sfgrd,
+                                                      m_inf=m_inf,
+                                                      min_a=min_a,
+                                                      callback=callback,
+                                                      callback_args=callback_args,
+                                                      random_state=random_state,
+                                                      verbose=verbose)
 
     def minimize(self):
         last_x = np.zeros_like(self.x)  # last point visited in the line search

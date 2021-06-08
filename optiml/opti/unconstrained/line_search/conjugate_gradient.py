@@ -135,22 +135,22 @@ class ConjugateGradient(LineSearchOptimizer):
                  callback_args=(),
                  random_state=None,
                  verbose=False):
-        super().__init__(f=f,
-                         x=x,
-                         eps=eps,
-                         max_iter=max_iter,
-                         max_f_eval=max_f_eval,
-                         m1=m1,
-                         m2=m2,
-                         a_start=a_start,
-                         tau=tau,
-                         sfgrd=sfgrd,
-                         m_inf=m_inf,
-                         min_a=min_a,
-                         callback=callback,
-                         callback_args=callback_args,
-                         random_state=random_state,
-                         verbose=verbose)
+        super(ConjugateGradient, self).__init__(f=f,
+                                                x=x,
+                                                eps=eps,
+                                                max_iter=max_iter,
+                                                max_f_eval=max_f_eval,
+                                                m1=m1,
+                                                m2=m2,
+                                                a_start=a_start,
+                                                tau=tau,
+                                                sfgrd=sfgrd,
+                                                m_inf=m_inf,
+                                                min_a=min_a,
+                                                callback=callback,
+                                                callback_args=callback_args,
+                                                random_state=random_state,
+                                                verbose=verbose)
         if wf not in ('fr', 'pr', 'hs', 'dy'):
             raise ValueError(f'unknown NCG formula {wf}, choose '
                              f'one of `fr`, `pr`, `hs` and `dy`')

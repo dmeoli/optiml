@@ -6,7 +6,7 @@ from .. import OptimizationFunction
 class Rosenbrock(OptimizationFunction):
 
     def __init__(self, ndim=2, a=1, b=2):
-        super().__init__(ndim)
+        super(Rosenbrock, self).__init__(ndim)
         self.a = a
         self.b = b
 

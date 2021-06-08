@@ -18,17 +18,17 @@ class AdaGrad(StochasticOptimizer):
                  shuffle=True,
                  random_state=None,
                  verbose=False):
-        super().__init__(f=f,
-                         x=x,
-                         step_size=step_size,
-                         batch_size=batch_size,
-                         eps=eps,
-                         epochs=epochs,
-                         callback=callback,
-                         callback_args=callback_args,
-                         shuffle=shuffle,
-                         random_state=random_state,
-                         verbose=verbose)
+        super(AdaGrad, self).__init__(f=f,
+                                      x=x,
+                                      step_size=step_size,
+                                      batch_size=batch_size,
+                                      eps=eps,
+                                      epochs=epochs,
+                                      callback=callback,
+                                      callback_args=callback_args,
+                                      shuffle=shuffle,
+                                      random_state=random_state,
+                                      verbose=verbose)
         if not offset > 0:
             raise ValueError('offset must be > 0')
         self.offset = offset

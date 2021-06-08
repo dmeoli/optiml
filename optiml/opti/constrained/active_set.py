@@ -42,14 +42,14 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                  callback=None,
                  callback_args=(),
                  verbose=False):
-        super().__init__(quad=quad,
-                         ub=ub,
-                         x=x,
-                         eps=eps,
-                         max_iter=max_iter,
-                         callback=callback,
-                         callback_args=callback_args,
-                         verbose=verbose)
+        super(ActiveSet, self).__init__(quad=quad,
+                                        ub=ub,
+                                        x=x,
+                                        eps=eps,
+                                        max_iter=max_iter,
+                                        callback=callback,
+                                        callback_args=callback_args,
+                                        verbose=verbose)
 
     def minimize(self):
 

@@ -109,19 +109,19 @@ class Subgradient(LineSearchOptimizer):
                  callback_args=(),
                  random_state=None,
                  verbose=False):
-        super().__init__(f=f,
-                         x=x,
-                         eps=eps,
-                         max_iter=max_iter,
-                         max_f_eval=max_f_eval,
-                         a_start=a_start,
-                         tau=tau,
-                         m_inf=m_inf,
-                         min_a=min_a,
-                         callback=callback,
-                         callback_args=callback_args,
-                         random_state=random_state,
-                         verbose=verbose)
+        super(Subgradient, self).__init__(f=f,
+                                          x=x,
+                                          eps=eps,
+                                          max_iter=max_iter,
+                                          max_f_eval=max_f_eval,
+                                          a_start=a_start,
+                                          tau=tau,
+                                          m_inf=m_inf,
+                                          min_a=min_a,
+                                          callback=callback,
+                                          callback_args=callback_args,
+                                          random_state=random_state,
+                                          verbose=verbose)
 
     def minimize(self):
 

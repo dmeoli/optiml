@@ -53,14 +53,14 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
                  callback=None,
                  callback_args=(),
                  verbose=False):
-        super().__init__(quad=quad,
-                         ub=ub,
-                         x=x,
-                         eps=eps,
-                         max_iter=max_iter,
-                         callback=callback,
-                         callback_args=callback_args,
-                         verbose=verbose)
+        super(FrankWolfe, self).__init__(quad=quad,
+                                         ub=ub,
+                                         x=x,
+                                         eps=eps,
+                                         max_iter=max_iter,
+                                         callback=callback,
+                                         callback_args=callback_args,
+                                         verbose=verbose)
         if not 0 <= t < 1:
             raise ValueError('t has to lie in [0, 1)')
         self.t = t

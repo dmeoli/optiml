@@ -74,14 +74,14 @@ class FullyConnected(ParamLayer):
                  inter_reg=l2,
                  fit_intercept=True,
                  random_state=None):
-        super().__init__(coef_shape=(n_in, n_out),
-                         activation=activation,
-                         coef_init=coef_init,
-                         inter_init=inter_init,
-                         coef_reg=coef_reg,
-                         inter_reg=inter_reg,
-                         fit_intercept=fit_intercept,
-                         random_state=random_state)
+        super(FullyConnected, self).__init__(coef_shape=(n_in, n_out),
+                                             activation=activation,
+                                             coef_init=coef_init,
+                                             inter_init=inter_init,
+                                             coef_reg=coef_reg,
+                                             inter_reg=inter_reg,
+                                             fit_intercept=fit_intercept,
+                                             random_state=random_state)
         self.fan_in = n_in
         self.fan_out = n_out
 

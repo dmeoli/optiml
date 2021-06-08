@@ -9,7 +9,7 @@ from ...opti import OptimizationFunction
 class SVMLoss(OptimizationFunction, ABC):
 
     def __init__(self, svm, X, y):
-        super().__init__(X.shape[1])
+        super(SVMLoss, self).__init__(X.shape[1])
         self.svm = svm
         self.X = X
         self.y = y
@@ -20,7 +20,7 @@ class SVMLoss(OptimizationFunction, ABC):
     def f_star(self):
         if self.svm.fit_intercept:
             return self.function(self.x_star())
-        return super().f_star()
+        return super(SVMLoss, self).f_star()
 
     def x_star(self):
         if self.svm.fit_intercept:
@@ -43,7 +43,7 @@ class SVMLoss(OptimizationFunction, ABC):
                 dual_svm.fit(self.X[:, :-1], self.y)
                 self.x_opt = np.hstack((dual_svm.coef_, dual_svm.intercept_))
             return self.x_opt
-        return super().x_star()
+        return super(SVMLoss, self).x_star()
 
     def function(self, packed_coef_inter, X_batch=None, y_batch=None):
         if X_batch is None:
@@ -99,10 +99,10 @@ class SquaredHinge(Hinge):
     """
 
     def loss(self, y_pred, y_true):
-        return np.square(super().loss(y_pred, y_true))
+        return np.square(super(SquaredHinge, self).loss(y_pred, y_true))
 
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
-        return 2 * super().loss_jacobian(packed_coef_inter, X_batch, y_batch)
+        return 2 * super(SquaredHinge, self).loss_jacobian(packed_coef_inter, X_batch, y_batch)
 
 
 class EpsilonInsensitive(SVMLoss):
@@ -115,7 +115,7 @@ class EpsilonInsensitive(SVMLoss):
     _loss_type = 'regressor'
 
     def __init__(self, svm, X, y, epsilon):
-        super().__init__(svm, X, y)
+        super(EpsilonInsensitive, self).__init__(svm, X, y)
         self.epsilon = epsilon
 
     def loss(self, y_pred, y_true):
@@ -136,7 +136,7 @@ class SquaredEpsilonInsensitive(EpsilonInsensitive):
     """
 
     def loss(self, y_pred, y_true):
-        return np.square(super().loss(y_pred, y_true))
+        return np.square(super(SquaredEpsilonInsensitive, self).loss(y_pred, y_true))
 
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
         y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function

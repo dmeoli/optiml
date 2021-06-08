@@ -21,7 +21,7 @@ class Regularizer(ABC):
 class L1(Regularizer):
 
     def __init__(self, lmbda=0.):
-        super().__init__(lmbda)
+        super(L1, self).__init__(lmbda)
 
     def function(self, theta):
         return self.lmbda * np.sum(np.abs(theta))
@@ -33,7 +33,7 @@ class L1(Regularizer):
 class L2(Regularizer):
 
     def __init__(self, lmbda=0.):
-        super().__init__(lmbda)
+        super(L2, self).__init__(lmbda)
 
     def function(self, theta):
         return self.lmbda * np.sum(np.square(theta))

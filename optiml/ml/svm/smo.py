@@ -58,7 +58,7 @@ class SMOClassifier(SMO):
 
     def __init__(self, quad, X, y, K, kernel, C, tol=1e-3, verbose=False):
         self.alphas = np.zeros(len(X))
-        super().__init__(quad, X, y, K, kernel, C, tol, verbose)
+        super(SMOClassifier, self).__init__(quad, X, y, K, kernel, C, tol, verbose)
 
         # initialize variables and structures to implement improvements
         # on the original Platt's SMO algorithm described in Keerthi et
@@ -345,7 +345,7 @@ class SMORegression(SMO):
     def __init__(self, quad, X, y, K, kernel, C, epsilon, tol=1e-3, verbose=False):
         self.alphas_p = np.zeros(len(X))
         self.alphas_n = np.zeros(len(X))
-        super().__init__(quad, X, y, K, kernel, C, tol, verbose)
+        super(SMORegression, self).__init__(quad, X, y, K, kernel, C, tol, verbose)
         self.epsilon = epsilon
 
         # initialize variables and structures to implement improvements

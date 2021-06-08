@@ -12,7 +12,7 @@ from ...opti import OptimizationFunction
 class NeuralNetworkLoss(OptimizationFunction, ABC):
 
     def __init__(self, neural_net, X, y):
-        super().__init__(X.shape[1])
+        super(NeuralNetworkLoss, self).__init__(X.shape[1])
         self.neural_net = neural_net
         self.X = X
         self.y = y

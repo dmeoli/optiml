@@ -87,14 +87,14 @@ class ProximalBundle(Optimizer):
                  master_verbose=False,
                  random_state=None,
                  verbose=False):
-        super().__init__(f=f,
-                         x=x,
-                         eps=eps,
-                         max_iter=max_iter,
-                         callback=callback,
-                         callback_args=callback_args,
-                         random_state=random_state,
-                         verbose=verbose)
+        super(ProximalBundle, self).__init__(f=f,
+                                             x=x,
+                                             eps=eps,
+                                             max_iter=max_iter,
+                                             callback=callback,
+                                             callback_args=callback_args,
+                                             random_state=random_state,
+                                             verbose=verbose)
         if not mu > 0:
             raise ValueError('mu must be > 0')
         self.mu = mu
