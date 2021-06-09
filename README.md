@@ -18,11 +18,6 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
 - Numerical Optimization
     - Unconstrained Optimization
         - Line Search Methods
-            - 0th Order Methods
-                - [x] Subgradient
-                - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface to 
-                  [ecos](https://github.com/embotech/ecos), [osqp](https://github.com/oxfordcontrol/osqp), 
-                  [scs](https://github.com/cvxgrp/scs), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
             - 1st Order Methods
                 - [x] Steepest Gradient Descent
                 - [x] Conjugate Gradient
@@ -59,6 +54,9 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
                 - [x] Momentum
                     - [x] Polyak
                     - [x] Nesterov
+        - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface to 
+          [ecos](https://github.com/embotech/ecos), [osqp](https://github.com/oxfordcontrol/osqp), 
+          [scs](https://github.com/cvxgrp/scs), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
     - Constrained Quadratic Optimization
         - Box-Constrained Quadratic Methods
             - [x] Projected Gradient

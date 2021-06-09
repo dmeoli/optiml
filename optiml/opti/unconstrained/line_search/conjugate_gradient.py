@@ -119,7 +119,7 @@ class ConjugateGradient(LineSearchOptimizer):
     def __init__(self,
                  f,
                  x=None,
-                 wf='fr',
+                 wf='pr',
                  eps=1e-6,
                  max_iter=1000,
                  max_f_eval=1000,

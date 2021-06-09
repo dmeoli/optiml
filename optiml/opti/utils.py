@@ -173,7 +173,8 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None, primal=True):
     ax = surface_contour.add_subplot(1, 2, 1, projection='3d', elev=50, azim=-50)
     ax.plot_surface(X, Y, Z, norm=SymLogNorm(linthresh=abs(Z.min()), base=np.e), cmap='jet', alpha=0.5)
     if f.f_star() < np.inf:
-        ax.plot(*f.x_star(), f.f_star(), marker='*', color='b', markersize=10, label='global optima')
+        ax.plot(*f.x_star(), f.f_star(), marker='*', color='b', markersize=10,
+                linestyle='None', label='global optima')
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
     ax.set_zlabel(f'${f.__class__.__name__}$')
@@ -232,16 +233,18 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None, primal=True):
                               q=f.q,
                               lb=np.zeros_like(f.q),
                               ub=ub)
-            ax.plot(*x_star, f(x_star), marker='*', color='r', markersize=10, label='constrained optima')
+            ax.plot(*x_star, f(x_star), marker='*', color='r', markersize=10,
+                    linestyle='None', label='constrained optima')
         else:
-            ax.plot(*dual.x_star(), dual.f_star(), marker='*', color='r', markersize=10, label='constrained optima')
+            ax.plot(*dual.x_star(), dual.f_star(), marker='*', color='r', markersize=10,
+                    linestyle='None', label='constrained optima')
         ax.legend()
 
     # 2D contour plot
     ax = surface_contour.add_subplot(1, 2, 2)
     ax.contour(X, Y, Z, 70, cmap='jet', alpha=0.5)
     if f.f_star() < np.inf:
-        ax.plot(*f.x_star(), marker='*', color='b', markersize=10)
+        ax.plot(*f.x_star(), marker='*', color='b', markersize=10, linestyle='None')
     ax.set_xlabel('$x_1$')
     ax.set_ylabel('$x_2$')
 

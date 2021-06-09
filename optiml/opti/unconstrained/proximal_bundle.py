@@ -201,27 +201,30 @@ class ProximalBundle(Optimizer):
             F = np.hstack((F, fd - self.g_x.dot(last_x)))
 
             if fd <= self.f_x + self.m1 * (v - self.f_x):  # SS: serious step
+
                 self.x = last_x
                 self.f_x = fd
+
+                if self.is_lagrangian_dual():
+                    constraints = self.f.AG.dot(self.x) - self.f.bh
+
+                    self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
+
+                    # upgrade and clip dual_x
+                    self.f.dual_x += self.f.rho * constraints
+                    self.f.dual_x[self.f.n_eq:] = np.clip(self.f.dual_x[self.f.n_eq:], a_min=0, a_max=None)
+
+                    if (np.linalg.norm(self.f.dual_x - self.f.past_dual_x) +
+                            np.linalg.norm(self.x - self.past_x) <= self.tol):
+                        self.status = 'optimal'
+                        break
+
             else:  # NS: null step
+
                 if self.f.ndim <= 3:
                     self.x0_history_ns.append(self.x[0])
                     self.x1_history_ns.append(self.x[1])
                     self.f_x_history_ns.append(self.f_x)
-
-            if self.is_lagrangian_dual():
-                constraints = self.f.AG.dot(self.x) - self.f.bh
-
-                self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
-
-                # upgrade and clip dual_x
-                self.f.dual_x += self.f.rho * constraints
-                self.f.dual_x[self.f.n_eq:] = np.clip(self.f.dual_x[self.f.n_eq:], a_min=0, a_max=None)
-
-                if (np.linalg.norm(self.f.dual_x - self.f.past_dual_x) +
-                        np.linalg.norm(self.x - self.past_x) <= self.tol):
-                    self.status = 'optimal'
-                    break
 
             self.iter += 1
 
