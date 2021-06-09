@@ -102,7 +102,9 @@ class SquaredHinge(Hinge):
         return np.square(super(SquaredHinge, self).loss(y_pred, y_true))
 
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
-        return 2 * super(SquaredHinge, self).loss_jacobian(packed_coef_inter, X_batch, y_batch)
+        y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function
+        idx = np.argwhere(y_batch * y_pred < 1.).ravel()
+        return 2 * np.dot(np.maximum(0, 1 - y_batch[idx] * y_pred[idx]) * y_batch[idx], X_batch[idx])
 
 
 class EpsilonInsensitive(SVMLoss):

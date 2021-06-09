@@ -329,7 +329,7 @@ It is a strictly convex function and its gradient is given by:
 \begin{equation} \label{eq:squared_hinge_loss_der}
     \nabla_w \mathcal{L}_2=
         \begin{cases}
-            - 2 y x & \text{if} \ y (w^T x + b) < 1 \\
+            - 2 \max(0, 1 - y (w^T x + b)) y x & \text{if} \ y (w^T x + b) < 1 \\
             0 & \text{otherwise} \\ 
         \end{cases}
 \end{equation}
