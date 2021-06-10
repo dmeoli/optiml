@@ -2,6 +2,8 @@ from abc import ABC
 
 import numpy as np
 from sklearn.base import BaseEstimator
+from sklearn.metrics.pairwise import check_pairwise_arrays, euclidean_distances, manhattan_distances
+from sklearn.utils.extmath import safe_sparse_dot
 
 
 class Kernel(BaseEstimator, ABC):
@@ -18,9 +20,8 @@ class LinearKernel(Kernel):
     """
 
     def __call__(self, X, Y=None):
-        if Y is None:
-            Y = X
-        return np.dot(X, Y.T)
+        X, Y = check_pairwise_arrays(X, Y)
+        return safe_sparse_dot(X, Y.T, dense_output=True)
 
 
 class PolyKernel(Kernel):
@@ -53,18 +54,16 @@ class PolyKernel(Kernel):
         if isinstance(gamma, str):
             if gamma not in ('scale', 'auto'):
                 raise ValueError(f'unknown gamma type {gamma}')
-        else:
-            if not gamma > 0:
-                raise ValueError('gamma must be > 0')
+        elif not gamma > 0:
+            raise ValueError('gamma must be > 0')
         self.gamma = gamma
         self.coef0 = coef0
 
     def __call__(self, X, Y=None):
-        if Y is None:
-            Y = X
-        gamma = (1. / (X.shape[1] * X.var()) if self.gamma == 'scale' else  # auto
-                 1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
-        return (gamma * np.dot(X, Y.T) + self.coef0) ** self.degree
+        X, Y = check_pairwise_arrays(X, Y)
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma == 'scale' else
+                 1. / X.shape[1] if self.gamma == 'auto' else self.gamma)
+        return (gamma * safe_sparse_dot(X, Y.T, dense_output=True) + self.coef0) ** self.degree
 
 
 class GaussianKernel(Kernel):
@@ -88,17 +87,47 @@ class GaussianKernel(Kernel):
         if isinstance(gamma, str):
             if gamma not in ('scale', 'auto'):
                 raise ValueError(f'unknown gamma type {gamma}')
-        else:
-            if not gamma > 0:
-                raise ValueError('gamma must be > 0')
+        elif not gamma > 0:
+            raise ValueError('gamma must be > 0')
         self.gamma = gamma
 
     def __call__(self, X, Y=None):
-        if Y is None:
-            Y = X
-        gamma = (1. / (X.shape[1] * X.var()) if self.gamma == 'scale' else  # auto
-                 1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
-        return np.exp(-gamma * np.linalg.norm(X[:, np.newaxis] - Y[np.newaxis, :], axis=2) ** 2)
+        X, Y = check_pairwise_arrays(X, Y)
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma == 'scale' else
+                 1. / X.shape[1] if self.gamma == 'auto' else self.gamma)
+        return np.exp(-gamma * euclidean_distances(X, Y, squared=True))
+
+
+class LaplacianKernel(Kernel):
+    """
+    Compute the laplacian RBF kernel between X and Y:
+
+        K(X, Y) = exp(-gamma ||X - Y||_1)
+
+    Parameters
+    ----------
+
+    gamma : {'scale', 'auto'} or float, default='scale'
+        Kernel coefficient for kernel function.
+
+        - if `gamma='scale'` (default) is passed then it uses
+          1 / (n_features * X.var()) as value of gamma,
+        - if `gamma='auto'`, uses 1 / n_features.
+    """
+
+    def __init__(self, gamma='scale'):
+        if isinstance(gamma, str):
+            if gamma not in ('scale', 'auto'):
+                raise ValueError(f'unknown gamma type {gamma}')
+        elif not gamma > 0:
+            raise ValueError('gamma must be > 0')
+        self.gamma = gamma
+
+    def __call__(self, X, Y=None):
+        X, Y = check_pairwise_arrays(X, Y)
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma == 'scale' else
+                 1. / X.shape[1] if self.gamma == 'auto' else self.gamma)
+        return np.exp(-gamma * manhattan_distances(X, Y))
 
 
 class SigmoidKernel(Kernel):
@@ -125,21 +154,20 @@ class SigmoidKernel(Kernel):
         if isinstance(gamma, str):
             if gamma not in ('scale', 'auto'):
                 raise ValueError(f'unknown gamma type {gamma}')
-        else:
-            if not gamma > 0:
-                raise ValueError('gamma must be > 0')
+        elif not gamma > 0:
+            raise ValueError('gamma must be > 0')
         self.gamma = gamma
         self.coef0 = coef0
 
     def __call__(self, X, Y=None):
-        if Y is None:
-            Y = X
-        gamma = (1. / (X.shape[1] * X.var()) if self.gamma == 'scale' else  # auto
-                 1. / X.shape[1] if isinstance(self.gamma, str) else self.gamma)
-        return np.tanh(gamma * np.dot(X, Y.T) + self.coef0)
+        X, Y = check_pairwise_arrays(X, Y)
+        gamma = (1. / (X.shape[1] * X.var()) if self.gamma == 'scale' else
+                 1. / X.shape[1] if self.gamma == 'auto' else self.gamma)
+        return np.tanh(gamma * safe_sparse_dot(X, Y.T, dense_output=True) + self.coef0)
 
 
 linear = LinearKernel()
 poly = PolyKernel()
 gaussian = GaussianKernel()
+laplacian = LaplacianKernel()
 sigmoid = SigmoidKernel()

@@ -98,6 +98,7 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
                 |    :----:    |    :----:    |
                 | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_l1_svc_hyperplane.png) | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_l1_svr_hyperplane.png) |
                 
+            - [x] Laplacian
             - [x] Sigmoid
         - Optimizers (ad hoc)
             - [x] Sequential Minimal Optimization (SMO)
