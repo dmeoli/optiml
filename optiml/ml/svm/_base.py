@@ -103,6 +103,7 @@ class SVM(BaseEstimator, ABC):
                  momentum=0.9,
                  max_f_eval=15000,
                  fit_intercept=True,
+                 random_state=None,
                  mu=1,
                  master_solver='ecos',
                  master_verbose=False,
@@ -121,6 +122,7 @@ class SVM(BaseEstimator, ABC):
         self.momentum = momentum
         self.max_f_eval = max_f_eval
         self.fit_intercept = fit_intercept
+        self.random_state = random_state
         self.intercept_ = 0.
         self.mu = mu
         self.master_solver = master_solver
@@ -186,6 +188,7 @@ class PrimalSVM(SVM, ABC):
                                         momentum=momentum,
                                         max_f_eval=max_f_eval,
                                         fit_intercept=fit_intercept,
+                                        random_state=random_state,
                                         mu=mu,
                                         master_solver=master_solver,
                                         master_verbose=master_verbose,
@@ -198,7 +201,6 @@ class PrimalSVM(SVM, ABC):
         self.patience = patience
         self.intercept_scaling = intercept_scaling
         self.shuffle = shuffle
-        self.random_state = random_state
         self.coef_ = np.zeros(0)
         if issubclass(self.optimizer, StochasticOptimizer):
             self.train_loss_history = []
@@ -301,6 +303,7 @@ class DualSVM(SVM, ABC):
                  momentum=0.9,
                  max_f_eval=15000,
                  reg_intercept=True,
+                 random_state=None,
                  rho=1,
                  mu=1,
                  master_solver='ecos',
@@ -316,6 +319,7 @@ class DualSVM(SVM, ABC):
                                       momentum=momentum,
                                       max_f_eval=max_f_eval,
                                       fit_intercept=True,
+                                      random_state=random_state,
                                       mu=mu,
                                       master_solver=master_solver,
                                       master_verbose=master_verbose,
@@ -652,6 +656,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  momentum=0.9,
                  max_f_eval=15000,
                  reg_intercept=True,
+                 random_state=None,
                  rho=1,
                  mu=1,
                  master_solver='ecos',
@@ -668,6 +673,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                       momentum=momentum,
                                       max_f_eval=max_f_eval,
                                       reg_intercept=reg_intercept,
+                                      random_state=random_state,
                                       rho=rho,
                                       mu=mu,
                                       master_solver=master_solver,
@@ -796,6 +802,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                         self.optimizer = self.optimizer(f=self.obj,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
+                                                        random_state=self.random_state,
                                                         callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
@@ -814,6 +821,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                         max_iter=self.max_iter,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
+                                                        random_state=self.random_state,
                                                         callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
@@ -830,6 +838,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                             epochs=self.max_iter,
                                                             momentum_type=self.momentum_type,
                                                             momentum=self.momentum,
+                                                            random_state=self.random_state,
                                                             callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
@@ -838,6 +847,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                             self.optimizer = self.optimizer(f=self.obj,
                                                             step_size=self.learning_rate,
                                                             epochs=self.max_iter,
+                                                            random_state=self.random_state,
                                                             callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
@@ -919,6 +929,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                         self.optimizer = self.optimizer(f=self.obj,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
+                                                        random_state=self.random_state,
                                                         callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
@@ -937,6 +948,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                         max_iter=self.max_iter,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
+                                                        random_state=self.random_state,
                                                         callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
@@ -953,6 +965,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                             epochs=self.max_iter,
                                                             momentum_type=self.momentum_type,
                                                             momentum=self.momentum,
+                                                            random_state=self.random_state,
                                                             callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
@@ -961,6 +974,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                             self.optimizer = self.optimizer(f=self.obj,
                                                             step_size=self.learning_rate,
                                                             epochs=self.max_iter,
+                                                            random_state=self.random_state,
                                                             callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
@@ -1336,6 +1350,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  momentum=0.9,
                  max_f_eval=15000,
                  reg_intercept=True,
+                 random_state=None,
                  rho=1,
                  mu=1,
                  master_solver='ecos',
@@ -1352,6 +1367,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                       momentum=momentum,
                                       max_f_eval=max_f_eval,
                                       reg_intercept=reg_intercept,
+                                      random_state=random_state,
                                       rho=rho,
                                       mu=mu,
                                       master_solver=master_solver,
@@ -1487,6 +1503,7 @@ class DualSVR(RegressorMixin, DualSVM):
                             self.optimizer = self.optimizer(f=self.obj,
                                                             max_iter=self.max_iter,
                                                             max_f_eval=self.max_f_eval,
+                                                            random_state=self.random_state,
                                                             callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
@@ -1505,6 +1522,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                             max_iter=self.max_iter,
                                                             master_solver=self.master_solver,
                                                             master_verbose=self.master_verbose,
+                                                            random_state=self.random_state,
                                                             callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
@@ -1521,6 +1539,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                                 epochs=self.max_iter,
                                                                 momentum_type=self.momentum_type,
                                                                 momentum=self.momentum,
+                                                                random_state=self.random_state,
                                                                 callback=self._store_train_info,
                                                                 verbose=self.verbose).minimize()
 
@@ -1529,6 +1548,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                 self.optimizer = self.optimizer(f=self.obj,
                                                                 step_size=self.learning_rate,
                                                                 epochs=self.max_iter,
+                                                                random_state=self.random_state,
                                                                 callback=self._store_train_info,
                                                                 verbose=self.verbose).minimize()
 
@@ -1614,6 +1634,7 @@ class DualSVR(RegressorMixin, DualSVM):
                         self.optimizer = self.optimizer(f=self.obj,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
+                                                        random_state=self.random_state,
                                                         callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
@@ -1632,6 +1653,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                         max_iter=self.max_iter,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
+                                                        random_state=self.random_state,
                                                         callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
 
@@ -1648,6 +1670,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                             epochs=self.max_iter,
                                                             momentum_type=self.momentum_type,
                                                             momentum=self.momentum,
+                                                            random_state=self.random_state,
                                                             callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
@@ -1656,6 +1679,7 @@ class DualSVR(RegressorMixin, DualSVM):
                             self.optimizer = self.optimizer(f=self.obj,
                                                             step_size=self.learning_rate,
                                                             epochs=self.max_iter,
+                                                            random_state=self.random_state,
                                                             callback=self._store_train_info,
                                                             verbose=self.verbose).minimize()
 
