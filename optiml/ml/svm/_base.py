@@ -13,8 +13,8 @@ from sklearn.preprocessing import LabelBinarizer
 from wurlitzer import pipes, STDOUT
 
 from .kernels import gaussian, Kernel, LinearKernel
-from .losses import hinge, squared_hinge, SVMLoss, epsilon_insensitive, squared_epsilon_insensitive, Hinge, \
-    SquaredHinge, SquaredEpsilonInsensitive, EpsilonInsensitive
+from .losses import (hinge, squared_hinge, epsilon_insensitive, squared_epsilon_insensitive,
+                     Hinge, SquaredHinge, SquaredEpsilonInsensitive, EpsilonInsensitive)
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
@@ -30,6 +30,9 @@ class SVM(BaseEstimator, ABC):
 
     Parameters
     ----------
+
+    loss : `SVMLoss` instance, default=None
+        Specifies the loss function.
 
     C : float, default=1.0
         Regularization parameter. The strength of the regularization is
@@ -48,52 +51,63 @@ class SVM(BaseEstimator, ABC):
 
     max_iter : int, default=1000
         Maximum number of iterations. The solver iterates until convergence
-        (determined by `tol`) or this number of iterations. If the optimizer
+        (determined by ``tol``) or this number of iterations. If the optimizer
         is a subclass of `StochasticOptimizer`, this value determines the number
         of epochs (how many times each data point will be used), not the number
         of gradient steps.
 
     learning_rate : double, default=0.1
         The initial learning rate used for weight update. It controls the
-        step-size in updating the weights. Only used when `optimizer` is a
+        step-size in updating the weights. Only used when ``optimizer`` is a
         subclass of `StochasticOptimizer`.
 
     momentum_type : {'none', 'polyak', 'nesterov'}, default='none'
-        Momentum type used for weight update. Only used when `optimizer` is
+        Momentum type used for weight update. Only used when ``optimizer`` is
         a subclass of `StochasticOptimizer`.
 
     momentum : float, default=0.9
         Momentum for weight update. Should be between 0 and 1. Only used when
-        `optimizer` is a subclass of `StochasticOptimizer`.
+        ``optimizer`` is a subclass of `StochasticOptimizer`.
 
     max_f_eval : int, default=15000
-        Only used when `optimizer` is a subclass of `LineSearchOptimizer`.
+        Only used when ``optimizer`` is a subclass of `LineSearchOptimizer`.
         Maximum number of loss function calls. The solver iterates until
-        convergence (determined by `tol`), number of iterations reaches
-        `max_iter`, or this number of loss function calls. Note that number
+        convergence (determined by ``tol``), number of iterations reaches
+        ``max_iter``, or this number of loss function calls. Note that number
         of loss function calls will be greater than or equal to the number
         of iterations.
 
+    fit_intercept : bool, default=True
+        Whether to calculate the intercept for this model. If set
+        to False, no intercept will be used in calculations
+        (i.e., data is expected to be already centered).
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the pseudo random number generation for train-test split if
+        ``early_stopping`` is True and shuffling the data for batch sampling when
+        an instance of `StochasticOptimizer` class is used as ``optimizer`` value.
+        Pass an int for reproducible output across multiple function calls.
+
     mu : float, default=1.
         Mu parameter for the proximal bundle method.
-        Only used when `optimizer` is `ProximalBundle`.
+        Only used when ``optimizer`` is `ProximalBundle`.
 
     master_solver : string, default='ecos'
-        Master solver for the proximal bundle method for the `cvxpy` interface.
-        Only used when `optimizer` is `ProximalBundle`.
+        Master solver for the proximal bundle method for the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
 
     master_verbose : bool or int, default=False
-        Controls the verbosity of the `cvxpy` interface.
-        Only used when `optimizer` is `ProximalBundle`.
+        Controls the verbosity of the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
 
     verbose : bool or int, default=False
         Controls the verbosity of progress messages to stdout. Use a boolean value
-        to switch on/off or an int value to show progress each `verbose` time
+        to switch on/off or an int value to show progress each ``verbose`` time
         optimization steps.
     """
 
     def __init__(self,
-                 loss=SVMLoss,
+                 loss=None,
                  C=1.,
                  tol=1e-3,
                  optimizer=None,
@@ -154,10 +168,125 @@ class PrimalSVM(SVM, ABC):
     See more at:
     - https://scikit-learn.org/stable/modules/classes.html#module-sklearn.kernel_approximation
     - https://cdn.rawgit.com/mstrazar/mklaren/master/docs/build/html/projection.html
+
+    Parameters
+    ----------
+
+    loss : `SVMLoss` instance, default=None
+        Specifies the loss function.
+
+    C : float, default=1.0
+        Regularization parameter. The strength of the regularization is
+        inversely proportional to C. Must be strictly positive.
+
+    tol : float, default=1e-4
+        Tolerance for stopping criterion.
+
+    optimizer : LineSearchOptimizer or StochasticOptimizer subclass, default=None
+        The solver for optimization. It can be a subclass of the `LineSearchOptimizer`
+        which can converge faster and perform better for small datasets, e.g., the
+        `BFGS` quasi-Newton method or, alternatively, a subclass of the `StochasticOptimizer`
+        e.g., the `StochasticGradientDescent` or `Adam`, which works well on relatively
+        large datasets (with thousands of training samples or more) in terms of both
+        training time and validation score.
+
+    max_iter : int, default=1000
+        Maximum number of iterations. The solver iterates until convergence
+        (determined by ``tol``) or this number of iterations. If the optimizer
+        is a subclass of `StochasticOptimizer`, this value determines the number
+        of epochs (how many times each data point will be used), not the number
+        of gradient steps.
+
+    learning_rate : double, default=0.1
+        The initial learning rate used for weight update. It controls the
+        step-size in updating the weights. Only used when ``optimizer`` is a
+        subclass of `StochasticOptimizer`.
+
+    momentum_type : {'none', 'polyak', 'nesterov'}, default='none'
+        Momentum type used for weight update. Only used when ``optimizer`` is
+        a subclass of `StochasticOptimizer`.
+
+    momentum : float, default=0.9
+        Momentum for weight update. Should be between 0 and 1. Only used when
+        ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    validation_split : float, default=0.
+        The proportion of training data to set aside as validation set for
+        early stopping. Must be between 0 and 1.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`
+        and ``early_stopping`` is True.
+
+    batch_size : int, default=None
+        Size of mini batches for stochastic optimizers.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    max_f_eval : int, default=15000
+        Only used when ``optimizer`` is a subclass of `LineSearchOptimizer`.
+        Maximum number of loss function calls. The solver iterates until
+        convergence (determined by ``tol``), number of iterations reaches
+        ``max_iter``, or this number of loss function calls. Note that number
+        of loss function calls will be greater than or equal to the number
+        of iterations.
+
+    early_stopping : bool, default=False
+        Whether to use early stopping to terminate training. If set to True
+        and ``validation_split`` is greater than 0, it will automatically set
+        aside ``validation_split``%  of training data as validation and terminate
+        training when validation score is not improving by at least ``tol`` for
+        ``patience`` consecutive epochs, otherwise terminate training when train
+        loss does not improve by more than ``tol`` for ``patience`` consecutive
+        passes over the training set.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    patience : int, default=5
+        Maximum number of epochs to not meet ``tol`` improvement.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    fit_intercept : bool, default=True
+        Whether to calculate the intercept for this model. If set
+        to False, no intercept will be used in calculations
+        (i.e., data is expected to be already centered).
+
+    intercept_scaling : float, default=1.
+        When ``fit_intercept`` is True, instance vector x becomes
+        [x, intercept_scaling], i.e., a "synthetic" feature with constant
+        value equals to ``intercept_scaling`` is appended to the instance vector.
+        The intercept becomes intercept_scaling * synthetic feature weight
+        Note: the synthetic feature weight is subject to L1/L2 regularization
+        as all other features. To lessen the effect of regularization on synthetic
+        feature weight (and therefore on the intercept) ``intercept_scaling`` has
+        to be increased.
+
+    shuffle : bool, default=True
+        Whether to shuffle samples for batch sampling in each iteration. Only
+        used when the ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the pseudo random number generation for train-test split if
+        ``early_stopping`` is True and shuffling the data for batch sampling when
+        an instance of `StochasticOptimizer` class is used as ``optimizer`` value.
+        Pass an int for reproducible output across multiple function calls.
+
+    mu : float, default=1.
+        Mu parameter for the proximal bundle method.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_solver : string, default='ecos'
+        Master solver for the proximal bundle method for the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_verbose : bool or int, default=False
+        Controls the verbosity of the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    verbose : bool or int, default=False
+        Controls the verbosity of progress messages to stdout. Use a boolean value
+        to switch on/off or an int value to show progress each ``verbose`` time
+        optimization steps.
     """
 
     def __init__(self,
-                 loss=SVMLoss,
+                 loss=None,
                  C=1.,
                  tol=1e-4,
                  optimizer=StochasticGradientDescent,
@@ -287,12 +416,88 @@ class DualSVM(SVM, ABC):
     Parameters
     ----------
 
+    loss : `SVMLoss` instance, default=None
+        Specifies the loss function.
+
     kernel : `Kernel` instance like {linear, poly, gaussian, sigmoid}, default=gaussian
         Specifies the kernel type to be used in the algorithm.
+
+    C : float, default=1.0
+        Regularization parameter. The strength of the regularization is
+        inversely proportional to C. Must be strictly positive.
+
+    tol : float, default=1e-3
+        Tolerance for stopping criterion.
+
+    optimizer : LineSearchOptimizer or StochasticOptimizer subclass, default=None
+        The solver for optimization. It can be a subclass of the `LineSearchOptimizer`
+        which can converge faster and perform better for small datasets, e.g., the
+        `BFGS` quasi-Newton method or, alternatively, a subclass of the `StochasticOptimizer`
+        e.g., the `StochasticGradientDescent` or `Adam`, which works well on relatively
+        large datasets (with thousands of training samples or more) in terms of both
+        training time and validation score.
+
+    max_iter : int, default=1000
+        Maximum number of iterations. The solver iterates until convergence
+        (determined by ``tol``) or this number of iterations. If the optimizer
+        is a subclass of `StochasticOptimizer`, this value determines the number
+        of epochs (how many times each data point will be used), not the number
+        of gradient steps.
+
+    learning_rate : double, default=0.1
+        The initial learning rate used for weight update. It controls the
+        step-size in updating the weights. Only used when ``optimizer`` is a
+        subclass of `StochasticOptimizer`.
+
+    momentum_type : {'none', 'polyak', 'nesterov'}, default='none'
+        Momentum type used for weight update. Only used when ``optimizer`` is
+        a subclass of `StochasticOptimizer`.
+
+    momentum : float, default=0.9
+        Momentum for weight update. Should be between 0 and 1. Only used when
+        ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    max_f_eval : int, default=15000
+        Only used when ``optimizer`` is a subclass of `LineSearchOptimizer`.
+        Maximum number of loss function calls. The solver iterates until
+        convergence (determined by ``tol``), number of iterations reaches
+        ``max_iter``, or this number of loss function calls. Note that number
+        of loss function calls will be greater than or equal to the number
+        of iterations.
+
+    reg_intercept : bool, default=True
+        Whether to include the intercept in the regularization term.
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the pseudo random number generation for train-test split if
+        ``early_stopping`` is True and shuffling the data for batch sampling when
+        an instance of `StochasticOptimizer` class is used as ``optimizer`` value.
+        Pass an int for reproducible output across multiple function calls.
+
+    rho: int, default=1.
+        Rho parameter for the augmented term of the Lagrangian method.
+        Must be strictly positive.
+
+    mu : float, default=1.
+        Mu parameter for the proximal bundle method.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_solver : string, default='ecos'
+        Master solver for the proximal bundle method for the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_verbose : bool or int, default=False
+        Controls the verbosity of the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    verbose : bool or int, default=False
+        Controls the verbosity of progress messages to stdout. Use a boolean value
+        to switch on/off or an int value to show progress each ``verbose`` time
+        optimization steps.
     """
 
     def __init__(self,
-                 loss=SVMLoss,
+                 loss=None,
                  kernel=gaussian,
                  C=1.,
                  tol=1e-3,
@@ -365,36 +570,107 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
     tol : float, default=1e-4
         Tolerance for stopping criterion.
 
+    optimizer : LineSearchOptimizer or StochasticOptimizer subclass, default=None
+        The solver for optimization. It can be a subclass of the `LineSearchOptimizer`
+        which can converge faster and perform better for small datasets, e.g., the
+        `BFGS` quasi-Newton method or, alternatively, a subclass of the `StochasticOptimizer`
+        e.g., the `StochasticGradientDescent` or `Adam`, which works well on relatively
+        large datasets (with thousands of training samples or more) in terms of both
+        training time and validation score.
+
+    max_iter : int, default=1000
+        Maximum number of iterations. The solver iterates until convergence
+        (determined by ``tol``) or this number of iterations. If the optimizer
+        is a subclass of `StochasticOptimizer`, this value determines the number
+        of epochs (how many times each data point will be used), not the number
+        of gradient steps.
+
+    learning_rate : double, default=0.1
+        The initial learning rate used for weight update. It controls the
+        step-size in updating the weights. Only used when ``optimizer`` is a
+        subclass of `StochasticOptimizer`.
+
+    momentum_type : {'none', 'polyak', 'nesterov'}, default='none'
+        Momentum type used for weight update. Only used when ``optimizer`` is
+        a subclass of `StochasticOptimizer`.
+
+    momentum : float, default=0.9
+        Momentum for weight update. Should be between 0 and 1. Only used when
+        ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    validation_split : float, default=0.
+        The proportion of training data to set aside as validation set for
+        early stopping. Must be between 0 and 1.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`
+        and ``early_stopping`` is True.
+
+    batch_size : int, default=None
+        Size of mini batches for stochastic optimizers.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    max_f_eval : int, default=15000
+        Only used when ``optimizer`` is a subclass of `LineSearchOptimizer`.
+        Maximum number of loss function calls. The solver iterates until
+        convergence (determined by ``tol``), number of iterations reaches
+        ``max_iter``, or this number of loss function calls. Note that number
+        of loss function calls will be greater than or equal to the number
+        of iterations.
+
+    early_stopping : bool, default=False
+        Whether to use early stopping to terminate training. If set to True
+        and ``validation_split`` is greater than 0, it will automatically set
+        aside ``validation_split``%  of training data as validation and terminate
+        training when validation score is not improving by at least ``tol`` for
+        ``patience`` consecutive epochs, otherwise terminate training when train
+        loss does not improve by more than ``tol`` for ``patience`` consecutive
+        passes over the training set.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    patience : int, default=5
+        Maximum number of epochs to not meet ``tol`` improvement.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`.
+
     fit_intercept : bool, default=True
         Whether to calculate the intercept for this model. If set
         to False, no intercept will be used in calculations
         (i.e., data is expected to be already centered).
 
     intercept_scaling : float, default=1.
-        When `fit_intercept` is True, instance vector x becomes
+        When ``fit_intercept`` is True, instance vector x becomes
         [x, intercept_scaling], i.e., a "synthetic" feature with constant
-        value equals to `intercept_scaling` is appended to the instance vector.
+        value equals to ``intercept_scaling`` is appended to the instance vector.
         The intercept becomes intercept_scaling * synthetic feature weight
         Note: the synthetic feature weight is subject to L1/L2 regularization
         as all other features. To lessen the effect of regularization on synthetic
-        feature weight (and therefore on the intercept) `intercept_scaling` has
+        feature weight (and therefore on the intercept) ``intercept_scaling`` has
         to be increased.
-
-    max_iter : int, default=1000
-        The maximum number of iterations to be run.
-
-    random_state : int, RandomState instance or None, default=None
-        Controls the pseudo random number generation for train-test split if
-        `early_stopping` is True and shuffling the data for batch sampling when
-        an instance of `StochasticOptimizer` class is used as `optimizer` value.
-        Pass an int for reproducible output across multiple function calls.
 
     shuffle : bool, default=True
         Whether to shuffle samples for batch sampling in each iteration. Only
-        used when the `optimizer` is a subclass of `StochasticOptimizer`.
+        used when the ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the pseudo random number generation for train-test split if
+        ``early_stopping`` is True and shuffling the data for batch sampling when
+        an instance of `StochasticOptimizer` class is used as ``optimizer`` value.
+        Pass an int for reproducible output across multiple function calls.
+
+    mu : float, default=1.
+        Mu parameter for the proximal bundle method.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_solver : string, default='ecos'
+        Master solver for the proximal bundle method for the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_verbose : bool or int, default=False
+        Controls the verbosity of the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
 
     verbose : bool or int, default=False
-        Enable verbose output.
+        Controls the verbosity of progress messages to stdout. Use a boolean value
+        to switch on/off or an int value to show progress each ``verbose`` time
+        optimization steps.
 
     Attributes
     ----------
@@ -618,11 +894,71 @@ class DualSVC(ClassifierMixin, DualSVM):
     tol : float, default=1e-3
         Tolerance for stopping criterion.
 
+    optimizer : LineSearchOptimizer or StochasticOptimizer subclass, default=None
+        The solver for optimization. It can be a subclass of the `LineSearchOptimizer`
+        which can converge faster and perform better for small datasets, e.g., the
+        `BFGS` quasi-Newton method or, alternatively, a subclass of the `StochasticOptimizer`
+        e.g., the `StochasticGradientDescent` or `Adam`, which works well on relatively
+        large datasets (with thousands of training samples or more) in terms of both
+        training time and validation score.
+
     max_iter : int, default=1000
-        The maximum number of iterations to be run.
+        Maximum number of iterations. The solver iterates until convergence
+        (determined by ``tol``) or this number of iterations. If the optimizer
+        is a subclass of `StochasticOptimizer`, this value determines the number
+        of epochs (how many times each data point will be used), not the number
+        of gradient steps.
+
+    learning_rate : double, default=0.1
+        The initial learning rate used for weight update. It controls the
+        step-size in updating the weights. Only used when ``optimizer`` is a
+        subclass of `StochasticOptimizer`.
+
+    momentum_type : {'none', 'polyak', 'nesterov'}, default='none'
+        Momentum type used for weight update. Only used when ``optimizer`` is
+        a subclass of `StochasticOptimizer`.
+
+    momentum : float, default=0.9
+        Momentum for weight update. Should be between 0 and 1. Only used when
+        ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    max_f_eval : int, default=15000
+        Only used when ``optimizer`` is a subclass of `LineSearchOptimizer`.
+        Maximum number of loss function calls. The solver iterates until
+        convergence (determined by ``tol``), number of iterations reaches
+        ``max_iter``, or this number of loss function calls. Note that number
+        of loss function calls will be greater than or equal to the number
+        of iterations.
+
+    reg_intercept : bool, default=True
+        Whether to include the intercept in the regularization term.
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the pseudo random number generation for train-test split if
+        ``early_stopping`` is True and shuffling the data for batch sampling when
+        an instance of `StochasticOptimizer` class is used as ``optimizer`` value.
+        Pass an int for reproducible output across multiple function calls.
+
+    rho: int, default=1.
+        Rho parameter for the augmented term of the Lagrangian method.
+        Must be strictly positive.
+
+    mu : float, default=1.
+        Mu parameter for the proximal bundle method.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_solver : string, default='ecos'
+        Master solver for the proximal bundle method for the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_verbose : bool or int, default=False
+        Controls the verbosity of the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
 
     verbose : bool or int, default=False
-        Enable verbose output.
+        Controls the verbosity of progress messages to stdout. Use a boolean value
+        to switch on/off or an int value to show progress each ``verbose`` time
+        optimization steps.
 
     Attributes
     ----------
@@ -1051,36 +1387,107 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
     tol : float, default=1e-4
         Tolerance for stopping criterion.
 
+    optimizer : LineSearchOptimizer or StochasticOptimizer subclass, default=None
+        The solver for optimization. It can be a subclass of the `LineSearchOptimizer`
+        which can converge faster and perform better for small datasets, e.g., the
+        `BFGS` quasi-Newton method or, alternatively, a subclass of the `StochasticOptimizer`
+        e.g., the `StochasticGradientDescent` or `Adam`, which works well on relatively
+        large datasets (with thousands of training samples or more) in terms of both
+        training time and validation score.
+
+    max_iter : int, default=1000
+        Maximum number of iterations. The solver iterates until convergence
+        (determined by ``tol``) or this number of iterations. If the optimizer
+        is a subclass of `StochasticOptimizer`, this value determines the number
+        of epochs (how many times each data point will be used), not the number
+        of gradient steps.
+
+    learning_rate : double, default=0.1
+        The initial learning rate used for weight update. It controls the
+        step-size in updating the weights. Only used when ``optimizer`` is a
+        subclass of `StochasticOptimizer`.
+
+    momentum_type : {'none', 'polyak', 'nesterov'}, default='none'
+        Momentum type used for weight update. Only used when ``optimizer`` is
+        a subclass of `StochasticOptimizer`.
+
+    momentum : float, default=0.9
+        Momentum for weight update. Should be between 0 and 1. Only used when
+        ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    validation_split : float, default=0.
+        The proportion of training data to set aside as validation set for
+        early stopping. Must be between 0 and 1.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`
+        and ``early_stopping`` is True.
+
+    batch_size : int, default=None
+        Size of mini batches for stochastic optimizers.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    max_f_eval : int, default=15000
+        Only used when ``optimizer`` is a subclass of `LineSearchOptimizer`.
+        Maximum number of loss function calls. The solver iterates until
+        convergence (determined by ``tol``), number of iterations reaches
+        ``max_iter``, or this number of loss function calls. Note that number
+        of loss function calls will be greater than or equal to the number
+        of iterations.
+
+    early_stopping : bool, default=False
+        Whether to use early stopping to terminate training. If set to True
+        and ``validation_split`` is greater than 0, it will automatically set
+        aside ``validation_split``%  of training data as validation and terminate
+        training when validation score is not improving by at least ``tol`` for
+        ``patience`` consecutive epochs, otherwise terminate training when train
+        loss does not improve by more than ``tol`` for ``patience`` consecutive
+        passes over the training set.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    patience : int, default=5
+        Maximum number of epochs to not meet ``tol`` improvement.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`.
+
     fit_intercept : bool, default=True
         Whether to calculate the intercept for this model. If set
         to False, no intercept will be used in calculations
         (i.e., data is expected to be already centered).
 
     intercept_scaling : float, default=1.
-        When `fit_intercept` is True, instance vector x becomes
+        When ``fit_intercept`` is True, instance vector x becomes
         [x, intercept_scaling], i.e., a "synthetic" feature with constant
-        value equals to `intercept_scaling` is appended to the instance vector.
+        value equals to ``intercept_scaling`` is appended to the instance vector.
         The intercept becomes intercept_scaling * synthetic feature weight
         Note: the synthetic feature weight is subject to L1/L2 regularization
         as all other features. To lessen the effect of regularization on synthetic
-        feature weight (and therefore on the intercept) `intercept_scaling` has
+        feature weight (and therefore on the intercept) ``intercept_scaling`` has
         to be increased.
-
-    max_iter : int, default=1000
-        The maximum number of iterations to be run.
-
-    random_state : int, RandomState instance or None, default=None
-        Controls the pseudo random number generation for train-test split if
-        `early_stopping` is True and shuffling the data for batch sampling when
-        an instance of `StochasticOptimizer` class is used as `optimizer` value.
-        Pass an int for reproducible output across multiple function calls.
 
     shuffle : bool, default=True
         Whether to shuffle samples for batch sampling in each iteration. Only
-        used when the `optimizer` is a subclass of `StochasticOptimizer`.
+        used when the ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the pseudo random number generation for train-test split if
+        ``early_stopping`` is True and shuffling the data for batch sampling when
+        an instance of `StochasticOptimizer` class is used as ``optimizer`` value.
+        Pass an int for reproducible output across multiple function calls.
+
+    mu : float, default=1.
+        Mu parameter for the proximal bundle method.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_solver : string, default='ecos'
+        Master solver for the proximal bundle method for the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_verbose : bool or int, default=False
+        Controls the verbosity of the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
 
     verbose : bool or int, default=False
-        Enable verbose output.
+        Controls the verbosity of progress messages to stdout. Use a boolean value
+        to switch on/off or an int value to show progress each ``verbose`` time
+        optimization steps.
 
     Attributes
     ----------
@@ -1311,11 +1718,71 @@ class DualSVR(RegressorMixin, DualSVM):
     tol : float, default=1e-3
         Tolerance for stopping criterion.
 
+    optimizer : LineSearchOptimizer or StochasticOptimizer subclass, default=None
+        The solver for optimization. It can be a subclass of the `LineSearchOptimizer`
+        which can converge faster and perform better for small datasets, e.g., the
+        `BFGS` quasi-Newton method or, alternatively, a subclass of the `StochasticOptimizer`
+        e.g., the `StochasticGradientDescent` or `Adam`, which works well on relatively
+        large datasets (with thousands of training samples or more) in terms of both
+        training time and validation score.
+
     max_iter : int, default=1000
-        The maximum number of iterations to be run.
+        Maximum number of iterations. The solver iterates until convergence
+        (determined by ``tol``) or this number of iterations. If the optimizer
+        is a subclass of `StochasticOptimizer`, this value determines the number
+        of epochs (how many times each data point will be used), not the number
+        of gradient steps.
+
+    learning_rate : double, default=0.1
+        The initial learning rate used for weight update. It controls the
+        step-size in updating the weights. Only used when ``optimizer`` is a
+        subclass of `StochasticOptimizer`.
+
+    momentum_type : {'none', 'polyak', 'nesterov'}, default='none'
+        Momentum type used for weight update. Only used when ``optimizer`` is
+        a subclass of `StochasticOptimizer`.
+
+    momentum : float, default=0.9
+        Momentum for weight update. Should be between 0 and 1. Only used when
+        ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    max_f_eval : int, default=15000
+        Only used when ``optimizer`` is a subclass of `LineSearchOptimizer`.
+        Maximum number of loss function calls. The solver iterates until
+        convergence (determined by ``tol``), number of iterations reaches
+        ``max_iter``, or this number of loss function calls. Note that number
+        of loss function calls will be greater than or equal to the number
+        of iterations.
+
+    reg_intercept : bool, default=True
+        Whether to include the intercept in the regularization term.
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the pseudo random number generation for train-test split if
+        ``early_stopping`` is True and shuffling the data for batch sampling when
+        an instance of `StochasticOptimizer` class is used as ``optimizer`` value.
+        Pass an int for reproducible output across multiple function calls.
+
+    rho: int, default=1.
+        Rho parameter for the augmented term of the Lagrangian method.
+        Must be strictly positive.
+
+    mu : float, default=1.
+        Mu parameter for the proximal bundle method.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_solver : string, default='ecos'
+        Master solver for the proximal bundle method for the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_verbose : bool or int, default=False
+        Controls the verbosity of the cvxpy interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
 
     verbose : bool or int, default=False
-        Enable verbose output.
+        Controls the verbosity of progress messages to stdout. Use a boolean value
+        to switch on/off or an int value to show progress each ``verbose`` time
+        optimization steps.
 
     Attributes
     ----------
