@@ -9,7 +9,7 @@ from sklearn.utils.extmath import safe_sparse_dot
 class Kernel(BaseEstimator, ABC):
 
     def __call__(self, X, Y=None):
-        pass
+        raise NotImplementedError
 
 
 class LinearKernel(Kernel):
