@@ -12,13 +12,15 @@ or, a matrix $K$ from the dot product of our input variables in the SVR case~\eq
 	K_{ij} = k(x_i,x_j)
 \end{equation}
 
-where $k(x_i,x_j)$ is an example of a family of functions called \emph{kernel functions} and:  
+where $k(x_i,x_j)$ is an example of a family of functions called \emph{kernel functions}.
+
+For any positive definite kernel function $k$ (a so called Mercer kernel), it is guaranteed that there exists a mapping $\phi$ into a Hilbert space $\mathcal{H}$, such that:
 
 \begin{equation} \label{eq:kernel_function}
 	k(x_i,x_j) = \langle \phi(x_i), \phi(x_j) \rangle = \phi(x_i)^T \phi(x_j)
 \end{equation}
 
-where $\phi(.)$ is the identity function, is known as \emph{linear} kernel.
+where $\langle \cdot, \cdot \rangle$ denotes the inner product in the Hilbert space and $\phi(\cdot)$ is the identity function.
 
 The reason that this \emph{kernel trick} is useful is that there are many classification/regression problems that are nonlinearly separable/regressable in the \emph{input space}, which might be in a higher dimensionality \emph{feature space} given a suitable mapping $x \rightarrow \phi(x)$.
 
