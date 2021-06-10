@@ -28,6 +28,18 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
                                                                verbose=verbose)
         self.ub = np.asarray(ub, dtype=float)
 
+    def f_star(self):
+        return self.f.function(self.x_star())
+
+    def x_star(self):
+        if not hasattr(self, 'x_opt'):
+            self.x_opt = solve_qp(P=self.f.Q,
+                                  q=self.f.q,
+                                  lb=np.zeros_like(self.f.q),
+                                  ub=self.ub,
+                                  solver='cvxopt')
+        return self.x_opt
+
 
 class LagrangianQuadratic(Quadratic):
     """
@@ -145,6 +157,7 @@ class LagrangianQuadratic(Quadratic):
         :param x: the primal variable wrt evaluate the jacobian
         :return: the jacobian wrt primal-dual variable
         """
+        # return self.auto_jac(x)
         constraints = self.AG @ x - self.bh
         clipped_constraints = constraints.copy()
         clipped_constraints[self.n_eq:] = np.clip(constraints[self.n_eq:], a_min=0, a_max=None)

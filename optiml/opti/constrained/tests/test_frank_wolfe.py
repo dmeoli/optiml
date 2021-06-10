@@ -1,0 +1,16 @@
+import numpy as np
+import pytest
+
+from optiml.opti import Quadratic
+from optiml.opti.constrained import FrankWolfe
+from optiml.opti.utils import generate_box_constrained_quadratic
+
+
+def test_FrankWolfe():
+    Q, q, ub = generate_box_constrained_quadratic(ndim=2)
+    bcqp = FrankWolfe(quad=Quadratic(Q, q), ub=ub)
+    assert np.allclose(bcqp.minimize().x, bcqp.x_star(), rtol=0.1)
+
+
+if __name__ == "__main__":
+    pytest.main()

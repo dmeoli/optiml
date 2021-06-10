@@ -209,7 +209,6 @@ class HeavyBallGradient(LineSearchOptimizer):
 
             # update new point and gradient
             self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
-            self.ng = np.linalg.norm(self.g_x)
 
             if self.is_lagrangian_dual():
                 constraints = self.f.AG.dot(self.x) - self.f.bh
@@ -224,6 +223,8 @@ class HeavyBallGradient(LineSearchOptimizer):
                         np.linalg.norm(self.x - self.past_x) <= self.tol):
                     self.status = 'optimal'
                     break
+
+            self.ng = np.linalg.norm(self.g_x)
 
             self.iter += 1
 
