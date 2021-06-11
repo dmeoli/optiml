@@ -1241,7 +1241,12 @@ class DualSVC(ClassifierMixin, DualSVM):
 
             else:
 
-                if issubclass(self.optimizer, Optimizer):
+                if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
+
+                    # TODO bcqp optimizer with 0 <= x <= +inf, i.e., without upper bound, is not available
+                    raise NotImplementedError
+
+                elif issubclass(self.optimizer, Optimizer):
 
                     lb = np.zeros(n_samples)  # lower bounds
 
@@ -2077,7 +2082,12 @@ class DualSVR(RegressorMixin, DualSVM):
 
             else:
 
-                if issubclass(self.optimizer, Optimizer):
+                if issubclass(self.optimizer, BoxConstrainedQuadraticOptimizer):
+
+                    # TODO bcqp optimizer with 0 <= x <= +inf, i.e., without upper bound, is not available
+                    raise NotImplementedError
+
+                elif issubclass(self.optimizer, Optimizer):
 
                     lb = np.zeros(2 * n_samples)  # lower bounds
 

@@ -1,6 +1,7 @@
 from abc import ABC
 
 import autograd.numpy as np
+from autograd import hessian, jacobian
 from qpsolvers import solve_qp
 
 from optiml.opti import Optimizer, Quadratic
@@ -114,6 +115,9 @@ class LagrangianQuadratic(Quadratic):
         # initialize Lagrange multipliers to 0
         self.dual_x = np.zeros(self.AG.shape[0])
         self.past_dual_x = self.dual_x.copy()
+        # overwrite autograd utils
+        self.auto_jac = jacobian(self._autograd_function)
+        self.auto_hess = hessian(self._autograd_function)
 
     def f_star(self):
         return self.primal.function(self.x_star())
@@ -138,12 +142,22 @@ class LagrangianQuadratic(Quadratic):
         :param x: the primal variable wrt evaluate the function
         :return: the function value wrt primal-dual variable
         """
-        # constraints = self.AG @ x - self.bh
-        # clipped_constraints = constraints.copy()
-        # clipped_constraints[self.n_eq:] = np.clip(constraints[self.n_eq:], a_min=0, a_max=None)
-        # return (super(LagrangianQuadratic, self).function(x) + self.dual_x @ constraints +
-        #         0.5 * self.rho * np.linalg.norm(clipped_constraints) ** 2)
-        # rewritten avoiding vector assignments to make it understandable by autograd
+        constraints = self.AG @ x - self.bh
+        clipped_constraints = constraints.copy()
+        clipped_constraints[self.n_eq:] = np.clip(constraints[self.n_eq:], a_min=0, a_max=None)
+        return (super(LagrangianQuadratic, self).function(x) + self.dual_x @ constraints +
+                0.5 * self.rho * np.linalg.norm(clipped_constraints) ** 2)
+
+    def _autograd_function(self, x):
+        """
+        Compute the value of the augmented lagrangian relaxation defined as:
+
+        L(x, mu, lambda) = 1/2 x^T Q x + q^T x + mu^T (A x - b) + lambda^T (G x - h) + rho/2 ||(A x - b) + (G x - h)||^2
+
+        :param x: the primal variable wrt evaluate the function
+        :return: the function value wrt primal-dual variable
+        """
+        # rewritten avoiding vector assignments to make it understandable by autograd but more expensive
         return (super(LagrangianQuadratic, self).function(x) + self.dual_x @ (self.AG @ x - self.bh) +
                 0.5 * self.rho * np.sum(np.square(self.A @ x - self.b)) +
                 0.5 * self.rho * np.sum(np.square(np.clip(self.G @ x - self.h, a_min=0, a_max=None))))
