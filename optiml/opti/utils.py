@@ -97,7 +97,7 @@ def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_
 
     ub = ub_min * np.ones(ndim) + (ub_max - ub_min) * np.random.rand(ndim)
 
-    G = np.random.rand(round(rank * ndim), ndim).T
+    G = np.random.rand(ndim, round(rank * ndim)).T
     Q = G.T.dot(G)
 
     # compute eigenvalue decomposition

@@ -93,11 +93,11 @@ class SVM(BaseEstimator, ABC):
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_solver : string, default='ecos'
-        Master solver for the proximal bundle method for the cvxpy interface.
+        Master solver for the proximal bundle method for the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_verbose : bool or int, default=False
-        Controls the verbosity of the cvxpy interface.
+        Controls the verbosity of the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     verbose : bool or int, default=False
@@ -272,11 +272,11 @@ class PrimalSVM(SVM, ABC):
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_solver : string, default='ecos'
-        Master solver for the proximal bundle method for the cvxpy interface.
+        Master solver for the proximal bundle method for the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_verbose : bool or int, default=False
-        Controls the verbosity of the cvxpy interface.
+        Controls the verbosity of the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     verbose : bool or int, default=False
@@ -483,11 +483,11 @@ class DualSVM(SVM, ABC):
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_solver : string, default='ecos'
-        Master solver for the proximal bundle method for the cvxpy interface.
+        Master solver for the proximal bundle method for the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_verbose : bool or int, default=False
-        Controls the verbosity of the cvxpy interface.
+        Controls the verbosity of the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     verbose : bool or int, default=False
@@ -660,11 +660,11 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_solver : string, default='ecos'
-        Master solver for the proximal bundle method for the cvxpy interface.
+        Master solver for the proximal bundle method for the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_verbose : bool or int, default=False
-        Controls the verbosity of the cvxpy interface.
+        Controls the verbosity of the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     verbose : bool or int, default=False
@@ -948,11 +948,11 @@ class DualSVC(ClassifierMixin, DualSVM):
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_solver : string, default='ecos'
-        Master solver for the proximal bundle method for the cvxpy interface.
+        Master solver for the proximal bundle method for the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_verbose : bool or int, default=False
-        Controls the verbosity of the cvxpy interface.
+        Controls the verbosity of the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     verbose : bool or int, default=False
@@ -1482,11 +1482,11 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_solver : string, default='ecos'
-        Master solver for the proximal bundle method for the cvxpy interface.
+        Master solver for the proximal bundle method for the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_verbose : bool or int, default=False
-        Controls the verbosity of the cvxpy interface.
+        Controls the verbosity of the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     verbose : bool or int, default=False
@@ -1777,11 +1777,11 @@ class DualSVR(RegressorMixin, DualSVM):
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_solver : string, default='ecos'
-        Master solver for the proximal bundle method for the cvxpy interface.
+        Master solver for the proximal bundle method for the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     master_verbose : bool or int, default=False
-        Controls the verbosity of the cvxpy interface.
+        Controls the verbosity of the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
     verbose : bool or int, default=False

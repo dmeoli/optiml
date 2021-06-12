@@ -134,8 +134,15 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                     uppr = True
 
                 if h.size == 0:
+
+                    if self.f.ndim <= 3:
+                        self.x0_history.append(self.x[0])
+                        self.x1_history.append(self.x[1])
+                        self.f_x_history.append(self.f_x)
+
                     self.status = 'optimal'
                     break
+
                 else:
                     h = h[0]  # that's probably Bland's anti-cycle rule
                     A[h] = True
