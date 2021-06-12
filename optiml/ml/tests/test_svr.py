@@ -27,9 +27,9 @@ def test_solve_primal_l1_svr_with_line_search_optimizers():
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.75
 
-    # svr = PrimalSVR(loss=epsilon_insensitive, optimizer=HeavyBallGradient)
-    # svr.fit(X_train, y_train)
-    # assert svr.score(X_test, y_test) >= 0.75
+    svr = PrimalSVR(loss=epsilon_insensitive, optimizer=HeavyBallGradient)
+    svr.fit(X_train, y_train)
+    assert svr.score(X_test, y_test) >= 0.75
 
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=Newton)
     svr.fit(X_train, y_train)

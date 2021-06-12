@@ -119,7 +119,7 @@ class ConjugateGradient(LineSearchOptimizer):
     def __init__(self,
                  f,
                  x=None,
-                 wf='pr',
+                 wf='fr',
                  eps=1e-6,
                  max_iter=1000,
                  max_f_eval=1000,
@@ -271,19 +271,19 @@ class ConjugateGradient(LineSearchOptimizer):
                 # update new point and gradient
                 self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
 
-                if self.is_lagrangian_dual():
-                    constraints = self.f.AG.dot(self.x) - self.f.bh
+            if self.is_lagrangian_dual():
+                constraints = self.f.AG.dot(self.x) - self.f.bh
 
-                    self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
+                self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
 
-                    # upgrade and clip dual_x
-                    self.f.dual_x += self.f.rho * constraints
-                    self.f.dual_x[self.f.n_eq:] = np.clip(self.f.dual_x[self.f.n_eq:], a_min=0, a_max=None)
+                # upgrade and clip dual_x
+                self.f.dual_x += self.f.rho * constraints
+                self.f.dual_x[self.f.n_eq:] = np.clip(self.f.dual_x[self.f.n_eq:], a_min=0, a_max=None)
 
-                    if (np.linalg.norm(self.f.dual_x - self.f.past_dual_x) +
-                            np.linalg.norm(self.x - self.past_x) <= self.tol):
-                        self.status = 'optimal'
-                        break
+                if (np.linalg.norm(self.f.dual_x - self.f.past_dual_x) +
+                        np.linalg.norm(self.x - self.past_x) <= self.tol):
+                    self.status = 'optimal'
+                    break
 
             past_d = d  # previous search direction
 

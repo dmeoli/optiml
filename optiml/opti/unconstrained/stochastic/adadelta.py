@@ -71,8 +71,6 @@ class AdaDelta(StochasticOptimizer):
 
             self.x += step
 
-            self.sms = self.decay * self.sms + (1. - self.decay) * step ** 2
-
             if self.is_lagrangian_dual():
                 constraints = self.f.AG.dot(self.x) - self.f.bh
 
@@ -86,6 +84,8 @@ class AdaDelta(StochasticOptimizer):
                         np.linalg.norm(self.x - self.past_x) <= self.tol):
                     self.status = 'optimal'
                     break
+
+            self.sms = self.decay * self.sms + (1. - self.decay) * step ** 2
 
             self.iter += 1
 
