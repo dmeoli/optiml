@@ -65,7 +65,7 @@ class MeanSquaredError(NeuralNetworkLoss):
                 if self.neural_net.layers[-1].coef_reg.lmbda == 0.:
                     self.x_opt = np.linalg.inv(self.X.T.dot(self.X)).dot(self.X.T).dot(self.y)
                 else:
-                    self.x_opt = np.linalg.inv(self.X.T.dot(self.X) + np.identity(self.ndim) *
+                    self.x_opt = np.linalg.inv(self.X.T.dot(self.X) + np.eye(self.ndim) *
                                                self.neural_net.layers[-1].coef_reg.lmbda).dot(self.X.T).dot(self.y)
             return self.x_opt
         return np.full(fill_value=np.nan, shape=self.ndim)

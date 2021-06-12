@@ -28,8 +28,7 @@ def test_perceptron_ridge_regressor_with_line_search_optimizer():
     lmbda = 0.1
     net = NeuralNetworkRegressor((FullyConnected(13, 1, linear, coef_reg=L2(lmbda), fit_intercept=False),),
                                  loss=mean_squared_error, optimizer=Newton).fit(X, y)
-    assert np.allclose(net.coefs_[0].ravel(),
-                       np.linalg.inv(X.T.dot(X) + np.identity(net.loss.ndim) * lmbda).dot(X.T).dot(y))
+    assert np.allclose(net.coefs_[0].ravel(), np.linalg.inv(X.T.dot(X) + np.eye(net.loss.ndim) * lmbda).dot(X.T).dot(y))
 
 
 def test_neural_network_regressor_with_stochastic_optimizer():
