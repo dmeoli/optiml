@@ -46,7 +46,7 @@ def solve_lagrangian_equality_constrained_quadratic(Q, q, A, b, method='gmres'):
 
 # bcqp generator
 
-def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_min=8, ub_max=12, seed=None):
+def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_min=8, ub_max=12, seed=123456):
     """
     Generate a box-constrained quadratic function defined as:
 
@@ -97,13 +97,13 @@ def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_
 
     ub = ub_min * np.ones(ndim) + (ub_max - ub_min) * np.random.rand(ndim)
 
-    G = np.random.rand(round(rank * ndim), ndim)
+    G = np.random.rand(round(rank * ndim), ndim).T
     Q = G.T.dot(G)
 
     # compute eigenvalue decomposition
     D, V = np.linalg.eigh(Q)  # V.dot(np.diag(D)).dot(V.T) = Q
 
-    if min(D) > 1e-14:  # smallest eigenvalue
+    if D[0] > 1e-14:  # smallest eigenvalue
         # modify eccentricity only if \lambda_n > 0, for when \lambda_n = 0 the
         # eccentricity is 1 by default. The formula is:
         #

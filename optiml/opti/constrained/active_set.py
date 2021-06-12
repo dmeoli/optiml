@@ -106,7 +106,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 # symmetric and positive definite, i.e., the function is strictly convex
                 xs[A] = cho_solve(cho_factor(self.f.Q[A, :][:, A]),
                                   -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
-            except np.linalg.LinAlgError:
+            except:  # np.linalg.LinAlgError:
                 # since Q is is not strictly psd, i.e., the function is linear along the
                 # eigenvectors correspondent to the null eigenvalues, the system has infinite
                 # solutions, so we will choose the one that minimizes the 2-norm
@@ -121,10 +121,10 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 # the solution of the unconstrained problem is actually feasible
 
                 # move the current point right there
-                last_x = xs
+                self.x = xs
 
                 # compute function value and gradient
-                self.f_x, self.g_x = self.f.function(last_x), self.f.jacobian(last_x)
+                self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
 
                 h = np.nonzero(np.logical_and(L, self.g_x < -1e-12))[0]
                 if h.size > 0:
@@ -149,14 +149,14 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                             print('\tI/O: O {:d}(L)'.format(h), end='')
             else:
                 # the solution of the unconstrained problem is not feasible
-                # this means that d = xs - self.x is a descent direction, use it
+                # this means that d = xs - x is a descent direction, use it
                 # of course, only the "free" part really needs to be computed
 
                 d = np.zeros_like(self.x)
                 d[A] = xs[A] - self.x[A]
 
                 # first, compute the maximum feasible step size max_t such that:
-                #   0 <= self.x[i] + max_t * d[i] <= u[i]   for all i
+                #   0 <= x[i] + max_t * d[i] <= u[i]   for all i
 
                 idx = np.logical_and(A, d > 0)  # positive gradient entries
                 max_t = min((self.ub[idx] - self.x[idx]) / d[idx], default=np.inf)
@@ -165,24 +165,22 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
 
                 # it is useless to compute the optimal t, because we know already
                 # that it is 1, whereas max_t necessarily is < 1
-                last_x = self.x + max_t * d
+                self.x += max_t * d
 
                 # compute function value
-                self.f_x = self.f.function(last_x)
+                self.f_x = self.f.function(self.x)
 
                 # update the active set(s)
-                nL = np.logical_and(A, last_x <= 1e-12)
+                nL = np.logical_and(A, self.x <= 1e-12)
                 L[nL] = True
                 A[nL] = False
 
-                nU = np.logical_and(A, last_x >= self.ub - 1e-12)
+                nU = np.logical_and(A, self.x >= self.ub - 1e-12)
                 U[nU] = True
                 A[nU] = False
 
                 if self.is_verbose():
                     print('\tI/O: I {:d}+{:d}'.format(sum(nL), sum(nU)), end='')
-
-            self.x = last_x
 
             if self.is_lagrangian_dual():
                 constraints = self.f.AG.dot(self.x) - self.f.bh

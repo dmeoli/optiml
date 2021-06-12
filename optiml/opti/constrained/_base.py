@@ -38,7 +38,7 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
                                   q=self.f.q,
                                   lb=np.zeros_like(self.f.q),
                                   ub=self.ub,
-                                  solver='cvxopt')
+                                  solver='quadprog')
         return self.x_opt
 
 

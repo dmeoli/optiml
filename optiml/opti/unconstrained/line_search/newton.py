@@ -177,7 +177,7 @@ class Newton(LineSearchOptimizer):
                 break
 
             # compute Newton's direction
-            lambda_n = min(np.linalg.eigvalsh(self.H_x))  # smallest eigenvalue
+            lambda_n = np.linalg.eigvalsh(self.H_x)[0]  # smallest eigenvalue
             if lambda_n < self.delta:
                 if self.is_verbose():
                     print('\tdelta: {: 1.4e}'.format(self.delta - lambda_n), end='')

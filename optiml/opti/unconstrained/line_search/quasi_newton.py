@@ -193,7 +193,7 @@ class BFGS(LineSearchOptimizer):
                         gp = self.f.jacobian(xp)
                         self.H_x[i] = ((gp - self.g_x) / small_step).T
                     self.H_x = (self.H_x + self.H_x.T) / 2  # ensure it is symmetric
-                    lambda_n = min(np.linalg.eigvalsh(self.H_x))  # smallest eigenvalue
+                    lambda_n = np.linalg.eigvalsh(self.H_x)[0]  # smallest eigenvalue
                     if lambda_n < 1e-6:
                         self.H_x = self.H_x + (1e-6 - lambda_n) * np.identity(self.f.ndim)
                     self.H_x = np.linalg.inv(self.H_x)
