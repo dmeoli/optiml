@@ -211,7 +211,7 @@ class HeavyBallGradient(LineSearchOptimizer):
             self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
 
             if self.is_lagrangian_dual():
-                constraints = self.f.AG.dot(self.x) - self.f.bh
+                constraints = self.f.get_constraints(self.x)
 
                 self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
 

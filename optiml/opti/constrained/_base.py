@@ -118,6 +118,10 @@ class LagrangianQuadratic(Quadratic):
         # overwrite autograd utils
         self.auto_jac = jacobian(self._autograd_function)
         self.auto_hess = hessian(self._autograd_function)
+        # backup {x: constraints} to speedup by reducing
+        # the number of matrix-vector products
+        self.last_x = None
+        self.last_constraints = None
 
     def f_star(self):
         return self.primal.function(self.x_star())
@@ -133,6 +137,16 @@ class LagrangianQuadratic(Quadratic):
                                   solver='cvxopt')
         return self.x_opt
 
+    def get_constraints(self, x):
+        if np.array_equal(self.last_x, x):
+            constraints = self.last_constraints.copy()  # speedup: just restore
+        else:
+            constraints = self.AG @ x - self.bh
+            # backup {x: constraints}
+            self.last_x = x.copy()
+            self.last_constraints = constraints.copy()
+        return constraints
+
     def function(self, x):
         """
         Compute the value of the augmented lagrangian relaxation defined as:
@@ -142,7 +156,7 @@ class LagrangianQuadratic(Quadratic):
         :param x: the primal variable wrt evaluate the function
         :return: the function value wrt primal-dual variable
         """
-        constraints = self.AG @ x - self.bh
+        constraints = self.get_constraints(x)
         clipped_constraints = constraints.copy()
         clipped_constraints[self.n_eq:] = np.clip(constraints[self.n_eq:], a_min=0, a_max=None)
         return (super(LagrangianQuadratic, self).function(x) + self.dual_x @ constraints +
@@ -155,7 +169,7 @@ class LagrangianQuadratic(Quadratic):
         L(x, mu, lambda) = 1/2 x^T Q x + q^T x + mu^T (A x - b) + lambda^T (G x - h) + rho/2 ||(A x - b) + (G x - h)||^2
 
         Returns the same value of `function(self, x)` but it is written avoiding vector assignments
-        to make it understandable by autograd, so it perform more matrix-vector product and for this
+        to make it understandable by autograd, so it perform more matrix-vector products and for this
         reason it is more computationally expensive.
 
         :param x: the primal variable wrt evaluate the function
@@ -175,7 +189,7 @@ class LagrangianQuadratic(Quadratic):
         :return: the jacobian wrt primal-dual variable
         """
         # return self.auto_jac(x)
-        constraints = self.AG @ x - self.bh
+        constraints = self.get_constraints(x)
         clipped_constraints = constraints.copy()
         clipped_constraints[self.n_eq:] = np.clip(constraints[self.n_eq:], a_min=0, a_max=None)
         idx_nonclipped = clipped_constraints != 0
@@ -184,7 +198,7 @@ class LagrangianQuadratic(Quadratic):
                 self.rho * self.bh[idx_nonclipped] @ self.AG[idx_nonclipped])
 
     def function_jacobian(self, x):
-        constraints = self.AG @ x - self.bh
+        constraints = self.get_constraints(x)
         clipped_constraints = constraints.copy()
         clipped_constraints[self.n_eq:] = np.clip(constraints[self.n_eq:], a_min=0, a_max=None)
         fun = (super(LagrangianQuadratic, self).function(x) + self.dual_x @ constraints +
