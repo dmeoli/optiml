@@ -14,6 +14,7 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
                  ub,
                  x=None,
                  eps=1e-6,
+                 tol=1e-3,
                  max_iter=1000,
                  callback=None,
                  callback_args=(),
@@ -23,6 +24,7 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
         super(BoxConstrainedQuadraticOptimizer, self).__init__(f=quad,
                                                                x=x or ub / 2,  # starts from the middle of the box
                                                                eps=eps,
+                                                               tol=tol,
                                                                max_iter=max_iter,
                                                                callback=callback,
                                                                callback_args=callback_args,

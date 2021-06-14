@@ -112,6 +112,7 @@ class BFGS(LineSearchOptimizer):
                  f,
                  x=None,
                  eps=1e-6,
+                 tol=1e-3,
                  max_iter=1000,
                  max_f_eval=1000,
                  m1=0.01,
@@ -127,7 +128,9 @@ class BFGS(LineSearchOptimizer):
                  random_state=None,
                  verbose=False):
         super(BFGS, self).__init__(f=f,
-                                   x=x, eps=eps,
+                                   x=x,
+                                   eps=eps,
+                                   tol=tol,
                                    max_iter=max_iter,
                                    max_f_eval=max_f_eval,
                                    m1=m1,

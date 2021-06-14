@@ -1069,7 +1069,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                 lb=lb,
                                                 ub=ub,
                                                 solver=self.optimizer,
-                                                verbose=False if self.verbose < 0 else True)
+                                                verbose=False if self.verbose < 0 else True)  # trick for Jupyter
 
                 else:
 
@@ -1083,7 +1083,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                 lb=lb,
                                                 ub=ub,
                                                 solver=self.optimizer,
-                                                verbose=False if self.verbose < 0 else True)
+                                                verbose=False if self.verbose < 0 else True)  # trick for Jupyter
 
                 stdout = out.getvalue()
                 if stdout:
@@ -1111,6 +1111,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                     self.optimizer = self.optimizer(quad=self.obj,
                                                     ub=ub,
+                                                    tol=self.tol,
                                                     max_iter=self.max_iter,
                                                     callback=self._store_train_info,
                                                     verbose=self.verbose).minimize()
@@ -1139,6 +1140,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
                         self.optimizer = self.optimizer(f=self.obj,
+                                                        tol=self.tol,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
                                                         random_state=self.random_state,
@@ -1157,6 +1159,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                         self.optimizer = self.optimizer(f=self.obj,
                                                         mu=self.mu,
+                                                        tol=self.tol,
                                                         max_iter=self.max_iter,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
@@ -1173,6 +1176,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                         if issubclass(self.optimizer, StochasticMomentumOptimizer):
 
                             self.optimizer = self.optimizer(f=self.obj,
+                                                            tol=self.tol,
                                                             step_size=self.learning_rate,
                                                             epochs=self.max_iter,
                                                             momentum_type=self.momentum_type,
@@ -1184,6 +1188,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                         else:
 
                             self.optimizer = self.optimizer(f=self.obj,
+                                                            tol=self.tol,
                                                             step_size=self.learning_rate,
                                                             epochs=self.max_iter,
                                                             random_state=self.random_state,
@@ -1221,7 +1226,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                 b=np.zeros(1),
                                                 lb=lb,
                                                 solver=self.optimizer,
-                                                verbose=False if self.verbose < 0 else True)
+                                                verbose=False if self.verbose < 0 else True)  # trick for Jupyter
 
                 else:
 
@@ -1234,7 +1239,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                                                 q=q,
                                                 lb=lb,
                                                 solver=self.optimizer,
-                                                verbose=False if self.verbose < 0 else True)
+                                                verbose=False if self.verbose < 0 else True)  # trick for Jupyter
 
                 stdout = out.getvalue()
                 if stdout:
@@ -1271,6 +1276,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
                         self.optimizer = self.optimizer(f=self.obj,
+                                                        tol=self.tol,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
                                                         random_state=self.random_state,
@@ -1289,6 +1295,7 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                         self.optimizer = self.optimizer(f=self.obj,
                                                         mu=self.mu,
+                                                        tol=self.tol,
                                                         max_iter=self.max_iter,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
@@ -1305,6 +1312,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                         if issubclass(self.optimizer, StochasticMomentumOptimizer):
 
                             self.optimizer = self.optimizer(f=self.obj,
+                                                            tol=self.tol,
                                                             step_size=self.learning_rate,
                                                             epochs=self.max_iter,
                                                             momentum_type=self.momentum_type,
@@ -1316,6 +1324,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                         else:
 
                             self.optimizer = self.optimizer(f=self.obj,
+                                                            tol=self.tol,
                                                             step_size=self.learning_rate,
                                                             epochs=self.max_iter,
                                                             random_state=self.random_state,
@@ -1909,7 +1918,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                     lb=lb,
                                                     ub=ub,
                                                     solver=self.optimizer,
-                                                    verbose=False if self.verbose < 0 else True)
+                                                    verbose=False if self.verbose < 0 else True)  # trick for Jupyter
 
                     else:
 
@@ -1923,7 +1932,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                     lb=lb,
                                                     ub=ub,
                                                     solver=self.optimizer,
-                                                    verbose=False if self.verbose < 0 else True)
+                                                    verbose=False if self.verbose < 0 else True)  # trick for Jupyter
 
                     stdout = out.getvalue()
                     if stdout:
@@ -1951,6 +1960,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                         self.optimizer = self.optimizer(quad=self.obj,
                                                         ub=ub,
+                                                        tol=self.tol,
                                                         max_iter=self.max_iter,
                                                         callback=self._store_train_info,
                                                         verbose=self.verbose).minimize()
@@ -1979,6 +1989,7 @@ class DualSVR(RegressorMixin, DualSVM):
                         if issubclass(self.optimizer, LineSearchOptimizer):
 
                             self.optimizer = self.optimizer(f=self.obj,
+                                                            tol=self.tol,
                                                             max_iter=self.max_iter,
                                                             max_f_eval=self.max_f_eval,
                                                             random_state=self.random_state,
@@ -1997,6 +2008,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                             self.optimizer = self.optimizer(f=self.obj,
                                                             mu=self.mu,
+                                                            tol=self.tol,
                                                             max_iter=self.max_iter,
                                                             master_solver=self.master_solver,
                                                             master_verbose=self.master_verbose,
@@ -2013,6 +2025,7 @@ class DualSVR(RegressorMixin, DualSVM):
                             if issubclass(self.optimizer, StochasticMomentumOptimizer):
 
                                 self.optimizer = self.optimizer(f=self.obj,
+                                                                tol=self.tol,
                                                                 step_size=self.learning_rate,
                                                                 epochs=self.max_iter,
                                                                 momentum_type=self.momentum_type,
@@ -2024,6 +2037,7 @@ class DualSVR(RegressorMixin, DualSVM):
                             else:
 
                                 self.optimizer = self.optimizer(f=self.obj,
+                                                                tol=self.tol,
                                                                 step_size=self.learning_rate,
                                                                 epochs=self.max_iter,
                                                                 random_state=self.random_state,
@@ -2065,7 +2079,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                 b=np.zeros(1),
                                                 lb=lb,
                                                 solver=self.optimizer,
-                                                verbose=False if self.verbose < 0 else True)
+                                                verbose=False if self.verbose < 0 else True)  # trick for Jupyter
 
                 else:
 
@@ -2078,7 +2092,7 @@ class DualSVR(RegressorMixin, DualSVM):
                                                 q=q,
                                                 lb=lb,
                                                 solver=self.optimizer,
-                                                verbose=False if self.verbose < 0 else True)
+                                                verbose=False if self.verbose < 0 else True)  # trick for Jupyter
 
                 stdout = out.getvalue()
                 if stdout:
@@ -2115,6 +2129,7 @@ class DualSVR(RegressorMixin, DualSVM):
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
                         self.optimizer = self.optimizer(f=self.obj,
+                                                        tol=self.tol,
                                                         max_iter=self.max_iter,
                                                         max_f_eval=self.max_f_eval,
                                                         random_state=self.random_state,
@@ -2133,6 +2148,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
                         self.optimizer = self.optimizer(f=self.obj,
                                                         mu=self.mu,
+                                                        tol=self.tol,
                                                         max_iter=self.max_iter,
                                                         master_solver=self.master_solver,
                                                         master_verbose=self.master_verbose,
@@ -2149,6 +2165,7 @@ class DualSVR(RegressorMixin, DualSVM):
                         if issubclass(self.optimizer, StochasticMomentumOptimizer):
 
                             self.optimizer = self.optimizer(f=self.obj,
+                                                            tol=self.tol,
                                                             step_size=self.learning_rate,
                                                             epochs=self.max_iter,
                                                             momentum_type=self.momentum_type,
@@ -2160,6 +2177,7 @@ class DualSVR(RegressorMixin, DualSVM):
                         else:
 
                             self.optimizer = self.optimizer(f=self.obj,
+                                                            tol=self.tol,
                                                             step_size=self.learning_rate,
                                                             epochs=self.max_iter,
                                                             random_state=self.random_state,
