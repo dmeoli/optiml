@@ -963,6 +963,9 @@ class DualSVC(ClassifierMixin, DualSVM):
     Attributes
     ----------
 
+    obj : instance of class `Quadratic`
+        Objective function of the SVC model.
+
     coef_ : ndarray of shape (n_features,)
         Weights assigned to the features (coefficients in the primal
         problem). This is only available in the case of a linear kernel.
@@ -1791,6 +1794,9 @@ class DualSVR(RegressorMixin, DualSVM):
 
     Attributes
     ----------
+
+    obj : instance of class `Quadratic`
+        Objective function of the SVR model.
 
     coef_ : ndarray of shape (n_features,)
         Weights assigned to the features (coefficients in the primal

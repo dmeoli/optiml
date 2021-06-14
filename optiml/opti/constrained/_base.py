@@ -154,10 +154,13 @@ class LagrangianQuadratic(Quadratic):
 
         L(x, mu, lambda) = 1/2 x^T Q x + q^T x + mu^T (A x - b) + lambda^T (G x - h) + rho/2 ||(A x - b) + (G x - h)||^2
 
+        Returns the same value of `function(self, x)` but it is written avoiding vector assignments
+        to make it understandable by autograd, so it perform more matrix-vector product and for this
+        reason it is more computationally expensive.
+
         :param x: the primal variable wrt evaluate the function
         :return: the function value wrt primal-dual variable
         """
-        # rewritten avoiding vector assignments to make it understandable by autograd but more expensive
         return (super(LagrangianQuadratic, self).function(x) + self.dual_x @ (self.AG @ x - self.bh) +
                 0.5 * self.rho * np.sum(np.square(self.A @ x - self.b)) +
                 0.5 * self.rho * np.sum(np.square(np.clip(self.G @ x - self.h, a_min=0, a_max=None))))
@@ -175,10 +178,22 @@ class LagrangianQuadratic(Quadratic):
         constraints = self.AG @ x - self.bh
         clipped_constraints = constraints.copy()
         clipped_constraints[self.n_eq:] = np.clip(constraints[self.n_eq:], a_min=0, a_max=None)
-        constraints = clipped_constraints != 0
+        idx_nonclipped = clipped_constraints != 0
         return (super(LagrangianQuadratic, self).jacobian(x) + self.dual_x @ self.AG +
-                self.rho * self.AG[constraints].T @ self.AG[constraints] @ x -
-                self.rho * self.bh[constraints] @ self.AG[constraints])
+                self.rho * self.AG[idx_nonclipped].T @ self.AG[idx_nonclipped] @ x -
+                self.rho * self.bh[idx_nonclipped] @ self.AG[idx_nonclipped])
+
+    def function_jacobian(self, x):
+        constraints = self.AG @ x - self.bh
+        clipped_constraints = constraints.copy()
+        clipped_constraints[self.n_eq:] = np.clip(constraints[self.n_eq:], a_min=0, a_max=None)
+        fun = (super(LagrangianQuadratic, self).function(x) + self.dual_x @ constraints +
+               0.5 * self.rho * np.linalg.norm(clipped_constraints) ** 2)
+        idx_nonclipped = clipped_constraints != 0
+        jac = (super(LagrangianQuadratic, self).jacobian(x) + self.dual_x @ self.AG +
+               self.rho * self.AG[idx_nonclipped].T @ self.AG[idx_nonclipped] @ x -
+               self.rho * self.bh[idx_nonclipped] @ self.AG[idx_nonclipped])
+        return fun, jac
 
     def hessian(self, x):
         return self.auto_hess(x)

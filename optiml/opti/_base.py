@@ -141,6 +141,9 @@ class OptimizationFunction(ABC):
         """
         return self.auto_jac(x)
 
+    def function_jacobian(self, *args, **kwargs):
+        return self.function(*args, **kwargs), self.jacobian(*args, **kwargs)
+
     def hessian(self, x):
         """
         The Hessian matrix of the function.

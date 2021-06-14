@@ -40,7 +40,7 @@ class AdaGrad(StochasticOptimizer):
 
         for batch in self.batches:
 
-            self.f_x = self.f.function(self.x, *batch)
+            self.f_x, self.g_x = self.f.function_jacobian(self.x, *batch)
 
             self._print_info()
 
@@ -55,8 +55,6 @@ class AdaGrad(StochasticOptimizer):
             if self.epoch >= self.epochs:
                 self.status = 'stopped'
                 break
-
-            self.g_x = self.f.jacobian(self.x, *batch)
 
             # compute search direction
             d = -self.g_x
