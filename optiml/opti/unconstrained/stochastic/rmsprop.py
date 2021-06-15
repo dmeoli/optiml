@@ -13,7 +13,7 @@ class RMSProp(StochasticMomentumOptimizer):
                  momentum=0.9,
                  batch_size=None,
                  eps=1e-6,
-                 tol=1e-3,
+                 tol=1e-8,
                  epochs=1000,
                  decay=0.9,
                  offset=1e-8,

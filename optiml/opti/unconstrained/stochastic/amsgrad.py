@@ -12,7 +12,7 @@ class AMSGrad(StochasticMomentumOptimizer):
                  x=None,
                  batch_size=None,
                  eps=1e-6,
-                 tol=1e-3,
+                 tol=1e-8,
                  epochs=1000,
                  step_size=0.001,
                  momentum_type='none',

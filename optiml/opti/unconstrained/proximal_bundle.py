@@ -79,7 +79,7 @@ class ProximalBundle(Optimizer):
                  mu=1,
                  m1=0.01,
                  eps=1e-6,
-                 tol=1e-3,
+                 tol=1e-8,
                  max_iter=1000,
                  m_inf=-np.inf,
                  callback=None,

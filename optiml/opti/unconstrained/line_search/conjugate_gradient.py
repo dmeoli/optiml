@@ -121,7 +121,7 @@ class ConjugateGradient(LineSearchOptimizer):
                  x=None,
                  wf='fr',
                  eps=1e-6,
-                 tol=1e-3,
+                 tol=1e-8,
                  max_iter=1000,
                  max_f_eval=1000,
                  r_start=0,

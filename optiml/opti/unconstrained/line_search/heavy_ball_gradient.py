@@ -116,7 +116,7 @@ class HeavyBallGradient(LineSearchOptimizer):
                  x=None,
                  beta=0.9,
                  eps=1e-6,
-                 tol=1e-3,
+                 tol=1e-8,
                  max_iter=1000,
                  max_f_eval=1000,
                  m1=0.01,

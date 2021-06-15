@@ -38,7 +38,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                  ub,
                  x=None,
                  eps=1e-6,
-                 tol=1e-3,
+                 tol=1e-8,
                  max_iter=1000,
                  callback=None,
                  callback_args=(),
