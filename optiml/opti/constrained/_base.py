@@ -190,7 +190,7 @@ class LagrangianQuadratic(Quadratic):
         :param x: the primal variable wrt evaluate the jacobian
         :return: the jacobian wrt primal-dual variable
         """
-        # return self.auto_jac(x)
+        # return self.auto_jac(x)  # slower
         constraints = self.get_constraints(x)
         clipped_constraints = constraints.copy()
         clipped_constraints[self.n_eq:] = np.clip(constraints[self.n_eq:], a_min=0, a_max=None)

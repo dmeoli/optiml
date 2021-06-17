@@ -90,15 +90,20 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
                  
                 | SVC          | SVR          |
                 |    :----:    |    :----:    |
-                | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/poly_dual_l1_svc_hyperplane.png) | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/poly_dual_l1_svr_hyperplane.png) |              
+                | ![poly_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/poly_dual_l1_svc_hyperplane.png) | ![poly_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/poly_dual_l1_svr_hyperplane.png) |              
                 
             - [x] Gaussian
                 
                 | SVC          | SVR          |
                 |    :----:    |    :----:    |
-                | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_l1_svc_hyperplane.png) | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_l1_svr_hyperplane.png) |
+                | ![gaussian_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_l1_svc_hyperplane.png) | ![gaussian_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_l1_svr_hyperplane.png) |
                 
             - [x] Laplacian
+              
+                | SVC          | SVR          |
+                |    :----:    |    :----:    |
+                | ![laplacian_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/laplacian_dual_l1_svc_hyperplane.png) | ![laplacian_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/laplacian_dual_l1_svr_hyperplane.png) |
+            
             - [x] Sigmoid
         - Optimizers (ad hoc)
             - [x] Sequential Minimal Optimization (SMO)
