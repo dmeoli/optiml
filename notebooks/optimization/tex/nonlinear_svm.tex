@@ -52,18 +52,20 @@ where $\gamma$ define how far the influence of a single training example reaches
 \caption{Polynomial SVM hyperplanes}
 \end{figure}
 
-\subsection{Gaussian RBF kernel}
+\pagebreak
+
+\subsection{Gaussian kernel}
 
 The \emph{gaussian} kernel is defined as:
 
 \begin{equation} \label{eq:gaussian_kernel1}
-	k(x_i,x_j)=\exp(-\frac{\|x_i-x_j\|^2}{2\sigma^2})
+	k(x_i,x_j)=\exp(-\frac{\|x_i-x_j\|_2^2}{2\sigma^2})
 \end{equation}
 
 or, equivalently:
 
 \begin{equation} \label{eq:gaussian_kernel2}
-	k(x_i,x_j)=\exp(-\gamma \|x_i-x_j\|^2)
+	k(x_i,x_j)=\exp(-\gamma \|x_i-x_j\|_2^2)
 \end{equation}
 
 where $\displaystyle \gamma=\frac{1}{2\sigma^2}$ define how far the influence of a single training example reaches (low values meaning ‘far’ and high values meaning ‘close’).
@@ -84,4 +86,38 @@ where $\displaystyle \gamma=\frac{1}{2\sigma^2}$ define how far the influence of
 		\label{fig:gaussian_dual_l1_svr_hyperplane}
 	\end{subfigure}
 \caption{Gaussian SVM hyperplanes}
+\end{figure}
+
+\subsection{Laplacian kernel}
+
+The \emph{laplacian} kernel is defined as:
+
+\begin{equation} \label{eq:laplacian_kernel1}
+	k(x_i,x_j)=\exp(-\frac{\|x_i-x_j\|_1}{2\sigma^2})
+\end{equation}
+
+or, equivalently:
+
+\begin{equation} \label{eq:laplacian_kernel2}
+	k(x_i,x_j)=\exp(-\gamma \|x_i-x_j\|_1)
+\end{equation}
+
+where $\displaystyle \gamma=\frac{1}{2\sigma^2}$ define how far the influence of a single training example reaches (low values meaning ‘far’ and high values meaning ‘close’).
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}{.49\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{img/laplacian_dual_l1_svc_hyperplane}
+		\caption{Laplacian SVC hyperplane}
+		\label{fig:laplacian_dual_l1_svc_hyperplane}
+	\end{subfigure}
+	\begin{subfigure}{.49\textwidth}
+		\centering
+		\captionsetup{justification=centering}
+		\includegraphics[width=\textwidth]{img/laplacian_dual_l1_svr_hyperplane}
+		\caption{Laplacian SVR hyperplane}
+		\label{fig:laplacian_dual_l1_svr_hyperplane}
+	\end{subfigure}
+\caption{Laplacian SVM hyperplanes}
 \end{figure}
