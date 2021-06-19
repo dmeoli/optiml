@@ -12,7 +12,7 @@ class AdaGrad(StochasticOptimizer):
                  eps=1e-6,
                  tol=1e-8,
                  epochs=1000,
-                 step_size=0.01,
+                 step_size=1.,
                  offset=1e-4,
                  callback=None,
                  callback_args=(),
@@ -67,7 +67,7 @@ class AdaGrad(StochasticOptimizer):
             self.x += step
 
             if self.is_lagrangian_dual():
-                constraints = self.f.AG.dot(self.x) - self.f.bh
+                constraints = self.f.get_constraints(self.x)
 
                 self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
 

@@ -465,7 +465,7 @@ class DualSVM(SVM, ABC):
         of loss function calls will be greater than or equal to the number
         of iterations.
 
-    reg_intercept : bool, default=True
+    reg_intercept : bool, default=False
         Whether to include the intercept in the regularization term.
 
     random_state : int, RandomState instance or None, default=None
@@ -507,7 +507,7 @@ class DualSVM(SVM, ABC):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 reg_intercept=True,
+                 reg_intercept=False,
                  random_state=None,
                  rho=1,
                  mu=1,
@@ -930,7 +930,7 @@ class DualSVC(ClassifierMixin, DualSVM):
         of loss function calls will be greater than or equal to the number
         of iterations.
 
-    reg_intercept : bool, default=True
+    reg_intercept : bool, default=False
         Whether to include the intercept in the regularization term.
 
     random_state : int, RandomState instance or None, default=None
@@ -994,7 +994,7 @@ class DualSVC(ClassifierMixin, DualSVM):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 reg_intercept=True,
+                 reg_intercept=False,
                  random_state=None,
                  rho=1,
                  mu=1,
@@ -1043,14 +1043,20 @@ class DualSVC(ClassifierMixin, DualSVM):
 
             if self.optimizer == 'smo' or self.optimizer == SMO:
 
-                self.obj = Quadratic(Q, q)
+                if not self.reg_intercept:
 
-                self.optimizer = SMOClassifier(self.obj, X, y, K, self.kernel, self.C,
-                                               self.tol, self.verbose).minimize()
-                self.alphas_ = self.optimizer.alphas
-                if isinstance(self.kernel, LinearKernel):
-                    self.coef_ = self.optimizer.w
-                self.intercept_ = self.optimizer.b
+                    self.obj = Quadratic(Q, q)
+
+                    self.optimizer = SMOClassifier(self.obj, X, y, K, self.kernel, self.C,
+                                                   self.tol, self.verbose).minimize()
+                    self.alphas_ = self.optimizer.alphas
+                    if isinstance(self.kernel, LinearKernel):
+                        self.coef_ = self.optimizer.w
+                    self.intercept_ = self.optimizer.b
+
+                else:
+
+                    raise NotImplementedError
 
             elif isinstance(self.optimizer, str):
 
@@ -1771,7 +1777,7 @@ class DualSVR(RegressorMixin, DualSVM):
         of loss function calls will be greater than or equal to the number
         of iterations.
 
-    reg_intercept : bool, default=True
+    reg_intercept : bool, default=False
         Whether to include the intercept in the regularization term.
 
     random_state : int, RandomState instance or None, default=None
@@ -1836,7 +1842,7 @@ class DualSVR(RegressorMixin, DualSVM):
                  momentum_type='none',
                  momentum=0.9,
                  max_f_eval=15000,
-                 reg_intercept=True,
+                 reg_intercept=False,
                  random_state=None,
                  rho=1,
                  mu=1,
@@ -1887,15 +1893,21 @@ class DualSVR(RegressorMixin, DualSVM):
 
             if self.optimizer == 'smo' or self.optimizer == SMO:
 
-                self.obj = Quadratic(Q, q)
+                if self.reg_intercept:
 
-                self.optimizer = SMORegression(self.obj, X, y, K, self.kernel, self.C,
-                                               self.epsilon, self.tol, self.verbose).minimize()
-                alphas_p, alphas_n = self.optimizer.alphas_p, self.optimizer.alphas_n
-                self.alphas_ = np.concatenate((alphas_p, alphas_n))
-                if isinstance(self.kernel, LinearKernel):
-                    self.coef_ = self.optimizer.w
-                self.intercept_ = self.optimizer.b
+                    self.obj = Quadratic(Q, q)
+
+                    self.optimizer = SMORegression(self.obj, X, y, K, self.kernel, self.C,
+                                                   self.epsilon, self.tol, self.verbose).minimize()
+                    alphas_p, alphas_n = self.optimizer.alphas_p, self.optimizer.alphas_n
+                    self.alphas_ = np.concatenate((alphas_p, alphas_n))
+                    if isinstance(self.kernel, LinearKernel):
+                        self.coef_ = self.optimizer.w
+                    self.intercept_ = self.optimizer.b
+
+                else:
+
+                    raise NotImplementedError
 
             else:
 

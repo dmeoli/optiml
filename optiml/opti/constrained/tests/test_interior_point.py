@@ -9,7 +9,7 @@ from optiml.opti.utils import generate_box_constrained_quadratic
 def test_InteriorPoint():
     Q, q, ub = generate_box_constrained_quadratic(ndim=2)
     bcqp = InteriorPoint(quad=Quadratic(Q, q), ub=ub)
-    assert np.allclose(bcqp.minimize().x, bcqp.x_star(), rtol=0.1)
+    assert np.allclose(bcqp.minimize().x, bcqp.x_star())
 
 
 if __name__ == "__main__":

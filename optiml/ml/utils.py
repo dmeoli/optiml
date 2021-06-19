@@ -14,6 +14,11 @@ from .svm import SVM, PrimalSVC, DualSVC, PrimalSVR, DualSVR
 from .svm.kernels import Kernel
 
 
+def moving_average(interval, window_size):
+    window = np.ones(int(window_size)) / window_size
+    return np.convolve(interval, window, 'same')
+
+
 # data generators
 
 def generate_linearly_separable_data(size=100, random_state=None):
