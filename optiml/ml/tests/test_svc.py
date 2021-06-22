@@ -354,7 +354,7 @@ def test_solve_dual_l2_svc_with_unreg_intercept_with_line_search_optimizers():
 
     svc = OVR(DualSVC(loss=squared_hinge, kernel=gaussian, optimizer=ConjugateGradient, reg_intercept=False))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97  # TODO relaxed
+    assert svc.score(X_test, y_test) >= 0.97
 
     svc = OVR(DualSVC(loss=squared_hinge, kernel=gaussian, optimizer=Newton, reg_intercept=False))
     svc = svc.fit(X_train, y_train)
