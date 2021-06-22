@@ -1893,7 +1893,7 @@ class DualSVR(RegressorMixin, DualSVM):
 
             if self.optimizer == 'smo' or self.optimizer == SMO:
 
-                if self.reg_intercept:
+                if not self.reg_intercept:
 
                     self.obj = Quadratic(Q, q)
 

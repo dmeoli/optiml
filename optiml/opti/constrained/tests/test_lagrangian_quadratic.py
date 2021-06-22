@@ -18,7 +18,7 @@ def test_LagrangianQuadratic():
 def test_AugmentedLagrangianQuadratic():
     Q, q, ub = generate_box_constrained_quadratic(ndim=2)
     A, b, lb = [2, 7], np.zeros(1), np.zeros_like(q)
-    ld = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q), A=A, b=b, lb=lb, ub=ub, rho=1.)
+    ld = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q), A=A, b=b, lb=lb, ub=ub, rho=1)
     assert np.allclose(AdaGrad(ld, step_size=1, epochs=15000).minimize().x, ld.x_star())
 
 

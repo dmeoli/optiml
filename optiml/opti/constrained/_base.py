@@ -185,7 +185,7 @@ class AugmentedLagrangianQuadratic(Quadratic):
     where \hat{G}^T = [ G -I I ] and \hat{h} = [ h -lb ub ].
     """
 
-    def __init__(self, primal, A=None, b=None, G=None, h=None, lb=None, ub=None, rho=1.):
+    def __init__(self, primal, A=None, b=None, G=None, h=None, lb=None, ub=None, rho=1):
         if not isinstance(primal, Quadratic):
             raise TypeError(f'{primal} is not an allowed quadratic function')
         super(AugmentedLagrangianQuadratic, self).__init__(primal.Q, primal.q)
