@@ -273,10 +273,10 @@ class ConjugateGradient(LineSearchOptimizer):
                 # update new point and gradient
                 self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
 
-            try:
-                self.check_lagrangian_dual_optimality()
-            except StopIteration:
-                break
+                try:
+                    self.check_lagrangian_dual_optimality()
+                except StopIteration:
+                    break
 
             past_d = d  # previous search direction
 
