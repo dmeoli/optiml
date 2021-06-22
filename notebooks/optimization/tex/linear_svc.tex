@@ -234,15 +234,15 @@ From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y
 
 In order to relax the constraints in the \emph{Wolfe dual} formulation~\eqref{eq:svc_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu$ and $\lambda_+, \lambda_- \geq 0$:
 
-\begin{equation} \label{eq:svc_lagrangian_dual}
+\begin{equation} \label{eq:l1_svc_lagrangian_dual}
 	\begin{aligned}
-		    \max_{\mu,\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\mu,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T Q\alpha+q^T\alpha - \mu^T (y^T \alpha) - \lambda_+^T (u - \alpha) - \lambda_-^T \alpha \\
-    &= \frac{1}{2} \alpha^T Q\alpha + (q - \mu y + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T u \\
+		    \max_{\mu,\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\mu,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T Q\alpha+q^T\alpha - \mu^T (y^T \alpha) - \lambda_+^T (ub - \alpha) - \lambda_-^T \alpha \\
+    &= \frac{1}{2} \alpha^T Q\alpha + (q - \mu y + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T ub \\
     \text{subject to} \quad & \,\, \lambda_+, \lambda_- \geq 0
 	\end{aligned}
 \end{equation}
 
-where the upper bound $u^T = [C, \dots, C]$.
+where the upper bound $ub^T = [C, \dots, C]$.
 
 Taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings it to 0 gives:
 
@@ -252,11 +252,11 @@ Taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings 
 
 With $\alpha$ optimal solution of the linear system:
 
-\begin{equation} \label{eq:svc_lagrangian_sol}
+\begin{equation} \label{eq:l1_svc_lagrangian_sol}
     Q \alpha = - (q - \mu y + \lambda_+ - \lambda_-)
 \end{equation}
 
-the gradient wrt $\mu$, $\lambda_+$ and $\lambda_-$ are:
+the gradients wrt $\mu$, $\lambda_+$ and $\lambda_-$ are:
 
 \begin{equation} \label{eq:svc_lagrangian_der_mu}
 	\frac{\partial \mathcal{L}}{\partial \mu}=-y \alpha
@@ -270,17 +270,17 @@ the gradient wrt $\mu$, $\lambda_+$ and $\lambda_-$ are:
     \frac{\partial \mathcal{L}}{\partial \lambda_-}=-\alpha
 \end{equation}
 
-From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of~\eqref{eq:svc_lagrangian_dual} is reduced of 1/3 by removing the multipliers $\mu$ which was allocated to control the equality constraint $y^T \alpha=0$, so we will end up solving exactly the problem~\eqref{eq:svc_min_bcqp_wolf_dual}.
+From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of~\eqref{eq:l1_svc_lagrangian_dual} is reduced by removing the multipliers $\mu$ which was allocated to control the equality constraint $y^T \alpha=0$, so we will end up solving exactly the problem~\eqref{eq:svc_min_bcqp_wolf_dual}.
 
 \begin{equation} \label{eq:l1_svc_bcqp_lagrangian_dual}
 	\begin{aligned}
-    	\max_{\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T (Q + yy^T)\alpha+q^T\alpha - \lambda_+^T (u - \alpha) - \lambda_-^T \alpha \\
-    &= \frac{1}{2} \alpha^T (Q + yy^T)\alpha + (q + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T u \\
+    	\max_{\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T (Q + yy^T)\alpha+q^T\alpha - \lambda_+^T (ub - \alpha) - \lambda_-^T \alpha \\
+    &= \frac{1}{2} \alpha^T (Q + yy^T)\alpha + (q + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T ub \\
     \text{subject to} \quad & \,\, \lambda_+, \lambda_- \geq 0
 	\end{aligned}
 \end{equation}
 
-where, again, the upper bound $u^T = [C, \dots, C]$.
+where, again, the upper bound $ub^T = [C, \dots, C]$.
 
 Now, taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings it to 0 gives:
 
@@ -294,15 +294,93 @@ With $\alpha$ optimal solution of the linear system:
     (Q + yy^T) \alpha = - (q + \lambda_+ - \lambda_-)
 \end{equation}
 
-the gradient wrt $\lambda_+$ and $\lambda_-$ are:
+the gradients wrt $\lambda_+$ and $\lambda_-$ are:
 
 \begin{equation} \label{eq:l1_svc_bcqp_lagrangian_der_lp}
-	\frac{\partial \mathcal{L}}{\partial \lambda_+}=\alpha - u
+	\frac{\partial \mathcal{L}}{\partial \lambda_+}=\alpha - ub
 \end{equation}
 
 \begin{equation} \label{eq:l1_svc_bcqp_lagrangian_der_lm}
     \frac{\partial \mathcal{L}}{\partial \lambda_-}=-\alpha
 \end{equation}
+
+\bigskip
+
+Note that since the Hessian matrix $Q$ of the $\mathcal{L}_1$-SVC is not strictly positive definite, i.e., the Lagrangian function is not strictly convex since it will be linear along the eigenvectors correspondent to the null eigenvalues and so it will be unbounded below, the Lagrangian dual relaxation, i.e.,~\ref{eq:l1_svc_lagrangian_sol} and~\ref{eq:l1_svc_bcqp_lagrangian_sol}, will be nondifferentiable, so it will have infinite solutions and for each of them it will have a different subgradient. In order to compute an approximation of the gradient, we will choose $\alpha$ in such a way as the one that minimizes the 2-norm since it is good almost like the gradient:
+
+\begin{equation} \label{eq:svc_lagrangian_krylov_sol}
+	\min_{\alpha_n \in K_n(Q, b)} \| Q \alpha_n - b \|
+\end{equation}
+
+Since we are dealing with a symmetric system we will choose a well-known Krylov method that performs the Lanczos iterate, i.e., symmetric Arnoldi iterate, called \emph{minres}, i.e., symmetric \emph{gmres}, to compute the vector $\alpha_n$ that minimizes the norm of the residual $r_n = Q \alpha_n - b$ among all vectors in $K_n(Q, b) = span(b, Qb, Q^2b, \dots, Q^{n-1}b)$.
+
+\bigskip
+
+Since the linear algebra methods in the ML context are crucial and also in order to deal with a per-iteration cost equals to the other algorithms described later to provide a coherent comparison of all at the end, we will solve it with a primal-dual optimization method and we modify its definition by adding a strictly convex augmentation term, i.e., a penalty term, in order to improve the practical convergence of the algorithms. So, if we consider a general quadratic optimization problem subject to linear constraints, i.e., equality and inequality constraints, defined as:
+
+\begin{equation}
+    \begin{aligned} 
+        \min_{\alpha} \quad & \frac{1}{2} \alpha^T Q \alpha + q^T \alpha \\
+            \textrm{subject to} \quad & A \alpha = b \\ & G \alpha \leq h \\ & lb \leq \alpha \leq ub
+    \end{aligned}
+\end{equation}
+
+or, equivalently:
+
+\begin{equation}
+    \begin{aligned}
+        \min_{\alpha} \quad & \frac{1}{2} \alpha^T Q \alpha + q^T \alpha \\
+            \textrm{subject to} \quad & A \alpha = b \\ & \hat{G} \alpha \leq \hat{h}
+    \end{aligned}
+\end{equation}
+
+where $\hat{G} =
+\begin{bmatrix}
+ G \\
+-I \\
+ I 
+\end{bmatrix}$ and $\hat{h} =
+\begin{bmatrix}
+h & -lb & ub
+\end{bmatrix}$; we give the following \emph{augmented Lagrangian dual}:
+
+\begin{equation} \label{eq:svc_gen_aug_lagrangian_dual}
+	\begin{aligned}
+		    \max_{\mu,\lambda} \min_{\alpha} \quad & \frac{1}{2} \alpha^T Q \alpha + q^T \alpha + \mu^T (A \alpha - b) + \lambda^T (\hat{G} \alpha - \hat{h}) + \frac{\rho}{2} \| A \alpha - b \|^2 + \frac{\rho}{2} \| \hat{G} \alpha - \hat{h} \|^2 \\
+    \text{subject to} \quad & \lambda \geq 0
+	\end{aligned}
+\end{equation}
+
+with $\rho > 0$.
+
+\bigskip
+
+According to this definition, we change the formulation~\ref{eq:l1_svc_lagrangian_dual} as:
+
+\begin{equation} \label{eq:l1_svc_aug_lagrangian_dual}
+	\begin{aligned}
+		    \max_{\mu,\lambda} \min_{\alpha} \mathcal{L}(\alpha,\mu,\lambda) &= \frac{1}{2} \alpha^T Q\alpha+q^T\alpha + \mu^T (y^T \alpha) + \lambda^T (\hat{G} \alpha - \hat{h}) + \frac{\rho}{2} \| y^T \alpha \|^2 + \frac{\rho}{2} \| \hat{G} \alpha - \hat{h} \|^2 \\
+    \text{subject to} \quad & \,\, \lambda \geq 0
+	\end{aligned}
+\end{equation}
+
+and the formulation~\ref{eq:l1_svc_bcqp_lagrangian_dual} as:
+
+\begin{equation} \label{eq:l1_svc_bcqp_aug_lagrangian_dual}
+	\begin{aligned}
+    	\max_{\lambda} \min_{\alpha} \mathcal{L}(\alpha,\lambda) &= \frac{1}{2} \alpha^T (Q + yy^T) \alpha + q^T \alpha + \lambda^T (\hat{G} \alpha - \hat{h}) + \frac{\rho}{2} \| \hat{G} \alpha - \hat{h} \|^2 \\
+    \text{subject to} \quad & \,\, \lambda \geq 0
+	\end{aligned}
+\end{equation}
+
+where $\hat{G} =
+\begin{bmatrix}
+-I \\
+ I 
+\end{bmatrix}$ and $\hat{h} =
+\begin{bmatrix}
+-lb & ub
+\end{bmatrix}$ with $lb^T = [0, \dots, 0]$, $ub^T = [C, \dots, C]$ and $\rho > 0$.
 
 \pagebreak
 
@@ -403,7 +481,7 @@ With $\alpha$ optimal solution of the linear system:
     (Q+D) \alpha = - (q - \mu y - \lambda)
 \end{equation}
 
-the gradient wrt $\mu$ and $\lambda$ are:
+the gradients wrt $\mu$ and $\lambda$ are:
 
 \begin{equation} \label{eq:l2_svc_lagrangian_der_mu}
 	\frac{\partial \mathcal{L}}{\partial \mu}=-y \alpha
@@ -413,7 +491,7 @@ the gradient wrt $\mu$ and $\lambda$ are:
     \frac{\partial \mathcal{L}}{\partial \lambda}=-\alpha
 \end{equation}
 
-From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of~\eqref{eq:l2_svc_lagrangian_dual} is reduced of 1/3 by removing the multipliers $\mu$ which was allocated to control the equality constraint $y^T \alpha=0$, so we will end up solving exactly the problem~\eqref{eq:reg_bias_wolfe_dual_l2_svc}.
+From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of~\eqref{eq:l2_svc_lagrangian_dual} is reduced by removing the multipliers $\mu$ which was allocated to control the equality constraint $y^T \alpha=0$, so we will end up solving exactly the problem~\eqref{eq:reg_bias_wolfe_dual_l2_svc}.
 
 \begin{equation} \label{eq:l2_svc_lb_lagrangian_dual}
 	\begin{aligned}
@@ -422,8 +500,6 @@ From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y
     \text{subject to} \quad & \,\, \lambda \geq 0
 	\end{aligned}
 \end{equation}
-
-where, again, the upper bound $u^T = [C, \dots, C]$.
 
 Now, taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings it to 0 gives:
 
@@ -442,3 +518,74 @@ the gradient wrt $\lambda$ is:
 \begin{equation} \label{eq:l2_svc_lb_lagrangian_der_l}
     \frac{\partial \mathcal{L}}{\partial \lambda}=-\alpha
 \end{equation}
+
+\bigskip
+
+Note that since the Hessian matrix $Q$ of the $\mathcal{L}_2$-SVC is symmetric and strictly positive definite, we can find the unique solution of the Lagrangian dual relaxation, i.e.,~\ref{eq:l2_svc_lagrangian_sol} and~\ref{eq:l2_svc_lb_lagrangian_sol}, by solving the system with the Cholesky factorization.
+
+\bigskip
+
+Since the linear algebra methods in the ML context are crucial and also in order to deal with a per-iteration cost equals to the other algorithms described later to provide a coherent comparison of all at the end, we will solve it with a primal-dual optimization method and we modify its definition by adding a strictly convex augmentation term, i.e., a penalty term, in order to improve the practical convergence of the algorithms. So, if we consider a general quadratic optimization problem subject to linear constraints, i.e., equality and inequality constraints, defined as:
+
+\begin{equation}
+    \begin{aligned} 
+        \min_{\alpha} \quad & \frac{1}{2} \alpha^T Q \alpha + q^T \alpha \\
+            \textrm{subject to} \quad & A \alpha = b \\ & G \alpha \leq h \\ & lb \leq \alpha \leq ub
+    \end{aligned}
+\end{equation}
+
+or, equivalently:
+
+\begin{equation}
+    \begin{aligned}
+        \min_{\alpha} \quad & \frac{1}{2} \alpha^T Q \alpha + q^T \alpha \\
+            \textrm{subject to} \quad & A \alpha = b \\ & \hat{G} \alpha \leq \hat{h}
+    \end{aligned}
+\end{equation}
+
+where $\hat{G} =
+\begin{bmatrix}
+ G \\
+-I \\
+ I 
+\end{bmatrix}$ and $\hat{h} =
+\begin{bmatrix}
+h & -lb & ub
+\end{bmatrix}$; we give the following \emph{augmented Lagrangian dual}:
+
+\begin{equation} \label{eq:l2_svc_gen_aug_lagrangian_dual}
+	\begin{aligned}
+		    \max_{\mu,\lambda} \min_{\alpha} \quad & \frac{1}{2} \alpha^T Q \alpha + q^T \alpha + \mu^T (A \alpha - b) + \lambda^T (\hat{G} \alpha - \hat{h}) + \frac{\rho}{2} \| A \alpha - b \|^2 + \frac{\rho}{2} \| \hat{G} \alpha - \hat{h} \|^2 \\
+    \text{subject to} \quad & \lambda \geq 0
+	\end{aligned}
+\end{equation}
+
+with $\rho > 0$.
+
+\bigskip
+
+According to this definition, we change the formulation~\ref{eq:l2_svc_lagrangian_dual} as:
+
+\begin{equation} \label{eq:l2_svc_aug_lagrangian_dual}
+	\begin{aligned}
+		    \max_{\mu,\lambda} \min_{\alpha} \mathcal{L}(\alpha,\mu,\lambda) &= \frac{1}{2} \alpha^T (Q + D) \alpha+q^T\alpha + \mu^T (y^T \alpha) + \lambda^T (\hat{G} \alpha - \hat{h}) + \frac{\rho}{2} \| y^T \alpha \|^2 + \frac{\rho}{2} \| \hat{G} \alpha - \hat{h} \|^2 \\
+    \text{subject to} \quad & \,\, \lambda \geq 0
+	\end{aligned}
+\end{equation}
+
+and the formulation~\ref{eq:l2_svc_lb_lagrangian_dual} as:
+
+\begin{equation} \label{eq:l2_svc_lb_aug_lagrangian_dual}
+	\begin{aligned}
+    	\max_{\lambda} \min_{\alpha} \mathcal{L}(\alpha,\lambda) &= \frac{1}{2} \alpha^T (Q + yy^T + D) \alpha + q^T \alpha + \lambda^T (\hat{G} \alpha - \hat{h}) + \frac{\rho}{2} \| \hat{G} \alpha - \hat{h} \|^2 \\
+    \text{subject to} \quad & \,\, \lambda \geq 0
+	\end{aligned}
+\end{equation}
+
+where $\hat{G} =
+\begin{bmatrix}
+-I
+\end{bmatrix}$ and $\hat{h} =
+\begin{bmatrix}
+-lb
+\end{bmatrix}$ with $lb^T = [0, \dots, 0]$ and $\rho > 0$.
