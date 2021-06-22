@@ -25,7 +25,6 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
                     - [x] Polak–Ribière formula
                     - [x] Hestenes-Stiefel formula
                     - [x] Dai-Yuan formula
-                - [x] Heavy Ball Gradient
             - 2nd Order Methods
                 - [x] Newton
                 - Quasi-Newton
