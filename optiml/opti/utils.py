@@ -158,13 +158,16 @@ def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_
 
 def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None, primal=True):
     dual = None
-    if hasattr(f, 'primal') and primal:  # plot primal with constraints
+    # plot primal with constraints
+    if hasattr(f, 'primal') and primal:  # is_lagrangian_dual()
         dual = f
         f = dual.primal
 
     X, Y = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
-    Z = np.array([f(np.array([x, y]))
+    Z = np.array([f(np.concatenate((np.array([x, y]), f.dual_x)))  # x, mu_lmbda*
+                  # is_lagrangian_dual() and not is_augmented_lagrangian_dual()
+                  if hasattr(f, 'primal') and not hasattr(f, 'rho') else f(np.array([x, y]))
                   for x, y in zip(X.ravel(), Y.ravel())]).reshape(X.shape)
 
     surface_contour = plt.figure(figsize=(16, 8))

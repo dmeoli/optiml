@@ -64,6 +64,7 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
             - [x] Active Set
             - [x] Interior Point
         - [x] Lagrangian Dual
+        - [x] Augmented Lagrangian Dual
 
 - Machine Learning
     - [x] Support Vector Machines

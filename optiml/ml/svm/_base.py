@@ -18,7 +18,7 @@ from .losses import (hinge, squared_hinge, epsilon_insensitive, squared_epsilon_
 from .smo import SMO, SMOClassifier, SMORegression
 from ...opti import Optimizer
 from ...opti import Quadratic
-from ...opti.constrained import BoxConstrainedQuadraticOptimizer, LagrangianQuadratic
+from ...opti.constrained import BoxConstrainedQuadraticOptimizer, AugmentedLagrangianQuadratic
 from ...opti.unconstrained import ProximalBundle
 from ...opti.unconstrained.line_search import LineSearchOptimizer
 from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGradientDescent, StochasticMomentumOptimizer
@@ -1105,10 +1105,10 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                         # TODO constrained optimizer with A x = 0 and 0 <= x <= ub is not available, so relax
                         #  the equality constraint and solve the lagrangian with the bcqp optimizer
-                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                       A=y,
-                                                       b=np.zeros(1),
-                                                       rho=self.rho)
+                        self.obj = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q),
+                                                                A=y,
+                                                                b=np.zeros(1),
+                                                                rho=self.rho)
 
                     else:
 
@@ -1128,20 +1128,20 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                     if not self.reg_intercept:
 
-                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                       A=y,
-                                                       b=np.zeros(1),
-                                                       lb=lb,
-                                                       ub=ub,
-                                                       rho=self.rho)
+                        self.obj = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q),
+                                                                A=y,
+                                                                b=np.zeros(1),
+                                                                lb=lb,
+                                                                ub=ub,
+                                                                rho=self.rho)
 
                     else:
 
                         Q += np.outer(y, y)
-                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                       lb=lb,
-                                                       ub=ub,
-                                                       rho=self.rho)
+                        self.obj = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q),
+                                                                lb=lb,
+                                                                ub=ub,
+                                                                rho=self.rho)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -1266,18 +1266,18 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                     if not self.reg_intercept:
 
-                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                       A=y,
-                                                       b=np.zeros(1),
-                                                       lb=lb,
-                                                       rho=self.rho)
+                        self.obj = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q),
+                                                                A=y,
+                                                                b=np.zeros(1),
+                                                                lb=lb,
+                                                                rho=self.rho)
 
                     else:
 
                         Q += np.outer(y, y)
-                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                       lb=lb,
-                                                       rho=self.rho)
+                        self.obj = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q),
+                                                                lb=lb,
+                                                                rho=self.rho)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -1960,10 +1960,10 @@ class DualSVR(RegressorMixin, DualSVM):
 
                             # TODO constrained optimizer with A x = 0 and 0 <= x <= ub is not available, so relax
                             #  the equality constraint and solve the lagrangian with the bcqp optimizer
-                            self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                           A=e,
-                                                           b=np.zeros(1),
-                                                           rho=self.rho)
+                            self.obj = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q),
+                                                                    A=e,
+                                                                    b=np.zeros(1),
+                                                                    rho=self.rho)
 
                         else:
 
@@ -1983,20 +1983,20 @@ class DualSVR(RegressorMixin, DualSVM):
 
                         if not self.reg_intercept:
 
-                            self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                           A=e,
-                                                           b=np.zeros(1),
-                                                           lb=lb,
-                                                           ub=ub,
-                                                           rho=self.rho)
+                            self.obj = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q),
+                                                                    A=e,
+                                                                    b=np.zeros(1),
+                                                                    lb=lb,
+                                                                    ub=ub,
+                                                                    rho=self.rho)
 
                         else:
 
                             Q += np.outer(e, e)
-                            self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                           lb=lb,
-                                                           ub=ub,
-                                                           rho=self.rho)
+                            self.obj = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q),
+                                                                    lb=lb,
+                                                                    ub=ub,
+                                                                    rho=self.rho)
 
                         if issubclass(self.optimizer, LineSearchOptimizer):
 
@@ -2125,18 +2125,18 @@ class DualSVR(RegressorMixin, DualSVM):
 
                     if not self.reg_intercept:
 
-                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                       A=e,
-                                                       b=np.zeros(1),
-                                                       lb=lb,
-                                                       rho=self.rho)
+                        self.obj = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q),
+                                                                A=e,
+                                                                b=np.zeros(1),
+                                                                lb=lb,
+                                                                rho=self.rho)
 
                     else:
 
                         Q += np.outer(e, e)
-                        self.obj = LagrangianQuadratic(primal=Quadratic(Q, q),
-                                                       lb=lb,
-                                                       rho=self.rho)
+                        self.obj = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q),
+                                                                lb=lb,
+                                                                rho=self.rho)
 
                     if issubclass(self.optimizer, LineSearchOptimizer):
 

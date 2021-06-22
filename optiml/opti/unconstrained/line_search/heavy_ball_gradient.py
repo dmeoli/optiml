@@ -212,26 +212,16 @@ class HeavyBallGradient(LineSearchOptimizer):
             # update new point and gradient
             self.x, self.f_x, self.g_x = last_x, last_f_x, last_g_x
 
-            if self.is_lagrangian_dual():
-                constraints = self.f.get_constraints(self.x)
-
-                self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
-
-                # upgrade and clip dual_x
-                self.f.dual_x += self.f.rho * constraints
-                self.f.dual_x[self.f.n_eq:] = np.clip(self.f.dual_x[self.f.n_eq:], a_min=0, a_max=None)
-
-                if (np.linalg.norm(self.f.dual_x - self.f.past_dual_x) +
-                        np.linalg.norm(self.x - self.past_x) <= self.tol):
-                    self.status = 'optimal'
-                    break
+            try:
+                self.check_lagrangian_dual_optimality()
+            except StopIteration:
+                break
 
             self.ng = np.linalg.norm(self.g_x)
 
             self.iter += 1
 
-        if self.is_lagrangian_dual():
-            assert all(self.f.dual_x[self.f.n_eq:] >= 0)  # Lagrange multipliers
+        self.check_lagrangian_dual_conditions()
 
         if self.verbose:
             print('\n')

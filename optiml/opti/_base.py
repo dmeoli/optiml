@@ -33,10 +33,28 @@ class Optimizer(ABC):
             raise TypeError(f'{f} is not an allowed optimization function')
         self.f = f
         if x is None:
-            if random_state is None:
-                x = np.random.uniform
+            if hasattr(self.f, 'primal'):  # is_lagrangian_dual()
+                if hasattr(self.f, 'rho'):  # is_augmented_lagrangian_dual()
+                    # dual_x is handled and initialized to 0 inside the `AugmentedLagrangianQuadratic`
+                    # class, so initialize the primal variable, i.e., x, as a random uniform
+                    if random_state is None:
+                        x = np.random.uniform
+                    else:
+                        x = np.random.RandomState(random_state).uniform
+                else:
+                    # initialize the primal variable, i.e., x, as a random uniform and
+                    # and the dual variable, i.e., mu_lmbda, to 0
+                    if random_state is None:
+                        x = np.concatenate((np.random.uniform(size=f.primal.ndim),  # x
+                                            np.zeros(f.AG.shape[0])))  # mu_lmbda
+                    else:
+                        x = np.concatenate((np.random.RandomState(random_state).uniform(size=f.primal.ndim),  # x
+                                            np.zeros(f.AG.shape[0])))  # mu_lmbda
             else:
-                x = np.random.RandomState(random_state).uniform
+                if random_state is None:
+                    x = np.random.uniform
+                else:
+                    x = np.random.RandomState(random_state).uniform
         if callable(x):
             try:
                 self.x = x(size=f.ndim)
@@ -57,7 +75,8 @@ class Optimizer(ABC):
         self.max_iter = max_iter
         self.iter = 0
         self.status = 'unknown'
-        if self.f.ndim <= 3:
+        if (self.f.ndim <= 3 or
+                hasattr(self.f, 'primal') and self.f.primal.ndim <= 3):
             self.x0_history = []
             self.x1_history = []
             self.f_x_history = []
@@ -69,13 +88,19 @@ class Optimizer(ABC):
     def is_lagrangian_dual(self):
         return hasattr(self.f, 'primal')
 
+    def is_augmented_lagrangian_dual(self):
+        return self.is_lagrangian_dual() and hasattr(self.f, 'rho')
+
     def callback(self, args=()):
 
         if hasattr(self.f, 'primal'):  # is_lagrangian_dual()
 
-            self.primal_f_x = self.f.primal.function(self.x)
+            if hasattr(self.f, 'rho'):  # is_augmented_lagrangian_dual()
+                self.primal_f_x = self.f.primal.function(self.x)
+            else:
+                self.primal_f_x = self.f.primal.function(self.x[:self.f.primal.ndim])
 
-            self.dgap = (self.primal_f_x - self.f_x) / max(abs(self.primal_f_x), 1)
+            self.dgap = abs((self.primal_f_x - self.f_x) / max(abs(self.primal_f_x), 1))
 
             if self.is_verbose():
                 print('\tpcost: {: 1.4e}'.format(self.primal_f_x), end='')
@@ -89,7 +114,7 @@ class Optimizer(ABC):
             if callable(self._callback):  # custom callback
                 self._callback(self, *args, *self.callback_args)
 
-            self.past_x = self.x.copy()  # backup primal x before upgrade it
+            self.past_x = self.x.copy()  # backup primal x before upgrade it outside the callback
 
         else:
 
@@ -100,6 +125,48 @@ class Optimizer(ABC):
 
             if callable(self._callback):  # custom callback
                 self._callback(self, *args, *self.callback_args)
+
+    def check_lagrangian_dual_optimality(self):
+
+        if hasattr(self.f, 'primal'):  # is_lagrangian_dual()
+
+            constraints = self.f.constraints(self.x)
+
+            if hasattr(self.f, 'rho'):  # is_augmented_lagrangian_dual()
+
+                self.f.past_dual_x = self.f.dual_x.copy()  # backup dual_x before upgrade it
+
+                # upgrade dual_x and clip lmbda
+                self.f.dual_x += self.f.rho * constraints
+                self.f.dual_x[self.f.n_eq:] = np.clip(self.f.dual_x[self.f.n_eq:], a_min=0, a_max=None)
+
+                # check optimality conditions
+                if ((np.linalg.norm(self.f.dual_x - self.f.past_dual_x) +
+                     np.linalg.norm(self.x - self.past_x) <= self.tol) or
+                        np.linalg.norm(constraints) <= self.tol):
+                    self.status = 'optimal'
+                    raise StopIteration
+
+            else:
+
+                # clip lmbda and backup mu_lmbda
+                self.x[self.f.primal.ndim + self.f.n_eq:] = np.clip(self.x[self.f.primal.ndim + self.f.n_eq:],
+                                                                    a_min=0, a_max=None)
+                self.f.dual_x = self.x[self.f.primal.ndim:].copy()
+
+                # check optimality conditions
+                if ((np.linalg.norm(self.x - self.past_x) <= self.tol) or  # x_mu_lmbda - past_x_mu_lmbda
+                        np.linalg.norm(constraints) <= self.tol):
+                    self.status = 'optimal'
+                    raise StopIteration
+
+    def check_lagrangian_dual_conditions(self):
+        # check if the Lagrange multipliers that controls the inequality constraints are >= 0
+        if hasattr(self.f, 'primal'):  # is_lagrangian_dual()
+            if hasattr(self.f, 'rho'):  # is_augmented_lagrangian_dual()
+                assert all(self.f.dual_x[self.f.n_eq:] >= 0)
+            else:
+                assert all(self.x[self.f.primal.ndim + self.f.n_eq:] >= 0)
 
     def is_verbose(self):
         return self.verbose and not self.iter % self.verbose
