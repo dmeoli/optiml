@@ -201,13 +201,13 @@ In order to relax the constraints in the \emph{Wolfe dual} formulation~\eqref{eq
 
 \begin{equation} \label{eq:svr_lagrangian_dual}
 	\begin{aligned}
-		    \max_{\mu,\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\mu,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T Q\alpha+q^T\alpha - \mu^T (e^T \alpha) - \lambda_+^T (u - \alpha) - \lambda_-^T \alpha \\
-    &= \frac{1}{2} \alpha^T Q\alpha + (q - \mu e + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T u \\
+		    \max_{\mu,\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\mu,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T Q\alpha+q^T\alpha - \mu^T (e^T \alpha) - \lambda_+^T (ub - \alpha) - \lambda_-^T \alpha \\
+    &= \frac{1}{2} \alpha^T Q\alpha + (q - \mu e + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T ub \\
     \text{subject to} \quad & \,\, \lambda_+, \lambda_- \geq 0
 	\end{aligned}
 \end{equation}
 
-where the upper bound $u^T = [C, \dots, C]$.
+where the upper bound $ub^T = [C, \dots, C]$.
 
 Taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings it to 0 gives:
 
@@ -221,7 +221,7 @@ With $\alpha$ optimal solution of the linear system:
     Q \alpha = - (q - \mu e + \lambda_+ - \lambda_-)
 \end{equation}
 
-the gradient wrt $\mu$, $\lambda_+$ and $\lambda_-$ are:
+the gradients wrt $\mu$, $\lambda_+$ and $\lambda_-$ are:
 
 \begin{equation} \label{eq:svr_lagrangian_der_mu}
 	\frac{\partial \mathcal{L}}{\partial \mu}=-e \alpha
@@ -235,17 +235,17 @@ the gradient wrt $\mu$, $\lambda_+$ and $\lambda_-$ are:
     \frac{\partial \mathcal{L}}{\partial \lambda_-}=-\alpha
 \end{equation}
 
-From~\eqref{eq:svr_min_qp_wolfe_dual} we can notice that the equality constraint $e^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of~\eqref{eq:svr_lagrangian_dual} is reduced of 1/3 by removing the multipliers $\mu$ which was allocated to control the equality constraint $e^T \alpha=0$, so we will end up solving exactly the problem~\eqref{eq:svr_min_bcqp_wolf_dual}.
+From~\eqref{eq:svr_min_qp_wolfe_dual} we can notice that the equality constraint $e^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of~\eqref{eq:svr_lagrangian_dual} is reduced by removing the multipliers $\mu$ which was allocated to control the equality constraint $e^T \alpha=0$, so we will end up solving exactly the problem~\eqref{eq:svr_min_bcqp_wolf_dual}.
 
 \begin{equation} \label{eq:l1_svr_bcqp_lagrangian_dual}
 	\begin{aligned}
-    	\max_{\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T (Q + ee^T)\alpha+q^T\alpha - \lambda_+^T (u - \alpha) - \lambda_-^T \alpha \\
-    &= \frac{1}{2} \alpha^T (Q + ee^T)\alpha + (q + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T u \\
+    	\max_{\lambda_+,\lambda_-} \min_{\alpha} \mathcal{L}(\alpha,\lambda_+,\lambda_-) &= \frac{1}{2} \alpha^T (Q + ee^T)\alpha+q^T\alpha - \lambda_+^T (ub - \alpha) - \lambda_-^T \alpha \\
+    &= \frac{1}{2} \alpha^T (Q + ee^T)\alpha + (q + \lambda_+ - \lambda_-)^T \alpha - \lambda_+^T ub \\
     \text{subject to} \quad & \,\, \lambda_+, \lambda_- \geq 0
 	\end{aligned}
 \end{equation}
 
-where, again, the upper bound $u^T = [C, \dots, C]$.
+where, again, the upper bound $ub^T = [C, \dots, C]$.
 
 Now, taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings it to 0 gives:
 
@@ -259,7 +259,7 @@ With $\alpha$ optimal solution of the linear system:
     (Q + ee^T) \alpha = - (q + \lambda_+ - \lambda_-)
 \end{equation}
 
-the gradient wrt $\lambda_+$ and $\lambda_-$ are:
+the gradients wrt $\lambda_+$ and $\lambda_-$ are:
 
 \begin{equation} \label{eq:l1_svr_bcqp_lagrangian_der_lp}
 	\frac{\partial \mathcal{L}}{\partial \lambda_+}=\alpha - u
@@ -370,7 +370,7 @@ With $\alpha$ optimal solution of the linear system:
     (Q+D) \alpha = - (q - \mu e - \lambda)
 \end{equation}
 
-the gradient wrt $\mu$ and $\lambda$ are:
+the gradients wrt $\mu$ and $\lambda$ are:
 
 \begin{equation} \label{eq:l2_svr_lagrangian_der_mu}
 	\frac{\partial \mathcal{L}}{\partial \mu}=-e \alpha
@@ -380,7 +380,7 @@ the gradient wrt $\mu$ and $\lambda$ are:
     \frac{\partial \mathcal{L}}{\partial \lambda}=-\alpha
 \end{equation}
 
-From~\eqref{eq:svr_min_qp_wolfe_dual} we can notice that the equality constraint $e^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of~\eqref{eq:l2_svr_lagrangian_dual} is reduced of 1/3 by removing the multipliers $\mu$ which was allocated to control the equality constraint $e^T \alpha=0$, so we will end up solving exactly the problem~\eqref{eq:reg_bias_wolfe_dual_l2_svr}.
+From~\eqref{eq:svr_min_qp_wolfe_dual} we can notice that the equality constraint $e^T \alpha = 0$ arises form the stationarity condition $\partial_{{b}} \mathcal{W}=0$. So, again, for simplicity, we can again consider the bias term $b$ embedded into the weight vector. In this way the dimensionality of~\eqref{eq:l2_svr_lagrangian_dual} is reduced by removing the multipliers $\mu$ which was allocated to control the equality constraint $e^T \alpha=0$, so we will end up solving exactly the problem~\eqref{eq:reg_bias_wolfe_dual_l2_svr}.
 
 \begin{equation} \label{eq:l2_svr_lb_lagrangian_dual}
 	\begin{aligned}
@@ -390,7 +390,7 @@ From~\eqref{eq:svr_min_qp_wolfe_dual} we can notice that the equality constraint
 	\end{aligned}
 \end{equation}
 
-where, again, the upper bound $u^T = [C, \dots, C]$.
+where, again, the upper bound $ub^T = [C, \dots, C]$.
 
 Now, taking the derivative of the Lagrangian $\mathcal{L}$ wrt $\alpha$ and settings it to 0 gives:
 
