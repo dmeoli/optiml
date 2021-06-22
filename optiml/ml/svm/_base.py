@@ -1103,12 +1103,8 @@ class DualSVC(ClassifierMixin, DualSVM):
 
                     if not self.reg_intercept:
 
-                        # TODO constrained optimizer with A x = 0 and 0 <= x <= ub is not available, so relax
-                        #  the equality constraint and solve the lagrangian with the bcqp optimizer
-                        self.obj = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q),
-                                                                A=y,
-                                                                b=np.zeros(1),
-                                                                rho=self.rho)
+                        # TODO constrained optimizer with A x = 0 and 0 <= x <= ub is not available
+                        raise NotImplementedError
 
                     else:
 
@@ -1958,12 +1954,8 @@ class DualSVR(RegressorMixin, DualSVM):
 
                         if not self.reg_intercept:
 
-                            # TODO constrained optimizer with A x = 0 and 0 <= x <= ub is not available, so relax
-                            #  the equality constraint and solve the lagrangian with the bcqp optimizer
-                            self.obj = AugmentedLagrangianQuadratic(primal=Quadratic(Q, q),
-                                                                    A=e,
-                                                                    b=np.zeros(1),
-                                                                    rho=self.rho)
+                            # TODO constrained optimizer with A x = 0 and 0 <= x <= ub is not available
+                            raise NotImplementedError
 
                         else:
 
