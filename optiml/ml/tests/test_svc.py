@@ -189,7 +189,8 @@ def test_solve_dual_l1_svc_with_unreg_intercept_with_adaptive_stochastic_optimiz
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer=AdaDelta, reg_intercept=False))
+    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer=AdaDelta,
+                      learning_rate=1., reg_intercept=False))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
