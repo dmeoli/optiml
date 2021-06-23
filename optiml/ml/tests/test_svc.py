@@ -83,7 +83,8 @@ def test_solve_dual_l1_svc_with_smo():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=1)
-    svc = OVR(DualSVC(loss=hinge, kernel=gaussian)).fit(X_train, y_train)
+    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer='smo'))
+    svr.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
 
