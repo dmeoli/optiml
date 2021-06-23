@@ -158,7 +158,8 @@ def test_solve_dual_l1_svr_with_reg_intercept_with_adaptive_stochastic_optimizer
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.76
 
-    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=AdaDelta, reg_intercept=True)
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=AdaDelta,
+                  learning_rate=1., reg_intercept=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.76
 
@@ -188,7 +189,8 @@ def test_solve_dual_l1_svr_with_unreg_intercept_with_adaptive_stochastic_optimiz
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.76
 
-    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=AdaDelta, reg_intercept=False)
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=AdaDelta,
+                  learning_rate=1., reg_intercept=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.76
 
