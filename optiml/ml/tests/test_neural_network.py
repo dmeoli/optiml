@@ -38,7 +38,7 @@ def test_l2_neural_network_regressor_with_stochastic_optimizer():
     net = NeuralNetworkRegressor((FullyConnected(13, 13, sigmoid),
                                   FullyConnected(13, 13, sigmoid),
                                   FullyConnected(13, 1, linear)),
-                                 loss=mean_squared_error, optimizer=Adam, learning_rate=0.02)
+                                 loss=mean_squared_error, optimizer=Adam, learning_rate=0.03)
     net.fit(X_train, y_train)
     assert net.score(X_test, y_test) >= 0.83
 
