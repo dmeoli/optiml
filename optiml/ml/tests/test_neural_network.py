@@ -19,7 +19,7 @@ def test_perceptron_regressor_with_line_search_optimizer():
     X, y = load_boston(return_X_y=True)
     net = NeuralNetworkRegressor((FullyConnected(13, 1, linear, fit_intercept=False),),
                                  loss=mean_squared_error, optimizer=Newton).fit(X, y)
-    assert np.allclose(net.coefs_[0].ravel(), net.loss.x_star())
+    assert np.allclose(net.coefs_[0], net.loss.x_star())
 
 
 def test_perceptron_ridge_regressor_with_line_search_optimizer():
@@ -28,7 +28,7 @@ def test_perceptron_ridge_regressor_with_line_search_optimizer():
     lmbda = 0.1
     net = NeuralNetworkRegressor((FullyConnected(13, 1, linear, coef_reg=L2(lmbda), fit_intercept=False),),
                                  loss=mean_squared_error, optimizer=Newton).fit(X, y)
-    assert np.allclose(net.coefs_[0].ravel(), net.loss.x_star())
+    assert np.allclose(net.coefs_[0], net.loss.x_star())
 
 
 def test_l2_neural_network_regressor_with_stochastic_optimizer():
