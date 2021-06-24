@@ -272,7 +272,6 @@ def test_solve_primal_l2_svr_with_stochastic_optimizers():
     svr = PrimalSVR(loss=squared_epsilon_insensitive, learning_rate=1., optimizer=AdaGrad)
     svr.fit(X_train, y_train)
     # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
     assert svr.score(X_test, y_test) >= 0.69
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, learning_rate=1., optimizer=AdaDelta)
