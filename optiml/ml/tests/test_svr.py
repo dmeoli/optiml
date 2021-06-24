@@ -56,11 +56,11 @@ def test_solve_primal_l1_svr_with_stochastic_optimizers():
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.75
 
-    svr = PrimalSVR(loss=epsilon_insensitive, learning_rate=1., optimizer=AdaGrad)
+    svr = PrimalSVR(loss=epsilon_insensitive, optimizer=AdaGrad, learning_rate=1.,)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.75
 
-    svr = PrimalSVR(loss=epsilon_insensitive, optimizer=AdaDelta)
+    svr = PrimalSVR(loss=epsilon_insensitive, optimizer=AdaDelta, learning_rate=1.)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.75
 
