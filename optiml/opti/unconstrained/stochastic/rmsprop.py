@@ -50,7 +50,12 @@ class RMSProp(StochasticMomentumOptimizer):
 
         for batch in self.batches:
 
-            self.f_x = self.f.function(self.x, *batch)
+            if self.momentum_type == 'nesterov':
+                step_m1 = self.step
+                step1 = self.momentum * step_m1
+                self.x += step1
+
+            self.f_x, self.g_x = self.f.function_jacobian(self.x, *batch)
 
             self._print_info()
 
@@ -65,13 +70,6 @@ class RMSProp(StochasticMomentumOptimizer):
             if self.epoch >= self.epochs:
                 self.status = 'stopped'
                 break
-
-            if self.momentum_type == 'nesterov':
-                step_m1 = self.step
-                step1 = self.momentum * step_m1
-                self.x += step1
-
-            self.g_x = self.f.jacobian(self.x, *batch)
 
             # compute search direction
             d = -self.g_x
