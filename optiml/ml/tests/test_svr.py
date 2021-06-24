@@ -78,7 +78,7 @@ def test_solve_primal_l1_svr_with_stochastic_optimizers():
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=RMSProp)
     svr.fit(X_train, y_train)
     # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
-    assert svr.score(X_test, y_test) >= 0.69
+    assert svr.score(X_test, y_test) >= 0.68
 
 
 def test_solve_primal_l1_svr_with_proximal_bundle():
@@ -201,7 +201,7 @@ def test_solve_dual_l1_svr_with_unreg_intercept_with_adaptive_stochastic_optimiz
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.69
 
-    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=AdaDelta, learning_rate=1., reg_intercept=False)
+    svr = DualSVR(loss=epsilon_insensitive, kernel=linear, optimizer=AdaDelta, max_iter=3000, reg_intercept=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.69
 
@@ -266,7 +266,7 @@ def test_solve_primal_l2_svr_with_stochastic_optimizers():
     # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
     assert svr.score(X_test, y_test) >= 0.69
 
-    svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=AdaDelta, learning_rate=1.)
+    svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=AdaDelta, learning_rate=1., max_iter=3000)
     svr.fit(X_train, y_train)
     # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
     assert svr.score(X_test, y_test) >= 0.69
@@ -312,7 +312,8 @@ def test_solve_dual_l2_svr_with_reg_intercept_with_adaptive_stochastic_optimizer
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.69
 
-    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=AdaDelta, reg_intercept=True)
+    svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=AdaDelta,
+                  learning_rate=1., reg_intercept=True)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.69
 
@@ -344,7 +345,7 @@ def test_solve_dual_l2_svr_with_unreg_intercept_with_adaptive_stochastic_optimiz
     assert svr.score(X_test, y_test) >= 0.69
 
     svr = DualSVR(loss=squared_epsilon_insensitive, kernel=linear, optimizer=AdaDelta,
-                  learning_rate=1., reg_intercept=False)
+                  learning_rate=1., max_iter=3000, reg_intercept=False)
     svr.fit(X_train, y_train)
     assert svr.score(X_test, y_test) >= 0.69
 
