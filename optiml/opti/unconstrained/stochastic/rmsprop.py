@@ -93,7 +93,14 @@ class RMSProp(StochasticMomentumOptimizer):
                 self.step = step2
                 self.x += self.step
 
+            try:
+                self.check_lagrangian_dual_optimality()
+            except StopIteration:
+                break
+
             self.iter += 1
+
+        self.check_lagrangian_dual_conditions()
 
         if self.verbose:
             print('\n')
