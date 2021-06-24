@@ -62,9 +62,9 @@ class AdaGrad(StochasticOptimizer):
             d = -self.g_x
 
             self.gms += self.g_x ** 2
-            step = self.step_size * d / np.sqrt(self.gms + self.offset)
+            self.step = self.step_size * d / np.sqrt(self.gms + self.offset)
 
-            self.x += step
+            self.x += self.step
 
             try:
                 self.check_lagrangian_dual_optimality()

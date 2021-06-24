@@ -67,16 +67,16 @@ class AdaDelta(StochasticOptimizer):
             d = -self.g_x
 
             self.gms = self.decay * self.gms + (1. - self.decay) * self.g_x ** 2
-            step = self.step_size * d * (np.sqrt(self.sms + self.offset) / np.sqrt(self.gms + self.offset))
+            self.step = self.step_size * d * (np.sqrt(self.sms + self.offset) / np.sqrt(self.gms + self.offset))
 
-            self.x += step
+            self.x += self.step
 
             try:
                 self.check_lagrangian_dual_optimality()
             except StopIteration:
                 break
 
-            self.sms = self.decay * self.sms + (1. - self.decay) * step ** 2
+            self.sms = self.decay * self.sms + (1. - self.decay) * self.step ** 2
 
             self.iter += 1
 
