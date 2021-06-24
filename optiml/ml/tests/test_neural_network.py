@@ -38,7 +38,8 @@ def test_l2_neural_network_regressor_with_stochastic_optimizer():
     net = NeuralNetworkRegressor((FullyConnected(13, 13, sigmoid),
                                   FullyConnected(13, 13, sigmoid),
                                   FullyConnected(13, 1, linear)),
-                                 loss=mean_squared_error, optimizer=Adam, learning_rate=0.03)
+                                 loss=mean_squared_error, optimizer=Adam, learning_rate=0.02,
+                                 momentum=0.4, momentum_type='nesterov')
     net.fit(X_train, y_train)
     assert net.score(X_test, y_test) >= 0.83
 
@@ -50,7 +51,7 @@ def test_l1_neural_network_regressor_with_proximal_bundle():
     net = NeuralNetworkRegressor((FullyConnected(13, 13, relu),
                                   FullyConnected(13, 13, relu),
                                   FullyConnected(13, 1, linear)),
-                                 loss=mean_absolute_error, optimizer=ProximalBundle, max_iter=100)
+                                 loss=mean_absolute_error, optimizer=ProximalBundle, max_iter=150)
     net.fit(X_train, y_train)
     assert net.score(X_test, y_test) >= 0.83
 
