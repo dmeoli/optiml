@@ -19,7 +19,7 @@ def test_perceptron_regressor_with_line_search_optimizer():
     X, y = load_boston(return_X_y=True)
     net = NeuralNetworkRegressor((FullyConnected(13, 1, linear, fit_intercept=False),),
                                  loss=mean_squared_error, optimizer=Newton).fit(X, y)
-    assert np.allclose(net.coefs_[0].ravel(), np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y))
+    assert np.allclose(net.coefs_[0].ravel(), net.loss.x_star())
 
 
 def test_perceptron_ridge_regressor_with_line_search_optimizer():
@@ -28,10 +28,10 @@ def test_perceptron_ridge_regressor_with_line_search_optimizer():
     lmbda = 0.1
     net = NeuralNetworkRegressor((FullyConnected(13, 1, linear, coef_reg=L2(lmbda), fit_intercept=False),),
                                  loss=mean_squared_error, optimizer=Newton).fit(X, y)
-    assert np.allclose(net.coefs_[0].ravel(), np.linalg.inv(X.T.dot(X) + np.eye(net.loss.ndim) * lmbda).dot(X.T).dot(y))
+    assert np.allclose(net.coefs_[0].ravel(), net.loss.x_star())
 
 
-def test_neural_network_regressor_with_stochastic_optimizer():
+def test_l2_neural_network_regressor_with_stochastic_optimizer():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
@@ -43,7 +43,7 @@ def test_neural_network_regressor_with_stochastic_optimizer():
     assert net.score(X_test, y_test) >= 0.83
 
 
-def test_neural_network_regressor_with_proximal_bundle():
+def test_l1_neural_network_regressor_with_proximal_bundle():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)

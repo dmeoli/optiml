@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
@@ -21,18 +22,26 @@ def test_solve_primal_l1_svc_with_line_search_optimizers():
 
     svc = OVR(PrimalSVC(loss=hinge, optimizer=SteepestGradientDescent))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=hinge, optimizer=ConjugateGradient))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=hinge, optimizer=Newton))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=hinge, optimizer=BFGS))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
 
@@ -43,30 +52,44 @@ def test_solve_primal_l1_svc_with_stochastic_optimizers():
 
     svc = OVR(PrimalSVC(loss=hinge, optimizer=StochasticGradientDescent))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=hinge, optimizer=Adam))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=hinge, optimizer=AMSGrad))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=hinge, optimizer=AdaMax))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=hinge, optimizer=AdaGrad))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=hinge, optimizer=AdaDelta, learning_rate=1.))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=hinge, optimizer=RMSProp))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
 
@@ -76,7 +99,9 @@ def test_solve_primal_l1_svc_with_proximal_bundle():
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
     svc = OVR(PrimalSVC(loss=hinge, optimizer=ProximalBundle))
     svc = svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.60
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
+    assert svc.score(X_test, y_test) >= 0.57
 
 
 def test_solve_dual_l1_svc_with_smo():
@@ -207,18 +232,26 @@ def test_solve_primal_l2_svc_with_line_search_optimizers():
 
     svc = OVR(PrimalSVC(loss=squared_hinge, optimizer=SteepestGradientDescent))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=squared_hinge, optimizer=ConjugateGradient))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=squared_hinge, optimizer=Newton))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=squared_hinge, optimizer=BFGS))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
 
@@ -229,30 +262,44 @@ def test_solve_primal_l2_svc_with_stochastic_optimizers():
 
     svc = OVR(PrimalSVC(loss=squared_hinge, optimizer=StochasticGradientDescent))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=squared_hinge, optimizer=Adam))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=squared_hinge, optimizer=AMSGrad))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=squared_hinge, optimizer=AdaMax))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=squared_hinge, optimizer=AdaGrad))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=squared_hinge, optimizer=AdaDelta, learning_rate=1.))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(PrimalSVC(loss=squared_hinge, optimizer=RMSProp))
     svc = svc.fit(X_train, y_train)
+    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
+            for estimator in svc.estimators_)
     assert svc.score(X_test, y_test) >= 0.57
 
 
