@@ -11,7 +11,7 @@ from optiml.ml.neural_network.losses import mean_squared_error, mean_absolute_er
 from optiml.ml.neural_network.regularizers import L2
 from optiml.opti.unconstrained import ProximalBundle
 from optiml.opti.unconstrained.line_search import Newton
-from optiml.opti.unconstrained.stochastic import Adam
+from optiml.opti.unconstrained.stochastic import Adam, StochasticGradientDescent
 
 
 def test_perceptron_regressor_with_line_search_optimizer():
@@ -38,8 +38,8 @@ def test_l2_neural_network_regressor_with_stochastic_optimizer():
     net = NeuralNetworkRegressor((FullyConnected(13, 13, sigmoid),
                                   FullyConnected(13, 13, sigmoid),
                                   FullyConnected(13, 1, linear)),
-                                 loss=mean_squared_error, optimizer=Adam, learning_rate=0.02,
-                                 momentum=0.4, momentum_type='nesterov')
+                                 loss=mean_squared_error, optimizer=StochasticGradientDescent,
+                                 learning_rate=0.01, momentum_type='nesterov', momentum=0.9)
     net.fit(X_train, y_train)
     assert net.score(X_test, y_test) >= 0.83
 
