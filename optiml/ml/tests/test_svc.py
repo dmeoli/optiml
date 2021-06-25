@@ -118,11 +118,11 @@ def test_solve_dual_l1_svc_with_cvxopt():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
 
-    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer='cvxopt', reg_intercept=True))
+    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, reg_intercept=True, optimizer='cvxopt'))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer='cvxopt', reg_intercept=False))
+    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, reg_intercept=False, optimizer='cvxopt'))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
@@ -132,19 +132,19 @@ def test_solve_dual_l1_svc_with_reg_intercept_with_bcqp_optimizers():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
 
-    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer=ProjectedGradient, reg_intercept=True))
+    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, reg_intercept=True, optimizer=ProjectedGradient))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer=ActiveSet, reg_intercept=True))
+    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, reg_intercept=True, optimizer=ActiveSet))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer=InteriorPoint, reg_intercept=True))
+    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, reg_intercept=True, optimizer=InteriorPoint))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer=FrankWolfe, reg_intercept=True))
+    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, reg_intercept=True, optimizer=FrankWolfe))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
@@ -154,11 +154,11 @@ def test_solve_dual_l1_svc_with_proximal_bundle():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
 
-    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer=ProximalBundle, max_iter=150, reg_intercept=True))
+    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, reg_intercept=True, optimizer=ProximalBundle, max_iter=150))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer=ProximalBundle, max_iter=150, reg_intercept=False))
+    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, reg_intercept=False, optimizer=ProximalBundle, max_iter=150))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
@@ -168,11 +168,11 @@ def test_solve_dual_l1_svc_with_AdaGrad():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
 
-    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer=AdaGrad, reg_intercept=True))
+    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, reg_intercept=True, optimizer=AdaGrad))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, optimizer=AdaGrad, reg_intercept=False))
+    svc = OVR(DualSVC(loss=hinge, kernel=gaussian, reg_intercept=False, optimizer=AdaGrad))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
@@ -260,11 +260,11 @@ def test_solve_dual_l2_svc_with_cvxopt():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
 
-    svc = OVR(DualSVC(loss=squared_hinge, kernel=gaussian, optimizer='cvxopt', reg_intercept=True))
+    svc = OVR(DualSVC(loss=squared_hinge, kernel=gaussian, reg_intercept=True, optimizer='cvxopt'))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OVR(DualSVC(loss=squared_hinge, kernel=gaussian, optimizer='cvxopt', reg_intercept=False))
+    svc = OVR(DualSVC(loss=squared_hinge, kernel=gaussian, reg_intercept=False, optimizer='cvxopt'))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
@@ -274,11 +274,11 @@ def test_solve_dual_l2_svc_with_AdaGrad():
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
 
-    svc = OVR(DualSVC(loss=squared_hinge, kernel=gaussian, optimizer=AdaGrad, reg_intercept=True))
+    svc = OVR(DualSVC(loss=squared_hinge, kernel=gaussian, reg_intercept=True, optimizer=AdaGrad))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
-    svc = OVR(DualSVC(loss=squared_hinge, kernel=gaussian, optimizer=AdaGrad, reg_intercept=False))
+    svc = OVR(DualSVC(loss=squared_hinge, kernel=gaussian, reg_intercept=False, optimizer=AdaGrad))
     svc = svc.fit(X_train, y_train)
     assert svc.score(X_test, y_test) >= 0.97
 
