@@ -36,7 +36,6 @@ def test_l2_neural_network_regressor_with_stochastic_optimizer():
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
     net = NeuralNetworkRegressor((FullyConnected(13, 13, sigmoid),
-                                  FullyConnected(13, 13, sigmoid),
                                   FullyConnected(13, 1, linear)),
                                  loss=mean_squared_error, optimizer=StochasticGradientDescent,
                                  learning_rate=0.01, momentum_type='nesterov', momentum=0.9)
@@ -49,7 +48,6 @@ def test_l1_neural_network_regressor_with_proximal_bundle():
     X_scaled = StandardScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
     net = NeuralNetworkRegressor((FullyConnected(13, 13, relu),
-                                  FullyConnected(13, 13, relu),
                                   FullyConnected(13, 1, linear)),
                                  loss=mean_absolute_error, optimizer=ProximalBundle, max_iter=150)
     net.fit(X_train, y_train)
