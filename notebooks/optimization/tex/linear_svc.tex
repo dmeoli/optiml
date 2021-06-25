@@ -140,7 +140,7 @@ In the specific case of the $\mathcal{L}_1$-SVC the objective~\eqref{eq:primal_l
 
 Note that in terms of numerical optimization the formulation~\eqref{eq:primal_l1_svc} is not equivalent to~\eqref{eq:reg_bias_primal_l1_svc} since in the first one the bias term $b$ does not contribute to the \emph{regularization term}, so the SVM formulation is based on an unregularized bias term $b$, as highlighted by the \emph{statistical learning theory}. But, in machine learning sense, numerical experiments in~\cite{hsu2002simple} show that the accuracy does not vary much when the bias term $b$ is embedded into the weight vector $w$.
 
-\subsubsection{Wolfe Dual formulation}
+\subsubsection{Wolfe dual formulation}
 
 To reformulate the~\eqref{eq:quad_svc_obj} as a \emph{Wolfe dual}, we need to allocate the Lagrange multipliers $\alpha_i, \mu_i \geq 0 \ \forall_i$:
 
@@ -230,7 +230,7 @@ From~\eqref{eq:svc_min_wolfe_dual} we can notice that the equality constraint $y
     \end{aligned}
 \end{equation}
 
-\subsubsection{Lagrangian Dual formulation}
+\subsubsection{Lagrangian dual formulation}
 
 In order to relax the constraints in the \emph{Wolfe dual} formulation~\eqref{eq:svc_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu$ and $\lambda_+, \lambda_- \geq 0$:
 
@@ -384,7 +384,7 @@ where $\hat{G} =
 
 \pagebreak
 
-\subsection{Squared Hinge loss}
+\subsection{Squared hinge loss}
 
 The \emph{squared hinge} loss is defined as:
 
@@ -431,11 +431,11 @@ The $\mathcal{L}_2$-SVC objective~\eqref{eq:primal_l2_svc} can be rewritten in f
 \begin{figure}[h!]
 	\centering
   	\includegraphics[scale=0.4]{img/l2_svc_loss}
-  	\caption{Squared Hinge loss with different optimization steps}
+  	\caption{Squared hinge loss with different optimization steps}
   	\label{fig:l2_svc_loss}
 \end{figure}
 
-\subsubsection{Wolfe Dual formulation}
+\subsubsection{Wolfe dual formulation}
 
 As done for the $\mathcal{L}_1$-SVC we can derive the \emph{Wolfe dual} formulation of the $\mathcal{L}_2$-SVC by obtaining:
 
@@ -457,7 +457,7 @@ or, alternatively, with the regularized bias term by obtaining:
 
 where the diagonal matrix $\displaystyle D_{ii} = \frac{1}{2C} \ \forall_i$.
 
-\subsubsection{Lagrangian Dual formulation}
+\subsubsection{Lagrangian dual formulation}
 
 In order to relax the constraints in the $\mathcal{L}_2$-SVC \emph{Wolfe dual} formulation~\eqref{eq:wolfe_dual_l2_svc} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu$ and $\lambda \geq 0$:
 

@@ -172,7 +172,7 @@ Note that since $f$ is convex and its epigraph is a closed convex set, $f^* = f$
 
 \pagebreak
 
-\subsection{Gradient Descent for Primal formulations}
+\subsection{Gradient Descent for primal formulations}
 
 The Gradient Descent algorithm is the simplest \emph{first-order optimization} method that exploits the orthogonality of the gradient wrt the level sets to take a descent direction. In particular, it performs the following iterations:
 
@@ -468,7 +468,7 @@ Note that in case of L-Lipschitz continuous and strongly convex functions, Neste
 
 \pagebreak
 
-\subsection{Sequential Minimal Optimization for Wolfe Dual formulations}
+\subsection{Sequential Minimal Optimization for Wolfe dual formulations}
 
 The \emph{Sequential Minimal Optimization (SMO)}~\cite{platt1998sequential} method is the most popular approach for solving the SVM QP problem without any extra $Q$ matrix storage required by common QP methods. The advantage of SMO lies in the fact that it performs a series of two-point optimizations since we deal with just one equality constraint, so the Lagrange multipliers can be solved analitically.
 
@@ -893,7 +893,7 @@ The improvements described in~\cite{keerthi2001improvements, shevade1999improvem
 
 \pagebreak
 
-\subsection{AdaGrad for Lagrangian Dual formulations}
+\subsection{AdaGrad for Lagrangian dual formulations}
 
 Due to the sparsity of the weight vector of the \emph{Lagrangian dual}, i.e., the Lagrange multipliers, we might end up in a situation where some components of the gradient are very small and others large. This, in terms of \emph{conditioning number}, i.e., $\kappa = L/\mu \gg 1$, means that the level sets of $f$ are ellipsoid, i.e., we are dealing with an ill-conditioned problem. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
 

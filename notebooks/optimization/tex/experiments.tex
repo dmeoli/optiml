@@ -1,12 +1,12 @@
 \section{Experiments}
 
-The following experiments refer to \emph{linearly} and \emph{nonlinearly} separable generated datasets of size 100. All the training times refer to running on a laptop with an Intel i7-6700HQ (8) @ 3.500GHz and 31.2 GB of memory.
+The following experiments refer to \emph{linearly} and \emph{nonlinearly} separable generated datasets of 100 training examples. All the training times refer to running on a laptop with an Intel i7-6700HQ (8) @ 3.500GHz and 31.2 GB of memory.
 
 The Python source code is available at: \href{https://github.com/dmeoli/optiml}{\texttt{github.com/dmeoli/optiml}}.
 
 \subsection{Support Vector Classifier}
 
-Below experiments are about the SVC for which I tested different values for the regularization hyperparameter $C$, i.e., from \emph{soft} to \emph{hard margin}, and in case of nonlinearly separable data also different \emph{kernel functions} mentioned above.
+Below experiments are about the SVC for which has been tested different values for the regularization hyperparameter $C$, i.e., from \emph{soft} to \emph{hard margin}, and in case of nonlinearly separable data also different \emph{kernel functions} mentioned above.
 
 The experiments about SVCs are available at: \\ \href{https://github.com/dmeoli/optiml/blob/master/notebooks/optimization/CM_SVC_report_experiments.ipynb}{\texttt{github.com/dmeoli/optiml/blob/master/notebooks/optimization/CM\_SVC\_report\_experiments.ipynb}}.
 
@@ -18,47 +18,39 @@ The experiments results shown in~\ref{primal_l1_svc_cv_results} referred to \emp
 
 \input{experiments/primal_l1_svc}
 
-The results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{accuracy} score. More training data points are selected as \emph{support vectors} from the SGD solver but it always requires lower iterations, i.e., epochs, to achieve the same \emph{numerical precision}. \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
-
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/l1_svc_loss_history}
-	\caption{SGD Convergence for the Primal formulation of the $\protect \mathcal{L}_1$-SVC}
+	\caption{SGD convergence for the primal formulation of the $\protect \mathcal{L}_1$-SVC}
 	\label{fig:l1_svc_history}
 \end{figure}
 
-\paragraph{Linear Dual formulations}
+\paragraph{Linear dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the augmented dual formulations~\eqref{eq:l1_svc_aug_lagrangian_dual} and~\eqref{eq:l1_svc_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{linear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l1_svc_aug_lagrangian_dual} and~\eqref{eq:l1_svc_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/linear_dual_l1_svc}
 
-For what about the linear \emph{Wolfe dual} formulation we can immediately notice as higher \emph{regularization hyperparameter} $C$ makes the model harder, so the \emph{custom} implementation of the SMO algorithm and also the \emph{sklearn} implementation, i.e., \emph{libsvm}~\cite{chang2011libsvm} implementation, needs to perform more iterations to achieve the same \emph{numerical precision}; meanwhile the \emph{cvxopt}~\cite{vandenberghe2010cvxopt} seems to be insensitive to the increasing complexity of the model. The results in terms of \emph{accuracy} and number of \emph{support vectors} are strongly similar to each others.
-
 \input{experiments/linear_lagrangian_dual_l1_svc}
 
-For what about the linear \emph{Lagrangian dual} formulation we can see as it seems to be insensitive to the increasing complexity of the model in terms of number of \emph{iterations} but it tends to select many training data points as \emph{support vectors}.
+\paragraph{Nonlinear dual formulations}
 
-\paragraph{Nonlinear Dual formulations}
-
-The experiments results shown in~\ref{nonlinear_dual_l1_svc_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the augmented dual formulations~\eqref{eq:l1_svc_aug_lagrangian_dual} and~\eqref{eq:l1_svc_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{nonlinear_dual_l1_svc_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l1_svc_aug_lagrangian_dual} and~\eqref{eq:l1_svc_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/nonlinear_dual_l1_svc}
 
 \input{experiments/nonlinear_lagrangian_dual_l1_svc}
 
-The same considerations made for the previous linear \emph{Wolfe dual} and \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting the complexity of the model coming with higher $C$ regularization values seems to be not paying a tradeoff in terms of the number of \emph{iterations} of the algorithm and, moreover, the \emph{reg\_bias Lagrangian dual} formulation seems to perform better wrt the \emph{unreg\_bias} formulation, both tends to select even more training data points as \emph{support vectors}.
-
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/lagrangian_dual_l1_svc_loss_history}
-	\caption{AdaGrad convergence for the Lagrangian Dual formulation of the nonlinear $\protect \mathcal{L}_1$-SVC}
+	\caption{AdaGrad convergence for the Lagrangian dual formulation of the $\protect \mathcal{L}_1$-SVC}
 	\label{fig:lagrangian_dual_l1_svc_loss_history}
 \end{figure}
 
 \pagebreak
 
-\subsubsection{Squared Hinge loss}
+\subsubsection{Squared hinge loss}
 
 \paragraph{Primal formulation}
 
@@ -66,37 +58,31 @@ The experiments results shown in~\ref{primal_l2_svc_cv_results} referred to \emp
 
 \input{experiments/primal_l2_svc}
 
-Again, the results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{accuracy} score. More training data points are selected as \emph{support vectors} from the SGD solver but it always requires even lower iterations, i.e., epochs, to achieve the same \emph{numerical precision}. \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
-
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/l2_svc_loss_history}
-	\caption{SGD convergence for the Primal formulation of the $\protect \mathcal{L}_2$-SVC}
+	\caption{SGD convergence for the primal formulation of the $\protect \mathcal{L}_2$-SVC}
 	\label{fig:l2_svc_loss_history}
 \end{figure}
 
 \pagebreak
 
-\paragraph{Linear Dual formulations}
+\paragraph{Linear dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_l2_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the augmented dual formulations~\eqref{eq:l2_svc_aug_lagrangian_dual} and~\eqref{eq:l2_svc_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{linear_lagrangian_dual_l2_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l2_svc_aug_lagrangian_dual} and~\eqref{eq:l2_svc_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/linear_lagrangian_dual_l2_svc}
 
-For what about the linear \emph{Lagrangian dual} formulation we can see as it seems to be insensitive to the increasing complexity of the model in terms of number of \emph{iterations} but it tends to select many training data points as \emph{support vectors}.
+\paragraph{Nonlinear dual formulations}
 
-\paragraph{Nonlinear Dual formulations}
-
-The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the augmented dual formulations~\eqref{eq:l2_svc_aug_lagrangian_dual} and~\eqref{eq:l2_svc_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l2_svc_aug_lagrangian_dual} and~\eqref{eq:l2_svc_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/nonlinear_lagrangian_dual_l2_svc}
-
-The same considerations made for the previous linear \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting the complexity of the model coming with higher $C$ regularization values seems to be not paying a tradeoff in terms of the number of \emph{iterations} of the algorithm and, moreover, the \emph{reg\_bias Lagrangian dual} formulation seems to perform better wrt the \emph{unreg\_bias} formulation, both tends to select even more training data points as \emph{support vectors}.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/lagrangian_dual_l2_svc_loss_history}
-	\caption{AdaGrad convergence for the Lagrangian Dual formulation of the nonlinear $\protect \mathcal{L}_2$-SVC}
+	\caption{AdaGrad convergence for the Lagrangian dual formulation of the $\protect \mathcal{L}_2$-SVC}
 	\label{fig:lagrangian_dual_l2_svc_loss_history}
 \end{figure}
 
@@ -104,7 +90,7 @@ The same considerations made for the previous linear \emph{Lagrangian dual} form
 
 \subsection{Support Vector Regression}
 
-Below experiments are about the SVR for which I tested different values for regularization hyperparameter $C$, i.e., from \emph{soft} to \emph{hard margin}, the $\epsilon$ penalty value and in case of nonlinearly separable data also different \emph{kernel functions} mentioned above.
+Below experiments are about the SVR for which has been tested different values for regularization hyperparameter $C$, i.e., from \emph{soft} to \emph{hard margin}, the $\epsilon$ penalty value and in case of nonlinearly separable data also different \emph{kernel functions} mentioned above.
 
 The experiments about SVRs are available at: \\ \href{https://github.com/dmeoli/optiml/blob/master/notebooks/optimization/CM_SVR_report_experiments.ipynb}{\texttt{github.com/dmeoli/optiml/blob/master/notebooks/optimization/CM\_SVR\_report\_experiments.ipynb}}.
 
@@ -116,63 +102,55 @@ The experiments results shown in~\ref{primal_l1_svr_cv_results} referred to \emp
 
 \input{experiments/primal_l1_svr}
 
-The results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{r2} score, except in case of $C$ regularization hyperparameter equals to 1 for which those of SGD are lower. Moreover, the SGD solver always requires lower iterations, i.e., epochs, for higher $C$ regularization values, i.e., for $C$ equals to 10 or 100, to achieve the same \emph{numerical precision}. Again, \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate. The results in terms of \emph{support vectors} are strongly similar to each others.
-
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.5]{img/l1_svr_loss_history}
-	\caption{SGD convergence for the Primal formulation of the $\protect \mathcal{L}_1$-SVR}
+	\caption{SGD convergence for the primal formulation of the $\protect \mathcal{L}_1$-SVR}
 	\label{fig:l1_svr_loss_history}
 \end{figure}
 
 \pagebreak
 
-\paragraph{Linear Dual formulations}
+\paragraph{Linear dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_l1_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the augmented dual formulations~\eqref{eq:l1_svr_aug_lagrangian_dual} and~\eqref{eq:l1_svr_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{linear_lagrangian_dual_l1_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l1_svr_aug_lagrangian_dual} and~\eqref{eq:l1_svr_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/linear_dual_l1_svr}
 
-For what about the linear \emph{Wolfe dual} formulation we can immediately notice as higher \emph{regularization hyperparameter} $C$ and lower $\epsilon$ values makes the model harder, so the \emph{custom} implementation of the SMO algorithm and also the \emph{sklearn} implementation, i.e., \emph{libsvm}~\cite{chang2011libsvm} implementation, needs to perform more iterations to achieve the same \emph{numerical precision}; meanwhile, again, the \emph{cvxopt}~\cite{vandenberghe2010cvxopt} seems to be insensitive to the increasing complexity of the model. The results in terms of \emph{r2} and number of \emph{support vectors} are strongly similar to each others.
-
 \input{experiments/linear_lagrangian_dual_l1_svr}
-
-For what about the linear \emph{Lagrangian dual} formulation we can see as it seems to be insensitive to the increasing complexity of the model in terms of number of \emph{iterations} and require many \emph{iterations} wrt the \emph{Wolfe dual} formulation.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/linear_lagrangian_dual_l1_svr_loss_history}
-	\caption{AdaGrad convergence for the Lagrangian Dual formulation of the linear $\protect \mathcal{L}_1$-SVR}
+	\caption{AdaGrad convergence for the Lagrangian dual formulation of the linear $\protect \mathcal{L}_1$-SVR}
 	\label{fig:linear_lagrangian_dual_l1_svr_loss_history}
 \end{figure}
 
-\paragraph{Nonlinear Dual formulations}
+\paragraph{Nonlinear dual formulations}
 
-The experiments results shown in~\ref{nonlinear_dual_l1_svr_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{gaussian} and \emph{laplacian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the augmented dual formulations~\eqref{eq:l1_svr_aug_lagrangian_dual} and~\eqref{eq:l1_svr_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{nonlinear_dual_l1_svr_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{gaussian} and \emph{laplacian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l1_svr_aug_lagrangian_dual} and~\eqref{eq:l1_svr_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/nonlinear_dual_l1_svr}
 
 \input{experiments/nonlinear_lagrangian_dual_l1_svr}
 
-The same considerations made for the previous linear \emph{Wolfe dual} and \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting, the complexity of the model coming with higher $C$ regularization hyperparameters and lower $\epsilon$ values pays a larger tradeoff in terms of the number of \emph{iterations} of the algorithm.
-
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/laplacian_lagrangian_dual_l1_svr_loss_history}
-	\caption{AdaGrad convergence for the Lagrangian Dual formulation of the Laplacian $\protect \mathcal{L}_1$-SVR}
+	\caption{AdaGrad convergence for the Lagrangian dual formulation of the Laplacian $\protect \mathcal{L}_1$-SVR}
 	\label{fig:laplacian_lagrangian_dual_l1_svr_loss_history}
 \end{figure}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/gaussian_lagrangian_dual_l1_svr_loss_history}
-	\caption{AdaGrad convergence for the Lagrangian Dual formulation of the Gaussian $\protect \mathcal{L}_1$-SVR}
+	\caption{AdaGrad convergence for the Lagrangian dual formulation of the Gaussian $\protect \mathcal{L}_1$-SVR}
 	\label{fig:gaussian_lagrangian_dual_l1_svr_loss_history}
 \end{figure}
 
 \pagebreak
 
-\subsubsection{Squared Epsilon-insensitive loss}
+\subsubsection{Squared epsilon-insensitive loss}
 
 \paragraph{Primal formulation}
 
@@ -180,50 +158,44 @@ The experiments results shown in~\ref{primal_l2_svr_cv_results} referred to \emp
 
 \input{experiments/primal_l2_svr}
 
-Again, the results provided from the \emph{custom} implementation, i.e., the SGD with different momentum settings, are strongly similar to those of \emph{sklearn} implementation, i.e., \emph{liblinear}~\cite{fan2008liblinear} implementation, in terms of \emph{r2} score. SGD solver always requires even lower iterations, i.e., epochs, for higher $C$ regularization values, i.e., for $C$ equals to 10 or 100, to achieve the same \emph{numerical precision}. \emph{Polyak} and \emph{Nesterov} momentums always perform lower iterations as expected from the theoretical analysis of the convergence rate.
-
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.5]{img/l2_svr_loss_history}
-	\caption{SGD convergence for the Primal formulation of the $\protect \mathcal{L}_2$-SVR}
+	\caption{SGD convergence for the primal formulation of the $\protect \mathcal{L}_2$-SVR}
 	\label{fig:l2_svr_loss_history}
 \end{figure}
 
 \pagebreak
 
-\paragraph{Linear Dual formulations}
+\paragraph{Linear dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_l2_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the augmented dual formulations~\eqref{eq:l2_svr_aug_lagrangian_dual} and~\eqref{eq:l2_svr_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{linear_lagrangian_dual_l2_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l2_svr_aug_lagrangian_dual} and~\eqref{eq:l2_svr_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/linear_lagrangian_dual_l2_svr}
-
-For what about the linear \emph{Lagrangian dual} formulation we can see as it seems to be insensitive to the increasing complexity of the model in terms of number of \emph{iterations} and require many \emph{iterations} wrt the \emph{Wolfe dual} formulation.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/linear_lagrangian_dual_l2_svr_loss_history}
-	\caption{AdaGrad convergence for the Lagrangian Dual formulation of the linear $\protect \mathcal{L}_2$-SVR}
+	\caption{AdaGrad convergence for the Lagrangian dual formulation of the linear $\protect \mathcal{L}_2$-SVR}
 	\label{fig:linear_lagrangian_dual_l2_svr_loss_history}
 \end{figure}
 
-\paragraph{Nonlinear Dual formulations}
+\paragraph{Nonlinear dual formulations}
 
-The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{gaussian} and \emph{laplacian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the augmented dual formulations~\eqref{eq:l2_svr_aug_lagrangian_dual} and~\eqref{eq:l2_svr_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{gaussian} and \emph{laplacian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l2_svr_aug_lagrangian_dual} and~\eqref{eq:l2_svr_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/nonlinear_lagrangian_dual_l2_svr}
-
-The same considerations made for the previous linear \emph{Lagrangian dual} formulations are confirmed also in the nonlinearly separable case. In this setting, the complexity of the model coming with higher $C$ regularization hyperparameters and lower $\epsilon$ values pays a larger tradeoff in terms of the number of \emph{iterations} of the algorithm.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/laplacian_lagrangian_dual_l2_svr_loss_history}
-	\caption{AdaGrad convergence for the Lagrangian Dual formulation of the Laplacian $\protect \mathcal{L}_2$-SVR}
+	\caption{AdaGrad convergence for the Lagrangian dual formulation of the Laplacian $\protect \mathcal{L}_2$-SVR}
 	\label{fig:laplacian_lagrangian_dual_l2_svr_loss_history}
 \end{figure}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/gaussian_lagrangian_dual_l2_svr_loss_history}
-	\caption{AdaGrad convergence for the Lagrangian Dual formulation of the Gaussian $\protect \mathcal{L}_2$-SVR}
+	\caption{AdaGrad convergence for the Lagrangian dual formulation of the Gaussian $\protect \mathcal{L}_2$-SVR}
 	\label{fig:gaussian_lagrangian_dual_l2_svr_loss_history}
 \end{figure}

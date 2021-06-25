@@ -91,7 +91,7 @@ The $\mathcal{L}_1$-SVR objective~\eqref{eq:primal_l1_svr} can be rewritten in f
   	\label{fig:l1_svr_loss}
 \end{figure}
 
-\subsubsection{Wolfe Dual formulation}
+\subsubsection{Wolfe dual formulation}
 
 To reformulate the~\eqref{eq:quad_svr_obj} as a \emph{Wolfe dual}, we introduce the Lagrange multipliers $\alpha_i^+, \alpha_i^-, \mu_i^+, \mu_i^- \geq 0 \ \forall_i$:
 
@@ -195,7 +195,7 @@ From~\eqref{eq:svr_min_qp_wolfe_dual} we can notice that the equality constraint
     \end{aligned}
 \end{equation}
 
-\subsubsection{Lagrangian Dual formulation}
+\subsubsection{Lagrangian dual formulation}
 
 In order to relax the constraints in the \emph{Wolfe dual} formulation~\eqref{eq:svr_min_wolfe_dual} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu$ and $\lambda_+, \lambda_- \geq 0$:
 
@@ -349,7 +349,7 @@ where $\hat{G} =
 
 \pagebreak
 
-\subsection{Squared Epsilon-insensitive loss}
+\subsection{Squared epsilon-insensitive loss}
 
 The \emph{squared epsilon-insensitive} loss is defined as:
 
@@ -398,11 +398,11 @@ The $\mathcal{L}_2$-SVR objective~\eqref{eq:primal_l2_svr} can be rewritten in f
 \begin{figure}[h!]
 	\centering
   	\includegraphics[scale=0.4]{img/l2_svr_loss}
-  	\caption{Squared Epsilon-insensitive loss with different optimization steps}
+  	\caption{Squared epsilon-insensitive loss with different optimization steps}
   	\label{fig:l2_svr_loss}
 \end{figure}
 
-\subsubsection{Wolfe Dual formulation}
+\subsubsection{Wolfe dual formulation}
 
 As done for the $\mathcal{L}_1$-SVR we can derive the \emph{Wolfe dual} formulation of the $\mathcal{L}_2$-SVR by obtaining:
 
@@ -424,7 +424,7 @@ or, alternatively, with the regularized bias term by obtaining:
 
 where the diagonal matrix $\displaystyle D_{ii} = \frac{1}{2C} \ \forall_i$.
 
-\subsubsection{Lagrangian Dual formulation}
+\subsubsection{Lagrangian dual formulation}
 
 In order to relax the constraints in the $\mathcal{L}_2$-SVR \emph{Wolfe dual} formulation~\eqref{eq:wolfe_dual_l2_svr} we define the problem as a \emph{Lagrangian dual} relaxation by embedding them into objective function, so we need to allocate the Lagrange multipliers $\mu$ and $\lambda \geq 0$:
 
