@@ -4,11 +4,24 @@ For what about the SVM formulations, it is known, in general, that the \emph{pri
 
 \bigskip
 
-From all these experiments we can see as all the \emph{custom} implementations underperforms all the others, i.e., both \emph{cvxopt}~\cite{vandenberghe2010cvxopt} and \emph{sklearn} implementations, i.e., \emph{liblinear}~\cite{fan2008liblinear} and \emph{libsvm}~\cite{chang2011libsvm} implementations, in terms of \emph{time} obviously due to the different core implementation languages, i.e., Python and C respectively.
+The actual \emph{convergence rates} of the \emph{primal} $\protect \mathcal{L}_1$-SVM formulations, i.e., the figures~\ref{fig:l1_svc_loss_history} and~\ref{fig:l1_svr_loss_history}, shows as they do not meet the theoretical expectations at the first line of the table~\ref{primal_svm_objectives_rates}. In fact, both the \emph{Polyak} and the \emph{Nesterov} momentums provide a significant accelleration wrt the vanilla \emph{SGD} and they are quite comparable.
 
-In the \emph{primal} formulations the \emph{liblinear}~\cite{fan2008liblinear} implementation uses an optimization method called \emph{Coordinate Gradient Descent} which minimizes one coordinate at a time.
+Conversely, the actual \emph{convergence rates} of the \emph{primal} $\protect \mathcal{L}_2$-SVM formulations, i.e., the figures~\ref{fig:l2_svc_loss_history} and~\ref{fig:l2_svr_loss_history}, shows as they do in part meet the theoretical expectations at the second line of the table~\ref{primal_svm_objectives_rates}. In fact, despite the \emph{Nesterov} momentum provide a significant accelleration wrt the vanilla \emph{SGD} as expected, also the \emph{Polyak} momentm provide a quite comparable accelleration only reserved for the quadratic case according to the theoretical analysis.
 
-Meanwhile, for what about the \emph{Wolfe dual} formulations we can notice as \emph{cvxopt}~\cite{vandenberghe2010cvxopt} underperforms the \emph{sklearn} implementation, i.e., \emph{libsvm}~\cite{chang2011libsvm} implementation, in terms of \emph{time} since it is a general-purpose QP solver and it does not exploit the structure of the problem, as SMO does. An interesting consideration can be made about the number of \emph{iterations} of \emph{custom} SMO implementation wrt that in \emph{libsvm} which seems to be always lower thanks to the improvements described in~\cite{keerthi2001improvements, shevade1999improvements} for classification and regression respectively.
+In general, the complexity of the \emph{primal formulations} is dominated by the regularization parameter $C$: higher values allow the algorithms to converge faster.
 
-Finally, in the \emph{Lagrangian dual} formulations, we can see as fitting the intercept in an explicit way, i.e., by adding Lagrange multipliers to control the equality constraint always get lower scores wrt the \emph{Lagrangian dual} of the same problem with the bias term embedded into the weight matrix.
+\bigskip
 
+The actual \emph{convergence rates} of the \emph{Lagrangian dual} formulations shows as they do not meet the theoretical expectations in the table~\ref{dual_svm_objectives_props}. The different \emph{convergence rate} is more highlighted in the linear case for lower regularization parameters $C$ but the situation is reversed as the latter grows. In the nonlinear settings, it depends on the kernel function, e.g., in the \emph{polynomial} case the convergence can become pathologically slower, meanwhile in the \emph{gaussian} or \emph{laplacian} case often it is better.
+
+Moreover, from all the actual \emph{convergence rates} of the \emph{Lagrangian dual} formulations, it is evident that fitting the bias in an explicit way, i.e., by adding Lagrange multipliers to control the equality constraint, always causes slower converge of the \emph{AdaGrad} algorithm wrt the \emph{Lagrangian dual} of the problem where the bias term embedded into the Hessian matrix.
+
+Unlike the \emph{primal formulations}, in the \emph{Lagrangian dual} case the complexity grows with the $C$ regularization parameter.
+
+\bigskip
+
+In general all the \emph{custom} implementations underperforms the others, i.e., both \emph{cvxopt}~\cite{vandenberghe2010cvxopt} and \emph{sklearn} implementations, i.e., \emph{liblinear}~\cite{fan2008liblinear} and \emph{libsvm}~\cite{chang2011libsvm} implementations, in terms of \emph{time} obviously in part due to the different core implementation languages, i.e., Python versus C. 
+
+Moreover, in the \emph{primal} formulations the \emph{liblinear}~\cite{fan2008liblinear} implementation uses an optimization method called \emph{Coordinate Gradient Descent} which minimizes one coordinate at a time.
+
+Meanwhile, for what about the \emph{Wolfe dual} formulations we can notice as \emph{cvxopt}~\cite{vandenberghe2010cvxopt} underperforms the \emph{sklearn} implementation, i.e., \emph{libsvm}~\cite{chang2011libsvm} implementation, in terms of \emph{time} since it is a general-purpose QP solver and it does not exploit the structure of the problem, as the SMO algorithm does. But in terms of \emph{number of iterations} of \emph{custom} SMO implementation wrt that in \emph{libsvm} which seems to be always lower thanks to the improvements described in~\cite{keerthi2001improvements, shevade1999improvements} for classification and regression respectively.

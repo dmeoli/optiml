@@ -22,12 +22,12 @@ The experiments results shown in~\ref{primal_l1_svc_cv_results} referred to \emp
 	\centering
 	\includegraphics[scale=0.55]{img/l1_svc_loss_history}
 	\caption{SGD convergence for the primal formulation of the $\protect \mathcal{L}_1$-SVC}
-	\label{fig:l1_svc_history}
+	\label{fig:l1_svc_loss_history}
 \end{figure}
 
 \paragraph{Linear dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l1_svc_aug_lagrangian_dual} and~\eqref{eq:l1_svc_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{linear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{Lagrangian dual} formulations~\eqref{eq:l1_svc_aug_lagrangian_dual} and~\eqref{eq:l1_svc_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/linear_dual_l1_svc}
 
@@ -35,7 +35,7 @@ The experiments results shown in~\ref{linear_lagrangian_dual_l1_svc_cv_results} 
 
 \paragraph{Nonlinear dual formulations}
 
-The experiments results shown in~\ref{nonlinear_dual_l1_svc_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l1_svc_aug_lagrangian_dual} and~\eqref{eq:l1_svc_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{nonlinear_dual_l1_svc_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{Lagrangian dual} formulations~\eqref{eq:l1_svc_aug_lagrangian_dual} and~\eqref{eq:l1_svc_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/nonlinear_dual_l1_svc}
 
@@ -69,13 +69,13 @@ The experiments results shown in~\ref{primal_l2_svc_cv_results} referred to \emp
 
 \paragraph{Linear dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_l2_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l2_svc_aug_lagrangian_dual} and~\eqref{eq:l2_svc_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{linear_lagrangian_dual_l2_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{Lagrangian dual} formulations~\eqref{eq:l2_svc_aug_lagrangian_dual} and~\eqref{eq:l2_svc_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/linear_lagrangian_dual_l2_svc}
 
 \paragraph{Nonlinear dual formulations}
 
-The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l2_svc_aug_lagrangian_dual} and~\eqref{eq:l2_svc_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svc_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters equal to 3 and 1 respectively for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{polynomial} and \emph{gaussian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{Lagrangian dual} formulations~\eqref{eq:l2_svc_aug_lagrangian_dual} and~\eqref{eq:l2_svc_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/nonlinear_lagrangian_dual_l2_svc}
 
@@ -113,7 +113,7 @@ The experiments results shown in~\ref{primal_l1_svr_cv_results} referred to \emp
 
 \paragraph{Linear dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_l1_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l1_svr_aug_lagrangian_dual} and~\eqref{eq:l1_svr_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{linear_lagrangian_dual_l1_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{Lagrangian dual} formulations~\eqref{eq:l1_svr_aug_lagrangian_dual} and~\eqref{eq:l1_svr_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/linear_dual_l1_svr}
 
@@ -128,7 +128,7 @@ The experiments results shown in~\ref{linear_lagrangian_dual_l1_svr_cv_results} 
 
 \paragraph{Nonlinear dual formulations}
 
-The experiments results shown in~\ref{nonlinear_dual_l1_svr_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{gaussian} and \emph{laplacian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l1_svr_aug_lagrangian_dual} and~\eqref{eq:l1_svr_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{nonlinear_dual_l1_svr_cv_results} and~\ref{nonlinear_lagrangian_dual_l1_svr_cv_results} are obtained with \emph{gamma} setted to \emph{`scale`} for both \emph{gaussian} and \emph{laplacian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l1_svc_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{Lagrangian dual} formulations~\eqref{eq:l1_svr_aug_lagrangian_dual} and~\eqref{eq:l1_svr_bcqp_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/nonlinear_dual_l1_svr}
 
@@ -137,14 +137,14 @@ The experiments results shown in~\ref{nonlinear_dual_l1_svr_cv_results} and~\ref
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/laplacian_lagrangian_dual_l1_svr_loss_history}
-	\caption{AdaGrad convergence for the Lagrangian dual formulation of the Laplacian $\protect \mathcal{L}_1$-SVR}
+	\caption{AdaGrad convergence for the Lagrangian dual formulation of the laplacian $\protect \mathcal{L}_1$-SVR}
 	\label{fig:laplacian_lagrangian_dual_l1_svr_loss_history}
 \end{figure}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/gaussian_lagrangian_dual_l1_svr_loss_history}
-	\caption{AdaGrad convergence for the Lagrangian dual formulation of the Gaussian $\protect \mathcal{L}_1$-SVR}
+	\caption{AdaGrad convergence for the Lagrangian dual formulation of the gaussian $\protect \mathcal{L}_1$-SVR}
 	\label{fig:gaussian_lagrangian_dual_l1_svr_loss_history}
 \end{figure}
 
@@ -169,7 +169,7 @@ The experiments results shown in~\ref{primal_l2_svr_cv_results} referred to \emp
 
 \paragraph{Linear dual formulations}
 
-The experiments results shown in~\ref{linear_lagrangian_dual_l2_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l2_svr_aug_lagrangian_dual} and~\eqref{eq:l2_svr_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{linear_lagrangian_dual_l2_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{Lagrangian dual} formulations~\eqref{eq:l2_svr_aug_lagrangian_dual} and~\eqref{eq:l2_svr_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/linear_lagrangian_dual_l2_svr}
 
@@ -182,20 +182,20 @@ The experiments results shown in~\ref{linear_lagrangian_dual_l2_svr_cv_results} 
 
 \paragraph{Nonlinear dual formulations}
 
-The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svr_cv_results} are obtained with \emph{d} and \emph{r} hyperparameters both equal to 3 for the \emph{polynomial} kernel; \emph{gamma} is setted to \emph{`scale`} for both \emph{gaussian} and \emph{laplacian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{augmented Lagrangian dual} formulations~\eqref{eq:l2_svr_aug_lagrangian_dual} and~\eqref{eq:l2_svr_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
+The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svr_cv_results} are obtained with \emph{gamma} setted to \emph{`scale`} for both \emph{gaussian} and \emph{laplacian} kernels. The experiments results shown in~\ref{nonlinear_lagrangian_dual_l2_svr_cv_results} are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 1 for the \emph{AdaGrad} algorithm. Note that the \emph{unreg\_bias} and \emph{reg\_bias} duals refers to the \emph{Lagrangian dual} formulations~\eqref{eq:l2_svr_aug_lagrangian_dual} and~\eqref{eq:l2_svr_lb_aug_lagrangian_dual} respectively with $\rho$ equals to 1. The optimization process is stopped if the primal-dual weight vector does not change by at least $1\mathrm{e}{-6}$  between two consecutive iterations.
 
 \input{experiments/nonlinear_lagrangian_dual_l2_svr}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/laplacian_lagrangian_dual_l2_svr_loss_history}
-	\caption{AdaGrad convergence for the Lagrangian dual formulation of the Laplacian $\protect \mathcal{L}_2$-SVR}
+	\caption{AdaGrad convergence for the Lagrangian dual formulation of the laplacian $\protect \mathcal{L}_2$-SVR}
 	\label{fig:laplacian_lagrangian_dual_l2_svr_loss_history}
 \end{figure}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.55]{img/gaussian_lagrangian_dual_l2_svr_loss_history}
-	\caption{AdaGrad convergence for the Lagrangian dual formulation of the Gaussian $\protect \mathcal{L}_2$-SVR}
+	\caption{AdaGrad convergence for the Lagrangian dual formulation of the gaussian $\protect \mathcal{L}_2$-SVR}
 	\label{fig:gaussian_lagrangian_dual_l2_svr_loss_history}
 \end{figure}
