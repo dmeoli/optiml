@@ -366,7 +366,7 @@ In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calcul
 \begin{figure}[h!]
 	\centering
   	\includegraphics[scale=0.5]{img/momentum}
-  	\caption{Polyak's and Nesterov's Momentum}
+  	\caption{Polyak's and Nesterov's momentum}
   	\label{fig:momentum}
 \end{figure}
 
@@ -425,7 +425,7 @@ Leveraging the idea of momentum introduced by Polyak, Nesterov introduced a slig
 	\end{algorithmic}
 \end{algorithm}
 
-Comparing the algorithm~\ref{alg:pag} with the algorithm~\ref{alg:nag}, we can see that Polyak’s method evaluates the gradient before adding momentum, whereas Nesterov’s algorithm evaluates it after applying momentum, which intuitively brings us closer to the minimum $x^*$, as showb in figure~\ref{fig:momentum}.
+Comparing the algorithm~\ref{alg:pag} with the algorithm~\ref{alg:nag}, we can see that Polyak’s method evaluates the gradient before adding momentum, whereas Nesterov’s algorithm evaluates it after applying momentum, which intuitively brings us closer to the minimum $x^*$, as shown in figure~\ref{fig:momentum}.
 
 \begin{theorem}[\href{http://www.princeton.edu/~yc5/ele522_optimization/lectures/accelerated_gradient.pdf\#page=31}{Nesterov's Accelerated Gradient Descent convergence for convex functions}] \label{thm:cvx_nag_convergence}
 Let $f: \Re^m \rightarrow \Re$ be a L-Lipschitz continuous convex function. Then the Nesterov's Accelerated Gradient Descent with step size $\alpha = 1/L$ and momentum $\beta_{t+1} = t / (t+3)$ satisfies:
