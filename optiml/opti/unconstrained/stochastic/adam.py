@@ -61,7 +61,7 @@ class Adam(StochasticMomentumOptimizer):
 
             if self.momentum_type == 'nesterov':
                 step_m1 = self.step
-                step1 = self.momentum * step_m1
+                step1 = next(self.momentum) * step_m1
                 self.x += step1
 
             self.f_x, self.g_x = self.f.function_jacobian(self.x, *batch)
@@ -96,12 +96,12 @@ class Adam(StochasticMomentumOptimizer):
             est_mom1_crt = self.est_mom1 / (1. - self.beta1 ** t)  # compute bias-corrected 1st moment estimate
             est_mom2_crt = self.est_mom2 / (1. - self.beta2 ** t)  # compute bias-corrected 2nd raw moment estimate
 
-            step2 = self.step_size * est_mom1_crt / (np.sqrt(est_mom2_crt) + self.offset)
+            step2 = next(self.step_size(*batch)) * est_mom1_crt / (np.sqrt(est_mom2_crt) + self.offset)
 
             if self.momentum_type == 'polyak':
 
                 step_m1 = self.step
-                self.step = self.momentum * step_m1 + step2
+                self.step = next(self.momentum) * step_m1 + step2
                 self.x += self.step
 
             elif self.momentum_type == 'nesterov':

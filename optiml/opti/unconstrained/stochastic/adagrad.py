@@ -62,7 +62,7 @@ class AdaGrad(StochasticOptimizer):
             d = -self.g_x
 
             self.gms += self.g_x ** 2
-            self.step = self.step_size * d / np.sqrt(self.gms + self.offset)
+            self.step = next(self.step_size(*batch)) * d / np.sqrt(self.gms + self.offset)
 
             self.x += self.step
 

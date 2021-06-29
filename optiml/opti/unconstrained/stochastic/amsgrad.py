@@ -63,7 +63,7 @@ class AMSGrad(StochasticMomentumOptimizer):
 
             if self.momentum_type == 'nesterov':
                 step_m1 = self.step
-                step1 = self.momentum * step_m1
+                step1 = next(self.momentum) * step_m1
                 self.x += step1
 
             self.f_x, self.g_x = self.f.function_jacobian(self.x, *batch)
@@ -95,12 +95,12 @@ class AMSGrad(StochasticMomentumOptimizer):
 
             est_mom2_crt = np.maximum(self.est_mom2, est_mom2_crt)
 
-            step2 = self.step_size * self.est_mom1 / (np.sqrt(est_mom2_crt) + self.offset)
+            step2 = next(self.step_size(*batch)) * self.est_mom1 / (np.sqrt(est_mom2_crt) + self.offset)
 
             if self.momentum_type == 'polyak':
 
                 step_m1 = self.step
-                self.step = self.momentum * step_m1 + step2
+                self.step = next(self.momentum) * step_m1 + step2
                 self.x += self.step
 
             elif self.momentum_type == 'nesterov':

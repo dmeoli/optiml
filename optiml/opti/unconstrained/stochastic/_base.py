@@ -1,10 +1,12 @@
 import itertools
 import warnings
 from abc import ABC
+from collections import Iterable
 
 import numpy as np
 from sklearn.utils import shuffle
 
+from .schedules import constant
 from ... import Optimizer
 
 
@@ -43,9 +45,14 @@ class StochasticOptimizer(Optimizer, ABC):
                                                   callback_args=callback_args,
                                                   random_state=random_state,
                                                   verbose=verbose)
-        if not step_size > 0:
-            raise ValueError('step_size must be > 0')
-        self.step_size = step_size
+        if not callable(step_size) and not isinstance(step_size, Iterable) and not step_size > 0:
+            raise ValueError('step_size must be > 0 or a callable or an iterator')
+        if isinstance(step_size, Iterable):  # wrap the iterable into a function to deal with mini batches, i.e., *args
+            self.step_size = lambda *args: step_size
+        elif callable(step_size):  # i.e., step_size(X_batch, y_batch)
+            self.step_size = step_size
+        else:
+            self.step_size = lambda *args: constant(step_size)
         self.epochs = epochs
         self.epoch = 0
         self.shuffle = shuffle
@@ -152,6 +159,9 @@ class StochasticMomentumOptimizer(StochasticOptimizer, ABC):
         if momentum_type not in ('polyak', 'nesterov', 'none'):
             raise ValueError(f'unknown momentum type {momentum_type}')
         self.momentum_type = momentum_type
-        if not 0 <= momentum < 1:
-            raise ValueError('momentum must be must be between 0 and 1')
-        self.momentum = momentum
+        if not isinstance(momentum, Iterable) and not 0 <= momentum < 1:
+            raise ValueError('momentum must be between 0 and 1 or an iterator')
+        if isinstance(momentum, Iterable):
+            self.momentum = momentum
+        else:
+            self.momentum = constant(momentum)

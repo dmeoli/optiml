@@ -66,10 +66,14 @@ class SVMLoss(OptimizationFunction, ABC):
             y_batch = self.y
 
         n_samples = X_batch.shape[0]
-        return ((1 / n_samples) * packed_coef_inter -
-                self.svm.C / n_samples * self.loss_jacobian(packed_coef_inter, X_batch, y_batch))
+        return ((1 / n_samples) * packed_coef_inter -  # jacobian wrt the regularization term
+                self.svm.C / n_samples * self.loss_jacobian(
+                    packed_coef_inter, X_batch, y_batch))  # jacobian wrt the loss term
 
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
+        raise NotImplementedError
+
+    def step_size(self, X_batch, y_batch):
         raise NotImplementedError
 
 
@@ -90,6 +94,18 @@ class Hinge(SVMLoss):
         idx = np.argwhere(y_batch * y_pred < 1.).ravel()
         return np.dot(y_batch[idx], X_batch[idx])
 
+    def step_size(self, X_batch, y_batch):
+        if np.array_equal(X_batch, self.X):  # no mini batches
+            if not hasattr(self, '_step_size'):
+                n_samples = self.X.shape[0]
+                L = self.svm.C / n_samples * np.linalg.norm(self.X) ** 2
+                self._step_size = 1 / L
+            yield self._step_size
+        else:
+            n_samples = X_batch.shape[0]
+            L = self.svm.C / n_samples * np.linalg.norm(X_batch) ** 2
+            yield 1 / L
+
 
 class SquaredHinge(Hinge):
     """
@@ -105,6 +121,22 @@ class SquaredHinge(Hinge):
         y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function
         idx = np.argwhere(y_batch * y_pred < 1.).ravel()
         return 2 * np.dot(np.maximum(0, 1 - y_batch[idx] * y_pred[idx]) * y_batch[idx], X_batch[idx])
+
+    def step_size(self, X_batch, y_batch):
+        if np.array_equal(X_batch, self.X):  # no mini batches
+            if not hasattr(self, '_step_size'):
+                mu = 1
+                n_samples = self.X.shape[0]
+                L = (1 / n_samples * mu +  # Lipschitz constant wrt the regularization term (strictly convex)
+                     self.svm.C / n_samples * np.linalg.norm(self.X) ** 2)  # Lipschitz constant wrt the loss term
+                self._step_size = 1 / L
+            yield self._step_size
+        else:
+            mu = 1
+            n_samples = X_batch.shape[0]
+            L = (1 / n_samples * mu +  # Lipschitz constant wrt the regularization term (strictly convex)
+                 self.svm.C / n_samples * np.linalg.norm(X_batch) ** 2)  # Lipschitz constant wrt the loss term
+            yield 1 / L
 
 
 class EpsilonInsensitive(SVMLoss):
@@ -129,6 +161,18 @@ class EpsilonInsensitive(SVMLoss):
         z = y_batch[idx] - y_pred[idx]
         return np.dot(np.sign(z), X_batch[idx])  # or np.dot(np.divide(z, np.abs(z)), X_batch[idx])
 
+    def step_size(self, X_batch, y_batch):
+        if np.array_equal(X_batch, self.X):  # no mini batches
+            if not hasattr(self, '_step_size'):
+                n_samples = self.X.shape[0]
+                L = self.svm.C / n_samples * np.linalg.norm(self.X) ** 2
+                self._step_size = 1 / L
+            yield self._step_size
+        else:
+            n_samples = X_batch.shape[0]
+            L = self.svm.C / n_samples * np.linalg.norm(X_batch) ** 2
+            yield 1 / L
+
 
 class SquaredEpsilonInsensitive(EpsilonInsensitive):
     """
@@ -145,6 +189,22 @@ class SquaredEpsilonInsensitive(EpsilonInsensitive):
         idx = np.argwhere(np.abs(y_batch - y_pred) >= self.epsilon).ravel()
         z = y_batch[idx] - y_pred[idx]
         return 2 * np.dot(np.sign(z) * (np.abs(z) - self.epsilon), X_batch[idx])
+
+    def step_size(self, X_batch, y_batch):
+        if np.array_equal(X_batch, self.X):  # no mini batches
+            if not hasattr(self, '_step_size'):
+                mu = 1
+                n_samples = self.X.shape[0]
+                L = (1 / n_samples * mu +  # Lipschitz constant wrt the regularization term (strictly convex)
+                     self.svm.C / n_samples * np.linalg.norm(self.X) ** 2)  # Lipschitz constant wrt the loss term
+                self._step_size = 1 / L
+            yield self._step_size
+        else:
+            mu = 1
+            n_samples = X_batch.shape[0]
+            L = (1 / n_samples * mu +  # Lipschitz constant wrt the regularization term (strictly convex)
+                 self.svm.C / n_samples * np.linalg.norm(X_batch) ** 2)  # Lipschitz constant wrt the loss term
+            yield 1 / L
 
 
 hinge = Hinge

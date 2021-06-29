@@ -54,6 +54,13 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
                 - [x] Momentum
                     - [x] Polyak
                     - [x] Nesterov
+            - [x] Schedules
+                - Step size
+                    - [x] Decaying
+                    - [x] Linear Annealing
+                    - [x] Repeater
+                - Momentum
+                    - [x] Sutskever Blend
         - [x] Proximal Bundle with [cvxpy](https://github.com/cvxgrp/cvxpy) interface to 
           [ecos](https://github.com/embotech/ecos), [osqp](https://github.com/oxfordcontrol/osqp), 
           [scs](https://github.com/cvxgrp/scs), [etc](https://www.cvxpy.org/tutorial/advanced/index.html#choosing-a-solver).
@@ -132,8 +139,8 @@ Numerical Methods and Optimization course  @ [Department of Computer Science](ht
         - Layers
             - [x] Fully Connected
         - Initializers
-            - [x] Xavier or Glorot normal and uniform
-            - [x] He normal and uniform
+            - [x] Xavier or Glorot (normal and uniform)
+            - [x] He (normal and uniform)
 
 ## Install
 

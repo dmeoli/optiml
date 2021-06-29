@@ -21,22 +21,26 @@ def test_solve_primal_l1_svr_with_line_search_optimizers():
 
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=SteepestGradientDescent)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=ConjugateGradient)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=Newton)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=BFGS)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
 
@@ -47,37 +51,44 @@ def test_solve_primal_l1_svr_with_stochastic_optimizers():
 
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=StochasticGradientDescent)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=Adam)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=AMSGrad)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=AdaMax)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=AdaGrad, learning_rate=1.)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=AdaDelta, learning_rate=1., max_iter=3000)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=RMSProp)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
 
@@ -87,7 +98,8 @@ def test_solve_primal_l1_svr_with_proximal_bundle():
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
     svr = PrimalSVR(loss=epsilon_insensitive, optimizer=ProximalBundle)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.64
 
 
@@ -175,22 +187,26 @@ def test_solve_primal_l2_svr_with_line_search_optimizers():
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=SteepestGradientDescent)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=ConjugateGradient)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=Newton)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=BFGS)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
 
@@ -201,37 +217,44 @@ def test_solve_primal_l2_svr_with_stochastic_optimizers():
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=StochasticGradientDescent)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=Adam)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=AMSGrad)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
-    svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=AdaMax)
+    svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=AdaMax, max_iter=3000)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=AdaGrad, learning_rate=1.)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 1e-4
     assert svr.score(X_test, y_test) >= 0.67
 
-    svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=AdaDelta, learning_rate=1., max_iter=3000)
+    svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=AdaDelta, learning_rate=1., max_iter=5000)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 0.01  # relaxed
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = PrimalSVR(loss=squared_epsilon_insensitive, optimizer=RMSProp)
     svr.fit(X_train, y_train)
-    # assert np.allclose(np.hstack((svr.coef_, svr.intercept_)), svr.loss.x_star())
+    # (f_t - f*) / f*
+    assert (svr.loss(np.hstack((svr.coef_, svr.intercept_))) - svr.loss.f_star()) / svr.loss.f_star() <= 0.01  # relaxed
     assert svr.score(X_test, y_test) >= 0.67
 
 

@@ -197,7 +197,7 @@ class PrimalSVM(SVM, ABC):
         of epochs (how many times each data point will be used), not the number
         of gradient steps.
 
-    learning_rate : double, default=0.1
+    learning_rate : 'auto' or double, default='auto'
         The initial learning rate used for weight update. It controls the
         step-size in updating the weights. Only used when ``optimizer`` is a
         subclass of `StochasticOptimizer`.
@@ -291,7 +291,7 @@ class PrimalSVM(SVM, ABC):
                  tol=1e-4,
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
-                 learning_rate=0.1,
+                 learning_rate='auto',
                  momentum_type='none',
                  momentum=0.9,
                  validation_split=0.,
@@ -585,7 +585,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
         of epochs (how many times each data point will be used), not the number
         of gradient steps.
 
-    learning_rate : double, default=0.1
+    learning_rate : 'auto' or double, default='auto'
         The initial learning rate used for weight update. It controls the
         step-size in updating the weights. Only used when ``optimizer`` is a
         subclass of `StochasticOptimizer`.
@@ -694,7 +694,7 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
                  tol=1e-4,
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
-                 learning_rate=0.1,
+                 learning_rate='auto',
                  momentum_type='none',
                  momentum=0.9,
                  validation_split=0.,
@@ -829,7 +829,8 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
                 self.optimizer = self.optimizer(f=self.loss,
                                                 epochs=self.max_iter,
-                                                step_size=self.learning_rate,
+                                                step_size=(self.loss.step_size if self.learning_rate == 'auto'
+                                                           else self.learning_rate),
                                                 momentum_type=self.momentum_type,
                                                 momentum=self.momentum,
                                                 batch_size=self.batch_size,
@@ -842,7 +843,8 @@ class PrimalSVC(LinearClassifierMixin, SparseCoefMixin, PrimalSVM):
 
                 self.optimizer = self.optimizer(f=self.loss,
                                                 epochs=self.max_iter,
-                                                step_size=self.learning_rate,
+                                                step_size=(self.loss.step_size if self.learning_rate == 'auto'
+                                                           else self.learning_rate),
                                                 batch_size=self.batch_size,
                                                 callback=self._store_train_val_info,
                                                 callback_args=(X_val_biased, y_val),
@@ -1421,7 +1423,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
         of epochs (how many times each data point will be used), not the number
         of gradient steps.
 
-    learning_rate : double, default=0.1
+    learning_rate : 'auto' or double, default='auto'
         The initial learning rate used for weight update. It controls the
         step-size in updating the weights. Only used when ``optimizer`` is a
         subclass of `StochasticOptimizer`.
@@ -1531,7 +1533,7 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
                  tol=1e-4,
                  optimizer=StochasticGradientDescent,
                  max_iter=1000,
-                 learning_rate=0.1,
+                 learning_rate='auto',
                  momentum_type='none',
                  momentum=0.9,
                  validation_split=0.,
@@ -1667,7 +1669,8 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
                 self.optimizer = self.optimizer(f=self.loss,
                                                 epochs=self.max_iter,
-                                                step_size=self.learning_rate,
+                                                step_size=(self.loss.step_size if self.learning_rate == 'auto'
+                                                           else self.learning_rate),
                                                 momentum_type=self.momentum_type,
                                                 momentum=self.momentum,
                                                 batch_size=self.batch_size,
@@ -1681,7 +1684,8 @@ class PrimalSVR(RegressorMixin, LinearModel, PrimalSVM):
 
                 self.optimizer = self.optimizer(f=self.loss,
                                                 epochs=self.max_iter,
-                                                step_size=self.learning_rate,
+                                                step_size=(self.loss.step_size if self.learning_rate == 'auto'
+                                                           else self.learning_rate),
                                                 batch_size=self.batch_size,
                                                 callback=self._store_train_val_info,
                                                 callback_args=(X_val_biased, y_val),

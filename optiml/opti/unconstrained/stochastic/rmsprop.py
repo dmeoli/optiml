@@ -52,7 +52,7 @@ class RMSProp(StochasticMomentumOptimizer):
 
             if self.momentum_type == 'nesterov':
                 step_m1 = self.step
-                step1 = self.momentum * step_m1
+                step1 = next(self.momentum) * step_m1
                 self.x += step1
 
             self.f_x, self.g_x = self.f.function_jacobian(self.x, *batch)
@@ -75,12 +75,12 @@ class RMSProp(StochasticMomentumOptimizer):
             d = -self.g_x
 
             self.moving_mean_squared = self.decay * self.moving_mean_squared + (1. - self.decay) * self.g_x ** 2
-            step2 = self.step_size * d / np.sqrt(self.moving_mean_squared + self.offset)
+            step2 = next(self.step_size(*batch)) * d / np.sqrt(self.moving_mean_squared + self.offset)
 
             if self.momentum_type == 'polyak':
 
                 step_m1 = self.step
-                self.step = self.momentum * step_m1 + step2
+                self.step = next(self.momentum) * step_m1 + step2
                 self.x += self.step
 
             elif self.momentum_type == 'nesterov':
