@@ -2,17 +2,15 @@
 
 The actual \emph{convergence rates} of the \emph{primal} $\protect \mathcal{L}_1$-SVM formulations, i.e., the figures~\ref{fig:l1_svc_loss_history} and~\ref{fig:l1_svr_loss_history}, shows as they do not meet the theoretical expectations at the first line of the table~\ref{primal_svm_objectives_rates}. Both the \emph{Polyak} and the \emph{Nesterov} momentums provide a significant accelleration wrt the \emph{vanilla SGD} and they are quite comparable.
 
-Conversely, the actual \emph{convergence rates} of the \emph{primal} $\protect \mathcal{L}_2$-SVM formulations, i.e., the figures~\ref{fig:l2_svc_loss_history} and~\ref{fig:l2_svr_loss_history}, shows as they do in part meet the theoretical expectations at the second line of the table~\ref{primal_svm_objectives_rates}. Despite the \emph{Nesterov} momentum provide a significant accelleration wrt the \emph{vanilla SGD} as expected, also the \emph{Polyak} momentm provide a quite comparable accelleration only reserved for the quadratic case according to the theoretical analysis.
+Conversely, the actual \emph{convergence rates} of the \emph{primal} $\protect \mathcal{L}_2$-SVC formulations, i.e., the figure~\ref{fig:l2_svc_loss_history} and~\ref{fig:l2_svr_loss_history}, shows as they do in part meet the theoretical expectations at the second line of the table~\ref{primal_svm_objectives_rates}. Despite the \emph{Nesterov} momentum provide a significant accelleration wrt the \emph{vanilla SGD} as expected, also the \emph{Polyak} momentm provide a quite comparable accelleration only reserved for the quadratic case according to the theoretical analysis.
 
-In general, the complexity of the \emph{primal formulations} is dominated by the regularization parameter $C$: higher values allow the algorithms to converge faster.
+Meanwhile, the actual \emph{convergence rates} of the \emph{primal} $\protect \mathcal{L}_2$-SVR formulations, i.e., the figure~\ref{fig:l2_svr_loss_history}, shows as they do not meet the theoretical expectations at the second line of the table~\ref{primal_svm_objectives_rates} since in this specific case, both the \emph{Polyak} and \emph{Nesterov} momentums does not provide an accelleration wrt the \emph{vanilla SGD} as expected.
 
 \bigskip
 
 The actual \emph{convergence rates} of the \emph{Lagrangian dual} formulations shows as they do not meet the theoretical expectations in the table~\ref{dual_svm_objectives_props}. The different \emph{convergence rate} is more highlighted in the linear case for lower regularization parameters $C$ but the situation is reversed as the latter grows. In the nonlinear settings, it depends on the kernel function, e.g., in the \emph{polynomial} case the convergence can become pathologically slower, meanwhile in the \emph{gaussian} or \emph{laplacian} case often it is better.
 
 Moreover, from all the actual \emph{convergence rates} of the \emph{Lagrangian dual} formulations, it is evident that fitting the bias in an explicit way, i.e., by adding Lagrange multipliers to control the equality constraint, always causes slower converge of the \emph{AdaGrad} algorithm wrt the \emph{Lagrangian dual} of the problem where the bias term embedded into the Hessian matrix.
-
-Unlike the \emph{primal formulations}, in the \emph{Lagrangian dual} case the complexity grows with the $C$ regularization parameter.
 
 \bigskip
 

@@ -14,7 +14,11 @@ The experiments about SVCs are available at: \\ \href{https://github.com/dmeoli/
 
 \paragraph{Primal formulation}
 
-The experiments results shown in~\ref{primal_l1_svc_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.02 and $\beta$, i.e., the \emph{momentum}, equal to 0.5. The optimization process is stopped if after 5 iterations the function value does not improve by at least $1\mathrm{e}{-8}$.
+% https://arxiv.org/pdf/1008.4000.pdf
+% https://hal.archives-ouvertes.fr/hal-00708243v1/file/appendixMNBCI.pdf
+% https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6580579&casa_token=5p51fnC0_mgAAAAA:CEwEO0ZeqzWDMlS_QG2fsfk4L7xlwUr6LzLu-Gw-nYD9CPEAhMCIMeyDDOTh7iATszKN3V4rvQ
+
+The experiments results shown in~\ref{primal_l1_svc_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to $1/L$ where $\displaystyle L = \frac{C}{n} \sum_{i=1}^n \| x_i \|^2$ and $\beta$, i.e., the \emph{momentum}, equal to 0.5. The optimization process is stopped if after 5 iterations the function value does not improve by at least $1\mathrm{e}{-8}$.
 
 \input{experiments/primal_l1_svc}
 
@@ -54,7 +58,11 @@ The experiments results shown in~\ref{nonlinear_dual_l1_svc_cv_results} and~\ref
 
 \paragraph{Primal formulation}
 
-The experiments results shown in~\ref{primal_l2_svc_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.02 and $\beta$, i.e., the \emph{momentum}, equal to 0.5. The optimization process is stopped if after 5 iterations the function value does not improve by at least $1\mathrm{e}{-8}$.
+% https://arxiv.org/pdf/1008.4000.pdf
+% https://hal.archives-ouvertes.fr/hal-00708243v1/file/appendixMNBCI.pdf
+% https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6580579&casa_token=5p51fnC0_mgAAAAA:CEwEO0ZeqzWDMlS_QG2fsfk4L7xlwUr6LzLu-Gw-nYD9CPEAhMCIMeyDDOTh7iATszKN3V4rvQ
+
+The experiments results shown in~\ref{primal_l2_svc_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to $1/L$ where $\displaystyle L = \frac{C}{n} \sum_{i=1}^n \| x_i \|^2$ and $\beta$, i.e., the \emph{momentum}, equal to 0.5. The optimization process is stopped if after 5 iterations the function value does not improve by at least $1\mathrm{e}{-8}$.
 
 \input{experiments/primal_l2_svc}
 
@@ -98,7 +106,11 @@ The experiments about SVRs are available at: \\ \href{https://github.com/dmeoli/
 
 \paragraph{Primal formulation}
 
-The experiments results shown in~\ref{primal_l1_svr_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.02 and $\beta$, i.e., the \emph{momentum}, equal to 0.2. The optimization process is stopped if after 5 iterations the function value does not improve by at least $1\mathrm{e}{-8}$.
+% https://arxiv.org/pdf/1008.4000.pdf
+% https://hal.archives-ouvertes.fr/hal-00708243v1/file/appendixMNBCI.pdf
+% https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6580579&casa_token=5p51fnC0_mgAAAAA:CEwEO0ZeqzWDMlS_QG2fsfk4L7xlwUr6LzLu-Gw-nYD9CPEAhMCIMeyDDOTh7iATszKN3V4rvQ
+
+The experiments results shown in~\ref{primal_l1_svr_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to $1/L$ where $\displaystyle L = \frac{C}{n} \sum_{i=1}^n \| x_i \|^2$ and $\beta$, i.e., the \emph{momentum}, equal to 0.2. The optimization process is stopped if after 5 iterations the function value does not improve by at least $1\mathrm{e}{-8}$.
 
 \input{experiments/primal_l1_svr}
 
@@ -154,7 +166,11 @@ The experiments results shown in~\ref{nonlinear_dual_l1_svr_cv_results} and~\ref
 
 \paragraph{Primal formulation}
 
-The experiments results shown in~\ref{primal_l2_svr_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to 0.02 and $\beta$, i.e., the \emph{momentum}, equal to 0.2. The optimization process is stopped if after 5 iterations the function value does not improve by at least $1\mathrm{e}{-8}$.
+% https://arxiv.org/pdf/1008.4000.pdf
+% https://hal.archives-ouvertes.fr/hal-00708243v1/file/appendixMNBCI.pdf
+% https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6580579&casa_token=5p51fnC0_mgAAAAA:CEwEO0ZeqzWDMlS_QG2fsfk4L7xlwUr6LzLu-Gw-nYD9CPEAhMCIMeyDDOTh7iATszKN3V4rvQ
+
+The experiments results shown in~\ref{primal_l2_svr_cv_results} referred to \emph{Stochastic Gradient Descent} algorithm are obtained with $\alpha$, i.e., the \emph{learning rate} or \emph{step size}, setted to $1/L$ where $\displaystyle L = \frac{C}{n} \sum_{i=1}^n \| x_i \|^2$ and $\beta$, i.e., the \emph{momentum}, equal to 0.2. The optimization process is stopped if after 5 iterations the function value does not improve by at least $1\mathrm{e}{-8}$.
 
 \input{experiments/primal_l2_svr}
 
