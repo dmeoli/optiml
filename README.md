@@ -7,7 +7,7 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/optiml/master)
 
 OptiML is a sklearn compatible implementation of *Support Vector Machines* and *Deep Neural Networks*, 
-both with some of the most successful features according to the state of art.
+both with some of the most successful features according to the state of the art.
 
 This work was motivated by the possibility of being able to solve the optimization problem deriving from the mathematical 
 formulation of these models through a wide range of optimization algorithms object of study and developed for the 
