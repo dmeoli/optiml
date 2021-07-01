@@ -81,7 +81,7 @@ class SVMLoss(OptimizationFunction, ABC):
 
 class Hinge(SVMLoss):
     """
-    Compute the Hinge loss for classification as:
+    Compute the hinge loss for classification as:
 
         L(y_pred, y_true) = max(0, 1 - y_true * y_pred)
     """
@@ -111,7 +111,7 @@ class Hinge(SVMLoss):
 
 class SquaredHinge(Hinge):
     """
-    Compute the squared Hinge loss for classification as:
+    Compute the squared hinge loss for classification as:
 
         L(y_pred, y_true) = max(0, 1 - y_true * y_pred)^2
     """

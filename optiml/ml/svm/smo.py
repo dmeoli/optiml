@@ -49,6 +49,7 @@ class SMOClassifier(SMO):
     by Keerthi et al.
 
     References
+    ----------
 
     John C. Platt. Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector Machines.
 
@@ -332,6 +333,7 @@ class SMORegression(SMO):
     further modifications for better performance by Shevade et al.
 
     References
+    ----------
 
     G.W. Flake, S. Lawrence. Efficient SVM Regression Training with SMO.
 
