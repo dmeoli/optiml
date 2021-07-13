@@ -12,6 +12,7 @@ __pycache__
 
 # PyPI
 optiml.egg-info
+build
 dist
 
 # LaTeX

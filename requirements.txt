@@ -4,6 +4,7 @@ cvxopt
 cvxpy
 matplotlib
 numpy
+pytest
 qpsolvers
 scikit-learn
 scipy
