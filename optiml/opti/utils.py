@@ -167,7 +167,8 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None, primal=True):
 
     Z = np.array([f(np.concatenate((np.array([x, y]), f.dual_x)))  # x, mu_lmbda*
                   # is_lagrangian_dual() and not is_augmented_lagrangian_dual()
-                  if hasattr(f, 'primal') and not hasattr(f, 'rho') else f(np.array([x, y]))
+                  if hasattr(f, 'primal') and not hasattr(f, 'rho') else
+                  f(np.array([x, y]))
                   for x, y in zip(X.ravel(), Y.ravel())]).reshape(X.shape)
 
     surface_contour = plt.figure(figsize=(16, 8))
@@ -289,27 +290,50 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None, primal=True):
     return surface_contour
 
 
-def plot_trajectory_optimization(surface_contour, opt, color='k', label=None, linewidth=1.5):
+def plot_trajectory_optimization(surface_contour, opt, primal=True, color='k', label=None, linewidth=1.5):
     if label is None:
         label = opt.__class__.__name__
 
+    # plot primal with constraints
+    if hasattr(opt.f, 'primal') and primal:  # is_lagrangian_dual()
+        f = opt.f.primal
+    else:
+        f = opt.f
+
+    # is_lagrangian_dual() and not is_augmented_lagrangian_dual()
+    if hasattr(f, 'primal') and not hasattr(f, 'rho'):
+        f_x_history = np.array([f(np.concatenate((np.array([x, y]), f.dual_x)))  # x, mu_lmbda*
+                                for x, y in zip(opt.x0_history, opt.x1_history)])
+    else:
+        f_x_history = opt.f_x_history
+
     # 3D trajectory optimization plot
-    surface_contour.axes[0].plot(opt.x0_history, opt.x1_history, opt.f_x_history,
+    surface_contour.axes[0].plot(opt.x0_history, opt.x1_history, f_x_history,
                                  marker='.', color=color, label=label, linewidth=linewidth)
     angles_x = np.array(opt.x0_history)[1:] - np.array(opt.x0_history)[:-1]
     angles_y = np.array(opt.x1_history)[1:] - np.array(opt.x1_history)[:-1]
     # 2D trajectory optimization plot
     surface_contour.axes[1].quiver(opt.x0_history[:-1], opt.x1_history[:-1], angles_x, angles_y,
                                    scale_units='xy', angles='xy', scale=1, color=color, linewidth=linewidth)
+
     if isinstance(opt, ProximalBundle):  # plot ns steps
+
+        # is_lagrangian_dual() and not is_augmented_lagrangian_dual()
+        if hasattr(f, 'primal') and not hasattr(f, 'rho'):
+            f_x_history_ns = np.array([f(np.concatenate((np.array([x, y]), f.dual_x)))  # x, mu_lmbda*
+                                       for x, y in zip(opt.x0_history_ns, opt.x1_history_ns)])
+        else:
+            f_x_history_ns = opt.f_x_history
+
         # 3D trajectory optimization plot
-        surface_contour.axes[0].plot(opt.x0_history_ns, opt.x1_history_ns, opt.f_x_history_ns,
+        surface_contour.axes[0].plot(opt.x0_history_ns, opt.x1_history_ns, f_x_history_ns,
                                      marker='.', color='b')
         angles_x = np.array(opt.x0_history_ns)[1:] - np.array(opt.x0_history_ns)[:-1]
         angles_y = np.array(opt.x1_history_ns)[1:] - np.array(opt.x1_history_ns)[:-1]
         # 2D trajectory optimization plot
         surface_contour.axes[1].quiver(opt.x0_history_ns[:-1], opt.x1_history_ns[:-1], angles_x, angles_y,
                                        scale_units='xy', angles='xy', scale=1, color='b')
+
     surface_contour.axes[0].legend()
     return surface_contour
 
@@ -319,4 +343,4 @@ def plot_surface_trajectory_optimization(f, opt, x_min, x_max, y_min, y_max, pri
                                          color='k', label=None, linewidth=1.5):
     ub = opt.ub if hasattr(opt, 'ub') else None
     plot_trajectory_optimization(plot_surface_contour(f, x_min, x_max, y_min, y_max, ub, primal),
-                                 opt, color, label, linewidth)
+                                 opt, primal, color, label, linewidth)

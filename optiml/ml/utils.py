@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 from sklearn.base import ClassifierMixin, RegressorMixin
-from sklearn.linear_model._base import LinearClassifierMixin, LinearModel
 from sklearn.model_selection import learning_curve, validation_curve
 from sklearn.svm import LinearSVC as SKLinearSVC
 from sklearn.svm import LinearSVR as SKLinearSVR
