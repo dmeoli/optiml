@@ -92,29 +92,29 @@ prof. [Antonio Frangioni](http://pages.di.unipi.it/frangio/).
                 - [x] Squared Epsilon-insensitive (L2 Loss) ![l2_svr_loss](notebooks/optimization/tex/img/l2_svr_loss.png)
         - Kernels
             - [x] Linear
-                
-                | SVC          | SVR          |
-                |    :----:    |    :----:    |
+
+                |                                                SVC                                                 |                                                SVR                                                 |
+                |:--------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------:|
                 | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/linear_dual_l1_svc_hyperplane.png) | ![linear_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/linear_dual_l1_svr_hyperplane.png) |
-                
+
             - [x] Polynomial
-                 
-                | SVC          | SVR          |
+
+                |     SVC      | SVR          |
                 |    :----:    |    :----:    |
                 | ![poly_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/poly_dual_l1_svc_hyperplane.png) | ![poly_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/poly_dual_l1_svr_hyperplane.png) |              
-                
+
             - [x] Gaussian
-                
-                | SVC          | SVR          |
-                |    :----:    |    :----:    |
+
+                |                                                  SVC                                                   |                                                  SVR                                                   |
+                |:------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------:|
                 | ![gaussian_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_l1_svc_hyperplane.png) | ![gaussian_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/gaussian_dual_l1_svr_hyperplane.png) |
-                
+
             - [x] Laplacian
-              
-                | SVC          | SVR          |
-                |    :----:    |    :----:    |
+
+                |                                                   SVC                                                    |                                                   SVR                                                    |
+                |:--------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------:|
                 | ![laplacian_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/laplacian_dual_l1_svc_hyperplane.png) | ![laplacian_dual_l1_svc_hyperplane](notebooks/optimization/tex/img/laplacian_dual_l1_svr_hyperplane.png) |
-            
+
             - [x] Sigmoid
         - Optimizers (ad hoc)
             - [x] Sequential Minimal Optimization (SMO)
