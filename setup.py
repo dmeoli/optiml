@@ -3,7 +3,7 @@ import setuptools
 setuptools.setup(name='optiml',
                  version='1.5',
                  author='Donato Meoli',
-                 author_email='donato.meoli.95@gmail.com',
+                 author_email='donato.meoli@outlook.com',
                  description='Optimizers for/and sklearn compatible Machine Learning models',
                  long_description=open('README.md').read(),
                  long_description_content_type='text/markdown',

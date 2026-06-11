@@ -109,7 +109,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 xs[A] = cho_solve(cho_factor(self.f.Q[A, :][:, A]),
                                   -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
             except:  # np.linalg.LinAlgError:
-                # since Q is is not strictly psd, i.e., the function is linear along the
+                # since Q is not strictly psd, i.e., the function is linear along the
                 # eigenvectors correspondent to the null eigenvalues, the system has infinite
                 # solutions, so we will choose the one that minimizes the 2-norm
                 Q = self.f.Q[A, :][:, A]
