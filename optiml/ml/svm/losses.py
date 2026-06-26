@@ -112,10 +112,12 @@ class SVMLoss(OptimizationFunction, ABC):
 
 
 class Hinge(SVMLoss):
-    """
+    r"""
     Compute the hinge loss for classification as:
 
-        L(y_pred, y_true) = max(0, 1 - y_true * y_pred)
+    .. math::
+
+        L(y_{pred}, y_{true}) = \max(0, 1 - y_{true} \, y_{pred})
     """
 
     _loss_type = 'classifier'
@@ -145,10 +147,12 @@ class Hinge(SVMLoss):
 
 
 class SquaredHinge(Hinge):
-    """
+    r"""
     Compute the squared hinge loss for classification as:
 
-        L(y_pred, y_true) = max(0, 1 - y_true * y_pred)^2
+    .. math::
+
+        L(y_{pred}, y_{true}) = \max(0, 1 - y_{true} \, y_{pred})^2
     """
 
     def loss(self, y_pred, y_true):
@@ -180,10 +184,12 @@ class SquaredHinge(Hinge):
 
 
 class EpsilonInsensitive(SVMLoss):
-    """
+    r"""
     Compute the epsilon-insensitive loss for regression as:
 
-        L(y_pred, y_true) = max(0, abs(y_true - y_pred) - epsilon)
+    .. math::
+
+        L(y_{pred}, y_{true}) = \max(0, \lvert y_{true} - y_{pred} \rvert - \epsilon)
     """
 
     _loss_type = 'regressor'
@@ -235,10 +241,12 @@ class EpsilonInsensitive(SVMLoss):
 
 
 class SquaredEpsilonInsensitive(EpsilonInsensitive):
-    """
+    r"""
     Compute the squared epsilon-insensitive loss for regression as:
 
-        L(y_pred, y_true) = max(0, abs(y_true - y_pred) - epsilon)^2
+    .. math::
+
+        L(y_{pred}, y_{true}) = \max(0, \lvert y_{true} - y_{pred} \rvert - \epsilon)^2
     """
 
     def loss(self, y_pred, y_true):

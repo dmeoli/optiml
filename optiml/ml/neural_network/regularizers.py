@@ -32,10 +32,12 @@ class Regularizer(ABC):
 
 
 class L1(Regularizer):
-    """
+    r"""
     L1 (Lasso) regularizer:
 
-        R(theta) = lmbda * sum(abs(theta))
+    .. math::
+
+        R(\theta) = \lambda \sum \lvert \theta \rvert
     """
 
     def __init__(self, lmbda=0.):
@@ -56,10 +58,12 @@ class L1(Regularizer):
 
 
 class L2(Regularizer):
-    """
+    r"""
     L2 (Ridge) regularizer:
 
-        R(theta) = lmbda * sum(theta^2)
+    .. math::
+
+        R(\theta) = \lambda \sum \theta^2
     """
 
     def __init__(self, lmbda=0.):

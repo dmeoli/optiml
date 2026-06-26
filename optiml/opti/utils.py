@@ -20,15 +20,20 @@ def cholesky_null_space(A):
 
 
 def solve_lagrangian_equality_constrained_quadratic(Q, q, A, b, method='gmres'):
-    """
+    r"""
     Solve a quadratic function subject to equality constraint:
 
-            1/2 x^T Q x + q^T x : A x = b
+    .. math::
+
+        \tfrac{1}{2} x^\top Q x + q^\top x \quad : \quad A x = b
 
     by solving the KKT system:
 
-            | Q A^T | |   x   | = | -q |
-            | A  0  | | lmbda |   |  b |
+    .. math::
+
+        \begin{bmatrix} Q & A^\top \\ A & 0 \end{bmatrix}
+        \begin{bmatrix} x \\ \lambda \end{bmatrix} =
+        \begin{bmatrix} -q \\ b \end{bmatrix}
 
     See more @ https://www.math.uh.edu/~rohop/fall_06/Chapter3.pdf
     """
@@ -50,7 +55,9 @@ def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_
     r"""
     Generate a box-constrained quadratic function defined as:
 
-                1/2 x^T Q x + q^T x : 0 <= x <= ub
+    .. math::
+
+        \tfrac{1}{2} x^\top Q x + q^\top x \quad : \quad 0 \le x \le ub
 
     :param ndim: (integer, scalar): the size of the problem
     :param actv: (real, scalar, default 0.5): how many box constraints (as a
@@ -61,20 +68,20 @@ def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_
                  likely) more, except when actv = 0 because then the unconstrained
                  optimum is surely feasible and therefore it will be the constrained
                  optimum as well
-    :param rank: (real, scalar, default 1.1): Q will be obtained as Q = G^T G, with
-                 G a m \times n random matrix with m = rank * n. If rank > 1 then Q can
+    :param rank: (real, scalar, default 1.1): Q will be obtained as :math:`Q = G^\top G`, with
+                 G a :math:`m \times n` random matrix with :math:`m = \text{rank} \cdot n`. If rank > 1 then Q can
                  be expected to be full-rank, if rank < 1 it will not
     :param ecc: (real, scalar, default 0.99): the eccentricity of Q, i.e., the
-                ratio ( \lambda_1 - \lambda_n ) / ( \lambda_1 + \lambda_n ), with
-                \lambda_1 the largest eigenvalue and \lambda_n the smallest one. Note
-                that this makes sense only if \lambda_n > 0, for otherwise the
+                ratio :math:`(\lambda_1 - \lambda_n) / (\lambda_1 + \lambda_n)`, with
+                :math:`\lambda_1` the largest eigenvalue and :math:`\lambda_n` the smallest one. Note
+                that this makes sense only if :math:`\lambda_n > 0`, for otherwise the
                 eccentricity is always 1; hence, this setting is ignored if
-                \lambda_n = 0, i.e., Q is not full-rank (see above). An eccentricity of
-                0 means that all eigenvalues are equal, as eccentricity -> 1 the
+                :math:`\lambda_n = 0`, i.e., Q is not full-rank (see above). An eccentricity of
+                0 means that all eigenvalues are equal, as eccentricity :math:`\to 1` the
                 largest eigenvalue gets larger and larger w.r.t. the smallest one
     :param seed: (integer, default 0): the seed for the random number generator
-    :param ub_min: (real, scalar, default 8): the minimum value of each ub_i
-    :param ub_max: (real, scalar, default 12): the maximum value of each ub_i
+    :param ub_min: (real, scalar, default 8): the minimum value of each :math:`ub_i`
+    :param ub_max: (real, scalar, default 12): the maximum value of each :math:`ub_i`
     """
 
     if not ndim >= 2:

@@ -8,9 +8,13 @@ from optiml.opti import Optimizer, Quadratic
 
 
 class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
-    """
+    r"""
     Abstract base class for the optimizers that solve the convex Box-Constrained
-    Quadratic program (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }.
+    Quadratic program
+
+    .. math::
+
+        (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : 0 \le x \le ub \right\}
     """
 
     def __init__(self,
@@ -23,11 +27,11 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
                  callback=None,
                  callback_args=(),
                  verbose=False):
-        """
+        r"""
 
-        :param quad:          the quadratic function 1/2 x^T Q x + q^T x to be minimized.
+        :param quad:          the quadratic function :math:`\tfrac{1}{2} x^\top Q x + q^\top x` to be minimized.
         :param ub:            ([n x 1] real column vector): the upper bound of the box, i.e., the
-                              variables are constrained to lie in 0 <= x <= ub.
+                              variables are constrained to lie in :math:`0 \le x \le ub`.
         :param x:             ([n x 1] real column vector, optional): the point where to start the
                               algorithm from; if not provided, it starts from the middle of the box.
         :param eps:           (real scalar, optional, default value 1e-6): the accuracy in the stopping
@@ -72,15 +76,19 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
 
 class LagrangianQuadratic(Quadratic):
     r"""
-    Construct the lagrangian relaxation of a constrained quadratic function defined as:
+    Construct the lagrangian relaxation of a constrained quadratic function defined as
 
-            1/2 x^T Q x + q^T x : A x = b, G x <= h, lb <= x <= ub
+    .. math::
+
+        \tfrac{1}{2} x^\top Q x + q^\top x : A x = b, \; G x \le h, \; lb \le x \le ub
 
     i.e.,
 
-            1/2 x^T Q x + q^T x : A x = b, \hat{G} x <= \hat{h}
+    .. math::
 
-    where \hat{G}^T = [ G -I I ] and \hat{h} = [ h -lb ub ].
+        \tfrac{1}{2} x^\top Q x + q^\top x : A x = b, \; \hat{G} x \le \hat{h}
+
+    where :math:`\hat{G}^\top = [\, G \;\; -I \;\; I \,]` and :math:`\hat{h} = [\, h \;\; -lb \;\; ub \,]`.
     """
 
     def __init__(self, primal, A=None, b=None, G=None, h=None, lb=None, ub=None):
@@ -165,10 +173,12 @@ class LagrangianQuadratic(Quadratic):
         return self.AG @ x_mu_lmbda[:self.primal.ndim] - self.bh
 
     def function(self, x_mu_lmbda):
-        """
-        Compute the value of the augmented lagrangian relaxation defined as:
+        r"""
+        Compute the value of the augmented lagrangian relaxation defined as
 
-            L(x, mu, lambda) = 1/2 x^T Q x + q^T x + mu^T (A x - b) + lambda^T (G x - h)
+        .. math::
+
+            L(x, \mu, \lambda) = \tfrac{1}{2} x^\top Q x + q^\top x + \mu^\top (A x - b) + \lambda^\top (G x - h)
 
         :param x_mu_lmbda: the primal-dual variable wrt evaluate the function
         :return: the function value wrt primal-dual variable
@@ -177,10 +187,12 @@ class LagrangianQuadratic(Quadratic):
         return self.primal.function(x) + mu_lmbda @ (self.AG @ x - self.bh)
 
     def jacobian(self, x_mu_lmbda):
-        """
-        Compute the jacobian of the lagrangian relaxation defined as:
+        r"""
+        Compute the jacobian of the lagrangian relaxation defined as
 
-            J L(x, mu, lambda) = Q x + q + mu^T A + lambda^T G
+        .. math::
+
+            J L(x, \mu, \lambda) = Q x + q + \mu^\top A + \lambda^\top G
 
         :param x_mu_lmbda: the primal-dual variable wrt evaluate the jacobian
         :return: the jacobian wrt primal-dual variable
@@ -200,15 +212,19 @@ class LagrangianQuadratic(Quadratic):
 
 class AugmentedLagrangianQuadratic(Quadratic):
     r"""
-    Construct the augmented lagrangian relaxation of a constrained quadratic function defined as:
+    Construct the augmented lagrangian relaxation of a constrained quadratic function defined as
 
-            1/2 x^T Q x + q^T x : A x = b, G x <= h, lb <= x <= ub
+    .. math::
+
+        \tfrac{1}{2} x^\top Q x + q^\top x : A x = b, \; G x \le h, \; lb \le x \le ub
 
     i.e.,
 
-            1/2 x^T Q x + q^T x : A x = b, \hat{G} x <= \hat{h}
+    .. math::
 
-    where \hat{G}^T = [ G -I I ] and \hat{h} = [ h -lb ub ].
+        \tfrac{1}{2} x^\top Q x + q^\top x : A x = b, \; \hat{G} x \le \hat{h}
+
+    where :math:`\hat{G}^\top = [\, G \;\; -I \;\; I \,]` and :math:`\hat{h} = [\, h \;\; -lb \;\; ub \,]`.
     """
 
     def __init__(self, primal, A=None, b=None, G=None, h=None, lb=None, ub=None, rho=1):
@@ -310,10 +326,12 @@ class AugmentedLagrangianQuadratic(Quadratic):
         return constraints
 
     def function(self, x):
-        """
-        Compute the value of the augmented lagrangian relaxation defined as:
+        r"""
+        Compute the value of the augmented lagrangian relaxation defined as
 
-        L(x, mu, lambda) = 1/2 x^T Q x + q^T x + mu^T (A x - b) + lambda^T (G x - h) + rho/2 ||(A x - b) + (G x - h)||^2
+        .. math::
+
+            L(x, \mu, \lambda) = \tfrac{1}{2} x^\top Q x + q^\top x + \mu^\top (A x - b) + \lambda^\top (G x - h) + \tfrac{\rho}{2} \| (A x - b) + (G x - h) \|^2
 
         :param x: the primal variable wrt evaluate the function
         :return: the function value wrt primal-dual variable
@@ -325,10 +343,12 @@ class AugmentedLagrangianQuadratic(Quadratic):
                 0.5 * self.rho * np.linalg.norm(clipped_constraints) ** 2)
 
     def _autograd_function(self, x):
-        """
-        Compute the value of the augmented lagrangian relaxation defined as:
+        r"""
+        Compute the value of the augmented lagrangian relaxation defined as
 
-        L(x, mu, lambda) = 1/2 x^T Q x + q^T x + mu^T (A x - b) + lambda^T (G x - h) + rho/2 ||(A x - b) + (G x - h)||^2
+        .. math::
+
+            L(x, \mu, \lambda) = \tfrac{1}{2} x^\top Q x + q^\top x + \mu^\top (A x - b) + \lambda^\top (G x - h) + \tfrac{\rho}{2} \| (A x - b) + (G x - h) \|^2
 
         Returns the same value of `function(self, x)` but it is written avoiding vector assignments
         to make it understandable by autograd, so it perform more matrix-vector products and for this
@@ -342,10 +362,12 @@ class AugmentedLagrangianQuadratic(Quadratic):
                 0.5 * self.rho * np.sum(np.square(np.clip(self.G @ x - self.h, a_min=0, a_max=None))))
 
     def jacobian(self, x):
-        """
-        Compute the jacobian of the augmented lagrangian relaxation defined as:
+        r"""
+        Compute the jacobian of the augmented lagrangian relaxation defined as
 
-            J L(x, mu, lambda) = Q x + q + mu^T A + lambda^T G + rho ((A x - b) + (G x - h))
+        .. math::
+
+            J L(x, \mu, \lambda) = Q x + q + \mu^\top A + \lambda^\top G + \rho ((A x - b) + (G x - h))
 
         :param x: the primal variable wrt evaluate the jacobian
         :return: the jacobian wrt primal-dual variable

@@ -38,10 +38,12 @@ class Kernel(BaseEstimator, ABC):
 
 
 class LinearKernel(Kernel):
-    """
+    r"""
     Compute the linear kernel between X and Y:
 
-        K(X, Y) = <X, Y>
+    .. math::
+
+        K(X, Y) = \langle X, Y \rangle
     """
 
     def __call__(self, X, Y=None):
@@ -50,10 +52,12 @@ class LinearKernel(Kernel):
 
 
 class PolyKernel(Kernel):
-    """
+    r"""
     Compute the polynomial kernel between X and Y:
 
-        K(X, Y) = (gamma <X, Y> + coef0)^degree
+    .. math::
+
+        K(X, Y) = (\gamma \langle X, Y \rangle + coef_0)^{degree}
 
     Parameters
     ----------
@@ -92,10 +96,12 @@ class PolyKernel(Kernel):
 
 
 class GaussianKernel(Kernel):
-    """
+    r"""
     Compute the gaussian RBF kernel between X and Y:
 
-        K(X, Y) = exp(-gamma ||X - Y||_2^2)
+    .. math::
+
+        K(X, Y) = e^{-\gamma \lVert X - Y \rVert_2^2}
 
     Parameters
     ----------
@@ -124,10 +130,12 @@ class GaussianKernel(Kernel):
 
 
 class LaplacianKernel(Kernel):
-    """
+    r"""
     Compute the laplacian RBF kernel between X and Y:
 
-        K(X, Y) = exp(-gamma ||X - Y||_1)
+    .. math::
+
+        K(X, Y) = e^{-\gamma \lVert X - Y \rVert_1}
 
     Parameters
     ----------
@@ -156,10 +164,12 @@ class LaplacianKernel(Kernel):
 
 
 class SigmoidKernel(Kernel):
-    """
+    r"""
     Compute the sigmoid kernel between X and Y:
 
-        K(X, Y) = tanh(gamma <X, Y> + coef0)
+    .. math::
+
+        K(X, Y) = \tanh(\gamma \langle X, Y \rangle + coef_0)
 
     Parameters
     ----------

@@ -6,17 +6,17 @@ from . import LineSearchOptimizer
 
 
 class BFGS(LineSearchOptimizer):
-    """
+    r"""
     Apply a Quasi-Newton approach, in particular using the celebrated
     Broyden-Fletcher-Goldfarb-Shanno (BFGS) formula, for the minimization of the
     provided function f.
 
     Unlike Newton's method, the (inverse of the) Hessian is not computed but
     iteratively approximated by a dense [n x n] matrix H, updated at each iteration
-    with the rank-two BFGS formula from the latest step s = x^{i + 1} - x^i and the
-    latest gradient variation y = \\nabla f(x^{i + 1}) - \\nabla f(x^i), so that the
-    search direction d = - H \\nabla f(x) requires no linear system solve; the step
-    size is then chosen by an Armijo-Wolfe (or Backtracking) line search.
+    with the rank-two BFGS formula from the latest step :math:`s^{i} = x^{i+1} - x^{i}`
+    and the latest gradient variation :math:`y^{i} = \nabla f(x^{i+1}) - \nabla f(x^{i})`,
+    so that the search direction :math:`d = -H \nabla f(x)` requires no linear system
+    solve; the step size is then chosen by an Armijo-Wolfe (or Backtracking) line search.
     """
 
     def __init__(self,
@@ -228,34 +228,36 @@ class BFGS(LineSearchOptimizer):
 
 
 class LBFGS(BFGS):
-    """
+    r"""
     Apply a Limited-memory Quasi-Newton approach, in particular the Limited-memory
     Broyden-Fletcher-Goldfarb-Shanno (L-BFGS) formula, for the minimization of the
     provided function f.
 
     Unlike the full BFGS, which explicitly stores and updates the [n x n] dense
-    approximation of the inverse of the Hessian (hence requiring O(n^2) memory and
-    O(n^2) operations per iteration), L-BFGS never forms that matrix: it only keeps
+    approximation of the inverse of the Hessian (hence requiring :math:`O(n^2)` memory and
+    :math:`O(n^2)` operations per iteration), L-BFGS never forms that matrix: it only keeps
     the m most recent curvature pairs
 
-        s^i = x^{i + 1} - x^i        y^i = \\nabla f(x^{i + 1}) - \\nabla f(x^i)
+    .. math::
+
+        s^{i} = x^{i+1} - x^{i} \qquad y^{i} = \nabla f(x^{i+1}) - \nabla f(x^{i})
 
     dropping the oldest pair as soon as a new one is computed, and recovers the
-    search direction d = - H \\nabla f(x) implicitly through the celebrated
-    *two-loop recursion* (Nocedal, 1980) [1]_, which costs just O(m n) memory and
+    search direction :math:`d = -H \nabla f(x)` implicitly through the celebrated
+    *two-loop recursion* (Nocedal, 1980) [1]_, which costs just :math:`O(m n)` memory and
     operations per iteration. This makes the method suited for large scale problems
     where storing a dense [n x n] matrix would be prohibitive, at the price of using
     a low-rank approximation of the inverse of the Hessian built only from the last
     m steps.
 
     At each iteration the recursion is restarted from a fresh initial approximation
-    of the inverse of the Hessian H^0 = gamma * I; rather than using the fixed delta
-    of the full BFGS, gamma is dynamically set to the scaling factor (Liu & Nocedal,
-    1989) [2]_ gamma = (s^{i - 1} y^{i - 1}) / (y^{i - 1} y^{i - 1}), which calibrates the
+    of the inverse of the Hessian :math:`H^{0} = \gamma I`; rather than using the fixed
+    delta of the full BFGS, :math:`\gamma` is dynamically set to the scaling factor (Liu & Nocedal,
+    1989) [2]_ :math:`\gamma = (s^{i-1} y^{i-1}) / (y^{i-1} y^{i-1})`, which calibrates the
     trial step to the size of the latest curvature, greatly improving the quality of
     the search direction. As long as no curvature pair has been collected yet, i.e.,
     at the very first iteration, the (scaled) steepest descent direction
-    d = - delta * \\nabla f(x) is used.
+    :math:`d = -\delta \nabla f(x)` is used.
 
     References
     ----------
@@ -287,12 +289,12 @@ class LBFGS(BFGS):
                  callback_args=(),
                  random_state=None,
                  verbose=False):
-        """
+        r"""
 
         :param f:          the objective function.
         :param x:          ([n x 1] real column vector): the point where to start the algorithm from.
         :param m:          (integer scalar, optional, default value 20): the number of most recent
-                           curvature pairs {s^i, y^i} kept in memory to implicitly represent the
+                           curvature pairs :math:`\{s^{i}, y^{i}\}` kept in memory to implicitly represent the
                            approximation of the inverse of the Hessian. Larger values yield a more
                            accurate approximation (closer to the full BFGS) at the price of more
                            memory and computation per iteration. Has to be >= 1.
@@ -314,7 +316,7 @@ class LBFGS(BFGS):
         :param a_start:    (real scalar, optional, default value 1): starting value of alpha in the
                            line search (> 0).
         :param delta:      (real scalar, optional, default value 1): scaling of the steepest descent
-                           direction d = - delta * \\nabla f(x) used at the very first iteration, before
+                           direction :math:`d = -\delta \nabla f(x)` used at the very first iteration, before
                            any curvature pair is available. Has to be > 0.
         :param tau:        (real scalar, optional, default value 0.9): scaling parameter for the line
                            search. In the Armijo-Wolfe line search it is used in the first phase: if the

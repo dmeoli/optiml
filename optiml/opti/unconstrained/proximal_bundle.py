@@ -5,13 +5,13 @@ from .. import Optimizer
 
 
 class ProximalBundle(Optimizer):
-    """
+    r"""
     Apply the Proximal Bundle Method for the minimization of the provided
     function f, which is assumed to be (possibly) nondifferentiable.
 
     At each iteration a cutting-plane model of f is built from the subgradients
     collected so far and a stabilized master problem, regularized by a proximal
-    term weighted by mu, is solved to compute the search direction; the candidate
+    term weighted by :math:`\mu`, is solved to compute the search direction; the candidate
     point is then accepted as a Serious Step or rejected as a Null Step according
     to an Armijo-like sufficient decrease condition.
     """

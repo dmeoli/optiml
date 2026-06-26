@@ -4,16 +4,16 @@ from . import LineSearchOptimizer
 
 
 class Newton(LineSearchOptimizer):
-    """
+    r"""
     Apply a classical Newton's method for the minimization of the provided
     function f.
 
     At each iteration the search direction is computed as the solution of the
-    Newton system H d = - g, where H is the Hessian of f. To guarantee that d is
-    a descent direction even when H is not positive definite, the Hessian is
-    modified by shifting its spectrum so that its smallest eigenvalue is at least
-    delta, and the resulting direction is then accepted by an Armijo-Wolfe (or
-    Backtracking) line search.
+    Newton system :math:`H d = -g`, where :math:`H` is the Hessian of f. To guarantee
+    that d is a descent direction even when :math:`H` is not positive definite, the
+    Hessian is modified by shifting its spectrum so that its smallest eigenvalue is
+    at least :math:`\delta`, and the resulting direction is then accepted by an
+    Armijo-Wolfe (or Backtracking) line search.
     """
 
     def __init__(self,

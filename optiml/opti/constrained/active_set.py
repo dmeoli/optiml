@@ -6,10 +6,12 @@ from optiml.opti.constrained import BoxConstrainedQuadraticOptimizer
 
 
 class ActiveSet(BoxConstrainedQuadraticOptimizer):
-    """
-    Apply the Active Set Method to the convex Box-Constrained Quadratic program:
+    r"""
+    Apply the Active Set Method to the convex Box-Constrained Quadratic program
 
-                        (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
+    .. math::
+
+        (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : 0 \le x \le ub \right\}
 
     Since all the constraints are box ones, the active set is logically partitioned
     onto the variables fixed to the lower bound and those fixed to the upper bound;
@@ -27,11 +29,11 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                  callback=None,
                  callback_args=(),
                  verbose=False):
-        """
+        r"""
 
-        :param quad:          the quadratic function 1/2 x^T Q x + q^T x to be minimized.
+        :param quad:          the quadratic function :math:`\tfrac{1}{2} x^\top Q x + q^\top x` to be minimized.
         :param ub:            ([n x 1] real column vector): the upper bound of the box, i.e., the
-                              variables are constrained to lie in 0 <= x <= ub.
+                              variables are constrained to lie in :math:`0 \le x \le ub`.
         :param x:             ([n x 1] real column vector, optional): the point where to start the
                               algorithm from; if not provided, it starts from the middle of the box.
         :param eps:           (real scalar, optional, default value 1e-6): the accuracy in the stopping

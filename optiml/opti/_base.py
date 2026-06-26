@@ -226,10 +226,12 @@ class OptimizationFunction(ABC):
 class Quadratic(OptimizationFunction):
 
     def __init__(self, Q, q):
-        """
-        Construct a quadratic function from its linear and quadratic part defined as:
+        r"""
+        Construct a quadratic function from its linear and quadratic part defined as
 
-                                    1/2 x^T Q x + q^T x
+        .. math::
+
+            \tfrac{1}{2} x^\top Q x + q^\top x
 
         :param Q: ([n x n] real symmetric matrix, not necessarily positive semidefinite):
                            the Hessian (i.e., the quadratic part) of f. If it is not
@@ -269,25 +271,25 @@ class Quadratic(OptimizationFunction):
         return self.function(self.x_star())
 
     def function(self, x):
-        """
-        A general quadratic function f(x) = 1/2 x^T Q x + q^T x.
+        r"""
+        A general quadratic function :math:`f(x) = \tfrac{1}{2} x^\top Q x + q^\top x`.
 
         :param x: ([n x 1] real column vector): 1D array of points at which the Hessian is to be computed.
-        :return:  the value 1/2 x^T Q x + q^T x of the general quadratic function at x.
+        :return:  the value :math:`\tfrac{1}{2} x^\top Q x + q^\top x` of the general quadratic function at x.
         """
         return 0.5 * x @ self.Q @ x + self.q @ x
 
     def jacobian(self, x):
-        """
-        The Jacobian (i.e., the gradient) of a general quadratic function J f(x) = Q x + q.
+        r"""
+        The Jacobian (i.e., the gradient) of a general quadratic function :math:`J f(x) = Q x + q`.
         :param x: ([n x 1] real column vector): 1D array of points at which the Hessian is to be computed.
         :return:  the Jacobian of a general quadratic function.
         """
         return self.Q @ x + self.q
 
     def hessian(self, x):
-        """
-        The Hessian matrix of a general quadratic function H f(x) = Q.
+        r"""
+        The Hessian matrix of a general quadratic function :math:`H f(x) = Q`.
         :param x: 1D array of points at which the Hessian is to be computed.
         :return:  the Hessian matrix (i.e., the the quadratic part) of a general quadratic function at x.
         """

@@ -77,10 +77,12 @@ class NeuralNetworkLoss(OptimizationFunction, ABC):
 
 
 class MeanSquaredError(NeuralNetworkLoss):
-    """
+    r"""
     Compute the mean squared error loss for regression as:
 
-        L(y_pred, y_true) = sum((y_pred - y_true)^2)
+    .. math::
+
+        L(y_{pred}, y_{true}) = \sum (y_{pred} - y_{true})^2
     """
 
     def x_star(self):
@@ -107,10 +109,12 @@ class MeanSquaredError(NeuralNetworkLoss):
 
 
 class MeanAbsoluteError(NeuralNetworkLoss):
-    """
+    r"""
     Compute the mean absolute error loss for regression as:
 
-        L(y_pred, y_true) = sum(abs(y_pred - y_true))
+    .. math::
+
+        L(y_{pred}, y_{true}) = \sum \lvert y_{pred} - y_{true} \rvert
     """
 
     def loss(self, y_pred, y_true):
@@ -121,17 +125,28 @@ class MeanAbsoluteError(NeuralNetworkLoss):
 
 
 class BinaryCrossEntropy(NeuralNetworkLoss):
-    """Binary Cross-Entropy aka Sigmoid Cross-Entropy loss
+    r"""Binary Cross-Entropy aka Sigmoid Cross-Entropy loss
     function for binary and multi-label classification
-    or regression between 0 and 1 with sigmoid output layer"""
+    or regression between 0 and 1 with sigmoid output layer:
+
+    .. math::
+
+        L(y_{pred}, y_{true}) = -\sum \left[ y_{true} \log(y_{pred}) +
+        (1 - y_{true}) \log(1 - y_{pred}) \right]
+    """
 
     def loss(self, y_pred, y_true):
         return -np.sum(xlogy(y_true, y_pred) + xlogy(1. - y_true, 1. - y_pred))
 
 
 class CategoricalCrossEntropy(NeuralNetworkLoss):
-    """Categorical Cross-Entropy loss function for multi-class (single-label)
-    classification with softmax output layer and one-hot encoded target data"""
+    r"""Categorical Cross-Entropy loss function for multi-class (single-label)
+    classification with softmax output layer and one-hot encoded target data:
+
+    .. math::
+
+        L(y_{pred}, y_{true}) = -\sum y_{true} \log(y_{pred})
+    """
 
     def loss(self, y_pred, y_true):
         return -np.sum(xlogy(y_true, y_pred))

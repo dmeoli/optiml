@@ -4,11 +4,13 @@ from optiml.opti.constrained import BoxConstrainedQuadraticOptimizer
 
 
 class FrankWolfe(BoxConstrainedQuadraticOptimizer):
-    """
+    r"""
     Apply the (possibly, stabilized) Frank-Wolfe algorithm with exact line search
-    to the convex Box-Constrained Quadratic program:
+    to the convex Box-Constrained Quadratic program
 
-                        (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
+    .. math::
+
+        (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : 0 \le x \le ub \right\}
 
     At each iteration the linearized problem is solved over the box to obtain a
     feasible vertex, a lower bound is updated and an exact line search is performed
@@ -27,11 +29,11 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
                  callback=None,
                  callback_args=(),
                  verbose=False):
-        """
+        r"""
 
-        :param quad:          the quadratic function 1/2 x^T Q x + q^T x to be minimized.
+        :param quad:          the quadratic function :math:`\tfrac{1}{2} x^\top Q x + q^\top x` to be minimized.
         :param ub:            ([n x 1] real column vector): the upper bound of the box, i.e., the
-                              variables are constrained to lie in 0 <= x <= ub.
+                              variables are constrained to lie in :math:`0 \le x \le ub`.
         :param x:             ([n x 1] real column vector, optional): the point where to start the
                               algorithm from; if not provided, it starts from the middle of the box.
         :param t:             (real scalar, optional, default value 0): if the stabilized version of the

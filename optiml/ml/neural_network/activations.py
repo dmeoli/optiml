@@ -21,7 +21,7 @@ class Activation(ABC):
 
 
 class Linear(Activation):
-    """Identity (linear) activation function: f(x) = x."""
+    r"""Identity (linear) activation function :math:`f(x) = x`."""
 
     def function(self, x):
         return x
@@ -31,7 +31,7 @@ class Linear(Activation):
 
 
 class ReLU(Activation):
-    """Rectified linear unit activation function: f(x) = max(0, x)."""
+    r"""Rectified linear unit activation function :math:`f(x) = \max(0, x)`."""
 
     def function(self, x):
         return np.maximum(0., x)
@@ -41,7 +41,7 @@ class ReLU(Activation):
 
 
 class Tanh(Activation):
-    """Hyperbolic tangent activation function: f(x) = tanh(x)."""
+    r"""Hyperbolic tangent activation function :math:`f(x) = \tanh(x)`."""
 
     def function(self, x):
         return np.tanh(x)
@@ -51,7 +51,7 @@ class Tanh(Activation):
 
 
 class Sigmoid(Activation):
-    """Logistic sigmoid activation function: f(x) = 1 / (1 + exp(-x))."""
+    r"""Logistic sigmoid activation function :math:`f(x) = \frac{1}{1 + e^{-x}}`."""
 
     def function(self, x):
         return expit(x)
@@ -62,7 +62,7 @@ class Sigmoid(Activation):
 
 
 class SoftMax(Activation):
-    """Softmax activation function: f(x)_i = exp(x_i) / sum_j exp(x_j)."""
+    r"""Softmax activation function :math:`f(x)_i = \frac{e^{x_i}}{\sum_j e^{x_j}}`."""
 
     def function(self, x, axis=-1):
         exps = np.exp(x - np.max(x, axis=axis, keepdims=True))

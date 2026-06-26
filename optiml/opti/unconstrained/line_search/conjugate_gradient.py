@@ -5,13 +5,13 @@ from ... import Quadratic
 
 
 class ConjugateGradient(LineSearchOptimizer):
-    """
+    r"""
     Apply a Nonlinear Conjugate Gradient algorithm for the minimization of the
     provided function f.
 
     At each iteration the search direction is a combination of the current
-    (negative) gradient and the previous search direction, d = - g + beta * d_prev,
-    where the scalar beta is computed according to one of the classical Nonlinear
+    (negative) gradient and the previous search direction, :math:`d = -g + \beta \, d_{prev}`,
+    where the scalar :math:`\beta` is computed according to one of the classical Nonlinear
     Conjugate Gradient formulae (Fletcher-Reeves, Polak-Ribiere, Hestenes-Stiefel
     or Dai-Yuan); the step size is then chosen by an Armijo-Wolfe (or Backtracking)
     line search. For quadratic functions the exact conjugacy condition and the

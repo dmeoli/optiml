@@ -5,12 +5,12 @@ from ... import Quadratic
 
 
 class SteepestGradientDescent(LineSearchOptimizer):
-    """
+    r"""
     Apply the classical Steepest Descent algorithm for the minimization of the
     provided function f.
 
     At each iteration the search direction is simply the negative gradient
-    d = - \\nabla f(x) and the step size is chosen by an Armijo-Wolfe (or
+    :math:`d = -\nabla f(x)` and the step size is chosen by an Armijo-Wolfe (or
     Backtracking) line search. For quadratic functions the exact closed-form step
     size along the steepest descent direction is used instead.
     """
