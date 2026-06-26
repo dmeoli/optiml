@@ -1,8 +1,8 @@
 # OptiML
 
-[![Build Status](https://api.travis-ci.com/dmeoli/optiml.svg?branch=master)](https://app.travis-ci.com/dmeoli/optiml)
+[![CI](https://github.com/dmeoli/optiml/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/dmeoli/optiml/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/dmeoli/optiml/badge.svg?branch=master)](https://coveralls.io/github/dmeoli/optiml?branch=master)
-[![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-blue)
+[![Python Version](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue)](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue)
 [![PyPI Version](https://img.shields.io/pypi/v/optiml.svg?color=blue)](https://pypi.org/project/optiml/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/optiml.svg)](https://pypistats.org/packages/optiml)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/optiml/master)

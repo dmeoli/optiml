@@ -21,4 +21,4 @@ setuptools.setup(name='optiml',
                                    'scikit-learn',
                                    'scipy',
                                    'wurlitzer'],
-                 python_requires='>=3.6')
+                 python_requires='>=3.9')
