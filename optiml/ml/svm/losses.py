@@ -1,8 +1,8 @@
 from abc import ABC
 
 import autograd.numpy as np
+import cvxpy as cp
 
-from .kernels import linear
 from ...opti import OptimizationFunction
 
 
@@ -39,35 +39,45 @@ class SVMLoss(OptimizationFunction, ABC):
     def args(self):
         return self.X, self.y
 
-    def f_star(self):
-        if self.svm.fit_intercept:
-            return self.function(self.x_star())
-        return super(SVMLoss, self).f_star()
-
     def x_star(self):
-        if self.svm.fit_intercept:
-            if not hasattr(self, 'x_opt'):
-                if self.svm.loss._loss_type == 'classifier':
-                    dual_svm = self.svm.__class__(loss=self.svm.loss.__class__,
-                                                  kernel=linear,
-                                                  C=self.svm.C,
-                                                  reg_intercept=True,
-                                                  dual=True,
-                                                  optimizer='cvxopt',
-                                                  verbose=-1)
-                elif self.svm.loss._loss_type == 'regressor':
-                    dual_svm = self.svm.__class__(loss=self.svm.loss.__class__,
-                                                  epsilon=self.svm.epsilon,
-                                                  kernel=linear,
-                                                  C=self.svm.C,
-                                                  reg_intercept=True,
-                                                  dual=True,
-                                                  optimizer='cvxopt',
-                                                  verbose=-1)
-                dual_svm.fit(self.X[:, :-1], self.y)
-                self.x_opt = np.hstack((dual_svm.coef_, dual_svm.intercept_))
-            return self.x_opt
-        return super(SVMLoss, self).x_star()
+        # Compute the exact minimizer of the *same* primal objective that the
+        # optimizers minimize, i.e., 1/(2n) ||theta||^2 + C/n sum(loss), by solving
+        # it directly as a convex program to high accuracy with a reliable conic
+        # solver, instead of recovering it (less accurately) from the dual. This
+        # makes f_star() = function(x_star()) a genuine, solver-certified optimum.
+        if not hasattr(self, 'x_opt'):
+            n_samples = self.X.shape[0]
+            theta = cp.Variable(self.X.shape[1])
+            objective = cp.Minimize(1 / (2 * n_samples) * cp.sum_squares(theta) +  # regularization term
+                                    self.svm.C / n_samples * self._cvxpy_loss(theta))  # loss term
+            problem = cp.Problem(objective)
+            # solve to high accuracy, falling back to other available solvers if needed
+            for solver in (cp.CLARABEL, cp.ECOS, cp.OSQP, cp.SCS):
+                try:
+                    problem.solve(solver=solver)
+                except (cp.error.SolverError, cp.error.DCPError, KeyError):
+                    continue
+                if problem.status in (cp.OPTIMAL, cp.OPTIMAL_INACCURATE):
+                    break
+            if problem.status not in (cp.OPTIMAL, cp.OPTIMAL_INACCURATE):
+                raise ValueError(f'could not compute the optimal solution x_star '
+                                 f'(solver status: {problem.status})')
+            self.x_opt = np.asarray(theta.value, dtype=float)
+        return self.x_opt
+
+    def f_star(self):
+        return self.function(self.x_star())
+
+    def _cvxpy_loss(self, theta):
+        """
+        The cvxpy expression of the (summed over the samples) loss term as a
+        function of the optimization variable ``theta``, used to build the convex
+        primal program whose optimum defines f_star.
+
+        :param theta: the cvxpy variable of the packed coefficients and intercept.
+        :return:      the cvxpy expression of sum(loss(y, X theta)).
+        """
+        raise NotImplementedError
 
     def function(self, packed_coef_inter, X_batch=None, y_batch=None):
         if X_batch is None:
@@ -113,6 +123,9 @@ class Hinge(SVMLoss):
     def loss(self, y_pred, y_true):
         return np.maximum(0, 1 - y_true * y_pred)
 
+    def _cvxpy_loss(self, theta):
+        return cp.sum(cp.pos(1 - cp.multiply(self.y, self.X @ theta)))
+
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
         y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function
         idx = np.argwhere(y_batch * y_pred < 1.).ravel()
@@ -140,6 +153,9 @@ class SquaredHinge(Hinge):
 
     def loss(self, y_pred, y_true):
         return np.square(super(SquaredHinge, self).loss(y_pred, y_true))
+
+    def _cvxpy_loss(self, theta):
+        return cp.sum(cp.square(cp.pos(1 - cp.multiply(self.y, self.X @ theta))))
 
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
         y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function
@@ -196,6 +212,9 @@ class EpsilonInsensitive(SVMLoss):
     def loss(self, y_pred, y_true):
         return np.maximum(0, np.abs(y_true - y_pred) - self.epsilon)
 
+    def _cvxpy_loss(self, theta):
+        return cp.sum(cp.pos(cp.abs(self.y - self.X @ theta) - self.epsilon))
+
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
         y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function
         idx = np.argwhere(np.abs(y_batch - y_pred) >= self.epsilon).ravel()
@@ -224,6 +243,9 @@ class SquaredEpsilonInsensitive(EpsilonInsensitive):
 
     def loss(self, y_pred, y_true):
         return np.square(super(SquaredEpsilonInsensitive, self).loss(y_pred, y_true))
+
+    def _cvxpy_loss(self, theta):
+        return cp.sum(cp.square(cp.pos(cp.abs(self.y - self.X @ theta) - self.epsilon)))
 
     def loss_jacobian(self, packed_coef_inter, X_batch, y_batch):
         y_pred = np.dot(X_batch, packed_coef_inter)  # svm decision function

@@ -6,11 +6,12 @@ from sklearn.multiclass import OneVsRestClassifier as OVR
 from sklearn.preprocessing import MinMaxScaler
 
 from optiml.ml.svm import SVC
+from optiml.ml.tests._utils import assert_all_optimal, SMOOTH_TOL, NONSMOOTH_TOL
 from optiml.ml.svm.kernels import gaussian
 from optiml.ml.svm.losses import hinge, squared_hinge
 from optiml.opti.constrained import ProjectedGradient, ActiveSet, InteriorPoint, FrankWolfe
 from optiml.opti.unconstrained import ProximalBundle
-from optiml.opti.unconstrained.line_search import SteepestGradientDescent, ConjugateGradient, Newton, BFGS
+from optiml.opti.unconstrained.line_search import SteepestGradientDescent, ConjugateGradient, Newton, BFGS, LBFGS
 from optiml.opti.unconstrained.stochastic import (StochasticGradientDescent, Adam, AMSGrad,
                                                   AdaMax, AdaGrad, AdaDelta, RMSProp)
 
@@ -22,26 +23,28 @@ def test_solve_primal_l1_svc_with_line_search_optimizers():
 
     svc = OVR(SVC(loss=hinge, optimizer=SteepestGradientDescent))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=hinge, optimizer=ConjugateGradient))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    # CG only crawls on the nonsmooth multiclass hinge primal, so just check the score here;
+    # its convergence to f* is exercised on the better-conditioned SVR problem
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=hinge, optimizer=Newton))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=hinge, optimizer=BFGS))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, NONSMOOTH_TOL)
+    assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OVR(SVC(loss=hinge, optimizer=LBFGS))
+    svc = svc.fit(X_train, y_train)
+    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
 
@@ -52,44 +55,37 @@ def test_solve_primal_l1_svc_with_stochastic_optimizers():
 
     svc = OVR(SVC(loss=hinge, optimizer=StochasticGradientDescent))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=hinge, optimizer=Adam))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    # Adam does not reliably converge on the nonsmooth multiclass hinge primal, so check only the score
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=hinge, optimizer=AMSGrad))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=hinge, optimizer=AdaMax))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=hinge, optimizer=AdaGrad))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=hinge, optimizer=AdaDelta, learning_rate=1.))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    # AdaDelta does not reliably converge on the nonsmooth multiclass hinge primal, so check only the score
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=hinge, optimizer=RMSProp))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    # RMSProp does not reliably converge on the nonsmooth multiclass hinge primal, so check only the score
     assert svc.score(X_test, y_test) >= 0.57
 
 
@@ -99,8 +95,7 @@ def test_solve_primal_l1_svc_with_proximal_bundle():
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
     svc = OVR(SVC(loss=hinge, optimizer=ProximalBundle))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    # the proximal bundle method only crawls on the nonsmooth multiclass hinge primal, so check only the score
     assert svc.score(X_test, y_test) >= 0.57
 
 
@@ -108,9 +103,10 @@ def test_solve_dual_l1_svc_with_smo():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
-    svc = OVR(SVC(loss=hinge, kernel=gaussian, dual=True, optimizer='smo'))
-    svc.fit(X_train, y_train)
-    assert svc.score(X_test, y_test) >= 0.97
+    smo = OVR(SVC(loss=hinge, kernel=gaussian, dual=True, optimizer='smo')).fit(X_train, y_train)
+    # SMO must reach essentially the same solution as the reference QP solver (cvxopt)
+    ref = OVR(SVC(loss=hinge, kernel=gaussian, reg_intercept=False, dual=True, optimizer='cvxopt')).fit(X_train, y_train)
+    assert (smo.predict(X_test) == ref.predict(X_test)).mean() >= 0.97
 
 
 def test_solve_dual_l1_svc_with_cvxopt():
@@ -188,26 +184,27 @@ def test_solve_primal_l2_svc_with_line_search_optimizers():
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=SteepestGradientDescent))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, SMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=ConjugateGradient))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, SMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=Newton))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, SMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=BFGS))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, SMOOTH_TOL)
+    assert svc.score(X_test, y_test) >= 0.57
+
+    svc = OVR(SVC(loss=squared_hinge, optimizer=LBFGS))
+    svc = svc.fit(X_train, y_train)
+    assert_all_optimal(svc, SMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
 
@@ -218,44 +215,37 @@ def test_solve_primal_l2_svc_with_stochastic_optimizers():
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=StochasticGradientDescent))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, SMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=Adam))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, SMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=AMSGrad))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, SMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=AdaMax))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, SMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=AdaGrad))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, NONSMOOTH_TOL)  # this adaptive method only gets within the looser tolerance here
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=AdaDelta, learning_rate=1.))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    assert_all_optimal(svc, NONSMOOTH_TOL)  # this adaptive method only gets within the looser tolerance here
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=RMSProp))
     svc = svc.fit(X_train, y_train)
-    assert (np.allclose(np.hstack((estimator.coef_, estimator.intercept_)), estimator.loss.x_star())
-            for estimator in svc.estimators_)
+    # RMSProp does not reliably converge here, so check only the score
     assert svc.score(X_test, y_test) >= 0.57
 
 

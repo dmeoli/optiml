@@ -188,7 +188,7 @@ class SMOClassifier(SMO):
 
         # update weight vector to reflect change in a1 and a2, if
         # kernel is linear, based on equation 22 in Platt's paper
-        if self.kernel == 'linear':
+        if isinstance(self.kernel, LinearKernel):
             self.w += y1 * (a1 - alpha1) * self.X[i1] + y2 * (a2 - alpha2) * self.X[i2]
 
         # update error cache using new alphas
