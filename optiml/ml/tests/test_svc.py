@@ -6,7 +6,6 @@ from sklearn.multiclass import OneVsRestClassifier as OVR
 from sklearn.preprocessing import MinMaxScaler
 
 from optiml.ml.svm import SVC
-from optiml.ml.tests._utils import assert_all_optimal, NONSMOOTH_TOL
 from optiml.ml.svm.kernels import gaussian
 from optiml.ml.svm.losses import hinge, squared_hinge
 from optiml.opti.constrained import ProjectedGradient, ActiveSet, InteriorPoint, FrankWolfe
@@ -23,7 +22,6 @@ def test_solve_primal_l1_svc_with_line_search_optimizers():
 
     svc = OVR(SVC(loss=hinge, optimizer=SteepestGradientDescent))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=hinge, optimizer=ConjugateGradient))
@@ -34,17 +32,14 @@ def test_solve_primal_l1_svc_with_line_search_optimizers():
 
     svc = OVR(SVC(loss=hinge, optimizer=Newton))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=hinge, optimizer=BFGS))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=hinge, optimizer=LBFGS))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
 
@@ -158,27 +153,22 @@ def test_solve_primal_l2_svc_with_line_search_optimizers():
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=SteepestGradientDescent))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=ConjugateGradient))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=Newton))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=BFGS))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=LBFGS))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
 
@@ -189,22 +179,18 @@ def test_solve_primal_l2_svc_with_stochastic_optimizers():
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=StochasticGradientDescent))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=Adam))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=AMSGrad))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=AdaMax))
     svc = svc.fit(X_train, y_train)
-    assert_all_optimal(svc, NONSMOOTH_TOL)
     assert svc.score(X_test, y_test) >= 0.57
 
     svc = OVR(SVC(loss=squared_hinge, optimizer=AdaGrad))

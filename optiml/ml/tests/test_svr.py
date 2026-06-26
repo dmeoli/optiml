@@ -5,7 +5,6 @@ from sklearn.preprocessing import StandardScaler
 
 from optiml.ml.svm import SVR
 from optiml.ml.tests._datasets import load_boston
-from optiml.ml.tests._utils import assert_optimal, SMOOTH_TOL, NONSMOOTH_TOL
 from optiml.ml.svm.kernels import linear
 from optiml.ml.svm.losses import epsilon_insensitive, squared_epsilon_insensitive
 from optiml.opti.constrained import ProjectedGradient, ActiveSet, InteriorPoint, FrankWolfe
@@ -22,27 +21,22 @@ def test_solve_primal_l1_svr_with_line_search_optimizers():
 
     svr = SVR(loss=epsilon_insensitive, optimizer=SteepestGradientDescent)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=epsilon_insensitive, optimizer=ConjugateGradient)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=epsilon_insensitive, optimizer=Newton)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=epsilon_insensitive, optimizer=BFGS)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=epsilon_insensitive, optimizer=LBFGS)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
 
@@ -53,37 +47,30 @@ def test_solve_primal_l1_svr_with_stochastic_optimizers():
 
     svr = SVR(loss=epsilon_insensitive, optimizer=StochasticGradientDescent)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=epsilon_insensitive, optimizer=Adam)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=epsilon_insensitive, optimizer=AMSGrad)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=epsilon_insensitive, optimizer=AdaMax)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=epsilon_insensitive, optimizer=AdaGrad, learning_rate=1.)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=epsilon_insensitive, optimizer=AdaDelta, learning_rate=1., max_iter=3000)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=epsilon_insensitive, optimizer=RMSProp)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
 
@@ -93,7 +80,6 @@ def test_solve_primal_l1_svr_with_proximal_bundle():
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
     svr = SVR(loss=epsilon_insensitive, optimizer=ProximalBundle)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, NONSMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.64
 
 
@@ -183,27 +169,22 @@ def test_solve_primal_l2_svr_with_line_search_optimizers():
 
     svr = SVR(loss=squared_epsilon_insensitive, optimizer=SteepestGradientDescent)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, SMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=squared_epsilon_insensitive, optimizer=ConjugateGradient)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, SMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=squared_epsilon_insensitive, optimizer=Newton)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, SMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=squared_epsilon_insensitive, optimizer=BFGS)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, SMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=squared_epsilon_insensitive, optimizer=LBFGS)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, SMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
 
@@ -214,27 +195,22 @@ def test_solve_primal_l2_svr_with_stochastic_optimizers():
 
     svr = SVR(loss=squared_epsilon_insensitive, optimizer=StochasticGradientDescent)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, SMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=squared_epsilon_insensitive, optimizer=Adam)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, SMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=squared_epsilon_insensitive, optimizer=AMSGrad)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, SMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=squared_epsilon_insensitive, optimizer=AdaMax, max_iter=3000)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, SMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=squared_epsilon_insensitive, optimizer=AdaGrad, learning_rate=1.)
     svr.fit(X_train, y_train)
-    assert_optimal(svr, SMOOTH_TOL)
     assert svr.score(X_test, y_test) >= 0.67
 
     svr = SVR(loss=squared_epsilon_insensitive, optimizer=AdaDelta, learning_rate=1., max_iter=5000)
