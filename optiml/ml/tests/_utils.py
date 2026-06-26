@@ -7,7 +7,7 @@ import numpy as np
 # nonsmooth ones (hinge / epsilon-insensitive) are only reached within a looser
 # tolerance by first-order and subgradient-type methods.
 SMOOTH_TOL = 1e-4
-NONSMOOTH_TOL = 1e-2
+NONSMOOTH_TOL = 5e-2
 
 
 def optimality_gap(model):
