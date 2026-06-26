@@ -96,7 +96,7 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
         Mu parameter for the proximal bundle method.
         Only used when ``optimizer`` is `ProximalBundle`. Must be strictly positive.
 
-    master_solver : string, default='ecos'
+    master_solver : string, default='clarabel'
         Master solver for the proximal bundle method for the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
@@ -127,7 +127,7 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
                  shuffle=True,
                  random_state=None,
                  mu=1,
-                 master_solver='ecos',
+                 master_solver='clarabel',
                  master_verbose=False,
                  verbose=False):
         self.layers = layers

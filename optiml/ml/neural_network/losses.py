@@ -57,10 +57,10 @@ class NeuralNetworkLoss(OptimizationFunction, ABC):
         self.neural_net._unpack(packed_coef_inter)
 
         n_samples = X_batch.shape[0]
-        coef_regs = np.sum(layer.coef_reg(layer.coef_) for layer in self.neural_net.layers
-                           if isinstance(layer, ParamLayer)) / (2 * n_samples)
-        inter_regs = np.sum(layer.inter_reg(layer.inter_) for layer in self.neural_net.layers
-                            if isinstance(layer, ParamLayer) and layer.fit_intercept) / (2 * n_samples)
+        coef_regs = sum(layer.coef_reg(layer.coef_) for layer in self.neural_net.layers
+                        if isinstance(layer, ParamLayer)) / (2 * n_samples)
+        inter_regs = sum(layer.inter_reg(layer.inter_) for layer in self.neural_net.layers
+                         if isinstance(layer, ParamLayer) and layer.fit_intercept) / (2 * n_samples)
         return 1 / (2 * n_samples) * self.loss(self.neural_net.forward(X_batch), y_batch) + coef_regs + inter_regs
 
     def jacobian(self, packed_coef_inter, X_batch=None, y_batch=None):

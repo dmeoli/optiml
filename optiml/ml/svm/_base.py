@@ -85,7 +85,7 @@ class SVM(BaseEstimator, ABC):
         large datasets (with thousands of training samples or more) in terms of both
         training time and validation score.
 
-    master_solver : string, default='ecos'
+    master_solver : string, default='clarabel'
         Master solver for the proximal bundle method for the CVXPY interface.
         Only used when ``optimizer`` is `ProximalBundle`.
 
@@ -195,7 +195,7 @@ class SVM(BaseEstimator, ABC):
                  reg_intercept=False,
                  dual=False,
                  optimizer=StochasticGradientDescent,
-                 master_solver='ecos',
+                 master_solver='clarabel',
                  learning_rate='auto',
                  momentum_type='none',
                  momentum=0.9,
@@ -374,7 +374,7 @@ class SVC(ClassifierMixin, SVM):
                  reg_intercept=False,
                  dual=False,
                  optimizer=StochasticGradientDescent,
-                 master_solver='ecos',
+                 master_solver='clarabel',
                  learning_rate='auto',
                  momentum_type='none',
                  momentum=0.9,
@@ -916,7 +916,7 @@ class SVR(RegressorMixin, SVM):
                  reg_intercept=False,
                  dual=False,
                  optimizer=StochasticGradientDescent,
-                 master_solver='ecos',
+                 master_solver='clarabel',
                  learning_rate='auto',
                  momentum_type='none',
                  momentum=0.9,

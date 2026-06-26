@@ -58,7 +58,7 @@ def test_l1_neural_network_regressor_with_proximal_bundle():
 def test_neural_network_classifier_with_stochastic_optimizer():
     X, y = load_iris(return_X_y=True)
     X_scaled = MinMaxScaler().fit_transform(X)
-    ohe = OneHotEncoder(sparse=False).fit(y.reshape(-1, 1))
+    ohe = OneHotEncoder(sparse_output=False).fit(y.reshape(-1, 1))
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
     net = NeuralNetworkClassifier((FullyConnected(4, 4, sigmoid),
                                    FullyConnected(4, 4, sigmoid),

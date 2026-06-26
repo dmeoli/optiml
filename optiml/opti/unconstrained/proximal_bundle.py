@@ -27,7 +27,7 @@ class ProximalBundle(Optimizer):
                  m_inf=-np.inf,
                  callback=None,
                  callback_args=(),
-                 master_solver='ecos',
+                 master_solver='clarabel',
                  master_verbose=False,
                  random_state=None,
                  verbose=False):
@@ -57,7 +57,7 @@ class ProximalBundle(Optimizer):
         :param callback:       (callable, optional, default value None): a function called at each iteration
                                with the optimizer instance as first argument.
         :param callback_args:  (tuple, optional, default value ()): additional arguments passed to callback.
-        :param master_solver:  (string, optional, default value 'ecos'): the cvxpy solver used to solve the
+        :param master_solver:  (string, optional, default value 'clarabel'): the cvxpy solver used to solve the
                                master problem at each iteration.
         :param master_verbose: (boolean, optional, default value False): print details about the resolution
                                of the master problem if True, nothing otherwise.
