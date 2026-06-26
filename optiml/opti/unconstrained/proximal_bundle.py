@@ -66,17 +66,7 @@ class ProximalBundle(Optimizer):
         :param verbose:        (boolean, optional, default value False): print details about each iteration
                                if True, nothing otherwise.
         :return x:             ([n x 1] real column vector): the best solution found so far.
-        :return status:        (string): a string describing the status of the algorithm at termination:
-                                  - 'optimal': the algorithm terminated having proven that x is a(n approximately)
-                               optimal solution; this only happens when "cheating", i.e., explicitly uses
-                               v_* = f([]) > -inf, unless in the very unlikely case that f() spontaneously
-                               produces an almost-null subgradient;
-                                  - 'unbounded': the algorithm has determined an extremely large negative value
-                               for f() that is taken as an indication that the problem is unbounded below
-                               (a "finite -inf", see m_inf above);
-                                  - 'stopped': the algorithm terminated having exhausted the maximum number of
-                               iterations: x is the best solution found so far, but not necessarily the optimal one;
-                                  - 'error': the master problem could not be solved at some iteration.
+        :return status: (string): the status of the algorithm at termination, one of: ``optimal`` (x is a(n approximately) optimal solution); ``unbounded`` (f() was driven below m_inf, i.e., the problem looks unbounded below); ``stopped`` (the maximum number of iterations/evaluations was reached); ``error`` (a numerical error occurred, e.g., the step size fell below min_a).
         """
         super(ProximalBundle, self).__init__(f=f,
                                              x=x,

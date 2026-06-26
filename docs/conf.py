@@ -26,6 +26,9 @@ extensions = [
 
 autosummary_generate = True
 autodoc_member_order = 'bysource'
+# render both the class docstring (the algorithm description) and the __init__
+# docstring (the :param list of the constructor) on each class page
+autoclass_content = 'both'
 autodoc_default_options = {
     'members': True,
     'inherited-members': True,
