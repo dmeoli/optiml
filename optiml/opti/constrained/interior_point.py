@@ -17,6 +17,30 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
     a Newton step on the slackened KKT system, in which the complementarity equations
     are linearized; the step size is then chosen so that the new iterate remains
     strictly interior.
+
+    Introducing the multipliers :math:`\lambda^+, \lambda^- \ge 0` for the upper and
+    lower bounds, the perturbed (slackened) KKT system of (P) reads
+
+    .. math::
+
+        Q x + q + \lambda^+ - \lambda^- = 0, \quad
+        \lambda^+ (ub - x) = \mu e, \quad
+        \lambda^- x = \mu e, \quad
+        0 \le x \le ub
+
+    where :math:`e` is the all-ones vector and :math:`\mu > 0` is the barrier
+    parameter driven to 0. Linearizing the complementarity equations (dropping the
+    bilinear terms) reduces the Newton step to the single symmetric positive definite
+    system
+
+    .. math::
+
+        \underbrace{\left( Q + \tfrac{\lambda^+}{ub - x} + \tfrac{\lambda^-}{x} \right)}_{H} dx
+        = \mu \left( \tfrac{e}{ub - x} - \tfrac{e}{x} \right) + \lambda^+ - \lambda^-
+
+    solved by a Cholesky factorization of :math:`H`; the primal/dual increments are
+    recovered from :math:`dx` and a fraction (0.9995) of the maximum feasible step is
+    taken to stay interior. The duality gap :math:`v - p = 2 n \mu` certifies optimality.
     """
 
     def __init__(self,
