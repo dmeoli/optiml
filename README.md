@@ -6,7 +6,7 @@
 [![PyPI Version](https://img.shields.io/pypi/v/optiml.svg?color=blue)](https://pypi.org/project/optiml/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/optiml.svg)](https://pypistats.org/packages/optiml)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/optiml/master)
-[![Documentation Status](https://readthedocs.org/projects/optiml/badge/?version=latest)](https://optiml.readthedocs.io/en/latest/?badge=latest)
+[![Documentation](https://img.shields.io/badge/docs-online-blue)](https://dmeoli.github.io/optiml)
 
 OptiML is a sklearn compatible implementation of *Support Vector Machines* and *Deep Neural Networks*, both with some of
 the most successful features according to the state of the art.
@@ -154,7 +154,8 @@ pip install optiml
 
 ## Documentation
 
-The full API reference is available at [optiml.readthedocs.io](https://optiml.readthedocs.io).
+The full API reference is available at [dmeoli.github.io/optiml](https://dmeoli.github.io/optiml),
+automatically built from the source docstrings and published to GitHub Pages on every push to `master`.
 
 It can also be built locally with [Sphinx](https://www.sphinx-doc.org):
 
