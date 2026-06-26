@@ -4,6 +4,7 @@ cvxopt
 cvxpy
 matplotlib
 numpy
+pandas
 pytest
 qpsolvers
 quadprog
