@@ -44,6 +44,20 @@ def test_l2_neural_network_regressor_with_stochastic_optimizer():
     assert net.score(X_test, y_test) >= 0.83
 
 
+def test_neural_network_regressor_with_mini_batches():
+    # exercises the mini-batch path of the stochastic optimizers
+    X, y = load_boston(return_X_y=True)
+    X_scaled = StandardScaler().fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
+    net = NeuralNetworkRegressor((FullyConnected(13, 13, relu),
+                                  FullyConnected(13, 1, linear)),
+                                 loss=mean_squared_error, optimizer=StochasticGradientDescent,
+                                 learning_rate=0.01, max_iter=100, batch_size=32)
+    net.fit(X_train, y_train)
+    # mini-batch training must run end-to-end and produce finite predictions
+    assert np.all(np.isfinite(net.predict(X_test)))
+
+
 def test_l1_neural_network_regressor_with_proximal_bundle():
     X, y = load_boston(return_X_y=True)
     X_scaled = StandardScaler().fit_transform(X)
