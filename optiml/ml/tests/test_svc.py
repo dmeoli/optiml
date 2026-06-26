@@ -74,7 +74,8 @@ def test_solve_dual_l1_svc_with_smo():
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
     smo = OVR(SVC(loss=hinge, kernel=gaussian, dual=True, optimizer='smo')).fit(X_train, y_train)
     # SMO must reach essentially the same solution as the reference QP solver (cvxopt)
-    ref = OVR(SVC(loss=hinge, kernel=gaussian, reg_intercept=False, dual=True, optimizer='cvxopt')).fit(X_train, y_train)
+    ref = OVR(SVC(loss=hinge, kernel=gaussian, reg_intercept=False,
+                  dual=True, optimizer='cvxopt')).fit(X_train, y_train)
     assert (smo.predict(X_test) == ref.predict(X_test)).mean() >= 0.97
 
 

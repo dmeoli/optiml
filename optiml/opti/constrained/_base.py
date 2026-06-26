@@ -49,7 +49,12 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
         :param verbose:       (boolean, optional, default value False): print details about each iteration
                               if True, nothing otherwise.
         :return x:            ([n x 1] real column vector): the best solution found so far.
-        :return status: (string): the status of the algorithm at termination, one of: ``optimal`` (x is a(n approximately) optimal solution); ``unbounded`` (f() was driven below m_inf, i.e., the problem looks unbounded below); ``stopped`` (the maximum number of iterations/evaluations was reached); ``error`` (a numerical error occurred, e.g., the step size fell below min_a).
+        :return status:       (string): the status of the algorithm at termination, one of:
+                              ``optimal`` (x is a(n approximately) optimal solution),
+                              ``unbounded`` (f() was driven below m_inf, i.e., the problem
+                              looks unbounded below), ``stopped`` (the maximum number of
+                              iterations or evaluations was reached) or ``error`` (a numerical
+                              error occurred, e.g., the step size fell below min_a).
         """
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
@@ -337,7 +342,8 @@ class AugmentedLagrangianQuadratic(Quadratic):
 
         .. math::
 
-            L(x, \mu, \lambda) = \tfrac{1}{2} x^\top Q x + q^\top x + \mu^\top (A x - b) + \lambda^\top (G x - h) + \tfrac{\rho}{2} \| (A x - b) + (G x - h) \|^2
+            L(x, \mu, \lambda) = \tfrac{1}{2} x^\top Q x + q^\top x + \mu^\top (A x - b)
+            + \lambda^\top (G x - h) + \tfrac{\rho}{2} \| (A x - b) + (G x - h) \|^2
 
         :param x: the primal variable wrt evaluate the function
         :return: the function value wrt primal-dual variable
@@ -354,7 +360,8 @@ class AugmentedLagrangianQuadratic(Quadratic):
 
         .. math::
 
-            L(x, \mu, \lambda) = \tfrac{1}{2} x^\top Q x + q^\top x + \mu^\top (A x - b) + \lambda^\top (G x - h) + \tfrac{\rho}{2} \| (A x - b) + (G x - h) \|^2
+            L(x, \mu, \lambda) = \tfrac{1}{2} x^\top Q x + q^\top x + \mu^\top (A x - b)
+            + \lambda^\top (G x - h) + \tfrac{\rho}{2} \| (A x - b) + (G x - h) \|^2
 
         Returns the same value of `function(self, x)` but it is written avoiding vector assignments
         to make it understandable by autograd, so it perform more matrix-vector products and for this

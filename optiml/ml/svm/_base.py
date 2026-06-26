@@ -1142,7 +1142,7 @@ class SVR(RegressorMixin, SVM):
                                                         lb=lb,
                                                         ub=ub,
                                                         solver=self.optimizer,
-                                                        verbose=False if self.verbose < 0 else True)  # trick for Jupyter
+                                                        verbose=self.verbose >= 0)  # quiet trick for Jupyter
 
                         else:
 
@@ -1156,7 +1156,7 @@ class SVR(RegressorMixin, SVM):
                                                         lb=lb,
                                                         ub=ub,
                                                         solver=self.optimizer,
-                                                        verbose=False if self.verbose < 0 else True)  # trick for Jupyter
+                                                        verbose=self.verbose >= 0)  # quiet trick for Jupyter
 
                         stdout = out.getvalue()
                         if stdout:

@@ -81,7 +81,12 @@ class Newton(LineSearchOptimizer):
         :param verbose:    (boolean, optional, default value False): print details about each iteration
                            if True, nothing otherwise.
         :return x:         ([n x 1] real column vector): the best solution found so far.
-        :return status: (string): the status of the algorithm at termination, one of: ``optimal`` (x is a(n approximately) optimal solution); ``unbounded`` (f() was driven below m_inf, i.e., the problem looks unbounded below); ``stopped`` (the maximum number of iterations/evaluations was reached); ``error`` (a numerical error occurred, e.g., the step size fell below min_a).
+        :return status:    (string): the status of the algorithm at termination, one of:
+                           ``optimal`` (x is a(n approximately) optimal solution),
+                           ``unbounded`` (f() was driven below m_inf, i.e., the problem
+                           looks unbounded below), ``stopped`` (the maximum number of
+                           iterations or evaluations was reached) or ``error`` (a numerical
+                           error occurred, e.g., the step size fell below min_a).
         """
         super(Newton, self).__init__(f=f,
                                      x=x,

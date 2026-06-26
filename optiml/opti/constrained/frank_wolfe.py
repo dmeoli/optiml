@@ -66,7 +66,10 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
                               if True, nothing otherwise.
         :return x:            ([n x 1] real column vector): the best solution found so far (possibly the
                               optimal one).
-        :return status: (string): the status of the algorithm at termination, one of: ``optimal`` (x is a(n approximately) optimal solution); ``stopped`` (the maximum number of iterations/evaluations was reached).
+        :return status:       (string): the status of the algorithm at termination, one of:
+                              ``optimal`` (x is a(n approximately) optimal solution) or
+                              ``stopped`` (the maximum number of iterations or evaluations
+                              was reached).
         """
         super(FrankWolfe, self).__init__(quad=quad,
                                          ub=ub,

@@ -82,7 +82,12 @@ class SteepestGradientDescent(LineSearchOptimizer):
                                 standard starting point from which the algorithm should start, otherwise it is the
                                 gradient of f() at x (or a subgradient if f() is not differentiable at x, which it
                                 should not be if you are applying the gradient method to it).
-        :return status: (string): the status of the algorithm at termination, one of: ``optimal`` (x is a(n approximately) optimal solution); ``unbounded`` (f() was driven below m_inf, i.e., the problem looks unbounded below); ``stopped`` (the maximum number of iterations/evaluations was reached); ``error`` (a numerical error occurred, e.g., the step size fell below min_a).
+        :return status:    (string): the status of the algorithm at termination, one of:
+                           ``optimal`` (x is a(n approximately) optimal solution),
+                           ``unbounded`` (f() was driven below m_inf, i.e., the problem
+                           looks unbounded below), ``stopped`` (the maximum number of
+                           iterations or evaluations was reached) or ``error`` (a numerical
+                           error occurred, e.g., the step size fell below min_a).
         """
         super(SteepestGradientDescent, self).__init__(f=f,
                                                       x=x,

@@ -89,7 +89,8 @@ def test_solve_dual_l1_svr_with_smo():
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, train_size=0.75, random_state=123456)
     smo = SVR(loss=epsilon_insensitive, kernel=linear, dual=True, optimizer='smo').fit(X_train, y_train)
     # SMO must reach essentially the same solution as the reference QP solver (cvxopt)
-    ref = SVR(loss=epsilon_insensitive, kernel=linear, reg_intercept=False, dual=True, optimizer='cvxopt').fit(X_train, y_train)
+    ref = SVR(loss=epsilon_insensitive, kernel=linear, reg_intercept=False,
+              dual=True, optimizer='cvxopt').fit(X_train, y_train)
     assert np.allclose(smo.predict(X_test), ref.predict(X_test), atol=1e-1)
     assert abs(smo.score(X_test, y_test) - ref.score(X_test, y_test)) <= 1e-2
 
