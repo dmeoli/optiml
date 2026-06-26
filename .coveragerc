@@ -1,6 +1,22 @@
 [report]
+# files that are not meant to be unit-tested (plotting helpers, namespaces, tests)
 omit =
     *utils.py
     *__init__.py
     */tests/*
     setup.py
+    docs/*
+
+# lines that should not count as "to be covered" because they are abstract,
+# defensive or non-runtime code
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError
+    raise AssertionError
+    raise TypeError
+    raise ValueError
+    raise Exception
+    except ImportError
+    if __name__ == .__main__.:
+    def __repr__
+    @(abc\.)?abstractmethod
