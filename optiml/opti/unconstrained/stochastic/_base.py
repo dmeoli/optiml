@@ -112,15 +112,12 @@ class StochasticOptimizer(Optimizer, ABC):
             self.batches = (i for i in self.iter_mini_batches())
 
     def iter_mini_batches(self):
-        """Return an iterator that successively yields tuples containing aligned
-        mini batches of size batch_size from sliceable objects given in f.args(), in
-        random order without replacement.
-        Because different containers might require slicing over different
-        dimensions, the dimension of each container has to be givens as a list
-        dims.
-        :param: Xy: tuple of arrays to be sliced into mini batches in alignment with the others
-        :param: batch_size: size of each batch
-        :return: infinite iterator of mini batches in random order (without replacement)
+        """
+        Return an iterator that successively yields tuples of aligned mini batches
+        of size ``batch_size`` from the sliceable arrays returned by ``f.args()``,
+        in random order (when ``shuffle`` is True) without replacement.
+
+        :return: an infinite iterator of mini batches (one tuple of aligned slices per step).
         """
 
         while True:

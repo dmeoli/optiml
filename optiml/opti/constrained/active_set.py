@@ -14,9 +14,20 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
         (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : lb \le x \le ub \right\}
 
     Since all the constraints are box ones, the active set is logically partitioned
-    onto the variables fixed to the lower bound and those fixed to the upper bound;
-    at each iteration the problem restricted to the remaining free variables is
-    solved and the active sets are updated accordingly.
+    into the variables fixed to the lower bound (L) and those fixed to the upper
+    bound (U); at each iteration the equality-constrained subproblem restricted to
+    the remaining free variables (A), with the others held at their bounds, is solved
+    in closed form as
+
+    .. math::
+
+        x_A^\star = -Q_{AA}^{-1} \left( q_A + Q_{A,U}\, ub_U + Q_{A,L}\, lb_L \right)
+
+    (via a Cholesky factorization of :math:`Q_{AA}`, falling back to a minimum-norm
+    solution when :math:`Q_{AA}` is singular). If :math:`x_A^\star` is feasible, a
+    constraint whose multiplier has the wrong sign is released from the active set;
+    otherwise the largest feasible step toward :math:`x_A^\star` is taken and the
+    newly hit bounds are added to the active set (Bland's rule prevents cycling).
     """
 
     def __init__(self,

@@ -203,6 +203,7 @@ class OptimizationFunction(ABC):
     def jacobian(self, x):
         """
         The Jacobian (i.e., the gradient) of the function.
+
         :param x: 1D array of points at which the Jacobian is to be computed.
         :return:  the Jacobian of the function at x.
         """
@@ -214,6 +215,7 @@ class OptimizationFunction(ABC):
     def hessian(self, x):
         """
         The Hessian matrix of the function.
+
         :param x: 1D array of points at which the Hessian is to be computed.
         :return:  the Hessian matrix of the function at x.
         """
@@ -282,7 +284,8 @@ class Quadratic(OptimizationFunction):
     def jacobian(self, x):
         r"""
         The Jacobian (i.e., the gradient) of a general quadratic function :math:`J f(x) = Q x + q`.
-        :param x: ([n x 1] real column vector): 1D array of points at which the Hessian is to be computed.
+
+        :param x: ([n x 1] real column vector): 1D array of points at which the Jacobian is to be computed.
         :return:  the Jacobian of a general quadratic function.
         """
         return self.Q @ x + self.q
@@ -290,8 +293,9 @@ class Quadratic(OptimizationFunction):
     def hessian(self, x):
         r"""
         The Hessian matrix of a general quadratic function :math:`H f(x) = Q`.
+
         :param x: 1D array of points at which the Hessian is to be computed.
-        :return:  the Hessian matrix (i.e., the the quadratic part) of a general quadratic function at x.
+        :return:  the Hessian matrix (i.e., the quadratic part) of a general quadratic function at x.
         """
         return self.Q
 

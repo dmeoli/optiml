@@ -12,10 +12,18 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
 
         (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : lb \le x \le ub \right\}
 
-    At each iteration the linearized problem is solved over the box to obtain a
-    feasible vertex, a lower bound is updated and an exact line search is performed
-    along the resulting direction; optionally the search is stabilized by restricting
-    the new point to a box of relative size around the current one.
+    At each iteration the linearized problem :math:`\min \{ \nabla f(x)^\top y : lb \le y \le ub \}`
+    is solved over the box, whose vertex picks, per coordinate, :math:`ub_i` where the
+    gradient is negative and :math:`lb_i` otherwise; this yields the descent direction
+    :math:`d = y - x`, the lower bound :math:`f(x) + \nabla f(x)^\top (y - x)` (whose gap
+    to f(x) drives the stopping criterion), and the exact step size
+
+    .. math::
+
+        \alpha = \min \left( -\frac{\nabla f(x)^\top d}{d^\top Q d},\; 1 \right)
+
+    Optionally the search is stabilized by restricting y to a box of relative size t
+    around the current point.
     """
 
     def __init__(self,

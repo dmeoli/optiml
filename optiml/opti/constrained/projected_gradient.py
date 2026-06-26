@@ -12,9 +12,16 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
 
         (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : lb \le x \le ub \right\}
 
-    At each iteration the steepest descent direction is projected over the active
-    constraints and an exact line search is performed along it, restricted to the
-    maximum feasible step size that keeps the iterate inside the box.
+    At each iteration the steepest descent direction :math:`d = -\nabla f(x)` is
+    projected over the active constraints (its components pushing against an active
+    bound are zeroed), and the exact step size minimizing the quadratic along d,
+
+    .. math::
+
+        \alpha = -\frac{d^\top (Q x + q)}{d^\top Q d}
+
+    is taken, clipped to the largest step :math:`\alpha_{\max}` that keeps the iterate
+    inside the box :math:`lb \le x \le ub`.
     """
 
     def __init__(self,

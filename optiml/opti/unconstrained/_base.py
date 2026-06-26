@@ -19,6 +19,7 @@ class Rosenbrock(OptimizationFunction):
     def function(self, x):
         """
         The Rosenbrock function.
+
         :param x: 1D array of points at which the Rosenbrock function is to be computed.
         :return:  the value of the Rosenbrock function at x.
         """
@@ -36,6 +37,7 @@ class Ackley(OptimizationFunction):
     def function(self, x):
         """
         The Ackley function.
+
         :param x: 1D array of points at which the Ackley function is to be computed.
         :return:  the value of the Ackley function.
         """
@@ -56,6 +58,7 @@ class SixHumpCamel(OptimizationFunction):
     def function(self, x):
         """
         The Six-Hump Camel function.
+
         :param x: 1D array of points at which the Six-Hump Camel function is to be computed.
         :return:  the value of the Six-Hump Camel function.
         """
