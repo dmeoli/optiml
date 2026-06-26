@@ -10,8 +10,8 @@ project = 'OptiML'
 author = 'Donato Meoli'
 copyright = '2021, Donato Meoli'
 
-release = '1.6'
-version = '1.6'
+release = '1.7'
+version = '1.7'
 
 # -- General configuration ---------------------------------------------------
 
