@@ -18,7 +18,7 @@ In order to explain the \emph{convergence rates} of the following optimization m
 		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$ is convex iff: 
 		$$ 
 			\nabla^2 f(x) \succeq 0 \ \forall \ x \in \Re^m 
-		$$ i.e., the Hessian matix is \emph{positive semidefinite}.
+		$$ i.e., the Hessian matrix is \emph{positive semidefinite}.
 	\end{enumerate}
 \end{definition}
 
@@ -36,7 +36,7 @@ In order to explain the \emph{convergence rates} of the following optimization m
 		\item We say that a twice differentiable function $f: \Re^m \rightarrow \Re$ is strictly convex iff: 
 		$$ 
 			\nabla^2 f(x) \succ 0 \ \forall \ x \in \Re^m 
-		$$ i.e., the Hessian matix is \emph{positive definite}.
+		$$ i.e., the Hessian matrix is \emph{positive definite}.
 	\end{enumerate}
 \end{definition}
 
@@ -56,7 +56,7 @@ and, if $f$ is a twice differentiable function then $f$ is $\mu$-strongly convex
 $$
 \nabla^2 g(x) \succ 0 \ \forall \ x \in \Re^m
 $$
-i.e., the Hessian matix is \emph{positive definite}, which is:
+i.e., the Hessian matrix is \emph{positive definite}, which is:
 $$
 \nabla^2 f(x) \succeq \mu I \ \forall \ x \in \Re^m
 $$
@@ -142,7 +142,7 @@ and therefore:
 $$
 	f(x) - f(y) \leq L_f \|x-y\|
 $$
-By exchanging the roles of $x$ ad $y$, we similarly obtain:
+By exchanging the roles of $x$ and $y$, we similarly obtain:
 $$
 	f(y) - f(x) \leq L_f \|x-y\|
 $$
@@ -155,7 +155,7 @@ showing that $f$ is $L_f$-Lipschitz continuous over $K$.
 
 Note that this proof shows how to determine the Lipschitz constant $L_f$: it is the maximum subgradient norm, over all subgradients in $\cup_{x \in K} \partial f(x)$.
 
-Strong convexity and L-Lipschitz continuity are related by Fenchel duality according to the following theorem, which proof is given in~\cite{zhou2018fenchel}.
+Strong convexity and L-Lipschitz continuity are related by Fenchel duality according to the following theorem, whose proof is given in~\cite{zhou2018fenchel}.
 
 % https://arxiv.org/pdf/1803.06573.pdf
 % https://www.stat.purdue.edu/~vishy/introml/notes/Optimization.pdf#page=8
@@ -266,7 +266,7 @@ f(x_t) - f(x^*) \leq \frac{L \| x_0 - x^* \|^2}{\sqrt{t+1}}
 $$
 \end{theorem}
 
-Unfortunately, Polyak’s stepsize rule requires knowledge of $f(x^*)$, which is often unknown a priori, so we might often need simpler rule for setting stepsizes.
+Unfortunately, Polyak’s stepsize rule requires knowledge of $f(x^*)$, which is often unknown a priori, so we might often need a simpler rule for setting stepsizes.
 
 \begin{theorem}[\href{http://www.princeton.edu/~yc5/ele522_optimization/lectures/subgradient_methods.pdf\#page=39}{Subgradient Descent convergence for convex functions}] \label{thm:cvx_subgd_convergence}
 Let $f: \Re^m \rightarrow \Re$ be a $L_f$-Lipschitz continuous convex function. Then the Subgradient Descent with step size $\displaystyle \alpha_t = \frac{1}{\sqrt{t}}$ satisfies:
@@ -299,7 +299,7 @@ strongly convex and $L_f$-Lipschitz & $\displaystyle \alpha = \frac{1}{t}$ & $\d
 \end{tabular}
 \end{table}
 
-Among algorithms that only use subgradient, these \emph{convergence rates} cannot be futher improved.
+Among algorithms that only use subgradient, these \emph{convergence rates} cannot be further improved.
 
 % http://www.princeton.edu/~yc5/ele522_optimization/lectures/grad_descent_unconstrained.pdf
 % http://www.stat.cmu.edu/~larry/=sml/optrates.pdf
@@ -357,7 +357,7 @@ strongly convex and L-Lipschitz & $\displaystyle \alpha = \frac{1}{L}$ & $\displ
 
 \subsubsection{Momentum}
 
-To mitigate the pathological zig-zagging by speeding up the \emph{convergence rate} of the SGD method, we introduce two accelerated methods~\cite{polyak1964some} and~\cite{nesterov1998introductory, nesterov1983method} that exploits information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield smoother trajectory.
+To mitigate the pathological zig-zagging by speeding up the \emph{convergence rate} of the SGD method, we introduce two accelerated methods~\cite{polyak1964some} and~\cite{nesterov1998introductory, nesterov1983method} that exploit information from the history, i.e., past iterates, to add some inertia, i.e., the momentum, to yield a smoother trajectory.
 
 In the Polyak's method~\cite{polyak1964some} the velocity vector $v_t$ is calculated by applying the $\beta$ momentum to the previous $v_{t-1}$ displacement, and subtracting the gradient step to $x_t$.
 
@@ -464,17 +464,17 @@ strongly convex and L-Lipschitz & $\displaystyle \alpha = \frac{1}{L}$ & $\displ
 \end{tabular}
 \end{table}
 
-Note that in case of L-Lipschitz continuous and strongly convex functions, Nesterov's momentum gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great because we get the guarantee for a more general class of functions, but these \emph{convergence rates} cannot be futher improved only using first-order information.
+Note that in case of L-Lipschitz continuous and strongly convex functions, Nesterov's momentum gives the acceleration that we had with Polyak’s momentum for quadratic functions. This is great because we get the guarantee for a more general class of functions, but these \emph{convergence rates} cannot be further improved only using first-order information.
 
 \pagebreak
 
 \subsection{Sequential Minimal Optimization for Wolfe dual formulations}
 
-The \emph{Sequential Minimal Optimization (SMO)}~\cite{platt1998sequential} method is the most popular approach for solving the SVM QP problem without any extra $Q$ matrix storage required by common QP methods. The advantage of SMO lies in the fact that it performs a series of two-point optimizations since we deal with just one equality constraint, so the Lagrange multipliers can be solved analitically.
+The \emph{Sequential Minimal Optimization (SMO)}~\cite{platt1998sequential} method is the most popular approach for solving the SVM QP problem without any extra $Q$ matrix storage required by common QP methods. The advantage of SMO lies in the fact that it performs a series of two-point optimizations since we deal with just one equality constraint, so the Lagrange multipliers can be solved analytically.
 
 \subsubsection{Classification}
 
-At each iteration, SMO chooses two $\alpha_i$ to jointly optimize, let $\alpha_1$ and $\alpha_2$, finds the optimal values for these multipliers and update the SVM to reflect these new values. In order to solve for two Lagrange multipliers, SMO first computes the constraints over these and then solves for the constrained minimum. Since there are only two multipliers, the box-constraints cause the Lagrange multipliers to lie within a box, while the linear equality constraint causes the Lagrange multipliers to lie on a diagonal line inside the box. So, the constrained minimum must lie there as shown in~\ref{fig:smo_lagrange_multipliers}.
+At each iteration, SMO chooses two $\alpha_i$ to jointly optimize, let $\alpha_1$ and $\alpha_2$, finds the optimal values for these multipliers and updates the SVM to reflect these new values. In order to solve for two Lagrange multipliers, SMO first computes the constraints over these and then solves for the constrained minimum. Since there are only two multipliers, the box-constraints cause the Lagrange multipliers to lie within a box, while the linear equality constraint causes the Lagrange multipliers to lie on a diagonal line inside the box. So, the constrained minimum must lie there as shown in~\ref{fig:smo_lagrange_multipliers}.
 
 \begin{figure}[h!]
 	\centering
@@ -483,7 +483,7 @@ At each iteration, SMO chooses two $\alpha_i$ to jointly optimize, let $\alpha_1
 	\label{fig:smo_lagrange_multipliers}
 \end{figure}
 
-In case of classification the ends of the diagonal line segment, i.e., the lower and upper bounds, can be espressed as follow if the target $y_1 \ne y_2$:
+In case of classification the ends of the diagonal line segment, i.e., the lower and upper bounds, can be expressed as follows if the target $y_1 \ne y_2$:
 
 \begin{equation} \label{eq:smo_svc_bounds_update1}
 	\begin{aligned}
@@ -501,13 +501,13 @@ or, alternatively, if the target $y_1 = y_2$:
 	\end{aligned}
 \end{equation}
 
-The second derivative of the objective quadratic function along the diagonl line can be expressed as:
+The second derivative of the objective quadratic function along the diagonal line can be expressed as:
 
 \begin{equation} \label{eq:smo_eta}
 	\eta = K(x_1, x_1) + K(x_2, x_2) - 2K(x_1, x_2)
 \end{equation}
 
-that will be grather than zero if the kernel matrix will be positive definite, so there will be a minimum along the linear equality constraints that will be:
+that will be greater than zero if the kernel matrix will be positive definite, so there will be a minimum along the linear equality constraints that will be:
 
 \begin{equation} \label{eq:smo_svc_a2_new}
 	\alpha_2^{new} = \alpha_2 + \frac{y_2(E_1 - E_2)}{\eta}
@@ -544,7 +544,7 @@ Since the \emph{Karush-Kuhn-Tucker} conditions are necessary and sufficient cond
 	\end{aligned}
 \end{equation}
 
-the steps described above will be iterate as long as there will be an example that violates them.
+the steps described above will be iterated as long as there will be an example that violates them.
 
 After optimizing $\alpha_1$ and $\alpha_2$, we select the threshold $b$ such that the KKT conditions are satisfied for $x_1$ and $x_2$. If, after optimization, $\alpha_1$ is not at the bounds, i.e., $0 < \alpha_1 < C$, then the following threshold $b_{up}$ is valid, since it forces the SVC to output $y_1$ when the input is $x_1$:
 
@@ -767,7 +767,7 @@ The KKT conditions for the regression problem~\eqref{eq:svr_min_wolfe_dual} are:
 	\end{aligned}
 \end{equation}
 
-so, the steps described above will be iterate as long as there will be an example that violates them.
+so, the steps described above will be iterated as long as there will be an example that violates them.
 
 In case of regression we select the threshold $b$ as follows:
 
@@ -791,7 +791,7 @@ In case of regression we select the threshold $b$ as follows:
 \bigskip
 \bigskip
 
-The improvements described in~\cite{keerthi2001improvements, shevade1999improvements} for classification and regression respectively are about the definition of subsets of multipliers to efficiently update them at each iteration by separating the multipliers at the bounds from those who can be further minimized.
+The improvements described in~\cite{keerthi2001improvements, shevade1999improvements} for classification and regression respectively are about the definition of subsets of multipliers to efficiently update them at each iteration by separating the multipliers at the bounds from those that can be further minimized.
 
 \newpage
 
@@ -895,7 +895,7 @@ The improvements described in~\cite{keerthi2001improvements, shevade1999improvem
 
 \subsection{AdaGrad for Lagrangian dual formulations}
 
-Due to the sparsity of the weight vector of the \emph{Lagrangian dual}, i.e., the Lagrange multipliers, we might end up in a situation where some components of the gradient are very small and others large. This, in terms of \emph{conditioning number}, i.e., $\kappa = L/\mu \gg 1$, means that the level sets of $f$ are ellipsoid, i.e., we are dealing with an ill-conditioned problem. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
+Due to the sparsity of the weight vector of the \emph{Lagrangian dual}, i.e., the Lagrange multipliers, we might end up in a situation where some components of the gradient are very small and others large. This, in terms of \emph{conditioning number}, i.e., $\kappa = L/\mu \gg 1$, means that the level sets of $f$ are ellipsoids, i.e., we are dealing with an ill-conditioned problem. So, given a learning rate, a standard gradient descent approach might end up in a situation where it decreases too quickly the small weights or too slowly the large ones.
 
 Another method, that is usually deprecated in ML applications due to its increased computational complexity, is Newton’s method. Newton’s method favors a much faster \emph{convergence rate}, i.e., number of iterations, at the cost of being more expensive per iteration. For convex problems, the recursion is similar to the gradient descent algorithm:
 
@@ -905,7 +905,7 @@ $$
 
 where $\alpha$ is often close to one (damped-Newton) or one, and $H^{-1}$ denotes the Hessian of $f$ at the current point, i.e., $\nabla^2 f(x_t)$.
 
-The above suggest a general rule in optimization: find any preconditioner, in convex optimization it has to be positive semidefinite, that improves the performance of gradient descent in terms of iterations, but without wasting too much time to compute that precoditioner. The above result into:
+The above suggests a general rule in optimization: find any preconditioner, in convex optimization it has to be positive semidefinite, that improves the performance of gradient descent in terms of iterations, but without wasting too much time to compute that preconditioner. The above results in:
 
 $$
 x_{t+1} = x_t - \alpha P^{-1} \nabla f(x_t)
@@ -913,7 +913,7 @@ $$
 
 where $P$ is the preconditioner. This idea is the basis of the BFGS quasi-Newton method.
 
-The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preconditioned gradient descent, where $P$ is selected to be a diagonal preconditioner matrix and is updated using the gradient information, in particular it is the diagonal approximation of the inverse of the square roots of gradient outer products, until the $k$-th iteration. The above lead to the algorithm:
+The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preconditioned gradient descent, where $P$ is selected to be a diagonal preconditioner matrix and is updated using the gradient information, in particular it is the diagonal approximation of the inverse of the square roots of gradient outer products, until the $k$-th iteration. The above leads to the algorithm:
 
 \begin{algorithm}[H]
 	\caption{AdaGrad}
@@ -921,7 +921,7 @@ The \emph{AdaGrad}~\cite{duchi2011adaptive} algorithm is just a variant of preco
 	\begin{algorithmic}
 		\Require{Function $f$ to minimize}
 		\Require{Learning rate or step size $\alpha > 0$}
-		\Require{Offset $\epsilon > 0$ to ensures not divide by 0}
+		\Require{Offset $\epsilon > 0$ to ensure not divide by 0}
 		\Function{AdaGrad}{$f,\alpha,\epsilon$}
 			\State Initialize weight vector $x_0$ and the squared accumulated gradients vector $s_t \gets 0$
 			\State $t = 1$
@@ -944,7 +944,7 @@ In practical terms, \emph{AdaGrad} addresses the problem of the sparse optimal b
 
 Several losses and objectives have been presented in section~\ref{section:svc} and~\ref{section:svr}. In our experiments, we will consider the following.
 
-For what about the loss functions, two of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, and linearly penalizes the misclassified points, i.e., $\mathcal{L}_1$-SVM, meanwhile, their two \emph{squared} versions are smooth, i.e., $\mathcal{L}_2$-SVM, and quadratically penalizes the misclassified points.
+For what about the loss functions, two of them are nonsmooth convex functions, i.e., the \emph{hinge} and the \emph{epsilon-insensitive} losses for \emph{classification} and \emph{regression} tasks respectively, and linearly penalize the misclassified points, i.e., $\mathcal{L}_1$-SVM, meanwhile, their two \emph{squared} versions are smooth, i.e., $\mathcal{L}_2$-SVM, and quadratically penalize the misclassified points.
 
 % http://juliaml.github.io/LossFunctions.jl/stable/losses/distance/#LPDistLoss-1
 
