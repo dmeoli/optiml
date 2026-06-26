@@ -4,6 +4,19 @@ from . import StochasticMomentumOptimizer
 
 
 class RMSProp(StochasticMomentumOptimizer):
+    """
+    RMSProp for the minimization of the provided function f.
+
+    It divides the learning rate of each coordinate by the square root of an
+    exponentially decaying average of the squared gradients (the moving root mean
+    square), so that the effective step size adapts to the recent magnitude of the
+    gradients; an optional Polyak or Nesterov momentum can be applied on top.
+
+    References
+    ----------
+    .. [1] Tieleman, T. & Hinton, G. (2012). Lecture 6.5 - RMSProp, COURSERA:
+       Neural Networks for Machine Learning.
+    """
 
     def __init__(self,
                  f,
@@ -22,6 +35,41 @@ class RMSProp(StochasticMomentumOptimizer):
                  shuffle=True,
                  random_state=None,
                  verbose=False):
+        """
+
+        :param f:             the objective function.
+        :param x:             ([n x 1] real column vector): the point where to start the algorithm from.
+        :param step_size:     (real scalar > 0, callable or iterable, optional, default value 0.001): the
+                              learning rate, i.e., the base size of the step taken along the search direction.
+        :param momentum_type: (string in {'none', 'polyak', 'nesterov'}, optional, default value 'none'):
+                              the kind of momentum applied on top of the RMSProp step.
+        :param momentum:      (real scalar in [0, 1) or iterable, optional, default value 0.9): the momentum
+                              factor, i.e., the fraction of the previous step retained in the current one.
+        :param batch_size:    (integer scalar or None, optional, default value None): the size of the mini
+                              batches used to estimate the gradient; if None the full sample is used.
+        :param eps:           (real scalar, optional, default value 1e-6): the accuracy in the stopping
+                              criterion: the algorithm is stopped when the norm of the gradient is less
+                              than or equal to eps.
+        :param tol:           (real scalar, optional, default value 1e-8): the tolerance used in the
+                              optimality conditions of the Lagrangian dual (when f is a Lagrangian dual).
+        :param epochs:        (integer scalar, optional, default value 1000): the maximum number of epochs
+                              before the algorithm is stopped.
+        :param decay:         (real scalar in [0, 1), optional, default value 0.9): the exponential decay
+                              rate of the moving average of the squared gradients.
+        :param offset:        (real scalar > 0, optional, default value 1e-8): a small constant added to the
+                              denominator to avoid division by zero and improve numerical stability.
+        :param callback:      (callable, optional, default value None): a function called at each iteration
+                              with the optimizer instance (and callback_args) as arguments; it can raise
+                              StopIteration to interrupt the optimization.
+        :param callback_args: (tuple, optional, default value ()): additional positional arguments passed
+                              to the callback at each call.
+        :param shuffle:       (boolean, optional, default value True): whether to shuffle the order of the
+                              mini batches at the beginning of each epoch.
+        :param random_state:  (integer scalar or None, optional, default value None): seed for the random
+                              number generator, for reproducibility.
+        :param verbose:       (boolean or integer, optional, default value False): print details about each
+                              iteration if True (or every `verbose` epochs if an integer), nothing otherwise.
+        """
         super(RMSProp, self).__init__(f=f,
                                       x=x,
                                       step_size=step_size,

@@ -18,6 +18,97 @@ from ...opti.unconstrained.stochastic import StochasticOptimizer, StochasticGrad
 
 
 class NeuralNetwork(BaseEstimator, Layer, ABC):
+    """
+    Base abstract class for all feed-forward neural network estimators.
+    It chains a sequence of layers, performs forward/backward propagation
+    and trains the network parameters by minimizing the given loss with
+    the chosen optimizer.
+
+    Parameters
+    ----------
+
+    layers : tuple of `Layer` instances, default=()
+        The ordered sequence of layers composing the network.
+
+    loss : `NeuralNetworkLoss` subclass, default=mean_squared_error
+        Specifies the loss function to minimize.
+
+    optimizer : `Optimizer` subclass, default=StochasticGradientDescent
+        The solver for optimization. It can be a subclass of the
+        `LineSearchOptimizer`, the `ProximalBundle` method or a subclass
+        of the `StochasticOptimizer`.
+
+    learning_rate : float, default=0.01
+        The initial learning rate used for weight update. It controls the
+        step-size in updating the weights. Only used when ``optimizer`` is a
+        subclass of `StochasticOptimizer`.
+
+    max_iter : int, default=1000
+        Maximum number of iterations. The solver iterates until convergence
+        (determined by ``tol``) or this number of iterations. If the optimizer
+        is a subclass of `StochasticOptimizer`, this value determines the number
+        of epochs, not the number of gradient steps.
+
+    momentum_type : {'none', 'polyak', 'nesterov'}, default='none'
+        Momentum type used for weight update. Only used when ``optimizer`` is
+        a subclass of `StochasticMomentumOptimizer`.
+
+    momentum : float, default=0.9
+        Momentum for weight update. Should be between 0 and 1. Only used when
+        ``optimizer`` is a subclass of `StochasticMomentumOptimizer`.
+
+    tol : float, default=1e-4
+        Tolerance for stopping criterion.
+
+    validation_split : float, default=0.
+        The proportion of training data to set aside as validation set for
+        early stopping. Must be between 0 and 1. Only used when ``optimizer``
+        is a subclass of `StochasticOptimizer`.
+
+    batch_size : int, default=None
+        Size of mini batches for stochastic optimizers.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    max_f_eval : int, default=15000
+        Maximum number of loss function calls. Only used when ``optimizer``
+        is a subclass of `LineSearchOptimizer`.
+
+    early_stopping : bool, default=False
+        Whether to use early stopping to terminate training when the
+        monitored score/loss does not improve by at least ``tol`` for
+        ``patience`` consecutive epochs.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    patience : int, default=5
+        Maximum number of epochs to not meet ``tol`` improvement.
+        Only used when ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    shuffle : bool, default=True
+        Whether to shuffle samples for batch sampling in each iteration. Only
+        used when the ``optimizer`` is a subclass of `StochasticOptimizer`.
+
+    random_state : int, RandomState instance or None, default=None
+        Controls the pseudo random number generation for the train-validation
+        split and for shuffling the data in batch sampling.
+        Pass an int for reproducible output across multiple function calls.
+
+    mu : float, default=1
+        Mu parameter for the proximal bundle method.
+        Only used when ``optimizer`` is `ProximalBundle`. Must be strictly positive.
+
+    master_solver : string, default='ecos'
+        Master solver for the proximal bundle method for the CVXPY interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    master_verbose : bool or int, default=False
+        Controls the verbosity of the CVXPY interface.
+        Only used when ``optimizer`` is `ProximalBundle`.
+
+    verbose : bool or int, default=False
+        Controls the verbosity of progress messages to stdout. Use a boolean value
+        to switch on/off or an int value to show progress each ``verbose`` time
+        optimization steps.
+    """
 
     def __init__(self,
                  layers=(),
@@ -277,6 +368,11 @@ class NeuralNetwork(BaseEstimator, Layer, ABC):
 
 
 class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
+    """
+    Feed-forward neural network for classification. The output layer must be
+    sigmoid (binary/multi-label) or softmax (multi-class), consistently with
+    the chosen loss function.
+    """
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
         super(NeuralNetworkClassifier, self)._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)
@@ -331,6 +427,11 @@ class NeuralNetworkClassifier(ClassifierMixin, NeuralNetwork):
 
 
 class NeuralNetworkRegressor(RegressorMixin, NeuralNetwork):
+    """
+    Feed-forward neural network for regression. The output layer must be
+    linear or, for regression between 0 and 1, sigmoid. The number of output
+    neurons must equal the number of targets.
+    """
 
     def _store_train_val_info(self, opt, X_batch, y_batch, X_val, y_val):
         super(NeuralNetworkRegressor, self)._store_train_val_info(opt, X_batch, y_batch, X_val, y_val)

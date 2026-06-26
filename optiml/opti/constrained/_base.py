@@ -8,6 +8,10 @@ from optiml.opti import Optimizer, Quadratic
 
 
 class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
+    """
+    Abstract base class for the optimizers that solve the convex Box-Constrained
+    Quadratic program (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }.
+    """
 
     def __init__(self,
                  quad,
@@ -19,6 +23,28 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
                  callback=None,
                  callback_args=(),
                  verbose=False):
+        """
+
+        :param quad:          the quadratic function 1/2 x^T Q x + q^T x to be minimized.
+        :param ub:            ([n x 1] real column vector): the upper bound of the box, i.e., the
+                              variables are constrained to lie in 0 <= x <= ub.
+        :param x:             ([n x 1] real column vector, optional): the point where to start the
+                              algorithm from; if not provided, it starts from the middle of the box.
+        :param eps:           (real scalar, optional, default value 1e-6): the accuracy in the stopping
+                              criterion: the algorithm is stopped when the norm of the gradient is less
+                              than or equal to eps.
+        :param tol:           (real scalar, optional, default value 1e-8): the tolerance used to check the
+                              optimality conditions when f is a Lagrangian dual relaxation.
+        :param max_iter:      (integer scalar, optional, default value 1000): the maximum number of iterations.
+        :param callback:      (callable, optional, default value None): a function called at each iteration
+                              with the optimizer instance as first argument.
+        :param callback_args: (tuple, optional, default value ()): additional arguments passed to callback.
+        :param verbose:       (boolean, optional, default value False): print details about each iteration
+                              if True, nothing otherwise.
+        :return x:            ([n x 1] real column vector): the best solution found so far.
+        :return status:       (string): a string describing the status of the algorithm at termination
+                              ('optimal', 'stopped', 'unbounded' or 'error').
+        """
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
         super(BoxConstrainedQuadraticOptimizer, self).__init__(f=quad,
@@ -45,7 +71,7 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
 
 
 class LagrangianQuadratic(Quadratic):
-    """
+    r"""
     Construct the lagrangian relaxation of a constrained quadratic function defined as:
 
             1/2 x^T Q x + q^T x : A x = b, G x <= h, lb <= x <= ub
@@ -173,7 +199,7 @@ class LagrangianQuadratic(Quadratic):
 
 
 class AugmentedLagrangianQuadratic(Quadratic):
-    """
+    r"""
     Construct the augmented lagrangian relaxation of a constrained quadratic function defined as:
 
             1/2 x^T Q x + q^T x : A x = b, G x <= h, lb <= x <= ub

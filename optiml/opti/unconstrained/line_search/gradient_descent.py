@@ -6,66 +6,13 @@ from ... import Quadratic
 
 class SteepestGradientDescent(LineSearchOptimizer):
     """
-    Apply the classical Steepest Descent algorithm for the minimization of
-    the provided function f.
-    # - x is either a [n x 1] real (column) vector denoting the input of
-    #   f(), or [] (empty).
-    #
-    # - x (either [n x 1] real vector or [], default []): starting point.
-    #   If x == [], the default starting point provided by f() is used.
-    #
-    # - eps (real scalar, optional, default value 1e-6): the accuracy in the
-    #   stopping criterion: the algorithm is stopped when the norm of the
-    #   gradient is less than or equal to eps. If a negative value is provided,
-    #   this is used in a *relative* stopping criterion: the algorithm is
-    #   stopped when the norm of the gradient is less than or equal to
-    #   (- eps) * || norm of the first gradient ||.
-    #
-    # - max_f_eval (integer scalar, optional, default value 1000): the maximum
-    #   number of function evaluations (hence, iterations will be not more than
-    #   max_f_eval because at each iteration at least a function evaluation is
-    #   performed, possibly more due to the line search).
-    #
-    # - m1 (real scalar, optional, default value 0.01): first parameter of the
-    #   Armijo-Wolfe-type line search (sufficient decrease). Has to be in (0,1)
-    #
-    # - m2 (real scalar, optional, default value 0.9): typically the second
-    #   parameter of the Armijo-Wolfe-type line search (strong curvature
-    #   condition). It should to be in (0,1); if not, it is taken to mean that
-    #   the simpler Backtracking line search should be used instead
-    #
-    # - a_start (real scalar, optional, default value 1): starting value of
-    #   alpha in the line search (> 0)
-    #
-    # - tau (real scalar, optional, default value 0.9): scaling parameter for
-    #   the line search. In the Armijo-Wolfe line search it is used in the
-    #   first phase: if the derivative is not positive, then the step is
-    #   divided by tau (which is < 1, hence it is increased). In the
-    #   Backtracking line search, each time the step is multiplied by tau
-    #   (hence it is decreased).
-    #
-    # - sfgrd (real scalar, optional, default value 0.01): safeguard parameter
-    #   for the line search. To avoid numerical problems that can occur with
-    #   the quadratic interpolation if the derivative at one endpoint is too
-    #   large w.r.t. The one at the other (which leads to choosing a point
-    #   extremely near to the other endpoint), a *safeguarded* version of
-    #   interpolation is used whereby the new point is chosen in the interval
-    #   [as * (1 + sfgrd), am * (1 - sfgrd)], being [as, am] the
-    #   current interval, whatever quadratic interpolation says. If you
-    #   experience problems with the line search taking too many iterations to
-    #   converge at "nasty" points, try to increase this
-    #
-    # - m_inf (real scalar, optional, default value -inf): if the algorithm
-    #   determines a value for f() <= m_inf this is taken as an indication that
-    #   the problem is unbounded below and computation is stopped
-    #   (a "finite -inf").
-    #
-    # - min_a (real scalar, optional, default value 1e-16): if the algorithm
-    #   determines a step size value <= min_a, this is taken as an indication
-    #   that something has gone wrong (the gradient is not a direction of
-    #   descent, so maybe the function is not differentiable) and computation
-    #   is stopped. It is legal to take min_a = 0, thereby in fact skipping this
-    #   test.
+    Apply the classical Steepest Descent algorithm for the minimization of the
+    provided function f.
+
+    At each iteration the search direction is simply the negative gradient
+    d = - \\nabla f(x) and the step size is chosen by an Armijo-Wolfe (or
+    Backtracking) line search. For quadratic functions the exact closed-form step
+    size along the steepest descent direction is used instead.
     """
 
     def __init__(self,

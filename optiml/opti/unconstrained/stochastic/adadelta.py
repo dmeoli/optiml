@@ -4,6 +4,19 @@ from . import StochasticOptimizer
 
 
 class AdaDelta(StochasticOptimizer):
+    """
+    AdaDelta for the minimization of the provided function f.
+
+    It is an extension of AdaGrad that replaces the ever-growing sum of squared
+    gradients with an exponentially decaying average and, by also tracking an
+    exponentially decaying average of the squared updates, scales the step by the
+    ratio of these two running averages, removing the need for a manually tuned
+    global learning rate.
+
+    References
+    ----------
+    .. [1] Zeiler, M. D. (2012). ADADELTA: An Adaptive Learning Rate Method.
+    """
 
     def __init__(self,
                  f,
@@ -20,6 +33,37 @@ class AdaDelta(StochasticOptimizer):
                  shuffle=True,
                  random_state=None,
                  verbose=False):
+        """
+
+        :param f:             the objective function.
+        :param x:             ([n x 1] real column vector): the point where to start the algorithm from.
+        :param batch_size:    (integer scalar or None, optional, default value None): the size of the mini
+                              batches used to estimate the gradient; if None the full sample is used.
+        :param eps:           (real scalar, optional, default value 1e-6): the accuracy in the stopping
+                              criterion: the algorithm is stopped when the norm of the gradient is less
+                              than or equal to eps.
+        :param tol:           (real scalar, optional, default value 1e-8): the tolerance used in the
+                              optimality conditions of the Lagrangian dual (when f is a Lagrangian dual).
+        :param epochs:        (integer scalar, optional, default value 1000): the maximum number of epochs
+                              before the algorithm is stopped.
+        :param step_size:     (real scalar > 0, callable or iterable, optional, default value 1.): the
+                              learning rate, i.e., the base size of the step taken along the negative gradient.
+        :param decay:         (real scalar in [0, 1), optional, default value 0.9): the exponential decay
+                              rate of the running averages of the squared gradients and of the squared updates.
+        :param offset:        (real scalar > 0, optional, default value 1e-6): a small constant added to the
+                              running averages to avoid division by zero and improve numerical stability.
+        :param callback:      (callable, optional, default value None): a function called at each iteration
+                              with the optimizer instance (and callback_args) as arguments; it can raise
+                              StopIteration to interrupt the optimization.
+        :param callback_args: (tuple, optional, default value ()): additional positional arguments passed
+                              to the callback at each call.
+        :param shuffle:       (boolean, optional, default value True): whether to shuffle the order of the
+                              mini batches at the beginning of each epoch.
+        :param random_state:  (integer scalar or None, optional, default value None): seed for the random
+                              number generator, for reproducibility.
+        :param verbose:       (boolean or integer, optional, default value False): print details about each
+                              iteration if True (or every `verbose` epochs if an integer), nothing otherwise.
+        """
         super(AdaDelta, self).__init__(f=f,
                                        x=x,
                                        step_size=step_size,

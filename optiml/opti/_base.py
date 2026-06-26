@@ -271,9 +271,9 @@ class Quadratic(OptimizationFunction):
     def function(self, x):
         """
         A general quadratic function f(x) = 1/2 x^T Q x + q^T x.
+
         :param x: ([n x 1] real column vector): 1D array of points at which the Hessian is to be computed.
-        :return:  the value of a general quadratic function if x, the optimal solution of a
-                  linear system Qx = q (=> x = Q^-1 q) which has a complexity of O(n^3) otherwise.
+        :return:  the value 1/2 x^T Q x + q^T x of the general quadratic function at x.
         """
         return 0.5 * x @ self.Q @ x + self.q @ x
 

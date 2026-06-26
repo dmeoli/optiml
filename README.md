@@ -6,6 +6,7 @@
 [![PyPI Version](https://img.shields.io/pypi/v/optiml.svg?color=blue)](https://pypi.org/project/optiml/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/optiml.svg)](https://pypistats.org/packages/optiml)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/optiml/master)
+[![Documentation Status](https://readthedocs.org/projects/optiml/badge/?version=latest)](https://optiml.readthedocs.io/en/latest/?badge=latest)
 
 OptiML is a sklearn compatible implementation of *Support Vector Machines* and *Deep Neural Networks*, both with some of
 the most successful features according to the state of the art.
@@ -32,7 +33,7 @@ prof. [Antonio Frangioni](http://pages.di.unipi.it/frangio/).
                 - [x] Newton
                 - Quasi-Newton
                     - [x] BFGS
-                    - [ ] L-BFGS
+                    - [x] L-BFGS
         - Stochastic Methods
             - [x] Stochastic Gradient Descent
                 - [x] Momentum
@@ -149,6 +150,17 @@ prof. [Antonio Frangioni](http://pages.di.unipi.it/frangio/).
 
 ```
 pip install optiml
+```
+
+## Documentation
+
+The full API reference is available at [optiml.readthedocs.io](https://optiml.readthedocs.io).
+
+It can also be built locally with [Sphinx](https://www.sphinx-doc.org):
+
+```
+pip install -r docs/requirements.txt
+sphinx-build -b html docs docs/_build/html
 ```
 
 ## License [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

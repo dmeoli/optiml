@@ -7,8 +7,30 @@ from ...opti import OptimizationFunction
 
 
 class SVMLoss(OptimizationFunction, ABC):
+    """
+    Base abstract class for all SVM loss functions. It defines the
+    primal objective, i.e., the regularization term plus the loss term
+    averaged over the training samples, together with its jacobian.
+
+    Subclasses must implement ``loss``, ``loss_jacobian`` and ``step_size``.
+    """
 
     def __init__(self, svm, X, y):
+        """
+        Parameters
+        ----------
+
+        svm : `SVM` instance
+            The SVM estimator this loss is attached to. It provides the
+            hyper-parameters used by the objective, e.g., ``C`` and
+            ``fit_intercept``.
+
+        X : ndarray of shape (n_samples, n_features)
+            Training data over which the loss is evaluated.
+
+        y : ndarray of shape (n_samples,)
+            Target values associated with ``X``.
+        """
         super(SVMLoss, self).__init__(X.shape[1])
         self.svm = svm
         self.X = X
@@ -145,12 +167,29 @@ class EpsilonInsensitive(SVMLoss):
     """
     Compute the epsilon-insensitive loss for regression as:
 
-        L(y_pred, y_true) = max(0, |y_true - y_pred| - epsilon)
+        L(y_pred, y_true) = max(0, abs(y_true - y_pred) - epsilon)
     """
 
     _loss_type = 'regressor'
 
     def __init__(self, svm, X, y, epsilon):
+        """
+        Parameters
+        ----------
+
+        svm : `SVM` instance
+            The SVM estimator this loss is attached to.
+
+        X : ndarray of shape (n_samples, n_features)
+            Training data over which the loss is evaluated.
+
+        y : ndarray of shape (n_samples,)
+            Target values associated with ``X``.
+
+        epsilon : float
+            Width of the epsilon-tube within which no penalty is associated
+            with points predicted within a distance epsilon from the actual value.
+        """
         super(EpsilonInsensitive, self).__init__(svm, X, y)
         self.epsilon = epsilon
 
@@ -180,7 +219,7 @@ class SquaredEpsilonInsensitive(EpsilonInsensitive):
     """
     Compute the squared epsilon-insensitive loss for regression as:
 
-        L(y_pred, y_true) = max(0, |y_true - y_pred| - epsilon)^2
+        L(y_pred, y_true) = max(0, abs(y_true - y_pred) - epsilon)^2
     """
 
     def loss(self, y_pred, y_true):

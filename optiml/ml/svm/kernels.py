@@ -7,8 +7,33 @@ from sklearn.utils.extmath import safe_sparse_dot
 
 
 class Kernel(BaseEstimator, ABC):
+    """
+    Base abstract class for all kernel functions. A kernel computes the
+    pairwise similarities (i.e., the Gram matrix) between two sets of samples.
+
+    Subclasses must implement ``__call__``.
+    """
 
     def __call__(self, X, Y=None):
+        """
+        Compute the kernel (Gram) matrix between X and Y.
+
+        Parameters
+        ----------
+
+        X : ndarray of shape (n_samples_X, n_features)
+            Left argument of the kernel function.
+
+        Y : ndarray of shape (n_samples_Y, n_features), default=None
+            Right argument of the kernel function. If None, ``Y`` is
+            set to ``X`` and the kernel matrix between X and itself is computed.
+
+        Returns
+        -------
+
+        K : ndarray of shape (n_samples_X, n_samples_Y)
+            The computed kernel matrix.
+        """
         raise NotImplementedError
 
 

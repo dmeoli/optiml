@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(name='optiml',
-                 version='1.5',
+                 version='1.6',
                  author='Donato Meoli',
                  author_email='donato.meoli@outlook.com',
                  description='Optimizers for/and sklearn compatible Machine Learning models',

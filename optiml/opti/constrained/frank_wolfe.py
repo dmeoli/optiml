@@ -4,44 +4,17 @@ from optiml.opti.constrained import BoxConstrainedQuadraticOptimizer
 
 
 class FrankWolfe(BoxConstrainedQuadraticOptimizer):
-    # Apply the (possibly, stabilized) Frank-Wolfe algorithm with exact line
-    # search to the convex Box-Constrained Quadratic program:
-    #
-    #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
-    #
-    # - eps (real scalar, optional, default value 1e-6): the accuracy in the
-    #   stopping criterion: the algorithm is stopped when the relative gap
-    #   between the value of the best primal solution (the current one) and the
-    #   value of the best lower bound obtained so far is less than or equal to
-    #   eps
-    #
-    # - max_iter (integer scalar, optional, default value 1000): the maximum
-    #   number of iterations
-    #
-    # - t (real scalar scalar, optional, default value 0): if the stabilized
-    #   version of the approach is used, then the new point is chosen in the
-    #   box of relative size around the current point, i.e., the component
-    #   x[i] is allowed to change by not more than plus or minus t * u[i].
-    #   if t = 0, then the non-stabilized version of the algorithm is used.
-    #
-    # Output:
-    #
-    # - v (real scalar): the best function value found so far (possibly the
-    #   optimal one)
-    #
-    # - x ([n x 1] real column vector, optional): the best solution found so
-    #   far (possibly the optimal one)
-    #
-    # - status (string, optional): a string describing the status of the
-    #   algorithm at termination, with the following possible values:
-    #
-    #   = 'optimal': the algorithm terminated having proven that x is an
-    #     (approximately) optimal solution, i.e., the norm of the gradient at x
-    #     is less than the required threshold
-    #
-    #   = 'stopped': the algorithm terminated having exhausted the maximum
-    #     number of iterations: x is the bast solution found so far, but not
-    #     necessarily the optimal one
+    """
+    Apply the (possibly, stabilized) Frank-Wolfe algorithm with exact line search
+    to the convex Box-Constrained Quadratic program:
+
+                        (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
+
+    At each iteration the linearized problem is solved over the box to obtain a
+    feasible vertex, a lower bound is updated and an exact line search is performed
+    along the resulting direction; optionally the search is stabilized by restricting
+    the new point to a box of relative size around the current one.
+    """
 
     def __init__(self,
                  quad,
@@ -54,6 +27,38 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
                  callback=None,
                  callback_args=(),
                  verbose=False):
+        """
+
+        :param quad:          the quadratic function 1/2 x^T Q x + q^T x to be minimized.
+        :param ub:            ([n x 1] real column vector): the upper bound of the box, i.e., the
+                              variables are constrained to lie in 0 <= x <= ub.
+        :param x:             ([n x 1] real column vector, optional): the point where to start the
+                              algorithm from; if not provided, it starts from the middle of the box.
+        :param t:             (real scalar, optional, default value 0): if the stabilized version of the
+                              approach is used, then the new point is chosen in the box of relative size
+                              around the current point, i.e., the component x[i] is allowed to change by
+                              not more than plus or minus t * ub[i]. If t = 0, then the non-stabilized
+                              version of the algorithm is used. It has to lie in [0, 1).
+        :param eps:           (real scalar, optional, default value 1e-6): the accuracy in the stopping
+                              criterion: the algorithm is stopped when the relative gap between the value
+                              of the best primal solution (the current one) and the value of the best lower
+                              bound obtained so far is less than or equal to eps.
+        :param tol:           (real scalar, optional, default value 1e-8): the tolerance used to check the
+                              optimality conditions when f is a Lagrangian dual relaxation.
+        :param max_iter:      (integer scalar, optional, default value 1000): the maximum number of iterations.
+        :param callback:      (callable, optional, default value None): a function called at each iteration
+                              with the optimizer instance as first argument.
+        :param callback_args: (tuple, optional, default value ()): additional arguments passed to callback.
+        :param verbose:       (boolean, optional, default value False): print details about each iteration
+                              if True, nothing otherwise.
+        :return x:            ([n x 1] real column vector): the best solution found so far (possibly the
+                              optimal one).
+        :return status:       (string): a string describing the status of the algorithm at termination:
+                                 - 'optimal': the algorithm terminated having proven that x is a(n approximately)
+                              optimal solution, i.e., the relative gap is less than the required threshold;
+                                 - 'stopped': the algorithm terminated having exhausted the maximum number of
+                              iterations: x is the best solution found so far, but not necessarily the optimal one.
+        """
         super(FrankWolfe, self).__init__(quad=quad,
                                          ub=ub,
                                          x=x,

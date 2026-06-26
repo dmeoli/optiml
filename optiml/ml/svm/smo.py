@@ -9,8 +9,47 @@ from .kernels import LinearKernel
 
 
 class SMO(ABC):
+    """
+    Base abstract class for the sequential minimal optimization (SMO)
+    algorithm used to train the dual SVM formulation. It holds the data,
+    the kernel matrix and the optimization state shared by the classifier
+    and regression variants.
+
+    Subclasses must implement ``_take_step``, ``_examine_example`` and ``minimize``.
+    """
 
     def __init__(self, quad, X, y, K, kernel, C, tol=1e-3, verbose=False):
+        """
+        Parameters
+        ----------
+
+        quad : `Quadratic` instance
+            The quadratic objective of the dual problem, used to monitor
+            the cost during the optimization.
+
+        X : ndarray of shape (n_samples, n_features)
+            Training data.
+
+        y : ndarray of shape (n_samples,)
+            Target values associated with ``X``.
+
+        K : ndarray of shape (n_samples, n_samples)
+            Precomputed kernel (Gram) matrix of the training data.
+
+        kernel : `Kernel` instance
+            The kernel function used to build ``K``. If it is a `LinearKernel`
+            the primal weight vector ``w`` is maintained explicitly.
+
+        C : float
+            Regularization parameter, i.e., the upper bound on the
+            Lagrange multipliers.
+
+        tol : float, default=1e-3
+            Tolerance for the KKT stopping criterion.
+
+        verbose : bool or int, default=False
+            Controls the verbosity of progress messages to stdout.
+        """
         self.quad = quad
         self.X = X
         self.y = y
@@ -345,6 +384,41 @@ class SMORegression(SMO):
     """
 
     def __init__(self, quad, X, y, K, kernel, C, epsilon, tol=1e-3, verbose=False):
+        """
+        Parameters
+        ----------
+
+        quad : `Quadratic` instance
+            The quadratic objective of the dual problem, used to monitor
+            the cost during the optimization.
+
+        X : ndarray of shape (n_samples, n_features)
+            Training data.
+
+        y : ndarray of shape (n_samples,)
+            Target values associated with ``X``.
+
+        K : ndarray of shape (n_samples, n_samples)
+            Precomputed kernel (Gram) matrix of the training data.
+
+        kernel : `Kernel` instance
+            The kernel function used to build ``K``. If it is a `LinearKernel`
+            the primal weight vector ``w`` is maintained explicitly.
+
+        C : float
+            Regularization parameter, i.e., the upper bound on the
+            Lagrange multipliers.
+
+        epsilon : float
+            Width of the epsilon-tube of the epsilon-insensitive loss within
+            which no penalty is associated in the regression problem.
+
+        tol : float, default=1e-3
+            Tolerance for the KKT stopping criterion.
+
+        verbose : bool or int, default=False
+            Controls the verbosity of progress messages to stdout.
+        """
         self.alphas_p = np.zeros(len(X))
         self.alphas_n = np.zeros(len(X))
         super(SMORegression, self).__init__(quad, X, y, K, kernel, C, tol, verbose)

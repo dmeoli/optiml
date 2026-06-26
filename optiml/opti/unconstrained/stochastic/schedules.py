@@ -86,4 +86,4 @@ def sutskever_blend(max_momentum, stretch=250):
     """
     for i in itertools.count(1):
         m = 1 - (2 ** (-1 - np.log2(np.floor_divide(i, stretch) + 1)))
-        yield min(m, max_momentum)
+        yield float(min(m, max_momentum))

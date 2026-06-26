@@ -29,7 +29,7 @@ def glorot_uniform(shape, random_state=None):
 
 
 def he_normal(shape, random_state=None):
-    """He normal initializer.cIt draws samples from a truncated normal
+    """He normal initializer. It draws samples from a truncated normal
     distribution centered on 0 with std = sqrt(2 / fan_in) where
     fan_in is the number of input units in the weight tensor."""
     fan_in, fan_out = shape[0], shape[1]

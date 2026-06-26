@@ -5,73 +5,16 @@ from .. import Optimizer
 
 
 class ProximalBundle(Optimizer):
-    # Apply the Proximal Bundle Method for the minimization of the provided
-    # function f.
-    #
-    # Input:
-    #
-    # - x is either a [n x 1] real (column) vector denoting the input of
-    #   f(), or [] (empty).
-    #
-    # Output:
-    #
-    # - v (real, scalar): if x == [] this is the best known lower bound on
-    #   the unconstrained global optimum of f(); it can be -inf if either f()
-    #   is not bounded below, or no such information is available. If x ~= []
-    #   then v = f(x).
-    #
-    # - g (real, [n x 1] real vector): this also depends on x. if x == []
-    #   this is the standard starting point from which the algorithm should
-    #   start, otherwise it is a subgradient of f() at x (possibly the
-    #   gradient, but you should not apply this algorithm to a differentiable
-    #   f)
-    #
-    # The other [optional] input parameters are:
-    #
-    # - x (either [n x 1] real vector or [], default []): starting point.
-    #   If x == [], the default starting point provided by f() is used.
-    #
-    # - mu (real scalar, optional, default value 1): the fixed weight to be
-    #   given to the stabilizing term throughout all the algorithm. It must
-    #   be a strictly positive number.
-    #
-    # - m1 (real scalar, optional, default value 0.01): parameter of the
-    #   Armijo-like condition used to declare a Serious Step; has to be in
-    #   [0,1).
-    #
-    # - eps (real scalar, optional, default value 1e-6): the accuracy in the
-    #   stopping criterion: the algorithm is stopped when the norm of the
-    #   direction (optimal solution of the master problem) is less than or
-    #   equal to mu * eps. If a negative value is provided, this is used in a
-    #   *relative* stopping criterion: the algorithm is stopped when the norm
-    #   of the direction is less than or equal to
-    #      mu * (-eps) * || norm of the first gradient ||.
-    #
-    # - m_inf (real scalar, optional, default value -inf): if the algorithm
-    #   determines a value for f() <= m_inf this is taken as an indication that
-    #   the problem is unbounded below and computation is stopped
-    #   (a "finite -inf").
-    #
-    # Output:
-    #
-    # - x ([n x 1] real column vector): the best solution found so far.
-    #
-    # - status (string): a string describing the status of the algorithm at
-    #   termination
-    #
-    #   = 'optimal': the algorithm terminated having proven that x is an
-    #     (approximately) optimal solution; this only happens when "cheating",
-    #     i.e., explicitly uses v_* = f([]) > -inf, unless in the very
-    #     unlikely case that f() spontaneously produces an almost-null
-    #     subgradient
-    #
-    #   = 'unbounded': the algorithm has determined an extremely large negative
-    #     value for f() that is taken as an indication that the problem is
-    #     unbounded below (a "finite -inf", see m_inf above)
-    #
-    #   = 'stopped': the algorithm terminated having exhausted the maximum
-    #     number of iterations: x is the bast solution found so far, but not
-    #     necessarily the optimal one
+    """
+    Apply the Proximal Bundle Method for the minimization of the provided
+    function f, which is assumed to be (possibly) nondifferentiable.
+
+    At each iteration a cutting-plane model of f is built from the subgradients
+    collected so far and a stabilized master problem, regularized by a proximal
+    term weighted by mu, is solved to compute the search direction; the candidate
+    point is then accepted as a Serious Step or rejected as a Null Step according
+    to an Armijo-like sufficient decrease condition.
+    """
 
     def __init__(self,
                  f,
@@ -88,6 +31,53 @@ class ProximalBundle(Optimizer):
                  master_verbose=False,
                  random_state=None,
                  verbose=False):
+        """
+
+        :param f:              the objective function.
+        :param x:              ([n x 1] real column vector, optional): the point where to start the
+                               algorithm from; if not provided, the default starting point provided
+                               by f() is used.
+        :param mu:             (real scalar, optional, default value 1): the fixed weight to be given to
+                               the stabilizing term throughout all the algorithm. It must be a strictly
+                               positive number.
+        :param m1:             (real scalar, optional, default value 0.01): parameter of the Armijo-like
+                               condition used to declare a Serious Step; has to be in (0,1).
+        :param eps:            (real scalar, optional, default value 1e-6): the accuracy in the stopping
+                               criterion: the algorithm is stopped when the norm of the direction (optimal
+                               solution of the master problem) is less than or equal to mu * eps. If a
+                               negative value is provided, this is used in a *relative* stopping criterion:
+                               the algorithm is stopped when the norm of the direction is less than or equal
+                               to mu * (- eps) * || norm of the first gradient ||.
+        :param tol:            (real scalar, optional, default value 1e-8): the tolerance used to check the
+                               optimality conditions when f is a Lagrangian dual relaxation.
+        :param max_iter:       (integer scalar, optional, default value 1000): the maximum number of iterations.
+        :param m_inf:          (real scalar, optional, default value -inf): if the algorithm determines a value
+                               for f() <= m_inf this is taken as an indication that the problem is unbounded
+                               below and computation is stopped (a "finite -inf").
+        :param callback:       (callable, optional, default value None): a function called at each iteration
+                               with the optimizer instance as first argument.
+        :param callback_args:  (tuple, optional, default value ()): additional arguments passed to callback.
+        :param master_solver:  (string, optional, default value 'ecos'): the cvxpy solver used to solve the
+                               master problem at each iteration.
+        :param master_verbose: (boolean, optional, default value False): print details about the resolution
+                               of the master problem if True, nothing otherwise.
+        :param random_state:   (integer scalar, optional, default value None): seed for the random number
+                               generator used to initialize the starting point when x is not provided.
+        :param verbose:        (boolean, optional, default value False): print details about each iteration
+                               if True, nothing otherwise.
+        :return x:             ([n x 1] real column vector): the best solution found so far.
+        :return status:        (string): a string describing the status of the algorithm at termination:
+                                  - 'optimal': the algorithm terminated having proven that x is a(n approximately)
+                               optimal solution; this only happens when "cheating", i.e., explicitly uses
+                               v_* = f([]) > -inf, unless in the very unlikely case that f() spontaneously
+                               produces an almost-null subgradient;
+                                  - 'unbounded': the algorithm has determined an extremely large negative value
+                               for f() that is taken as an indication that the problem is unbounded below
+                               (a "finite -inf", see m_inf above);
+                                  - 'stopped': the algorithm terminated having exhausted the maximum number of
+                               iterations: x is the best solution found so far, but not necessarily the optimal one;
+                                  - 'error': the master problem could not be solved at some iteration.
+        """
         super(ProximalBundle, self).__init__(f=f,
                                              x=x,
                                              eps=eps,

@@ -4,36 +4,16 @@ from optiml.opti.constrained import BoxConstrainedQuadraticOptimizer
 
 
 class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
-    # Apply the Projected Gradient algorithm with exact line search to the
-    # convex Box-Constrained Quadratic program:
-    #
-    #  (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
-    #
-    # - eps (real scalar, optional, default value 1e-6): the accuracy in the
-    #   stopping criterion: the algorithm is stopped when the norm of the
-    #   (projected) gradient is less than or equal to eps
-    #
-    # - max_iter (integer scalar, optional, default value 1000): the maximum
-    #   number of iterations
-    #
-    # Output:
-    #
-    # - v (real scalar): the best function value found so far (possibly the
-    #   optimal one)
-    #
-    # - x ([n x 1] real column vector, optional): the best solution found so
-    #   far (possibly the optimal one)
-    #
-    # - status (string, optional): a string describing the status of the
-    #   algorithm at termination, with the following possible values:
-    #
-    #   = 'optimal': the algorithm terminated having proven that x is an
-    #     (approximately) optimal solution, i.e., the norm of the gradient at x
-    #     is less than the required threshold
-    #
-    #   = 'stopped': the algorithm terminated having exhausted the maximum
-    #     number of iterations: x is the bast solution found so far, but not
-    #     necessarily the optimal one
+    """
+    Apply the Projected Gradient algorithm with exact line search to the convex
+    Box-Constrained Quadratic program:
+
+                        (P) min { 1/2 x^T Q x + q^T x : 0 <= x <= ub }
+
+    At each iteration the steepest descent direction is projected over the active
+    constraints and an exact line search is performed along it, restricted to the
+    maximum feasible step size that keeps the iterate inside the box.
+    """
 
     def __init__(self,
                  quad,
@@ -45,6 +25,33 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
                  callback=None,
                  callback_args=(),
                  verbose=False):
+        """
+
+        :param quad:          the quadratic function 1/2 x^T Q x + q^T x to be minimized.
+        :param ub:            ([n x 1] real column vector): the upper bound of the box, i.e., the
+                              variables are constrained to lie in 0 <= x <= ub.
+        :param x:             ([n x 1] real column vector, optional): the point where to start the
+                              algorithm from; if not provided, it starts from the middle of the box.
+        :param eps:           (real scalar, optional, default value 1e-6): the accuracy in the stopping
+                              criterion: the algorithm is stopped when the norm of the (projected) gradient
+                              is less than or equal to eps.
+        :param tol:           (real scalar, optional, default value 1e-8): the tolerance used to check the
+                              optimality conditions when f is a Lagrangian dual relaxation.
+        :param max_iter:      (integer scalar, optional, default value 1000): the maximum number of iterations.
+        :param callback:      (callable, optional, default value None): a function called at each iteration
+                              with the optimizer instance as first argument.
+        :param callback_args: (tuple, optional, default value ()): additional arguments passed to callback.
+        :param verbose:       (boolean, optional, default value False): print details about each iteration
+                              if True, nothing otherwise.
+        :return x:            ([n x 1] real column vector): the best solution found so far (possibly the
+                              optimal one).
+        :return status:       (string): a string describing the status of the algorithm at termination:
+                                 - 'optimal': the algorithm terminated having proven that x is a(n approximately)
+                              optimal solution, i.e., the norm of the (projected) gradient at x is less than the
+                              required threshold;
+                                 - 'stopped': the algorithm terminated having exhausted the maximum number of
+                              iterations: x is the best solution found so far, but not necessarily the optimal one.
+        """
         super(ProjectedGradient, self).__init__(quad=quad,
                                                 ub=ub,
                                                 x=x,

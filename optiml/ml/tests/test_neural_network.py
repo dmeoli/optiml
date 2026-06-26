@@ -1,9 +1,10 @@
 import numpy as np
 import pytest
-from sklearn.datasets import load_iris, load_boston
+from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder
 
+from optiml.ml.tests._datasets import load_boston
 from optiml.ml.neural_network import NeuralNetworkRegressor, NeuralNetworkClassifier
 from optiml.ml.neural_network.activations import sigmoid, softmax, linear, relu
 from optiml.ml.neural_network.layers import FullyConnected

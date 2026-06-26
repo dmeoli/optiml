@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
-from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from optiml.ml.svm import SVR
+from optiml.ml.tests._datasets import load_boston
 from optiml.ml.svm.kernels import linear
 from optiml.ml.svm.losses import epsilon_insensitive, squared_epsilon_insensitive
 from optiml.opti.constrained import ProjectedGradient, ActiveSet, InteriorPoint, FrankWolfe

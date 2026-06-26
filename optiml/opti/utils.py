@@ -47,7 +47,7 @@ def solve_lagrangian_equality_constrained_quadratic(Q, q, A, b, method='gmres'):
 # bcqp generator
 
 def generate_box_constrained_quadratic(ndim=2, actv=0.5, rank=1.1, ecc=0.99, ub_min=8, ub_max=12, seed=123456):
-    """
+    r"""
     Generate a box-constrained quadratic function defined as:
 
                 1/2 x^T Q x + q^T x : 0 <= x <= ub
@@ -223,9 +223,9 @@ def plot_surface_contour(f, x_min, x_max, y_min, y_max, ub=None, primal=True):
                  [v[4], v[7], v[3], v[0]]]
         # plot sides
         surf2 = ax.add_collection3d(Poly3DCollection(verts, facecolors='k', edgecolors='k', alpha=0.1,
-                                                     label=('$x \leq ub$' if np.all(_lb == [X.min(), Y.min()]) else
-                                                            '$x \geq lb$' if np.all(_ub == [X.max(), Y.max()]) else
-                                                            '$lb \leq x \leq ub$')))
+                                                     label=(r'$x \leq ub$' if np.all(_lb == [X.min(), Y.min()]) else
+                                                            r'$x \geq lb$' if np.all(_ub == [X.max(), Y.max()]) else
+                                                            r'$lb \leq x \leq ub$')))
         constrained = True
         # bug https://stackoverflow.com/a/55534939/5555994
         surf2._facecolors2d = surf2._facecolor3d

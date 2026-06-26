@@ -10,6 +10,12 @@ __pycache__
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Sphinx
+docs/_build
+
+# cached test datasets
+optiml/ml/tests/data
+
 # PyPI
 optiml.egg-info
 dist

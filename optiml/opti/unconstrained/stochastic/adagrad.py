@@ -4,6 +4,19 @@ from . import StochasticOptimizer
 
 
 class AdaGrad(StochasticOptimizer):
+    """
+    AdaGrad (Adaptive Gradient) for the minimization of the provided function f.
+
+    It adapts the learning rate to each coordinate by dividing the step by the
+    square root of the sum of the squares of all the past gradients, so that
+    frequently updated parameters receive smaller steps and rarely updated ones
+    larger steps.
+
+    References
+    ----------
+    .. [1] Duchi, J., Hazan, E. & Singer, Y. (2011). Adaptive Subgradient Methods
+       for Online Learning and Stochastic Optimization.
+    """
 
     def __init__(self,
                  f,
@@ -19,6 +32,35 @@ class AdaGrad(StochasticOptimizer):
                  shuffle=True,
                  random_state=None,
                  verbose=False):
+        """
+
+        :param f:             the objective function.
+        :param x:             ([n x 1] real column vector): the point where to start the algorithm from.
+        :param batch_size:    (integer scalar or None, optional, default value None): the size of the mini
+                              batches used to estimate the gradient; if None the full sample is used.
+        :param eps:           (real scalar, optional, default value 1e-6): the accuracy in the stopping
+                              criterion: the algorithm is stopped when the norm of the gradient is less
+                              than or equal to eps.
+        :param tol:           (real scalar, optional, default value 1e-8): the tolerance used in the
+                              optimality conditions of the Lagrangian dual (when f is a Lagrangian dual).
+        :param epochs:        (integer scalar, optional, default value 1000): the maximum number of epochs
+                              before the algorithm is stopped.
+        :param step_size:     (real scalar > 0, callable or iterable, optional, default value 1.): the
+                              learning rate, i.e., the base size of the step taken along the negative gradient.
+        :param offset:        (real scalar > 0, optional, default value 1e-8): a small constant added to the
+                              accumulated squared gradients to avoid division by zero.
+        :param callback:      (callable, optional, default value None): a function called at each iteration
+                              with the optimizer instance (and callback_args) as arguments; it can raise
+                              StopIteration to interrupt the optimization.
+        :param callback_args: (tuple, optional, default value ()): additional positional arguments passed
+                              to the callback at each call.
+        :param shuffle:       (boolean, optional, default value True): whether to shuffle the order of the
+                              mini batches at the beginning of each epoch.
+        :param random_state:  (integer scalar or None, optional, default value None): seed for the random
+                              number generator, for reproducibility.
+        :param verbose:       (boolean or integer, optional, default value False): print details about each
+                              iteration if True (or every `verbose` epochs if an integer), nothing otherwise.
+        """
         super(AdaGrad, self).__init__(f=f,
                                       x=x,
                                       step_size=step_size,

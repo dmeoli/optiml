@@ -138,7 +138,7 @@ def plot_svm_hyperplane(svm, X, y):
                            markerfacecolor='darkorange', markersize=0),
                     Line2D([0], [0], linestyle='none', marker='.', color='navy',
                            markerfacecolor='navy', markersize=9)],
-                   ['training data', 'decision boundary', '$\epsilon$-insensitive tube', 'support vectors'],
+                   ['training data', 'decision boundary', r'$\epsilon$-insensitive tube', 'support vectors'],
                    fontsize='7', shadow=True).get_frame().set_facecolor('white')
 
     # plot training data

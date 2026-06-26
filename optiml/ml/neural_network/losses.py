@@ -10,8 +10,30 @@ from ...opti import OptimizationFunction
 
 
 class NeuralNetworkLoss(OptimizationFunction, ABC):
+    """
+    Base abstract class for all neural network loss functions. It defines the
+    objective minimized during training, i.e., the data loss averaged over the
+    samples plus the layers regularization terms, together with its jacobian
+    computed via back-propagation.
+
+    Subclasses must implement ``loss`` and, optionally, override ``delta``.
+    """
 
     def __init__(self, neural_net, X, y):
+        """
+        Parameters
+        ----------
+
+        neural_net : `NeuralNetwork` instance
+            The neural network estimator this loss is attached to. It provides
+            the layers and the forward/backward passes used by the objective.
+
+        X : ndarray of shape (n_samples, n_features)
+            Training data over which the loss is evaluated.
+
+        y : ndarray of shape (n_samples, n_outputs)
+            Target values associated with ``X``.
+        """
         super(NeuralNetworkLoss, self).__init__(X.shape[1])
         self.neural_net = neural_net
         self.X = X
@@ -55,6 +77,11 @@ class NeuralNetworkLoss(OptimizationFunction, ABC):
 
 
 class MeanSquaredError(NeuralNetworkLoss):
+    """
+    Compute the mean squared error loss for regression as:
+
+        L(y_pred, y_true) = sum((y_pred - y_true)^2)
+    """
 
     def x_star(self):
         if (len(self.neural_net.layers) == 1 and
@@ -80,6 +107,11 @@ class MeanSquaredError(NeuralNetworkLoss):
 
 
 class MeanAbsoluteError(NeuralNetworkLoss):
+    """
+    Compute the mean absolute error loss for regression as:
+
+        L(y_pred, y_true) = sum(abs(y_pred - y_true))
+    """
 
     def loss(self, y_pred, y_true):
         return np.sum(np.abs(y_pred - y_true))

@@ -5,116 +5,18 @@ from ... import Quadratic
 
 
 class ConjugateGradient(LineSearchOptimizer):
-    # Apply a Nonlinear Conjugated Gradient algorithm for the minimization of
-    # the provided function f.
-    #
-    # Input:
-    #
-    # - x is either a [n x 1] real (column) vector denoting the input of
-    #   f(), or [] (empty).
-    #
-    # Output:
-    #
-    # - v (real, scalar): if x == [] this is the best known lower bound on
-    #   the unconstrained global optimum of f(); it can be -inf if either f()
-    #   is not bounded below, or no such information is available. If x ~= []
-    #   then v = f(x).
-    #
-    # - g (real, [n x 1] real vector): this also depends on x. if x == []
-    #   this is the standard starting point from which the algorithm should
-    #   start, otherwise it is the gradient of f() at x (or a subgradient if
-    #   f() is not differentiable at x, which it should not be if you are
-    #   applying the gradient method to it).
-    #
-    # The other [optional] input parameters are:
-    #
-    # - x (either [n x 1] real vector or [], default []): starting point.
-    #   If x == [], the default starting point provided by f() is used.
-    #
-    # - wf (integer scalar, optional, default value 0): which of the Nonlinear
-    #   Conjugated Gradient formulae to use. Possible values are:
-    #   = fr: Fletcher-Reeves
-    #   = pr: Polak-Ribière
-    #   = hs: Hestenes-Stiefel
-    #   = dy: Dai-Yuan
-    #
-    # - r_start (integer scalar, optional, default value 0): if > 0, restarts
-    #   (setting beta = 0) are performed every n * r_start iterations
-    #
-    # - eps (real scalar, optional, default value 1e-6): the accuracy in the
-    #   stopping criterion: the algorithm is stopped when the norm of the
-    #   gradient is less than or equal to eps. If a negative value is provided,
-    #   this is used in a *relative* stopping criterion: the algorithm is
-    #   stopped when the norm of the gradient is less than or equal to
-    #   (- eps) * || norm of the first gradient ||.
-    #
-    # - max_f_eval (integer scalar, optional, default value 1000): the maximum
-    #   number of function evaluations (hence, iterations will be not more than
-    #   max_f_eval because at each iteration at least a function evaluation is
-    #   performed, possibly more due to the line search).
-    #
-    # - m1 (real scalar, optional, default value 0.01): first parameter of the
-    #   Armijo-Wolfe-type line search (sufficient decrease). Has to be in (0,1)
-    #
-    # - m2 (real scalar, optional, default value 0.9): typically the second
-    #   parameter of the Armijo-Wolfe-type line search (strong curvature
-    #   condition). It should to be in (0,1); if not, it is taken to mean that
-    #   the simpler Backtracking line search should be used instead
-    #
-    # - a_start (real scalar, optional, default value 1): starting value of
-    #   alpha in the line search (> 0)
-    #
-    # - tau (real scalar, optional, default value 0.9): scaling parameter for
-    #   the line search. In the Armijo-Wolfe line search it is used in the
-    #   first phase: if the derivative is not positive, then the step is
-    #   divided by tau (which is < 1, hence it is increased). In the
-    #   Backtracking line search, each time the step is multiplied by tau
-    #   (hence it is decreased).
-    #
-    # - sfgrd (real scalar, optional, default value 0.01): safeguard parameter
-    #   for the line search. to avoid numerical problems that can occur with
-    #   the quadratic interpolation if the derivative at one endpoint is too
-    #   large w.r.t. the one at the other (which leads to choosing a point
-    #   extremely near to the other endpoint), a *safeguarded* version of
-    #   interpolation is used whereby the new point is chosen in the interval
-    #   [as * (1 + sfgrd), am * (1 - sfgrd)], being [as, am] the
-    #   current interval, whatever quadratic interpolation says. If you
-    #   experience problems with the line search taking too many iterations to
-    #   converge at "nasty" points, try to increase this
-    #
-    # - m_inf (real scalar, optional, default value -inf): if the algorithm
-    #   determines a value for f() <= m_inf this is taken as an indication that
-    #   the problem is unbounded below and computation is stopped
-    #   (a "finite -inf").
-    #
-    # - min_a (real scalar, optional, default value 1e-16): if the algorithm
-    #   determines a step size value <= min_a, this is taken as an indication
-    #   that something has gone wrong (the gradient is not a direction of
-    #   descent, so maybe the function is not differentiable) and computation
-    #   is stopped. It is legal to take min_a = 0, thereby in fact skipping this
-    #   test.
-    #
-    # Output:
-    #
-    # - x ([n x 1] real column vector): the best solution found so far.
-    #
-    # - status (string): a string describing the status of the algorithm at
-    #   termination
-    #
-    #   = 'optimal': the algorithm terminated having proven that x is a(n
-    #     approximately) optimal solution, i.e., the norm of the gradient at x
-    #     is less than the required threshold
-    #
-    #   = 'unbounded': the algorithm has determined an extremely large negative
-    #     value for f() that is taken as an indication that the problem is
-    #     unbounded below (a "finite -inf", see m_inf above)
-    #
-    #   = 'stopped': the algorithm terminated having exhausted the maximum
-    #     number of iterations: x is the bast solution found so far, but not
-    #     necessarily the optimal one
-    #
-    #   = 'error': the algorithm found a numerical error that prevents it from
-    #     continuing optimization (see min_a above)
+    """
+    Apply a Nonlinear Conjugate Gradient algorithm for the minimization of the
+    provided function f.
+
+    At each iteration the search direction is a combination of the current
+    (negative) gradient and the previous search direction, d = - g + beta * d_prev,
+    where the scalar beta is computed according to one of the classical Nonlinear
+    Conjugate Gradient formulae (Fletcher-Reeves, Polak-Ribiere, Hestenes-Stiefel
+    or Dai-Yuan); the step size is then chosen by an Armijo-Wolfe (or Backtracking)
+    line search. For quadratic functions the exact conjugacy condition and the
+    closed-form step size are used instead.
+    """
 
     def __init__(self,
                  f,
@@ -136,6 +38,67 @@ class ConjugateGradient(LineSearchOptimizer):
                  callback_args=(),
                  random_state=None,
                  verbose=False):
+        """
+
+        :param f:          the objective function.
+        :param x:          ([n x 1] real column vector): the point where to start the algorithm from.
+        :param wf:         (string, optional, default value 'fr'): which of the Nonlinear Conjugate
+                           Gradient formulae to use to compute beta. Possible values are: 'fr'
+                           (Fletcher-Reeves), 'pr' (Polak-Ribiere), 'hs' (Hestenes-Stiefel) and
+                           'dy' (Dai-Yuan).
+        :param eps:        (real scalar, optional, default value 1e-6): the accuracy in the stopping
+                           criterion: the algorithm is stopped when the norm of the gradient is less
+                           than or equal to eps. If a negative value is provided, this is used in a
+                           *relative* stopping criterion: the algorithm is stopped when the norm of
+                           the gradient is less than or equal to (- eps) * || norm of the first gradient ||.
+        :param max_f_eval: (integer scalar, optional, default value 1000): the maximum number of
+                           function evaluations (hence, iterations will be not more than max_f_eval
+                           because at each iteration at least a function evaluation is performed,
+                           possibly more due to the line search).
+        :param r_start:    (integer scalar, optional, default value 0): if > 0, restarts (setting
+                           beta = 0) are performed every n * r_start iterations.
+        :param m1:         (real scalar, optional, default value 0.01): first parameter of the
+                           Armijo-Wolfe-type line search (sufficient decrease). Has to be in (0,1).
+        :param m2:         (real scalar, optional, default value 0.9): typically the second parameter
+                           of the Armijo-Wolfe-type line search (strong curvature condition). It should
+                           to be in (0,1); if not, it is taken to mean that the simpler Backtracking
+                           line search should be used instead.
+        :param a_start:    (real scalar, optional, default value 1): starting value of alpha in the
+                           line search (> 0).
+        :param tau:        (real scalar, optional, default value 0.9): scaling parameter for the line
+                           search. In the Armijo-Wolfe line search it is used in the first phase: if the
+                           derivative is not positive, then the step is divided by tau (which is < 1,
+                           hence it is increased). In the Backtracking line search, each time the step is
+                           multiplied by tau (hence it is decreased).
+        :param sfgrd:      (real scalar, optional, default value 0.01): safeguard parameter for the line search.
+                           To avoid numerical problems that can occur with the quadratic interpolation if the
+                           derivative at one endpoint is too large w.r.t. The one at the other (which leads to
+                           choosing a point extremely near to the other endpoint), a *safeguarded* version of
+                           interpolation is used whereby the new point is chosen in the interval
+                           [as * (1 + sfgrd), am * (1 - sfgrd)], being [as, am] the current interval, whatever
+                           quadratic interpolation says. If you experience problems with the line search taking
+                           too many iterations to converge at "nasty" points, try to increase this.
+        :param m_inf:      (real scalar, optional, default value -inf): if the algorithm determines a value for
+                           f() <= m_inf this is taken as an indication that the problem is unbounded below and
+                           computation is stopped (a "finite -inf").
+        :param min_a:      (real scalar, optional, default value 1e-16): if the algorithm determines a step size
+                           value <= min_a, this is taken as an indication that something has gone wrong (the gradient
+                           is not a direction of descent, so maybe the function is not differentiable) and computation
+                           is stopped. It is legal to take min_a = 0, thereby in fact skipping this test.
+        :param verbose:    (boolean, optional, default value False): print details about each iteration
+                           if True, nothing otherwise.
+        :return x:         ([n x 1] real column vector): the best solution found so far.
+        :return status:    (string): a string describing the status of the algorithm at termination:
+                              - 'optimal': the algorithm terminated having proven that x is a(n approximately) optimal
+                           solution, i.e., the norm of the gradient at x is less than the required threshold;
+                              - 'unbounded': the algorithm has determined an extremely large negative value for f()
+                           that is taken as an indication that the problem is unbounded below (a "finite -inf",
+                           see m_inf above);
+                              - 'stopped': the algorithm terminated having exhausted the maximum number of iterations:
+                           x is the best solution found so far, but not necessarily the optimal one;
+                              - 'error': the algorithm found a numerical error that prevents it from continuing
+                           optimization (see min_a above).
+        """
         super(ConjugateGradient, self).__init__(f=f,
                                                 x=x,
                                                 eps=eps,

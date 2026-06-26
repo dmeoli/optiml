@@ -5,6 +5,10 @@ from autograd.scipy.special import expit
 
 
 class Activation(ABC):
+    """
+    Base abstract class for all activation functions. Subclasses must
+    implement ``function`` and its element-wise derivative ``jacobian``.
+    """
 
     def function(self, x):
         raise NotImplementedError
@@ -17,6 +21,7 @@ class Activation(ABC):
 
 
 class Linear(Activation):
+    """Identity (linear) activation function: f(x) = x."""
 
     def function(self, x):
         return x
@@ -26,6 +31,7 @@ class Linear(Activation):
 
 
 class ReLU(Activation):
+    """Rectified linear unit activation function: f(x) = max(0, x)."""
 
     def function(self, x):
         return np.maximum(0., x)
@@ -35,6 +41,7 @@ class ReLU(Activation):
 
 
 class Tanh(Activation):
+    """Hyperbolic tangent activation function: f(x) = tanh(x)."""
 
     def function(self, x):
         return np.tanh(x)
@@ -44,6 +51,7 @@ class Tanh(Activation):
 
 
 class Sigmoid(Activation):
+    """Logistic sigmoid activation function: f(x) = 1 / (1 + exp(-x))."""
 
     def function(self, x):
         return expit(x)
@@ -54,6 +62,7 @@ class Sigmoid(Activation):
 
 
 class SoftMax(Activation):
+    """Softmax activation function: f(x)_i = exp(x_i) / sum_j exp(x_j)."""
 
     def function(self, x, axis=-1):
         exps = np.exp(x - np.max(x, axis=axis, keepdims=True))
