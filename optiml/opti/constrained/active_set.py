@@ -11,7 +11,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
 
     .. math::
 
-        (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : 0 \le x \le ub \right\}
+        (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : lb \le x \le ub \right\}
 
     Since all the constraints are box ones, the active set is logically partitioned
     onto the variables fixed to the lower bound and those fixed to the upper bound;
@@ -22,6 +22,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
     def __init__(self,
                  quad,
                  ub,
+                 lb=None,
                  x=None,
                  eps=1e-6,
                  tol=1e-8,
@@ -33,7 +34,9 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
 
         :param quad:          the quadratic function :math:`\tfrac{1}{2} x^\top Q x + q^\top x` to be minimized.
         :param ub:            ([n x 1] real column vector): the upper bound of the box, i.e., the
-                              variables are constrained to lie in :math:`0 \le x \le ub`.
+                              variables are constrained to lie in :math:`lb \le x \le ub`.
+        :param lb:            ([n x 1] real column vector, optional): the lower bound of the box;
+                              if not provided it defaults to the all-zeros vector.
         :param x:             ([n x 1] real column vector, optional): the point where to start the
                               algorithm from; if not provided, it starts from the middle of the box.
         :param eps:           (real scalar, optional, default value 1e-6): the accuracy in the stopping
@@ -58,6 +61,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
         """
         super(ActiveSet, self).__init__(quad=quad,
                                         ub=ub,
+                                        lb=lb,
                                         x=x,
                                         eps=eps,
                                         tol=tol,
@@ -115,24 +119,29 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
 
             xs = np.zeros_like(self.x)
             xs[U] = self.ub[U]
+            xs[L] = self.lb[L]
+
+            # the variables fixed to the lower (L) and upper (U) bounds contribute the
+            # constant term Q_{A,L} lb_L + Q_{A,U} ub_U to the linear part of the
+            # subproblem restricted to the free variables A
+            q_A = self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U]) + self.f.Q[A, :][:, L].dot(self.lb[L])
 
             try:
                 # use the Cholesky factorization to solve the linear system if Q_{AA} is
                 # symmetric and positive definite, i.e., the function is strictly convex
-                xs[A] = cho_solve(cho_factor(self.f.Q[A, :][:, A]),
-                                  -(self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])))
+                xs[A] = cho_solve(cho_factor(self.f.Q[A, :][:, A]), -q_A)
             except:  # np.linalg.LinAlgError:
                 # since Q is not strictly psd, i.e., the function is linear along the
                 # eigenvectors correspondent to the null eigenvalues, the system has infinite
                 # solutions, so we will choose the one that minimizes the 2-norm
                 Q = self.f.Q[A, :][:, A]
-                q = self.f.q[A] + self.f.Q[A, :][:, U].dot(self.ub[U])
+                q = q_A
                 # `min ||Qx - q||` is formally equivalent to solve the linear system:
                 #                       (Q^T Q) x = (Q^T q)^T x
                 Q, q = np.inner(Q, Q), Q.T.dot(q)
                 xs[A] = minres(Q, -q)[0]
 
-            if np.logical_and(xs[A] <= self.ub[A] + 1e-12, xs[A] >= -1e-12).all():
+            if np.logical_and(xs[A] <= self.ub[A] + 1e-12, xs[A] >= self.lb[A] - 1e-12).all():
                 # the solution of the unconstrained problem is actually feasible
 
                 # move the current point right there
@@ -183,7 +192,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 idx = np.logical_and(A, d > 0)  # positive gradient entries
                 max_t = min((self.ub[idx] - self.x[idx]) / d[idx], default=np.inf)
                 idx = np.logical_and(A, d < 0)  # negative gradient entries
-                max_t = min(max_t, min(-self.x[idx] / d[idx], default=np.inf))
+                max_t = min(max_t, min((self.lb[idx] - self.x[idx]) / d[idx], default=np.inf))
 
                 # it is useless to compute the optimal t, because we know already
                 # that it is 1, whereas max_t necessarily is < 1
@@ -193,7 +202,7 @@ class ActiveSet(BoxConstrainedQuadraticOptimizer):
                 self.f_x = self.f.function(self.x)
 
                 # update the active set(s)
-                nL = np.logical_and(A, self.x <= 1e-12)
+                nL = np.logical_and(A, self.x <= self.lb + 1e-12)
                 L[nL] = True
                 A[nL] = False
 

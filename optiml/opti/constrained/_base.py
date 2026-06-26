@@ -20,6 +20,7 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
     def __init__(self,
                  quad,
                  ub,
+                 lb=None,
                  x=None,
                  eps=1e-6,
                  tol=1e-8,
@@ -31,7 +32,9 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
 
         :param quad:          the quadratic function :math:`\tfrac{1}{2} x^\top Q x + q^\top x` to be minimized.
         :param ub:            ([n x 1] real column vector): the upper bound of the box, i.e., the
-                              variables are constrained to lie in :math:`0 \le x \le ub`.
+                              variables are constrained to lie in :math:`lb \le x \le ub`.
+        :param lb:            ([n x 1] real column vector, optional): the lower bound of the box; if not
+                              provided it defaults to the all-zeros vector, i.e., :math:`0 \le x \le ub`.
         :param x:             ([n x 1] real column vector, optional): the point where to start the
                               algorithm from; if not provided, it starts from the middle of the box.
         :param eps:           (real scalar, optional, default value 1e-6): the accuracy in the stopping
@@ -51,15 +54,19 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
         """
         if not isinstance(quad, Quadratic):
             raise TypeError(f'{quad} is not an allowed quadratic function')
+        ub = np.asarray(ub, dtype=float)
+        lb = np.zeros_like(ub) if lb is None else np.asarray(lb, dtype=float)
         super(BoxConstrainedQuadraticOptimizer, self).__init__(f=quad,
-                                                               x=x or ub / 2,  # starts from the middle of the box
+                                                               # starts from the middle of the box
+                                                               x=x if x is not None else (lb + ub) / 2,
                                                                eps=eps,
                                                                tol=tol,
                                                                max_iter=max_iter,
                                                                callback=callback,
                                                                callback_args=callback_args,
                                                                verbose=verbose)
-        self.ub = np.asarray(ub, dtype=float)
+        self.lb = lb
+        self.ub = ub
 
     def f_star(self):
         return self.f.function(self.x_star())
@@ -68,7 +75,7 @@ class BoxConstrainedQuadraticOptimizer(Optimizer, ABC):
         if not hasattr(self, 'x_opt'):
             self.x_opt = solve_qp(P=self.f.Q,
                                   q=self.f.q,
-                                  lb=np.zeros_like(self.f.q),
+                                  lb=self.lb,
                                   ub=self.ub,
                                   solver='quadprog')
         return self.x_opt

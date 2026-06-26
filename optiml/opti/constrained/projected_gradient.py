@@ -10,7 +10,7 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
 
     .. math::
 
-        (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : 0 \le x \le ub \right\}
+        (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : lb \le x \le ub \right\}
 
     At each iteration the steepest descent direction is projected over the active
     constraints and an exact line search is performed along it, restricted to the
@@ -20,6 +20,7 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
     def __init__(self,
                  quad,
                  ub,
+                 lb=None,
                  x=None,
                  eps=1e-6,
                  tol=1e-8,
@@ -31,7 +32,9 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
 
         :param quad:          the quadratic function :math:`\tfrac{1}{2} x^\top Q x + q^\top x` to be minimized.
         :param ub:            ([n x 1] real column vector): the upper bound of the box, i.e., the
-                              variables are constrained to lie in :math:`0 \le x \le ub`.
+                              variables are constrained to lie in :math:`lb \le x \le ub`.
+        :param lb:            ([n x 1] real column vector, optional): the lower bound of the box;
+                              if not provided it defaults to the all-zeros vector.
         :param x:             ([n x 1] real column vector, optional): the point where to start the
                               algorithm from; if not provided, it starts from the middle of the box.
         :param eps:           (real scalar, optional, default value 1e-6): the accuracy in the stopping
@@ -56,6 +59,7 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
         """
         super(ProjectedGradient, self).__init__(quad=quad,
                                                 ub=ub,
+                                                lb=lb,
                                                 x=x,
                                                 eps=eps,
                                                 tol=tol,
@@ -75,7 +79,7 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
 
             # project the direction over the active constraints
             d[np.logical_and(self.ub - self.x <= 1e-12, d > 0)] = 0
-            d[np.logical_and(self.x <= 1e-12, d < 0)] = 0
+            d[np.logical_and(self.x - self.lb <= 1e-12, d < 0)] = 0
 
             # compute the norm of the (projected) gradient
             ng = np.linalg.norm(d)
@@ -97,12 +101,12 @@ class ProjectedGradient(BoxConstrainedQuadraticOptimizer):
                 break
 
             # first, compute the maximum feasible step size max_t such that:
-            #   0 <= x[i] + max_t * d[i] <= ub[i]   for all i
+            #   lb[i] <= x[i] + max_t * d[i] <= ub[i]   for all i
 
             idx = d > 0  # positive gradient entries
             max_t = min((self.ub[idx] - self.x[idx]) / d[idx], default=np.inf)
             idx = d < 0  # negative gradient entries
-            max_t = min(max_t, min(-self.x[idx] / d[idx], default=np.inf))
+            max_t = min(max_t, min((self.lb[idx] - self.x[idx]) / d[idx], default=np.inf))
 
             # compute optimal unbounded step size:
             #   min { 1/2 (x + a d)^T Q (x + a d) + q^T (x + a d) }

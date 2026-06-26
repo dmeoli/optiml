@@ -11,7 +11,7 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
 
     .. math::
 
-        (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : 0 \le x \le ub \right\}
+        (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : lb \le x \le ub \right\}
 
     At each iteration a feasible interior primal-dual solution is updated by taking
     a Newton step on the slackened KKT system, in which the complementarity equations
@@ -46,6 +46,7 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
     def __init__(self,
                  quad,
                  ub,
+                 lb=None,
                  x=None,
                  eps=1e-10,
                  tol=1e-8,
@@ -57,7 +58,9 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
 
         :param quad:          the quadratic function :math:`\tfrac{1}{2} x^\top Q x + q^\top x` to be minimized.
         :param ub:            ([n x 1] real column vector): the upper bound of the box, i.e., the
-                              variables are constrained to lie in :math:`0 \le x \le ub`.
+                              variables are constrained to lie in :math:`lb \le x \le ub`.
+        :param lb:            ([n x 1] real column vector, optional): the lower bound of the box;
+                              if not provided it defaults to the all-zeros vector.
         :param x:             ([n x 1] real column vector, optional): the point where to start the
                               algorithm from; if not provided, it starts from the middle of the box.
         :param eps:           (real scalar, optional, default value 1e-10): the accuracy in the stopping
@@ -81,6 +84,7 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
         """
         super(InteriorPoint, self).__init__(quad=quad,
                                             ub=ub,
+                                            lb=lb,
                                             x=x,
                                             eps=eps,
                                             tol=tol,
@@ -188,7 +192,7 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
         while True:
             self.f_x = self.f.function(self.x)
             xQx = self.x.dot(self.f.Q).dot(self.x)
-            p = -lp.dot(self.ub) - 0.5 * xQx
+            p = -lp.dot(self.ub) + lm.dot(self.lb) - 0.5 * xQx
             gap = (self.f_x - p) / max(abs(self.f_x), 1)
 
             if self.is_verbose():
@@ -221,10 +225,11 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
 
             mu = (self.f_x - p) / (4 * self.f.ndim * self.f.ndim)  # use \rho = 1 / (# of constraints)
 
-            umx = self.ub - self.x
-            H = self.f.Q + np.diag(lp / umx + lm / self.x)
-            # w = \mu (np.ones(n) / umx - np.ones(n) / self.x) + lp - lm
-            w = mu * (self.ub - 2 * self.x) / (umx * self.x) + lp - lm
+            umx = self.ub - self.x  # upper slack
+            xml = self.x - self.lb  # lower slack
+            H = self.f.Q + np.diag(lp / umx + lm / xml)
+            # w = \mu (np.ones(n) / umx - np.ones(n) / xml) + lp - lm
+            w = mu * (self.ub + self.lb - 2 * self.x) / (umx * xml) + lp - lm
 
             # and use Cholesky to solve the system since
             # H is a symmetric positive definite matrix
@@ -232,12 +237,12 @@ class InteriorPoint(BoxConstrainedQuadraticOptimizer):
 
             dlp = (mu * np.ones(self.f.ndim) + lp * dx) / umx - lp
 
-            dlm = (mu * np.ones(self.f.ndim) - lm * dx) / self.x - lm
+            dlm = (mu * np.ones(self.f.ndim) - lm * dx) / xml - lm
 
             # compute maximum feasible primal step size
             idx = dx < 0  # negative direction entries
             if any(idx):
-                max_t = min(-self.x[idx] / dx[idx])
+                max_t = min((self.lb[idx] - self.x[idx]) / dx[idx])
             else:
                 max_t = np.inf
 

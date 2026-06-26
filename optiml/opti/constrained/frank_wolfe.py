@@ -10,7 +10,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
 
     .. math::
 
-        (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : 0 \le x \le ub \right\}
+        (P) \quad \min \left\{ \tfrac{1}{2} x^\top Q x + q^\top x : lb \le x \le ub \right\}
 
     At each iteration the linearized problem is solved over the box to obtain a
     feasible vertex, a lower bound is updated and an exact line search is performed
@@ -21,6 +21,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
     def __init__(self,
                  quad,
                  ub,
+                 lb=None,
                  x=None,
                  t=0.,
                  eps=1e-6,
@@ -33,7 +34,9 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
 
         :param quad:          the quadratic function :math:`\tfrac{1}{2} x^\top Q x + q^\top x` to be minimized.
         :param ub:            ([n x 1] real column vector): the upper bound of the box, i.e., the
-                              variables are constrained to lie in :math:`0 \le x \le ub`.
+                              variables are constrained to lie in :math:`lb \le x \le ub`.
+        :param lb:            ([n x 1] real column vector, optional): the lower bound of the box;
+                              if not provided it defaults to the all-zeros vector.
         :param x:             ([n x 1] real column vector, optional): the point where to start the
                               algorithm from; if not provided, it starts from the middle of the box.
         :param t:             (real scalar, optional, default value 0): if the stabilized version of the
@@ -63,6 +66,7 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
         """
         super(FrankWolfe, self).__init__(quad=quad,
                                          ub=ub,
+                                         lb=lb,
                                          x=x,
                                          eps=eps,
                                          tol=tol,
@@ -84,10 +88,9 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
         while True:
             self.f_x, self.g_x = self.f.function(self.x), self.f.jacobian(self.x)
 
-            # solve min { <g, y> : 0 <= y <= u }
-            y = np.zeros_like(self.x)
-            idx = self.g_x < 0
-            y[idx] = self.ub[idx]
+            # solve min { <g, y> : lb <= y <= ub }, whose vertex picks, per coordinate,
+            # the upper bound where the gradient is negative and the lower bound otherwise
+            y = np.where(self.g_x < 0, self.ub, self.lb)
 
             # compute the lower bound: remember that the first-order approximation
             # is f(x) + g(y - x)
@@ -114,9 +117,10 @@ class FrankWolfe(BoxConstrainedQuadraticOptimizer):
                 self.status = 'stopped'
                 break
 
-            # in the stabilized case, restrict y in the box
+            # in the stabilized case, restrict y to a box of relative size t around x
             if self.t > 0:
-                y = max(self.x - self.t * self.ub, min(self.x + self.t * self.ub, y))
+                radius = self.t * (self.ub - self.lb)
+                y = np.clip(y, self.x - radius, self.x + radius)
 
             # compute step size
             # we are taking direction d = y - x and y is feasible, hence the
