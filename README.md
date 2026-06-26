@@ -6,6 +6,7 @@
 [![PyPI Version](https://img.shields.io/pypi/v/optiml.svg?color=blue)](https://pypi.org/project/optiml/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/optiml.svg)](https://pypistats.org/packages/optiml)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dmeoli/optiml/master)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dmeoli/optiml)
 [![Documentation](https://img.shields.io/badge/docs-online-blue)](https://dmeoli.github.io/optiml)
 
 OptiML is a sklearn compatible implementation of *Support Vector Machines* and *Deep Neural Networks*, both with some of
