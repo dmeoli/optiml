@@ -1,9 +1,6 @@
-import sys
-import warnings
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import numpy as np
-from sklearn.exceptions import PositiveSpectrumWarning
 
 from .kernels import LinearKernel
 
@@ -11,11 +8,33 @@ from .kernels import LinearKernel
 class SMO(ABC):
     """
     Base abstract class for the sequential minimal optimization (SMO)
-    algorithm used to train the dual SVM formulation. It holds the data,
-    the kernel matrix and the optimization state shared by the classifier
-    and regression variants.
+    algorithm used to train the dual SVM formulation.
 
-    Subclasses must implement ``_take_step``, ``_examine_example`` and ``minimize``.
+    The dual of a training problem, whether of a classifier or of a
+    regressor, is the same quadratic program over a box with one linear
+    equality constraint
+
+        min 1/2 alphas^T Q alphas + q^T alphas ,
+            0 <= alphas <= C , s^T alphas = 0 ,
+
+    written over a *dual index space* of size ``n_dual``, of the map giving
+    the sample each dual index refers to, of the signs ``s`` and of the
+    linear coefficients ``q``. A classifier has one dual index per sample,
+    with the sign of its target and a coefficient of -1; a regressor has two,
+    one per side of the insensitivity tube, with opposite signs. Everything
+    else, this class included, is written in terms of those alone, which is
+    why the same iteration trains both.
+
+    The iteration is the one of Platt with the working set selection of
+    Keerthi et al. and of Fan, Chen and Lin: the first index of the pair is
+    the maximal violating one, the second is the one that decreases the
+    objective the most among those that make a violating pair with it. The
+    gradient of the dual is maintained, so that both are read off a single
+    scan of the active set, and the active set is shrunk of what provably
+    cannot be selected any more.
+
+    Subclasses provide the dual index space and read the solution back out of
+    the multipliers, and nothing else.
     """
 
     def __init__(self, quad, X, y, K, kernel, C, tol=1e-3, verbose=False):
@@ -38,7 +57,7 @@ class SMO(ABC):
 
         kernel : `Kernel` instance
             The kernel function used to build ``K``. If it is a `LinearKernel`
-            the primal weight vector ``w`` is maintained explicitly.
+            the primal weight vector ``w`` is recovered from the multipliers.
 
         C : float
             Regularization parameter, i.e., the upper bound on the
@@ -59,739 +78,745 @@ class SMO(ABC):
             self.w = 0.
         self.b = 0.
         self.C = C
-        self.errors = np.zeros(len(X))
         self.tol = tol
         self.iter = 0
         self.verbose = verbose
 
-    def _take_step(self, i1, i2):
-        raise NotImplementedError
+    # the dual index space - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    def _examine_example(self, i2):
-        raise NotImplementedError
+    @abstractmethod
+    def _dual_index_space(self):
+        """
+        The dual index space of the training problem, as the triple of the
+        sample each dual index refers to, of the signs and of the linear
+        coefficients. This is all the iteration knows about the problem.
+
+        Returns
+        -------
+
+        smpl : ndarray of shape (n_dual,)
+            The sample each dual index refers to.
+
+        s : ndarray of shape (n_dual,)
+            The sign of each dual index.
+
+        q : ndarray of shape (n_dual,)
+            The linear coefficient of each dual index.
+        """
+
+    @abstractmethod
+    def _set_solution(self, alphas, smpl, s, m, M):
+        """
+        Reads the solution the iteration has found back out of the
+        multipliers, in the form the caller expects it: the multipliers
+        themselves, the bias, and the weight vector when the kernel is linear.
+
+        Parameters
+        ----------
+
+        alphas : ndarray of shape (n_dual,)
+            The multipliers, in the order of the dual index space.
+
+        smpl : ndarray of shape (n_dual,)
+            The sample each dual index refers to.
+
+        s : ndarray of shape (n_dual,)
+            The sign of each dual index.
+
+        m, M : float
+            The largest and the smallest value of the bias that the
+            multipliers allow: at optimality they coincide with it.
+        """
+
+    # the iteration - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     def minimize(self):
+        smpl, s, q = self._dual_index_space()
+        n_dual = len(s)
+        u = self.C
+
+        # the multipliers and the gradient of the dual at them, G = Q alphas
+        # + q, which starts at q since the multipliers start at zero and is
+        # then followed in O( n_dual ) at every step rather than recomputed
+        # the multipliers of the previous call, if there are any, are a
+        # sensible starting point: what makes them one is that the gradient
+        # has been followed through the change [see set_C()], so that it is
+        # exactly the gradient of the new dual at them, as if it had been
+        # recomputed from scratch
+        if getattr(self, '_alphas', None) is not None and \
+                len(self._alphas) == n_dual:
+            alphas = self._alphas.copy()
+            G = self._G.copy()
+        else:
+            alphas = np.zeros(n_dual)
+            G = np.asarray(q, dtype=float).copy()
+
+        # the diagonal of the Hessian, which the second order selection reads
+        # once per candidate: taking it out of the kernel matrix every time
+        # walks that matrix with stride n + 1, i.e. one cache miss per
+        # candidate, which is what makes the rule cost more than it saves
+        QD = self.K[smpl, smpl].astype(float).copy()
+
+        # the active set is a *prefix* of the current order of the dual
+        # indices: shrinking an index is exchanging it with the last active
+        # one, which keeps every scan sequential, as it would be without
+        # shrinking at all. The kernel matrix is not touched, being indexed by
+        # the sample rather than by the dual index, so only the map moves
+        smpl = np.asarray(smpl).copy()
+        s = np.asarray(s, dtype=float).copy()
+        q = np.asarray(q, dtype=float).copy()
+        # where each entry of the current order came from, so that the
+        # multipliers can be reported in the order the caller has them
+        perm = np.arange(n_dual)
+        state = (alphas, G, QD, s, q, smpl, perm)
+        act = n_dual
+
+        # shrinking at every iteration costs more than it saves, and above all
+        # the whole index space has to come back every so often even when
+        # nothing asks for it: what makes the active set collapse is not
+        # shrinking often but staying shrunk
+        period = min(n_dual, 1000)
+        counter = period
+        patience = 20
+        passes = 0
+        pm, pM = np.inf, -np.inf
+
+        while True:
+
+            if counter:
+                counter -= 1
+
+            if (not counter) and (pM > -np.inf):
+                counter = period
+                if act < n_dual:
+                    passes += 1
+                    if passes >= patience:
+                        act = self._unshrink(state, act, n_dual)
+                        passes = 0
+                    else:
+                        act = self._shrink(state, act, pm, pM)
+                else:
+                    act = self._shrink(state, act, pm, pM)
+
+            # the first index of the pair: the maximal violating one - - - - -
+
+            sa, aa, Ga = s[:act], alphas[:act], G[:act]
+            g = -sa * Ga
+            up = np.where(sa > 0, aa < u, aa > 0)
+            low = np.where(sa > 0, aa > 0, aa < u)
+
+            if not up.any():
+                i, m = -1, -np.inf
+            else:
+                i = int(np.flatnonzero(up)[np.argmax(g[up])])
+                m = g[i]
+
+            M = g[low].min() if low.any() else np.inf
+
+            # the second one: the index of those that make a violating pair
+            # with the first that decreases the objective the most, the
+            # curvature along the direction that moves the two multipliers
+            # being Q_ii + Q_kk - 2 Q_ik
+
+            j = -1
+            if i >= 0 and low.any():
+                # the curvature along the direction that moves the two
+                # multipliers is K_ii + K_kk - 2 K_ik: the signs cancel out,
+                # the direction being the one that keeps s^T alphas where it is
+                a = QD[i] + QD[:act] - 2 * self.K[smpl[:act], smpl[i]]
+                a = np.where(a > 0, a, 1e-12)
+                dec = np.where(low & (g < m), (m - g) ** 2 / a, -np.inf)
+                if np.isfinite(dec).any():
+                    j = int(np.argmax(dec))
+                    if not np.isfinite(dec[j]):
+                        j = -1
+
+            if i < 0 or j < 0 or m - M <= self.tol:
+                if act < n_dual:
+                    # the conditions hold on the active set, which says
+                    # nothing about the rest: everything comes back and they
+                    # are checked where they have to hold
+                    act = self._unshrink(state, act, n_dual)
+                    passes = 0
+                    pm, pM = np.inf, -np.inf
+                    continue
+                break
+
+            pm, pM = m, M
+
+            # minimize along the only feasible direction changing the two - -
+
+            a = QD[i] + QD[j] - 2 * self.K[smpl[i], smpl[j]]
+            if a <= 0:
+                a = 1e-12
+            t = (m - g[j]) / a
+            t = min(t, u - alphas[i] if s[i] > 0 else alphas[i],
+                    alphas[j] if s[j] > 0 else u - alphas[j])
+            if t <= 0:
+                if act < n_dual:
+                    act = self._unshrink(state, act, n_dual)
+                    passes = 0
+                    pm, pM = np.inf, -np.inf
+                    continue
+                break
+
+            alphas[i] += s[i] * t
+            alphas[j] -= s[j] * t
+
+            # snap to the bounds, so that the sets the selection reads off the
+            # multipliers are exact
+            for k in (i, j):
+                if alphas[k] < 1e-12:
+                    alphas[k] = 0.
+                elif alphas[k] > u - 1e-12:
+                    alphas[k] = u
+
+            # the gradient follows in O( n_dual ): this is the innermost loop
+            G[:act] += sa * t * (self.K[smpl[:act], smpl[i]] -
+                                 self.K[smpl[:act], smpl[j]])
+
+            if self.verbose and not self.iter % self.verbose:
+                print('{:4d}\t{: 1.4e}'.format(self.iter, self.quad.function(
+                    alphas[np.argsort(state[5] if False else np.arange(n_dual))])))
+
+            self.iter += 1
+
+        # the bias is any value the optimality conditions leave room for,
+        # i.e. the midpoint of the interval the multipliers allow
+        if not np.isfinite(m):
+            m = 0.
+        if not np.isfinite(M):
+            M = 0.
+
+        # the state of the dual survives the call, in the order the caller
+        # has it: the exact solution path of learn()/unlearn() walks it
+        order = np.argsort(perm)
+        self._alphas = alphas[order].copy()
+        self._G = G[order].copy()
+        self._s = s[order].copy()
+        self._q = q[order].copy()
+        self._smpl = smpl[order].copy()
+        self._QD = QD[order].copy()
+        # the multiplier of the equality constraint, which is what the path
+        # walks: the bias the caller sees is what _set_solution() makes of it,
+        # and the two do not have the same sign for every problem
+        self._b = (m + M) / 2
+
+        self._set_solution(alphas, smpl, s, m, M)
+
+        if self.verbose:
+            print()
+
+        return self
+
+
+    # re-optimization - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    def set_C(self, C):
+        """
+        Changes the trade-off parameter, i.e. the upper bound on the
+        multipliers, keeping the solution of the previous call as the starting
+        point of the next one.
+
+        The gradient of the dual is affine in the multipliers, in the linear
+        term and in the diagonal alike, so the change is followed exactly, and
+        in O( n_dual ) time rather than in the O( n_dual^2 ) that recomputing
+        it from scratch costs. When the bound *decreases* the multipliers that
+        exceed it are *scaled* rather than clipped, which is what keeps them
+        feasible for the equality constraint as well, the latter being
+        homogeneous, and keeps them in the proportions the previous solve had
+        put them in.
+        """
+        if getattr(self, '_alphas', None) is None:
+            self.C = C
+            return
+
+        if C < self.C:
+            mx = self._alphas.max() if len(self._alphas) else 0.
+            if mx > C:
+                theta = C / mx
+                self._G = theta * (self._G - self._q) + self._q
+                self._alphas = self._alphas * theta
+
+        self.C = C
+
+    def set_epsilon(self, epsilon):
+        """
+        Changes the half-width of the insensitivity tube, which only moves the
+        linear term of the dual by the same amount on every dual index, hence
+        is followed in O( n_dual ) as well. Meaningless for a classifier,
+        whose linear term does not depend on it.
+        """
         raise NotImplementedError
+
+    # the exact solution path - - - - - - - - - - - - - - - - - - - - - - - -
+
+    def _dual_indices_of(self, i):
+        """
+        The dual indices the sample ``i`` carries: one for a classifier, the
+        two sides of the tube for a regressor.
+        """
+        return np.flatnonzero(self._smpl == i)
+
+    def _free_system(self, S, c):
+        """
+        The matrix of the free system on the margin set @p S, bordered by the
+        equality constraint, whose first slot is the border row:
+
+            Q_SS beta + s_S beta_b = - Q_Sc  ,  s_S . beta = - s_c
+
+        Returns the matrix and the right hand side, in that order.
+        """
+        s, smpl = self._s, self._smpl
+        S = np.asarray(S, dtype=int)
+        ns = len(S)
+        sS, mS = s[S], smpl[S]
+        A = np.zeros((ns + 1, ns + 1))
+        A[0, 1:] = sS
+        A[1:, 0] = sS
+        A[1:, 1:] = np.outer(sS, sS) * self.K[np.ix_(mS, mS)]
+        rhs = np.empty(ns + 1)
+        rhs[0] = -s[c]
+        rhs[1:] = -sS * s[c] * self.K[mS, smpl[c]]
+        return A, rhs
+
+    def _add_to_free_system(self, R, S, k):
+        """
+        Extends the inverse of the matrix of the free system, which @p S is
+        the margin set of, with the dual index @p k that has just reached the
+        margin, by the bordering formula
+
+            gamma = Q_kk - z^T R z  ,  v = R z
+
+        with z the column of @p k against the system as it is: the new
+        inverse is R + v v^T / gamma bordered by - v / gamma and 1 / gamma,
+        which costs the square of the order of the system rather than its
+        cube. Returns None if gamma is too small to divide by, i.e. if the
+        extended matrix is singular, in which case the caller computes the
+        inverse again from scratch.
+        """
+        s, smpl = self._s, self._smpl
+        S = np.asarray(S, dtype=int)
+        z = np.empty(len(S) + 1)
+        z[0] = s[k]
+        z[1:] = s[S] * s[k] * self.K[smpl[S], smpl[k]]
+        v = R.dot(z)
+        gamma = self.K[smpl[k], smpl[k]] - z.dot(v)
+        if abs(gamma) < 1e-10:
+            return None
+        n = len(z)
+        out = np.empty((n + 1, n + 1))
+        out[:n, :n] = R + np.outer(v, v) / gamma
+        out[:n, n] = -v / gamma
+        out[n, :n] = -v / gamma
+        out[n, n] = 1. / gamma
+        return out
+
+    @staticmethod
+    def _rmv_from_free_system(R, p):
+        """
+        Drops the slot @p p, i.e. the row and the column of one dual index
+        that has left the margin, out of the inverse of the matrix of the free
+        system, by the counterpart of the bordering formula
+
+            R_ij - R_ip R_pj / R_pp
+
+        Returns None if R_pp is too small to divide by, in which case the
+        caller computes the inverse again from scratch.
+        """
+        if abs(R[p, p]) < 1e-10:
+            return None
+        out = R - np.outer(R[:, p], R[p, :]) / R[p, p]
+        return np.delete(np.delete(out, p, axis=0), p, axis=1)
+
+    def follow_path(self, c, to, pinned=()):
+        """
+        Moves the multiplier of the dual index ``c`` towards ``to`` keeping
+        *every other* dual index at its own optimality condition, which is the
+        incremental and decremental algorithm of Cauwenberghs and Poggio.
+
+        The multipliers of the margin indices and the bias follow the one of
+        ``c`` along the direction that the free system gives, up to the first
+        *event*: the multiplier of ``c`` arrives, its own condition starts
+        holding, a margin multiplier reaches a bound, or a bounded index
+        reaches the margin. At each event the direction is recomputed and the
+        walk resumes, so what is left behind is optimal at every point of the
+        path and exact when it stops. Growing a multiplier from zero learns a
+        sample, driving it to zero unlearns one, and the two are the same walk
+        taken in opposite directions.
+
+        Since two consecutive events differ by one index, the inverse of the
+        matrix of the free system is kept across them and followed with
+        rank-one updates, which cost the square of the order of the system
+        rather than its cube. Building it costs more than one solve, so a walk
+        that ends at its first event never builds it, and it is computed again
+        from scratch every so many updates, so that what each of them loses in
+        accuracy does not pile up.
+
+        Returns the number of events taken, or -1 if the path could not be
+        followed, in which case the multipliers are still feasible but they
+        are not the solution asked for and the caller has to fall back on
+        ``minimize()``.
+        """
+        alphas, G, s, q, smpl = (self._alphas, self._G, self._s,
+                                 self._q, self._smpl)
+        n_dual = len(s)
+        u = self.C
+        eps = 1e-9
+        pinned = set(int(k) for k in pinned) | {int(c)}
+        events = 0
+
+        def h(k):
+            return G[k] + s[k] * self._b
+
+        S = []
+        refactor = True     # the margin set has to be read off the state
+        R = None            # the inverse, when it is there and matches S
+        updates = 0         # rank-one updates since the last factorization
+
+        for _ in range(20 * n_dual + 100):
+
+            dist = to - alphas[c]
+            if abs(dist) <= 1e-12:
+                return events
+            dirn = 1. if dist > 0 else -1.
+
+            hc = h(c)
+            if dirn > 0 and hc >= -1e-9:
+                # nothing more is asked of it: its own condition holds where
+                # it is
+                return events
+
+            if refactor:
+                # the margin: the indices whose multiplier is strictly inside
+                # its bounds and *also* those that sit at a bound with their
+                # own condition holding with equality, which is where a
+                # previous event has left them. Reading the set off the
+                # multipliers alone makes the walk pick the same event forever
+                S = [k for k in range(n_dual)
+                     if k not in pinned and
+                     ((eps < alphas[k] < u - eps) or abs(h(k)) <= 1e-7)]
+                refactor = False
+                R = None
+
+            if not S:
+                # no multiplier can absorb the movement of c and keep s^T
+                # alphas where it is: what moves is the bias alone, until some
+                # index stops satisfying its own condition
+                bdir = s[c] if hc < 0 else -s[c]
+                mag, who = np.inf, -1
+                for k in range(n_dual):
+                    if k in pinned:
+                        continue
+                    dh = s[k] * bdir
+                    if abs(dh) <= 1e-12:
+                        continue
+                    t = -h(k) / dh
+                    if 1e-12 < t < mag:
+                        mag, who = t, k
+                tc = -hc / (s[c] * bdir)
+                if 0 < tc <= mag:
+                    self._b += bdir * tc
+                    return events
+                if who < 0:
+                    return -1
+                self._b += bdir * mag
+                events += 1
+                refactor = True
+                continue
+
+            # from the second event on the walk carries the inverse of the
+            # system: building it costs more than one solve, hence a walk that
+            # ends at its first event never does
+            if events and R is None:
+                A, _ = self._free_system(S, c)
+                try:
+                    R = np.linalg.inv(A)
+                    updates = 0
+                except np.linalg.LinAlgError:
+                    R = None
+
+            while True:
+                S_arr = np.asarray(S, dtype=int)
+                A, rhs = self._free_system(S, c)
+                if R is not None:
+                    sol = R.dot(rhs)
+                else:
+                    try:
+                        sol = np.linalg.solve(A, rhs)
+                    except np.linalg.LinAlgError:
+                        return -1
+                beta_b, beta = sol[0], sol[1:]
+
+                # whoever is at a bound and would be pushed out of it is not
+                # on the margin after all: it leaves and the direction is
+                # computed again, which can only happen as many times as there
+                # are indices on it
+                gone = [idx for idx, k in enumerate(S_arr)
+                        if (alphas[k] <= eps and beta[idx] * dirn < -1e-12) or
+                        (alphas[k] >= u - eps and beta[idx] * dirn > 1e-12)]
+                if not gone:
+                    break
+
+                # dropped from the last on, so that the slots before it do not
+                # move; the border row takes up the first slot
+                if R is not None:
+                    for idx in reversed(gone):
+                        R = self._rmv_from_free_system(R, idx + 1)
+                        if R is None:
+                            break
+                        updates += 1
+                S = [k for idx, k in enumerate(S_arr) if idx not in set(gone)]
+                if not S:
+                    break
+
+            if not S:
+                refactor = True
+                continue
+
+            sS, mS = s[S_arr], smpl[S_arr]
+
+            # how the condition of every index moves per unit of movement of c
+            w = (s * self.K[smpl, smpl[c]] * s[c] +
+                 (s[:, None] * self.K[np.ix_(smpl, mS)] * sS).dot(beta))
+            gof = w + s * beta_b
+
+            # the first event along the direction
+            mag = abs(dist)
+            what, who = 0, -1
+
+            gc = gof[c] * dirn
+            if dirn > 0 and gc > 1e-12:
+                t = -hc / gc
+                if 0 <= t < mag:
+                    mag, what = t, 1
+
+            for idx, k in enumerate(S_arr):
+                db = beta[idx] * dirn
+                if abs(db) <= 1e-12:
+                    continue
+                room = (u - alphas[k]) if db > 0 else alphas[k]
+                t = room / abs(db)
+                if t < mag:
+                    mag, what, who = t, 2, k
+
+            in_S = set(int(k) for k in S_arr)
+            for k in range(n_dual):
+                if k in pinned or k in in_S:
+                    continue
+                dh = gof[k] * dirn
+                if abs(dh) <= 1e-12:
+                    continue
+                t = -h(k) / dh
+                if 1e-12 < t < mag:
+                    mag, what, who = t, 3, k
+
+            if not np.isfinite(mag):
+                return -1
+
+            # walk that far
+            da = dirn * mag
+            alphas[c] += da
+            alphas[S_arr] += beta * da
+            self._b += beta_b * da
+            G += w * da
+
+            # snap to the bounds, so that the margin is what it looks like
+            for k in list(S_arr) + [c] + ([who] if what == 2 else []):
+                if alphas[k] < eps:
+                    alphas[k] = 0.
+                elif alphas[k] > u - eps:
+                    alphas[k] = u
+
+            events += 1
+            self.iter += 1
+
+            if what == 1:
+                return events
+
+            if what == 3:
+                # the index that has reached the margin joins the margin set,
+                # and the inverse follows it with a rank-one update; the one
+                # that has reached a bound stays, its own condition holding
+                # there with equality, and leaves only when the direction
+                # would push it out, which the pruning above sees to
+                if R is not None:
+                    R = self._add_to_free_system(R, S, who)
+                    updates += 1
+                if R is None:
+                    refactor = True
+                else:
+                    S = list(S) + [int(who)]
+
+            # the inverse is computed again from scratch every so many
+            # updates, so that what each of them loses in accuracy does not
+            # pile up
+            if updates >= 50:
+                R = None
+
+        return -1
+
+    def unlearn(self, i):
+        """
+        Drives the multipliers of the sample ``i`` to zero keeping every other
+        one at its own optimality condition, so that what is left is the exact
+        solution of the training problem *without* that sample, at the cost of
+        one walk along the solution path rather than of a training. This is
+        what makes the leave-one-out estimate, and the k-fold that unlearns
+        one fold at a time, cost a walk each instead of a training each.
+
+        Returns the number of events taken, or -1 if the path could not be
+        followed.
+        """
+        idx = self._dual_indices_of(i)
+        events = 0
+        for c in idx:
+            # the indices of the sample stay pinned for the whole of it: a
+            # walk keeps every index that is not pinned at its own condition,
+            # and would therefore let one that has already been unlearnt back
+            # in, which the problem without the sample has no way of doing
+            taken = self.follow_path(int(c), 0., pinned=idx.tolist())
+            if taken < 0:
+                return -1
+            events += taken
+        # the sample that has been unlearnt does not take part in the problem
+        # any more, hence it does not constrain the bias either
+        m, M = self._bias_interval(exclude=idx)
+        self._b = (m + M) / 2
+        self._set_solution(self._alphas, self._smpl, self._s, m, M)
+        return events
+
+    def _bias_interval(self, exclude=()):
+        """
+        The interval the optimality conditions leave for the bias at the
+        current multipliers, whose midpoint is the bias itself. The dual
+        indices in @p exclude are the ones of a sample that has been
+        unlearnt: they take no part in the problem any more, hence they do
+        not constrain the bias either.
+        """
+        alphas, G, s = self._alphas, self._G, self._s
+        u = self.C
+        g = -s * G
+        up = np.where(s > 0, alphas < u, alphas > 0)
+        low = np.where(s > 0, alphas > 0, alphas < u)
+        if len(exclude):
+            up[np.asarray(exclude, dtype=int)] = False
+            low[np.asarray(exclude, dtype=int)] = False
+        m = g[up].max() if up.any() else 0.
+        M = g[low].min() if low.any() else 0.
+        return m, M
+
+    # shrinking - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    @staticmethod
+    def _swap(state, a, b):
+        if a != b:
+            for v in state:
+                v[a], v[b] = v[b], v[a]
+
+    def _shrink(self, state, act, m, M):
+        """
+        Takes out of the active set what cannot be selected any more: a
+        multiplier that cannot be increased and whose own value of the bias is
+        larger than the largest one the others allow can be neither the first
+        nor the second of a violating pair, and symmetrically for one that
+        cannot be decreased. The exclusion is only valid at the current
+        multipliers, which is why everything is put back before the optimality
+        conditions are declared to hold.
+        """
+        alphas, G, QD, s, q, smpl, perm = state
+        u = self.C
+        k = 0
+        while k < act:
+            sk = s[k]
+            gk = -sk * G[k]
+            up = alphas[k] < u if sk > 0 else alphas[k] > 0
+            low = alphas[k] > 0 if sk > 0 else alphas[k] < u
+            if ((not up) and gk > m) or ((not low) and gk < M):
+                act -= 1
+                self._swap(state, k, act)
+                continue
+            k += 1
+        return act
+
+    def _unshrink(self, state, act, n_dual):
+        """
+        Puts back into the active set everything that had been taken out,
+        recomputing the gradient of what had been left out, which the steps
+        taken in the meantime have made stale: G = Q alphas + q costs one row
+        of the kernel matrix per *nonzero* multiplier rather than one per
+        index restored, a multiplier that is zero contributing nothing.
+        """
+        alphas, G, QD, s, q, smpl, perm = state
+        if act >= n_dual:
+            return n_dual
+
+        nz = np.flatnonzero(alphas)
+        G[act:] = q[act:]
+        if len(nz):
+            G[act:] += s[act:] * (self.K[np.ix_(smpl[act:], smpl[nz])] @
+                                  (s[nz] * alphas[nz]))
+        return n_dual
 
 
 class SMOClassifier(SMO):
     """
-    Implements John Platt's sequential minimal optimization
-    algorithm for training a support vector classifier.
-
-    The SMO algorithm is an algorithm for solving large quadratic programming (QP)
-    optimization problems, widely used for the training of support vector machines.
-    First developed by John C. Platt in 1998, SMO breaks up large QP problems into a
-    series of smallest possible QP problems, which are then solved analytically.
-
-    This class follows the original algorithm by Platt with additional modifications
-    by Keerthi et al.
-
-    References
-    ----------
-
-    John C. Platt. Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector Machines.
-
-    S.S. Keerthi, S.K. Shevade, C. Bhattacharyya, K.R.K. Murthy. Improvements to Platt's SMO
-    Algorithm for SVM Classifier Design. Technical Report CD-99-14.
+    The dual index space of a classifier: one dual index per sample, with the
+    sign of its target and a linear coefficient of -1.
     """
 
     def __init__(self, quad, X, y, K, kernel, C, tol=1e-3, verbose=False):
         self.alphas = np.zeros(len(X))
         super(SMOClassifier, self).__init__(quad, X, y, K, kernel, C, tol, verbose)
 
-        # initialize variables and structures to implement improvements
-        # on the original Platt's SMO algorithm described in Keerthi et
-        # al. for better performance ed efficiency
+    def _dual_index_space(self):
+        n_samples = len(self.X)
+        return (np.arange(n_samples),
+                np.asarray(self.y, dtype=float),
+                -np.ones(n_samples))
 
-        # set of indices
-        # {i : 0 < alphas[i] < C}
-        self.I0 = set()
-        # {i : y[i] = +1, alphas[i] = 0}
-        self.I1 = set(i for i in range(len(X)) if y[i] == 1)
-        # {i : y[i] = -1, alphas[i] = C}
-        self.I2 = set()
-        # {i : y[i] = +1, alphas[i] = C}
-        self.I3 = set()
-        # {i : y[i] = -1, alphas[i] = 0}
-        self.I4 = set(i for i in range(len(X)) if y[i] == -1)
-
-        # multiple thresholds
-        self.b_up = -1
-        self.b_low = 1
-        # initialize b_up_idx to any one index of class +1
-        self.b_up_idx = next(i for i in range(len(X)) if y[i] == 1)
-        # initialize b_low_idx to any one index of class -1
-        self.b_low_idx = next(i for i in range(len(X)) if y[i] == -1)
-
-        self.errors[self.b_up_idx] = -1
-        self.errors[self.b_low_idx] = 1
-
-    def _take_step(self, i1, i2):
-        # skip if chosen alphas are the same
-        if i1 == i2:
-            return False
-
-        alpha1 = self.alphas[i1]
-        y1 = self.y[i1]
-        E1 = self.errors[i1]
-
-        alpha2 = self.alphas[i2]
-        y2 = self.y[i2]
-        E2 = self.errors[i2]
-
-        s = y1 * y2
-
-        # compute L and H, the bounds on new possible alpha values
-        # based on equations 13 and 14 in Platt's paper
-        if y1 != y2:
-            L = max(0, alpha2 - alpha1)
-            H = min(self.C, self.C + alpha2 - alpha1)
-        else:
-            L = max(0, alpha2 + alpha1 - self.C)
-            H = min(self.C, alpha2 + alpha1)
-
-        if L == H:
-            return False
-
-        # compute the 2nd derivative of the objective function along
-        # the diagonal line based on equation 15 in Platt's paper
-        eta = self.K[i1, i1] + self.K[i2, i2] - 2 * self.K[i1, i2]
-
-        # under normal circumstances, the objective function will be positive
-        # definite, there will be a minimum along the direction of the linear
-        # equality constraint, and eta will be greater than zero compute new
-        # alpha2, a2, if eta is positive based on equation 16 in Platt's paper
-        if eta > 0:
-            # clip a2 based on bounds L and H based
-            # on equation 17 in Platt's paper
-            a2 = max(L, min(alpha2 + y2 * (E1 - E2) / eta, H))
-        else:
-            Lobj = y2 * (E1 - E2) * L
-            Hobj = y2 * (E1 - E2) * H
-
-            if Lobj > Hobj + 1e-12:
-                a2 = L
-            elif Lobj < Hobj - 1e-12:
-                a2 = H
-            else:
-                a2 = alpha2
-
-            warnings.warn('kernel matrix is not positive definite', PositiveSpectrumWarning)
-
-        # if examples can't be optimized within tol, skip this pair
-        if abs(a2 - alpha2) < 1e-12 * (a2 + alpha2 + 1e-12):
-            return False
-
-        # calculate new alpha1 based on equation 18 in Platt's paper
-        a1 = alpha1 + s * (alpha2 - a2)
-
-        # update weight vector to reflect change in a1 and a2, if
-        # kernel is linear, based on equation 22 in Platt's paper
+    def _set_solution(self, alphas, smpl, s, m, M):
+        self.alphas = np.zeros(len(self.X))
+        self.alphas[smpl] = alphas
+        self.b = (m + M) / 2
         if isinstance(self.kernel, LinearKernel):
-            self.w += y1 * (a1 - alpha1) * self.X[i1] + y2 * (a2 - alpha2) * self.X[i2]
-
-        # update error cache using new alphas
-        for i in self.I0:
-            if i != i1 and i != i2:
-                self.errors[i] += y1 * (a1 - alpha1) * self.K[i1, i] + y2 * (a2 - alpha2) * self.K[i2, i]
-        # update error cache using new alphas for i1 and i2
-        self.errors[i1] += y1 * (a1 - alpha1) * self.K[i1, i1] + y2 * (a2 - alpha2) * self.K[i1, i2]
-        self.errors[i2] += y1 * (a1 - alpha1) * self.K[i1, i2] + y2 * (a2 - alpha2) * self.K[i2, i2]
-
-        # to prevent precision problems
-        if a2 > self.C - 1e-8 * self.C:
-            a2 = self.C
-        elif a2 <= 1e-8 * self.C:
-            a2 = 0.
-
-        if a1 > self.C - 1e-8 * self.C:
-            a1 = self.C
-        elif a1 <= 1e-8 * self.C:
-            a1 = 0.
-
-        # update model object with new alphas
-        self.alphas[i1] = a1
-        self.alphas[i2] = a2
-
-        # update the sets of indices for i1 and i2
-        for i in (i1, i2):
-            if 0 < self.alphas[i] < self.C:
-                self.I0.add(i)
-            else:
-                self.I0.discard(i)
-            if self.y[i] == 1 and self.alphas[i] == 0:
-                self.I1.add(i)
-            else:
-                self.I1.discard(i)
-            if self.y[i] == -1 and self.alphas[i] == self.C:
-                self.I2.add(i)
-            else:
-                self.I2.discard(i)
-            if self.y[i] == 1 and self.alphas[i] == self.C:
-                self.I3.add(i)
-            else:
-                self.I3.discard(i)
-            if self.y[i] == -1 and self.alphas[i] == 0:
-                self.I4.add(i)
-            else:
-                self.I4.discard(i)
-
-        # update thresholds (b_up, b_up_idx) and (b_low, b_low_idx)
-        # by applying equations 11a and 11b, using only i1, i2 and
-        # indices in I0 as suggested in item 3 of section 5 in
-        # Keerthi et al.
-        self.b_up_idx = -1
-        self.b_low_idx = -1
-        self.b_up = sys.float_info.max
-        self.b_low = -sys.float_info.max
-
-        for i in self.I0:
-            if self.errors[i] > self.b_low:
-                self.b_low = self.errors[i]
-                self.b_low_idx = i
-            if self.errors[i] < self.b_up:
-                self.b_up = self.errors[i]
-                self.b_up_idx = i
-        if i1 not in self.I0:
-            if i1 in self.I3 or i1 in self.I4:
-                if self.errors[i1] > self.b_low:
-                    self.b_low = self.errors[i1]
-                    self.b_low_idx = i1
-            elif self.errors[i1] < self.b_up:
-                self.b_up = self.errors[i1]
-                self.b_up_idx = i1
-        if i2 not in self.I0:
-            if i2 in self.I3 or i2 in self.I4:
-                if self.errors[i2] > self.b_low:
-                    self.b_low = self.errors[i2]
-                    self.b_low_idx = i2
-            elif self.errors[i2] < self.b_up:
-                self.b_up = self.errors[i2]
-                self.b_up_idx = i2
-
-        if self.b_low_idx == -1 or self.b_up_idx == -1:
-            raise Exception('unexpected status')
-
-        return True
-
-    def _examine_example(self, i2):
-        if i2 in self.I0:
-            E2 = self.errors[i2]
-        else:
-            E2 = (self.alphas * self.y).dot(self.K[i2]) - self.y[i2]
-            self.errors[i2] = E2
-
-            # update (b_up, b_up_idx) or (b_low, b_low_idx) using E2 and i2
-            if (i2 in self.I1 or i2 in self.I2) and E2 < self.b_up:
-                self.b_up = E2
-                self.b_up_idx = i2
-            elif (i2 in self.I3 or i2 in self.I4) and E2 > self.b_low:
-                self.b_low = E2
-                self.b_low_idx = i2
-
-        # check optimality using current b_up and b_low and, if violated,
-        # find another index i1 to do joint optimization with i2
-        i1 = -1
-        optimal = True
-        if i2 in self.I0 or i2 in self.I1 or i2 in self.I2:
-            if self.b_low - E2 > 2 * self.tol:
-                optimal = False
-                i1 = self.b_low_idx
-        if i2 in self.I0 or i2 in self.I3 or i2 in self.I4:
-            if E2 - self.b_up > 2 * self.tol:
-                optimal = False
-                i1 = self.b_up_idx
-
-        if optimal:
-            return False
-
-        # for i2 in I0 choose the better i1
-        if i2 in self.I0:
-            if self.b_low - E2 > E2 - self.b_up:
-                i1 = self.b_low_idx
-            else:
-                i1 = self.b_up_idx
-
-        if i1 == -1:
-            raise Exception('the index could not be found')
-
-        return self._take_step(i1, i2)
-
-    def minimize(self):
-        if self.verbose:
-            print('iter\t cost')
-
-        num_changed = 0
-        examine_all = True
-        while num_changed > 0 or examine_all:
-            num_changed = 0
-            # loop over all training examples
-            if examine_all:
-                for i in range(len(self.X)):
-                    num_changed += self._examine_example(i)
-            else:
-                # loop over examples where alphas are not already at their limits
-                for i in range(len(self.X)):
-                    if 0 < self.alphas[i] < self.C:
-                        num_changed += self._examine_example(i)
-                        # check if optimality on I0 is attained
-                        if self.b_up > self.b_low - 2 * self.tol:
-                            num_changed = 0
-                            break
-            if examine_all:
-                examine_all = False
-            elif num_changed == 0:
-                examine_all = True
-
-            if self.verbose and not self.iter % self.verbose:
-                print('{:4d}\t{: 1.4e}'.format(self.iter, self.quad.function(self.alphas)))
-
-            self.iter += 1
-
-        self.b = -(self.b_low + self.b_up) / 2
-
-        if self.verbose:
-            print()
-
-        return self
+            self.w = (s * alphas).dot(self.X[smpl])
 
 
 class SMORegression(SMO):
     """
-    Implements Smola and Scholkopf sequential minimal optimization
-    algorithm for training a support vector regression.
-
-    The SMO algorithm is an algorithm for solving large quadratic programming (QP)
-    optimization problems, widely used for the training of support vector machines.
-    First developed by John C. Platt in 1998, SMO breaks up large QP problems into a
-    series of smallest possible QP problems, which are then solved analytically.
-
-    This class incorporates modifications in the original SMO algorithm to solve
-    regression problems as suggested by Alex J. Smola and Bernhard Scholkopf and
-    further modifications for better performance by Shevade et al.
-
-    References
-    ----------
-
-    G.W. Flake, S. Lawrence. Efficient SVM Regression Training with SMO.
-
-    Alex J. Smola, Bernhard Scholkopf. A Tutorial on Support Vector Regression.
-    NeuroCOLT2 Technical Report Series NC2-TR-1998-030.
-
-    S.K. Shevade, S.S. Keerthi, C. Bhattacharyya, K.R.K. Murthy. Improvements to SMO
-    Algorithm for SVM Regression. Technical Report CD-99-16.
+    The dual index space of a regressor: two dual indices per sample, one per
+    side of the insensitivity tube, with opposite signs and the target of the
+    sample shifted by the half-width of the tube.
     """
 
     def __init__(self, quad, X, y, K, kernel, C, epsilon, tol=1e-3, verbose=False):
-        """
-        Parameters
-        ----------
-
-        quad : `Quadratic` instance
-            The quadratic objective of the dual problem, used to monitor
-            the cost during the optimization.
-
-        X : ndarray of shape (n_samples, n_features)
-            Training data.
-
-        y : ndarray of shape (n_samples,)
-            Target values associated with ``X``.
-
-        K : ndarray of shape (n_samples, n_samples)
-            Precomputed kernel (Gram) matrix of the training data.
-
-        kernel : `Kernel` instance
-            The kernel function used to build ``K``. If it is a `LinearKernel`
-            the primal weight vector ``w`` is maintained explicitly.
-
-        C : float
-            Regularization parameter, i.e., the upper bound on the
-            Lagrange multipliers.
-
-        epsilon : float
-            Width of the epsilon-tube of the epsilon-insensitive loss within
-            which no penalty is associated in the regression problem.
-
-        tol : float, default=1e-3
-            Tolerance for the KKT stopping criterion.
-
-        verbose : bool or int, default=False
-            Controls the verbosity of progress messages to stdout.
-        """
         self.alphas_p = np.zeros(len(X))
         self.alphas_n = np.zeros(len(X))
+        self.epsilon = epsilon
         super(SMORegression, self).__init__(quad, X, y, K, kernel, C, tol, verbose)
+
+    def _dual_index_space(self):
+        n_samples = len(self.X)
+        smpl = np.concatenate((np.arange(n_samples), np.arange(n_samples)))
+        s = np.concatenate((np.ones(n_samples), -np.ones(n_samples)))
+        q = np.concatenate((-self.y, self.y)) + self.epsilon
+        return smpl, s, np.asarray(q, dtype=float)
+
+    def set_epsilon(self, epsilon):
+        if getattr(self, '_q', None) is not None:
+            self._G += epsilon - self.epsilon
+            self._q += epsilon - self.epsilon
         self.epsilon = epsilon
 
-        # initialize variables and structures to implement improvements
-        # on the original Smola and Scholkopf SMO algorithm described in
-        # Shevade et al. for better performance ed efficiency
-
-        # set of indices
-        # {i : 0 < alphas_p[i] < C, 0 < alphas_n[i] < C}
-        self.I0 = set()
-        # {i : alphas_p[i] = 0, alphas_n[i] = 0}
-        self.I1 = set(range(len(X)))
-        # {i : alphas_p[i] = 0, alphas_n[i] = C}
-        self.I2 = set()
-        # {i : alphas_p[i] = C, alphas_n[i] = 0}
-        self.I3 = set()
-
-        # multiple thresholds
-        self.b_up_idx = 0
-        self.b_low_idx = 0
-        self.b_up = y[self.b_up_idx] + self.epsilon
-        self.b_low = y[self.b_low_idx] - self.epsilon
-
-    def _take_step(self, i1, i2):
-        # skip if chosen alphas are the same
-        if i1 == i2:
-            return False
-
-        alpha1_p, alpha1_n = self.alphas_p[i1], self.alphas_n[i1]
-        E1 = self.errors[i1]
-
-        alpha2_p, alpha2_n = self.alphas_p[i2], self.alphas_n[i2]
-        E2 = self.errors[i2]
-
-        # compute kernel and 2nd derivative eta
-        # based on equation 15 in Platt's paper
-        eta = self.K[i1, i1] + self.K[i2, i2] - 2 * self.K[i1, i2]
-
-        if eta < 0:
-            eta = 0
-
-        gamma = alpha1_p - alpha1_n + alpha2_p - alpha2_n
-
-        case1 = case2 = case3 = case4 = False
-        changed = finished = False
-
-        delta_E = E1 - E2
-
-        while not finished:  # occurs at most three times
-            if (not case1 and
-                    (alpha1_p > 0 or (alpha1_n == 0 and delta_E > 0)) and
-                    (alpha2_p > 0 or (alpha2_n == 0 and delta_E < 0))):
-                # compute L and H wrt alpha1_p, alpha2_p
-                L = max(0, gamma - self.C)
-                H = min(self.C, gamma)
-                if L < H:
-                    if eta > 0:
-                        a2 = max(L, min(alpha2_p - delta_E / eta, H))
-                    else:
-                        Lobj = -L * delta_E
-                        Hobj = -H * delta_E
-                        a2 = L if Lobj > Hobj else H
-                        warnings.warn('kernel matrix is not positive definite', PositiveSpectrumWarning)
-                    a1 = alpha1_p - (a2 - alpha2_p)
-                    # update alpha1, alpha2_p if change is larger than some eps
-                    if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
-                        alpha1_p = a1
-                        alpha2_p = a2
-                        changed = True
-                else:
-                    finished = True
-                case1 = True
-            elif (not case2 and
-                  (alpha1_p > 0 or (alpha1_n == 0 and delta_E > 2 * self.epsilon)) and
-                  (alpha2_n > 0 or (alpha2_p == 0 and delta_E > 2 * self.epsilon))):
-                # compute L and H wrt alpha1_p, alpha2_n
-                L = max(0, -gamma)
-                H = min(self.C, -gamma + self.C)
-                if L < H:
-                    if eta > 0:
-                        a2 = max(L, min(alpha2_n + (delta_E - 2 * self.epsilon) / eta, H))
-                    else:
-                        Lobj = L * (-2 * self.epsilon + delta_E)
-                        Hobj = H * (-2 * self.epsilon + delta_E)
-                        a2 = L if Lobj > Hobj else H
-                        warnings.warn('kernel matrix is not positive definite', PositiveSpectrumWarning)
-                    a1 = alpha1_p + (a2 - alpha2_n)
-                    # update alpha1, alpha2_n if change is larger than some eps
-                    if abs(a1 - alpha1_p) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
-                        alpha1_p = a1
-                        alpha2_n = a2
-                        changed = True
-                else:
-                    finished = True
-                case2 = True
-            elif (not case3 and
-                  (alpha1_n > 0 or (alpha1_p == 0 and delta_E < -2 * self.epsilon)) and
-                  (alpha2_p > 0 or (alpha2_n == 0 and delta_E < -2 * self.epsilon))):
-                # computer L and H wrt alpha1_n, alpha2_p
-                L = max(0, gamma)
-                H = min(self.C, self.C + gamma)
-                if L < H:
-                    if eta > 0:
-                        a2 = max(L, min(alpha2_p - (delta_E + 2 * self.epsilon) / eta, H))
-                    else:
-                        Lobj = -L * (2 * self.epsilon + delta_E)
-                        Hobj = -H * (2 * self.epsilon + delta_E)
-                        a2 = L if Lobj > Hobj else H
-                        warnings.warn('kernel matrix is not positive definite', PositiveSpectrumWarning)
-                    a1 = alpha1_n + (a2 - alpha2_p)
-                    # update alpha1_n, alpha2_p if change is larger than some eps
-                    if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_p) > 1e-12:
-                        alpha1_n = a1
-                        alpha2_p = a2
-                        changed = True
-                else:
-                    finished = True
-                case3 = True
-            elif (not case4 and
-                  (alpha1_n > 0 or (alpha1_p == 0 and delta_E < 0)) and
-                  (alpha2_n > 0 or (alpha2_p == 0 and delta_E > 0))):
-                # compute L and H wrt alpha1_n, alpha2_n
-                L = max(0, -gamma - self.C)
-                H = min(self.C, -gamma)
-                if L < H:
-                    if eta > 0:
-                        a2 = max(L, min(alpha2_n + delta_E / eta, H))
-                    else:
-                        Lobj = L * delta_E
-                        Hobj = H * delta_E
-                        a2 = L if Lobj > Hobj else H
-                        warnings.warn('kernel matrix is not positive definite', PositiveSpectrumWarning)
-                    a1 = alpha1_n - (a2 - alpha2_n)
-                    # update alpha1_n, alpha2_n if change is larger than some eps
-                    if abs(a1 - alpha1_n) > 1e-12 or abs(a2 - alpha2_n) > 1e-12:
-                        alpha1_n = a1
-                        alpha2_n = a2
-                        changed = True
-                else:
-                    finished = True
-                case4 = True
-            else:
-                finished = True
-
-            delta_E += eta * ((alpha2_p - alpha2_n) - (self.alphas_p[i2] - self.alphas_n[i2]))
-
-        if not changed:
-            return False
-
-        # if kernel is liner update weight vector
-        # to reflect change in a1 and a2
+    def _set_solution(self, alphas, smpl, s, m, M):
+        n_samples = len(self.X)
+        full = np.zeros(2 * n_samples)
+        # the two sides of the tube are told apart by the sign, the sample
+        # alone not saying which of the two dual indices one is
+        full[np.where(s > 0, smpl, smpl + n_samples).astype(int)] = alphas
+        self.alphas_p = full[:n_samples]
+        self.alphas_n = full[n_samples:]
+        self.b = -(m + M) / 2
         if isinstance(self.kernel, LinearKernel):
-            self.w -= (((self.alphas_p[i1] - self.alphas_n[i1]) - (alpha1_p - alpha1_n)) * self.X[i1] +
-                       ((self.alphas_p[i2] - self.alphas_n[i2]) - (alpha2_p - alpha2_n)) * self.X[i2])
-
-        # update error cache using new alphas
-        for i in self.I0:
-            if i != i1 and i != i2:
-                self.errors[i] += (
-                        ((self.alphas_p[i1] - self.alphas_n[i1]) - (alpha1_p - alpha1_n)) * self.K[i1, i] +
-                        ((self.alphas_p[i2] - self.alphas_n[i2]) - (alpha2_p - alpha2_n)) * self.K[i2, i])
-        # update error cache using new alphas for i1 and i2
-        self.errors[i1] += (((self.alphas_p[i1] - self.alphas_n[i1]) - (alpha1_p - alpha1_n)) * self.K[i1, i1] +
-                            ((self.alphas_p[i2] - self.alphas_n[i2]) - (alpha2_p - alpha2_n)) * self.K[i1, i2])
-        self.errors[i2] += (((self.alphas_p[i1] - self.alphas_n[i1]) - (alpha1_p - alpha1_n)) * self.K[i1, i2] +
-                            ((self.alphas_p[i2] - self.alphas_n[i2]) - (alpha2_p - alpha2_n)) * self.K[i2, i2])
-
-        # to prevent precision problems
-        if alpha1_p > self.C - 1e-10 * self.C:
-            alpha1_p = self.C
-        elif alpha1_p <= 1e-10 * self.C:
-            alpha1_p = 0
-
-        if alpha1_n > self.C - 1e-10 * self.C:
-            alpha1_n = self.C
-        elif alpha1_n <= 1e-10 * self.C:
-            alpha1_n = 0
-
-        if alpha2_p > self.C - 1e-10 * self.C:
-            alpha2_p = self.C
-        elif alpha2_p <= 1e-10 * self.C:
-            alpha2_p = 0
-
-        if alpha2_n > self.C - 1e-10 * self.C:
-            alpha2_n = self.C
-        elif alpha2_n <= 1e-10 * self.C:
-            alpha2_n = 0
-
-        # update model object with new alphas
-        self.alphas_p[i1], self.alphas_p[i2] = alpha1_p, alpha2_p
-        self.alphas_n[i1], self.alphas_n[i2] = alpha1_n, alpha2_n
-
-        # update the sets of indices for i1 and i2
-        for i in (i1, i2):
-            if 0 < self.alphas_p[i] < self.C or 0 < self.alphas_n[i] < self.C:
-                self.I0.add(i)
-            else:
-                self.I0.discard(i)
-            if self.alphas_p[i] == 0 and self.alphas_n[i] == 0:
-                self.I1.add(i)
-            else:
-                self.I1.discard(i)
-            if self.alphas_p[i] == 0 and self.alphas_n[i] == self.C:
-                self.I2.add(i)
-            else:
-                self.I2.discard(i)
-            if self.alphas_p[i] == self.C and self.alphas_n[i] == 0:
-                self.I3.add(i)
-            else:
-                self.I3.discard(i)
-
-        # update thresholds
-        self.b_up_idx = -1
-        self.b_low_idx = -1
-        self.b_up = sys.float_info.max
-        self.b_low = -sys.float_info.max
-
-        for i in self.I0:
-            if 0 < self.alphas_p[i] < self.C and self.errors[i] - self.epsilon > self.b_low:
-                self.b_low = self.errors[i] - self.epsilon
-                self.b_low_idx = i
-            elif 0 < self.alphas_n[i] < self.C and self.errors[i] + self.epsilon > self.b_low:
-                self.b_low = self.errors[i] + self.epsilon
-                self.b_low_idx = i
-
-            if 0 < self.alphas_p[i] < self.C and self.errors[i] - self.epsilon < self.b_up:
-                self.b_up = self.errors[i] - self.epsilon
-                self.b_up_idx = i
-            elif 0 < self.alphas_n[i] < self.C and self.errors[i] + self.epsilon < self.b_up:
-                self.b_up = self.errors[i] + self.epsilon
-                self.b_up_idx = i
-
-        for i in (i1, i2):
-            if i not in self.I0:
-                if i in self.I2 and self.errors[i] + self.epsilon > self.b_low:
-                    self.b_low = self.errors[i] + self.epsilon
-                    self.b_low_idx = i
-                elif i in self.I1 and self.errors[i] - self.epsilon > self.b_low:
-                    self.b_low = self.errors[i] - self.epsilon
-                    self.b_low_idx = i
-
-                if i in self.I3 and self.errors[i] - self.epsilon < self.b_up:
-                    self.b_up = self.errors[i] - self.epsilon
-                    self.b_up_idx = i
-                elif i in self.I1 and self.errors[i] + self.epsilon < self.b_up:
-                    self.b_up = self.errors[i] + self.epsilon
-                    self.b_up_idx = i
-
-        if self.b_low_idx == -1 or self.b_up_idx == -1:
-            raise Exception('unexpected status')
-
-        return True
-
-    def _examine_example(self, i2):
-        alpha2_p, alpha2_n = self.alphas_p[i2], self.alphas_n[i2]
-
-        if i2 in self.I0:
-            E2 = self.errors[i2]
-        else:
-            E2 = self.y[i2] - (self.alphas_p - self.alphas_n).dot(self.K[i2])
-            self.errors[i2] = E2
-            # update (b_low, b_low_idx) or (b_up, b_up_idx) using (E2, i2)
-            if i2 in self.I1:
-                if E2 + self.epsilon < self.b_up:
-                    self.b_up = E2 + self.epsilon
-                    self.b_up_idx = i2
-                elif E2 - self.epsilon > self.b_low:
-                    self.b_low = E2 - self.epsilon
-                    self.b_low_idx = i2
-            elif i2 in self.I2 and E2 + self.epsilon > self.b_low:
-                self.b_low = E2 + self.epsilon
-                self.b_low_idx = i2
-            elif i2 in self.I3 and E2 - self.epsilon < self.b_up:
-                self.b_up = E2 - self.epsilon
-                self.b_up_idx = i2
-
-        # check optimality using current b_up and b_low and, if violated,
-        # find another index i1 to do joint optimization with i2
-        i1 = -1
-        optimal = True
-        if i2 in self.I0:
-            if 0 < alpha2_p < self.C:
-                if self.b_low - (E2 - self.epsilon) > 2 * self.tol:
-                    optimal = False
-                    i1 = self.b_low_idx
-                    # for i2 in I0 choose the better i1
-                    if (E2 - self.epsilon) - self.b_up > self.b_low - (E2 - self.epsilon):
-                        i1 = self.b_up_idx
-                elif (E2 - self.epsilon) - self.b_up > 2 * self.tol:
-                    optimal = False
-                    i1 = self.b_up_idx
-                    # for i2 in I0 choose the better i1
-                    if self.b_low - (E2 - self.epsilon) > (E2 - self.epsilon) - self.b_up:
-                        i1 = self.b_low_idx
-            elif 0 < alpha2_n < self.C:
-                if self.b_low - (E2 + self.epsilon) > 2 * self.tol:
-                    optimal = False
-                    i1 = self.b_low_idx
-                    # for i2 in I0 choose the better i1
-                    if (E2 + self.epsilon) - self.b_up > self.b_low - (E2 + self.epsilon):
-                        i1 = self.b_up_idx
-                elif (E2 + self.epsilon) - self.b_up > 2 * self.tol:
-                    optimal = False
-                    i1 = self.b_up_idx
-                    # for i2 in I0 choose the better i1
-                    if self.b_low - (E2 + self.epsilon) > (E2 + self.epsilon) - self.b_up:
-                        i1 = self.b_low_idx
-        elif i2 in self.I1:
-            if self.b_low - (E2 + self.epsilon) > 2 * self.tol:
-                optimal = False
-                i1 = self.b_low_idx
-                # for i2 in I1 choose the better i1
-                if (E2 + self.epsilon) - self.b_up > self.b_low - (E2 + self.epsilon):
-                    i1 = self.b_up_idx
-            elif (E2 - self.epsilon) - self.b_up > 2 * self.tol:
-                optimal = False
-                i1 = self.b_up_idx
-                # for i2 in I1 choose the better i1
-                if self.b_low - (E2 - self.epsilon) > (E2 - self.epsilon) - self.b_up:
-                    i1 = self.b_low_idx
-        elif i2 in self.I2:
-            if (E2 + self.epsilon) - self.b_up > 2 * self.tol:
-                optimal = False
-                i1 = self.b_up_idx
-        elif i2 in self.I3:
-            if self.b_low - (E2 - self.epsilon) > 2 * self.tol:
-                optimal = False
-                i1 = self.b_low_idx
-        else:
-            raise Exception('the index could not be found')
-
-        if optimal:
-            return False
-
-        return self._take_step(i1, i2)
-
-    def minimize(self):
-        if self.verbose:
-            print('iter\t cost')
-
-        num_changed = 0
-        examine_all = True
-        while num_changed > 0 or examine_all:
-            num_changed = 0
-            # loop over all training examples
-            if examine_all:
-                for i in range(len(self.X)):
-                    num_changed += self._examine_example(i)
-            else:
-                # loop over examples where alphas are not already at their limits
-                for i in range(len(self.X)):
-                    if 0 < self.alphas_p[i] < self.C or 0 < self.alphas_n[i] < self.C:
-                        num_changed += self._examine_example(i)
-                        # check if optimality on I0 is attained
-                        if self.b_up > self.b_low - 2 * self.tol:
-                            num_changed = 0
-                            break
-            if examine_all:
-                examine_all = False
-            elif num_changed == 0:
-                examine_all = True
-
-            if self.verbose and not self.iter % self.verbose:
-                print('{:4d}\t{: 1.4e}'.format(
-                    self.iter, self.quad.function(np.concatenate((self.alphas_p, self.alphas_n)))))
-
-            self.iter += 1
-
-        self.b = (self.b_low + self.b_up) / 2
-
-        if self.verbose:
-            print()
-
-        return self
+            self.w = -(self.alphas_p - self.alphas_n).dot(self.X)
