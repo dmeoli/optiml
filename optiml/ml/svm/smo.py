@@ -191,8 +191,17 @@ class SMO(ABC):
                 if act < n_dual:
                     passes += 1
                     if passes >= patience:
+                        # what the restore is for is that the pair is selected
+                        # out of the whole index space again, and one pass at
+                        # full width does that: the period is thrown away
+                        # together with the interval, so that the shrinking
+                        # decides again as soon as a new one is there, a pass
+                        # at full width costing O(n_dual) against the O(act)
+                        # of every other one
                         act = self._unshrink(state, act, n_dual)
                         passes = 0
+                        counter = 0
+                        pm, pM = np.inf, -np.inf
                     else:
                         act = self._shrink(state, act, pm, pM)
                 else:
